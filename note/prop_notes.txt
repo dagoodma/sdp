@@ -1,0 +1,16 @@
+
+
+Notes:
+--
+Rule of thumb: 2" pitch = 400 RPM
+
+Definitions:
+--
+
+Pitch: theoretical distance the prop travels on each rotation. This is theoretical because water is not a solid medium and the prop slips. 10 to 30% is normal, the lower numbers are found only on hi-performance props, specially prepared. 
+
+Transom = stern = rear = aft-most 
+
+http://www.modelpowerboat.com/content.php?152-RC-Model-Boat-Propellers
+
+http://boatpropellers.iboats.com/?cm_guid=1-_-100000000000001879176-_-9155975179&cm_mmc=Google_Main-_-Props%3AGoogle%3ACalifornia-_-Outboard+Prop%3AProps%3AGoogle%3ACalifornia-_-boat+propeller_Phrase&gclid=CNH_5ovV_LMCFYl7QgodUEcAYw

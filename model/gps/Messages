@@ -1,0 +1,27 @@
+
+GGA--- Global Positioning System Fixed Data
+Example:
+    $GPGGA,053740.000,2503.6319,N,12136.0099,E,1,08,1.1,63.8,M,15.2,M,,0000*64
+
+GGA Data Format:
+    
+Name            Example     Units   Description
+|--------------|-----------|-------|---------------------
+Message ID      $GPGGA              GGA protocol header
+UTC Time        053740.000          hhmmss.sss
+Page 3/13
+Latitude        2503.6319           ddmm.mmmm
+N/S indicator   N                   N=north or S=south
+Longitude       12136.0099          dddmm.mmmm
+E/W Indicator   E                   E=east or W=west
+Pos. Fix Ind.   1
+Satellites Used 08                  Range 0 to 12
+HDOP            1.1                 Horizontal Dilution of Precision
+MSL Altitude    63.8        mters
+Units           M           mters
+Geoid Sep.      15.2        mters
+Units           M           mters
+Age Diff. Corr.             second  Null fields when DGPS is not used
+Diff. Ref. ID   0000
+Checksum        *64
+<CR> <LF>                           End of message termination

@@ -1,0 +1,80 @@
+function [msg] = gps_read_message2(serial_obj)
+% [str] = gps_read_message(serial_obj)
+%
+% Reads a message (CR/LF terminated) from a GPS device
+% and returns it as a string.
+%
+% Arguments:
+%   serial_obj: a serial object
+%
+% Returns:
+%   a string containing a GPS message
+%
+
+if nargin < 1
+    error('Missing argument ''serial_obj''')
+end
+
+DEBUG = 1;
+
+START_CHAR = 181;
+START_CHAR2 = 98;
+SYNC1_POS = 1;
+SYNC2_POS = 2;
+LENGTH_POS = 5;
+
+pos = 1;
+
+max_pos = 10;
+
+
+while 1
+     if pos == LENGTH_POS
+         c = fread(serial_obj,1,'uint16');
+     else
+        c = fread(serial_obj,1,'uint8');
+     end
+     
+     
+%     
+%     % Debug printing
+%     if DEBUG == 1
+%         disp(sprintf('pos %d: %X',pos,c));
+%     end
+%     
+     if pos == SYNC1_POS && c ~= START_CHAR
+         continue;
+     elseif pos == SYNC2_POS && c ~= START_CHAR2
+         pos = 1;
+         continue;
+     end
+%     elseif pos == CLASS_POS
+%         class = c;
+%     elseif pos == ID_POS
+%         id = c;
+     if pos == LENGTH_POS
+        pos = pos + 1;
+        length = c;
+        max_pos = 6 + length + 2;
+     end
+%         pos = pos + 1;
+%         length = c;
+%         max_pos = 6 + length + 2;
+%     elseif pos >= PAYLOAD_POS && pos < (max_pos - 2
+%     end
+%     
+    
+
+     pos = pos + 1;
+%     
+     if pos >= max_pos
+         break
+     end
+end
+
+% Done 
+
+end % function
+
+
+

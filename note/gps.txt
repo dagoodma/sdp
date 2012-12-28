@@ -1,0 +1,39 @@
+GPS
+
+
+Frequencies:
+* L1 (L1C, C/A and P codes, 1575.42 MHz): 
+* L2 (L2C, P(Y)-code, 1227.60 MHz):
+* L3 (Nuclear Detonation, 1381.05 MHz):
+
+Technologies:
+* GPS/GNSS (Sat Nav): US, 32 MEO satellites in 6 orbital planes, CDMA, L1 & L2,  small electronics, LOS radio, LAT/LON/ALT
+* GLONASS: Russia, FDMA/CDMA, 
+* Galileo: EU, CDMA, 
+* GLONASS: Soviet systems
+
+
+Precision:
+Unpredictable delay through the ionosphere causes errors in precision. There are various methods for improving the accuracy:
+
+* L1C or L2C (Standard Civilian GPS): 3-15 meters (9.8-49 feet). Uses carier acquistion (C/A) tracking.
+
+* P(Y) Codes (Military): 0.3 meters (~1 foot). Uses L1 and L2 for dual frequency measurements/comparison for military, requires decryption keys, or else decoding is time consuming.
+
+* DGPS: up to 10 cm (3.9 inches) using two GPS receivers and measuring the differences between receivers, satellites, and time points (epochs) (triple differencing) with numerical root finding and least squares technique. 
+
+* RKP: 10 cm using DGPS and statistical tests with separate radio receiver
+
+* CPGPS: 3 cm (1.2 inches) uses gold code bit period (1000ns vs 1ns for GPS) as additional clock to resolve uncertainty
+
+* Carrier phase tracking (surveying): 2mm, but requires specially equipped receivers for measuring total phase
+
+
+
+
+Notes:
+* 1 meter is 3.28 feet
+* 100 cm in 1 meter
+* 1 cm is 0.3937 inches
+* DGPS will require additional information to be shared between the bot the the control station
+* USCG broadcasts DGPS signals on marine longwave, and "almost all major GPS vendors offered units with DGPS inputs"

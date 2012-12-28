@@ -1,0 +1,7 @@
+NMEA commands are followed by checksums (after the *). Hex
+representation of XOR of all the bytes between the $ and the *
+    http://www.hhhh.org/wiml/proj/nmeaxor.html
+
+ie. Command:  $PSRF103,04,00,01,01*
+            =>$PSRF103,04,00,01,01*21
+

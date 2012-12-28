@@ -1,0 +1,91 @@
+\documentclass{article}
+\usepackage[pdftex]{graphicx}
+\usepackage{epstopdf}
+\usepackage{amsmath, amssymb, calc}
+\usepackage{mathtools}
+\usepackage{siunitx}
+\usepackage{verbatim}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{enumerate}
+\usepackage{steinmetz}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\lhead{Darrel Deo, Shehadah Dajani,\\ John Ash, David Goodman}
+\rhead{Autonomous Lifeguard,\\ Fall 2012}
+\chead{\thepage\ of \pageref{LastPage}}
+\lfoot{Autonomous Lifeguard --- Block Diagram}
+\cfoot{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\newcommand*\sepline{%
+  \begin{center}
+    \rule[1ex]{.5\textwidth}{.5pt}
+  \end{center}}
+
+
+\usepackage{blindtext}
+\begin{document} 
+
+\begin{center}
+{\bf \Large Autonomous Lifeguard\\
+	Block Diagrams}
+\end{center}
+
+\begin{figure}[H]
+		\begin{center}
+		\centerline{\includegraphics[width=0.7\textwidth]{image/davids_block_overview.png}}
+		\caption{System Overview}
+		%\label{fig:1_freqz}
+		\end{center}
+	\end{figure}
+
+\begin{figure}[H]
+	\centering
+\begin{subfigure}[b]{1\linewidth}		
+	\begin{center}
+	\centerline{\includegraphics[width=1.2\textwidth]{image/shahs_block_top.png}}
+	%\caption{Schematic}
+	%\label{fig:rgb_schem}
+	\end{center}
+\end{subfigure}
+\begin{subfigure}[bH]{1\linewidth}
+	\begin{center}
+	\centerline{\includegraphics[width=0.35\textwidth]{image/shahs_block_legend.png}}
+	%\caption{Specifications}
+	%\label{fig:rgb_spec}
+	\end{center}
+	\end{subfigure}%
+	\caption{Command Center Block Diagram}
+	%\label{fig:connect4}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+\begin{subfigure}[b]{1\linewidth}		
+	\begin{center}
+	\centerline{\includegraphics[width=1.2\textwidth]{image/shahs_block_bottom.png}}
+	%\caption{Schematic}
+	%\label{fig:rgb_schem}
+	\end{center}
+\end{subfigure}
+\begin{subfigure}[bH]{1\linewidth}
+	\begin{center}
+	\centerline{\includegraphics[width=0.35\textwidth]{image/shahs_block_legend.png}}
+	%\caption{Specifications}
+	%\label{fig:rgb_spec}
+	\end{center}
+	\end{subfigure}%
+	\caption{ASV Block Diagram}
+	%\label{fig:connect4}
+\end{figure}
+
+
+
+\end{document}

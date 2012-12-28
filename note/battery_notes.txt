@@ -1,0 +1,16 @@
+LiPo RC battery pack voltages
+--
+3.7 volt battery = 1 cell x 3.7 volts (1S)
+7.4 volt battery = 2 cells x 3.7 volts (2S)
+11.1 volt battery = 3 cells x 3.7 volts (3S)
+14.8 volt battery = 4 cells x 3.7 volts (4S)
+18.5 volt battery = 5 cells x 3.7 volts (5S)
+22.2 volt battery = 6 cells x 3.7 volts (6S)
+29.6 volt battery = 8 cells x 3.7 volts (8S)
+37.0 volt battery = 10 cells x 3.7 volts (10S)
+44.4 volt battery = 12 cells x 3.7 volts (12S)
+
+
+http://www.rchelicopterfun.com/rc-lipo-batteries.html
+
+http://www.hobbyking.com/hobbyking/store/__14616__Turnigy_nano_tech_5000mah_6S_45_90C_Lipo_Pack.html

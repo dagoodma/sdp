@@ -1,0 +1,13 @@
+
+UART to USB Interfaces
+-----------------------
+($9.50) FTDI - UMFT230XB Breakout
+    http://www.digikey.com/product-detail/en/UMFT230XB-01/768-1117-ND/3029128
+
+($15.35) FTDI - UM232H-B (245 FIFO, JTAG, UART, I2C, SPI, GPIO)
+    http://www.ftdichip.com/Support/Documents/DataSheets/Modules/DS_UM232H-B.pdf
+    http://www.digikey.com/product-detail/en/UM232H-B-WE/768-1161-ND/3770838
+
+
+**($14.99) Microchip - MCP2200
+    http://www.digikey.com/product-detail/en/ADM00393/ADM00393-ND/3671394

@@ -1,0 +1,34 @@
+Install drivers for FTDI, UART USB-Serial:
+    http://www.ftdichip.com/FTDrivers.htm
+
+Plug GPS devices in one at a time and record port names (*nix) or numbers
+(windows) for each device. Enter these values into the portnums section
+for each device in gps_autoconf.m
+
+Run gps_autoconf.m is matlab. You will see:
+    Connected to Locosys
+    Connected to Mediatek
+    Connected to Ublox
+    Connected to San_Jose
+    Connected to Sirf_Star
+
+Use fscanf n matlab to print messages from a device. Locosys for example:
+    > out = fscanf(ports{locosys})
+    out =
+    GGA,000525.836,,,,,0,0,,,M,,M,,*47
+    > out = fscanf(ports{locosys})
+    out =
+    ...
+    $GPRMC,000525.836,V,,,,,0.00,0.00,060180,,,N*4D
+    $PMTK001,220,3*30
+    $PMTK001,314,3*36
+    $GPGGA,000526.836,,,,,0,0,,,M,,M,
+    $GPRMC,000542.836,V,,,,,0.00,0.00,060180,,,N*4C
+    $GPGGA,000527.836,,,,,0,0,,,M,,M,,*45
+    $GPRMC,000527.836,V,,,,,0.00,0.00,060180,,,N*4F
+    $GPGGA,000528.836,,,,,0,0,,,M,,M,,*4A
+
+    Note that the above results were obtains when running the scripts indoors.
+
+
+Verify timestamps at 1 Hz. See Messages for an explaination.

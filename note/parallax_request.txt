@@ -1,0 +1,11 @@
+Hello,
+
+We are a team of robotics engineering students at the University of California, Santa Cruz. For our senior capstone project we are working to build an autonomous robot that will be used to aid drowning victims in the ocean and on local beaches. In order to accomplish this, we require wireless communication between the robot and a ground station on the shore, with a working range of up to 2,500 feet. We were interested in using the XBee Pro because we have experience with the standard XBee model, and we believe that the pro model will meet our requirements in terms of distance and power consumption.
+
+As undergraduate students we are working with a very limited budget. We would like to use your XBee devices in our project, but unfortunately we lack the resources to purchase them. We would greatly appreciate your donation of three XBee PRO 60mW Chip Antennas (802.15.4). We are highly dedicated and care very much about our project. We strongly believe that it could help to save lives by keeping our beaches safe. In exchange for your generous contribution, we would be happy to credit Parallax and the XBee Pro. Thank you very much for your time and consideration. Regardless of your response to this request, we look forward to using your devices in the future.
+
+Sincerely,
+
+John Ash, David Goodman, Darrel Deo, Shehadeh Dejani,
+Autonomous Lifeguard Project,
+University of California, Santa Cruz.
