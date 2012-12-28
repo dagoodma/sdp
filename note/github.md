@@ -47,20 +47,24 @@ done.
     git config --global user.email your@email.com
 
 
-Add/create a repository 
------------------------
+Add/create a fresh repository 
+----------------------------
 
-Next steps:
-  mkdir sdp
-  cd sdp
-  git init
-  touch README.md
-  git add README.md
-  git commit -m 'Initial commit.'
-  git remote add origin git@github.com:username/sdp.git
-  git push -u origin master
+Be sure to see: http://help.github.com/create-a-repo/ for more info.
+
+### Create a new local and push to GitHub
+
+    mkdir sdp
+    cd sdp
+    git init
+    touch README.md
+    git add README.md
+    git commit -m 'Initial commit.'
+    git remote add origin git@github.com:username/sdp.git
+    git push -u origin master
       
-Existing Git Repo?
-  cd existing_git_repo
-  git remote add origin git@github.com:username/sdp.git
-  git push -u origin master
+### Push from existing Git Repo
+
+    cd existing_git_repo
+    git remote add origin git@github.com:username/sdp.git
+    git push -u origin master
