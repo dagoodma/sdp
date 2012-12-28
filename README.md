@@ -22,7 +22,7 @@
 
 Autonomous Lifeguard -- Senior Design Project for UCSC
 
-*   Website: http://qgroundcontrol.org/mavlink/
+*   Website: http://
 *   Source: https://github.com/dagoodma/sdp
 *   Mailing list: [Google Groups](https://groups.google.com/a/ucsc.edu/forum/#!forum/albs-group)
 
