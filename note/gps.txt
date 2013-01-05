@@ -7,10 +7,13 @@ Frequencies:
 * L3 (Nuclear Detonation, 1381.05 MHz):
 
 Technologies:
-* GPS/GNSS (Sat Nav): US, 32 MEO satellites in 6 orbital planes, CDMA, L1 & L2,  small electronics, LOS radio, LAT/LON/ALT
-* GLONASS: Russia, FDMA/CDMA, 
+* GPS/GNSS (Sat Nav): US, 32 MEO satellites in 6 orbital planes, CDMA, L1 & L2,  small electronics, LOS radio, LAT/LON/ALT, SBAS
+* SBAS:  WADGPS, wide area DGPS, ground stations broadcast error to satellites who share
+* WAGE: DOD military SBAS
+* GLONASS: Russia, FDMA/CDMA, SBAS
 * Galileo: EU, CDMA, 
-* GLONASS: Soviet systems
+* EGNOS: EU, SBAS augmentation overlay system
+* GLONASS: Soviet systems, SBAS
 
 
 Precision:

@@ -1,0 +1,9 @@
+Barometric Pressure Sensor - BMP085 Breakout (sparkfun)
+https://www.sparkfun.com/products/9694
+
+digital pressure sensor by Bosch
+range: +9000m .. -500m above sea level
+features: temperature, I2C, calibrated, MSL 1
+
+piezo resistive sensor
+data: pressure (16-19 bits), temp. (16 bits)

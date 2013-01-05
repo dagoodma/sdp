@@ -8,4 +8,5 @@ Repository Structure
 * _src_ - C source code files.
 * _t_ - Unit tests and harnesses.
 * _tool_ - Tools and utilities.
+* _example_ - Example code.
 

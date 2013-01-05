@@ -1,0 +1,41 @@
+Estimation of Total Electron Content and Instrumental Biases of Low Latitude Global Positioning System Stations Using Kalman Filter
+http://apps.webofknowledge.com.oca.ucsc.edu/full_record.do?product=WOS&search_mode=Refine&qid=2&SID=1Cm1E3ChOC4Bi2kkjjK&page=1&doc=6
+
+Author(s): Sunehra, D (Sunehra, Dhiraj)1; Satyanarayana, K (Satyanarayana, K.)3; Viswanadh, CS (Viswanadh, C. S.)2; Sarma, AD (Sarma, A. D.)2
+Source: IETE JOURNAL OF RESEARCH  Volume: 56   Issue: 5   Pages: 235-241   DOI: 10.4103/0377-2063.72772   Published: SEP-OCT 2010
+Times Cited: 0 (from Web of Science)
+Cited References: 21 [ view related records ]     Citation Map     
+Abstract:
+    In order to achieve the required navigation accuracy for satellite based
+    augmentation system (SBAS) applications, the ionospheric total electron content
+    (TEC) must be accurately estimated. However, measurements of TEC from the
+    Global Positioning System (GPS) observables are corrupted by instrumental delay
+    biases of satellites and receiver, measurement noise and multipath errors. In
+    this investigation, an algorithm based on the Kalman filter is developed for
+    the estimation of TEC and instrumental biases, using single station data in
+    contrast to multi-station technique reported elsewhere. The initial state of
+    receiver bias in the Kalman filter is chosen using a modified fitted receiver
+    bias (FRB) method. The estimated instrumental biases for several equatorial and
+    low latitude stations in the International GNSS Service (IGS) and GPS Aided Geo
+    Augmented Navigation (GAGAN) network show significant improvement.
+Accession Number: WOS:000285063200003
+Document Type: Article
+Language: English
+Author Keywords: Global positioning system; Instrumental bias; Total electron content
+KeyWords Plus: RECEIVER DIFFERENTIAL BIASES; GPS; TEC
+Reprint Address: Sunehra, D (reprint author), JNTUH Coll Engn, Jagtial 505501, Karimnagar, India.
+Addresses: 
+1. JNTUH Coll Engn, Jagtial 505501, Karimnagar, India 
+2. Osmania Univ, Res & Training Unit Nav Elect, Hyderabad 500007, Andhra Pradesh, India 
+3. Osmania Univ, Coll Engn, Hyderabad 500007, Andhra Pradesh, India
+E-mail Address: dhirajsunehra@yahoo.co.in; kjwala@yahoo.com; viswanadhcs@gmail.com; ad_sarma@yahoo.com
+Funding:
+Funding Agency  Grant Number
+Department of Science and Technology (DST), New Delhi   
+SR/S4/AS-230/03 
+[Show funding text]   
+Publisher: MEDKNOW PUBLICATIONS, B-9, KANARA BUSINESS CENTRE, OFF LINK RD, GHAKTOPAR-E, MUMBAI, 400075, INDIA
+Web of Science Categories: Engineering, Electrical & Electronic; Telecommunications
+Research Areas: Engineering; Telecommunications
+IDS Number: 691EN
+ISSN: 0377-2063

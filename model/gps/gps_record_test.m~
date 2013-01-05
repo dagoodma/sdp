@@ -1,5 +1,10 @@
-% Autoconfigures the 2 GPS devices for the lifeguard test system
+% Records geodetic position from GPS devices into files
 
+% variables
+DEBUG=1;
+record=1;
+
+%% GPS Configuration
 % device enumeration
 ublox1=1;
 ublox2=2;
@@ -19,19 +24,33 @@ clear portnums;
 portnums(ublox1)={'/dev/tty.usbserial-A1012WFD'};
 portnums(ublox2)={'/dev/tty.usbserial-A1012WEE'};
 
+% file names
+files(ublox1)={sprintf('data/%s_ublox1_geodetic',datestr(now,'yyyy.mm.dd-HHMMSS'))};
+files(ublox1)={sprintf('data/%s_ublox2_geodetic',datestr(now,'yyyy.mm.dd-HHMMSS'))};
+
 % connect to devices
 clear ports;
 %ports(ublox1) = {gps_configure_ublox(portnums(ublox1))};
 ports(ublox2) = {gps_configure_ublox(portnums(ublox2))};
 
-disp(sprintf('Success!\n'));
-
-disp(sprintf('Listening...'));
-
-% Dump messages
-while 1
-    disp(gps_read_message2(ports{ublox2}));
+if DEBUG
+    disp(sprintf('Success!\n'));
+    disp(sprintf('Listening...'));
 end
 
+%% Read GPS data
+% Dump messages
+try
+    while 1
+        disp(gps_readMessage_ubx(ports{ublox2},1));
+    end
+catch err
+    % Do nothing
+end
+
+%% Clean up
+delete(instrfindall)
+clear ports portnums names;
 
 % Done
+

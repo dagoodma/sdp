@@ -1,0 +1,47 @@
+Multi-Unmanned Aerial Vehicle (UAV) Cooperative Fault Detection Employing Differential Global Positioning (DGPS), Inertial and Vision Sensors
+http://apps.webofknowledge.com.oca.ucsc.edu/full_record.do?product=WOS&search_mode=Refine&qid=2&SID=1Cm1E3ChOC4Bi2kkjjK&page=1&doc=7
+
+Author(s): Heredia, G (Heredia, Guillermo)1; Caballero, F (Caballero, Fernando)1; Maza, I (Maza, Ivan)1; Merino, L (Merino, Luis)2; Viguria, A (Viguria, Antidio)3; Ollero, A (Ollero, Anibal)1,3
+Source: SENSORS  Volume: 9   Issue: 9   Pages: 7566-7579   DOI: 10.3390/s90907566   Published: SEP 2009
+Times Cited: 4 (from Web of Science)
+Cited References: 19 [ view related records ]     Citation Map     
+Abstract:
+    This paper presents a method to increase the reliability of Unmanned Aerial
+    Vehicle (UAV) sensor Fault Detection and Identification (FDI) in a multi-UAV
+    context. Differential Global Positioning System (DGPS) and inertial sensors are
+    used for sensor FDI in each UAV. The method uses additional position
+    estimations that augment individual UAV FDI system. These additional
+    estimations are obtained using images from the same planar scene taken from two
+    different UAVs. Since accuracy and noise level of the estimation depends on
+    several factors, dynamic replanning of the multi-UAV team can be used to obtain
+    a better estimation in case of faults caused by slow growing errors of absolute
+    position estimation that cannot be detected by using local FDI in the UAVs.
+    Experimental results with data from two real UAVs are also presented.
+Accession Number: WOS:000270213300059
+Document Type: Article
+Language: English
+Author Keywords: UAVs; fault detection and identification; multi-UAV; vision sensors; GPS
+KeyWords Plus: SYSTEMS
+Reprint Address: Heredia, G (reprint author), Univ Seville, Robot Vis & Control Grp, Camino Descubrimientos S-N, Seville 41092, Spain.
+Addresses: 
+1. Univ Seville, Robot Vis & Control Grp, Seville 41092, Spain 
+2. Pablo Olavide Univ, Seville 41013, Spain 
+3. Ctr Avanzado Tecnol Aeroespaciales CATEC, Seville 41309, Spain
+E-mail Address: guiller@cartuja.us.es; aollero@cartuja.us.es
+ResearcherID Numbers: [ ? ]
+[ 2 researcher(s) included this record in their ResearcherID My Publication List. Click to view. ]
+Funding:
+Funding Agency  Grant Number
+AWARE (European Commission)     
+IST -2006-33579 
+COMETS (European Commission)    
+IST 2001-34304 
+AEROSENS    
+DPI2005-02293 
+Spanish National Research    
+[Show funding text]   
+Publisher: MOLECULAR DIVERSITY PRESERVATION INTERNATIONAL-MDPI, KANDERERSTRASSE 25, CH-4057 BASEL, SWITZERLAND
+Web of Science Categories: Chemistry, Analytical; Electrochemistry; Instruments & Instrumentation
+Research Areas: Chemistry; Electrochemistry; Instruments & Instrumentation
+IDS Number: 499IS
+ISSN: 1424-8220

@@ -1,0 +1,38 @@
+Quantization and Colored Noises Error Modeling for Inertial Sensors for GPS/INS Integration
+http://apps.webofknowledge.com.oca.ucsc.edu/full_record.do?product=WOS&search_mode=Refine&qid=2&SID=1Cm1E3ChOC4Bi2kkjjK&page=1&doc=4
+
+Author(s): Han, SL (Han, Songlai)1,2; Wang, JL (Wang, Jinling)2
+Source: IEEE SENSORS JOURNAL  Volume: 11   Issue: 6   Pages: 1493-1503   DOI: 10.1109/JSEN.2010.2093878   Published: JUN 2011
+Times Cited: 1 (from Web of Science)
+Cited References: 34 [ view related records ]     Citation Map     
+Abstract:
+    In this paper, modeling approaches for quantization and colored noises have
+    been proposed. To accommodate the quantization noise, a modified inertial
+    navigation system (INS) error dynamics is developed in this paper, and the
+    quantization noise is incorporated into the modified INS error dynamics as
+    augmenting driving noise. The three kinds of colored noises are modeled by
+    using an equivalent differential equation driven by a unit white noise, and a
+    technique is developed in this paper to augment the Kalman Filter of GPS/INS
+    integration using this equivalent differential equation. Experimental test
+    results show that the proposed stochastic error modeling approaches for
+    quantization and colored noises significantly improves the accuracies of the
+    estimated inertial drifts and the navigation solutions.
+Accession Number: WOS:000289805300029
+Document Type: Article
+Language: English
+Author Keywords: Error modeling; GPS/INS; integration; inertial sensor; Kalman Filter
+KeyWords Plus: GYRO DRIFT RATE; NAVIGATION; SYSTEMS
+Reprint Address: Han, SL (reprint author), Natl Univ Def Technol, Coll Optoelect Sci & Engn, Changsha 410073, Hunan, Peoples R China.
+Addresses: 
+1. Natl Univ Def Technol, Coll Optoelect Sci & Engn, Changsha 410073, Hunan, Peoples R China 
+2. Univ New S Wales, Sch Surveying & Spatial Informat Syst, Sydney, NSW 2052, Australia
+E-mail Address: songlai.han@student.unsw.edu.au; Jinling.Wang@unsw.edu.au
+Funding:
+Funding Agency  Grant Number
+Chinese Scholarship Council      
+[Show funding text]   
+Publisher: IEEE-INST ELECTRICAL ELECTRONICS ENGINEERS INC, 445 HOES LANE, PISCATAWAY, NJ 08855-4141 USA
+Web of Science Categories: Engineering, Electrical & Electronic; Instruments & Instrumentation; Physics, Applied
+Research Areas: Engineering; Instruments & Instrumentation; Physics
+IDS Number: 753UN
+ISSN: 1530-437X

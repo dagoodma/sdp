@@ -1,22 +1,25 @@
-function [msg] = gps_readMessage_ubx(serial_obj)
-% [str] = gps_readMessage_ubx(serial_obj)
+function [msg] = gps_readMessage_ubx(serial_obj,use_hex_str)
+% [str] = gps_readMessage_ubx(serial_obj, use_hex_str)
 %
 % Reads a message UBX message from a UBlox GPS device and packs data
 % into cells.
 %
 % Arguments:
 %   serial_obj: a serial object
+%   use_hex_str: returns packet data as hex string when set
 %
 % Returns:
 %   a cell array containing ubx packet data
 %
 
+DEBUG = 1;
+USE_HEX_STRING = 0;
+
 if nargin < 1
     error('Missing argument ''serial_obj''')
+elseif nargin > 1
+    USE_HEX_STRING = use_hex_str;
 end
-
-DEBUG = 1;
-USE_HEX_STRING = 1;
 
 START_CHAR = 181;
 START_CHAR2 = 98;
