@@ -1,0 +1,12 @@
+118 Hainline Rd Aptos, CA 95003
+    Latitude, Longitude: 36.9709519, -121.905441
+    WKT: POINT(-121.905441 36.9709519)
+    Google Maps zoom level: 17
+    Timezone: America/Los_Angeles
+    Local time: Sat, 05 Jan 2013 10:38:38 -0800
+
+Jack Baskin School of Engineering
+1156 High Street Santa Cruz, CA 95064
+
+
+

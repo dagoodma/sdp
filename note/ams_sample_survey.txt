@@ -1,0 +1,5 @@
+Coordinate point acquisition for navigation system of nautical mobile robot application with reference base station.
+
+Coordinate point acquisition from reference base station for navigation system of nautical mobile robot application.
+
+We plan to test this product for use in our base station.
