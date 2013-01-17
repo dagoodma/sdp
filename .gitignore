@@ -1,0 +1,9 @@
+# Do not track files with the following extensions
+*~
+*.swp
+*.swo
+*.aux
+*.log
+*.tex~
+*.docx~
+*.doc~
