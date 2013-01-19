@@ -1,0 +1,12 @@
+# Do not track files with the following extensions
+~*.tmp
+*~
+~$*
+*.swp
+*.swo
+*.aux
+*.log
+*.tex~
+*.synctex.gz
+*.docx~
+*.doc~
