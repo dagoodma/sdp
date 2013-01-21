@@ -10,3 +10,5 @@
 *.synctex.gz
 *.docx~
 *.doc~
+*.pyc
+*.hex

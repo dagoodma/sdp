@@ -1,0 +1,7 @@
+*.map
+*.hex
+*/build
+*/dist
+*/nbproject/private
+*/nbproject/*.properties
+*.bash

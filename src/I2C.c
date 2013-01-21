@@ -5,6 +5,7 @@
  * Created on January 18, 2013, 3:42 PM
  */
 
+#include <xc.h>
 #include <stdio.h>
 #include <plib.h>
 #include "I2C.h"
@@ -121,3 +122,6 @@ BOOL I2C_sendByte(UINT8 data)
 
 
 }
+
+
+int main
