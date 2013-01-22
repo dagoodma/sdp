@@ -1,123 +1,109 @@
 /*
- * File:   I2C.h
- * Author: ddeo
+ * File:   I2C.c
+ * Author: Shehadeh H. Dajani
+ * Author: Darrel R. Deo
+ *
  *
  * Created on January 18, 2013, 3:42 PM
  */
-
+#include <p32xxxx.h>
 #include <stdio.h>
 #include <plib.h>
-#include "I2C.h"
 
+BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart){
+    I2C_STATUS  status;
 
-
-/*********************************************************************
- * FUNCTION:
- *  BOOl I2C_Start_Comm
- *
- * Summary:
- *  Initiates the Start Sequence command
- *
- * Description:
- *  This function sends a start (Hi-Lo on SDA line)
- *
- *
- *
- *
- *
- *
- * *******************************************************************/
-
-BOOL I2C_startComm(BOOL restart)
-{
-    //I2C explicit status for error checking
-    I2C_STATUS status;
-    I2C_RESULT result;
-
-    //If you are repeating a start signal in the event of reading
-    //from a device.
-    if(restart)
-    {
-        I2CRepeatStart(I2C1);
-    }
-    //If you are not repeating a start signal (first time initiation)
-    else
-    {
-        //Wait for the I2C bus to be idle
-        while(!I2CBusIsIdle(I2C1))
-        {
-            ;
-        }
-
-        //When the SDA line is idle, initiate a start sequence
-        result = I2CStart(I2C1);
-        
-        //If an error arrises, it is because the line is not idle
-        if (result != I2C_SUCCESS){
-            DBPRINTF("ERROR: The SDA line is not idle\n");
+// Send the Start (or Restart) signal
+    if(restart){
+        if(I2CRepeatStart(I2C_ID) != I2C_SUCCESS){
+            printf("Error: Bus collision during transfer Start\n");
             return FALSE;
         }
     }
-    //We wait for a confirmation that the start condition has been
-    //detected
-    while (!(I2CGetStatus(I2C1) & I2C_START))
-    {
-        ;
+    else{
+    // Wait for the bus to be idle, then start the transfer
+        while( !I2CBusIsIdle(I2C_ID) );
+        if(I2CStart(I2C_ID) != I2C_SUCCESS){
+            printf("Error: Bus collision during transfer Start\n");
+            return FALSE;
+        }
     }
+// Wait for the signal to complete
+    do{
+        status = I2CGetStatus(I2C_ID);
+    }
+    while (!(status & I2C_START) );
 
     return TRUE;
 }
 
+void I2C_stopTransfer(I2C_MODULE I2C_ID){
+    I2C_STATUS  status;
 
-BOOL I2C_stopComm(void)
-{
-    I2C_STATUS status;
-    I2C_RESULT result;
+// Send the Stop signal
+    I2CStop(I2C_ID);
 
-    //Initiate stop signal
-    I2CStop(I2C1);
-
-    //Confirm that stop request has been detected
-    while(!(I2CGetStatus(I2C1) & I2C_STOP))
-    {
-        ;
+// Wait for the signal to complete
+    do{
+        status = I2CGetStatus(I2C_ID);
     }
-
-    return TRUE;
-
-
+    while (!(status & I2C_STOP));
 }
 
+BOOL I2C_transmitOneByte(I2C_MODULE I2C_ID, UINT8 data){
 
-BOOL I2C_sendByte(UINT8 data)
-{
+// Wait for the transmitter to be ready
+    while(!I2CTransmitterIsReady(I2C_ID));
 
-    I2C_RESULT result;
-
-    //Check if the transmitter is ready to send out data
-    while(I2CTransmitterIsReady(I2C1) != TRUE)
-    {
-        ;
-    }
-
-    //When transmitter is ready, send a byte
-    result = I2CSendByte(I2C1,data);
-
-    //check for error if I2C wasn't able to send a byte
-    if (result != I2C_SUCCESS)
-    {
-        DBPRINTF("ERROR: Master device was not able to send a byte to slave.\n");
+// Transmit the byte and check for bus collision
+    if(I2CSendByte(I2C_ID, data) == I2C_MASTER_BUS_COLLISION){
+        printf("Error: I2C Master Bus Collision\n");
         return FALSE;
     }
 
-    //check to see if an acknowledgement was sent by the slave device
+// Wait for the transmission to finish
+    while(!I2CTransmissionHasCompleted(I2C_ID));
+    
+    return TRUE;
+}
 
+BOOL I2C_sendData(I2C_MODULE I2C_ID, UINT8 data){
+    BOOL Success = TRUE;
 
+// Initiate a single byte transmit over the I2C bus
+    if (!I2C_transmitOneByte(I2C_ID,data)){
+        Success = FALSE;
+    }
 
+// Verify that the byte was acknowledged
+    if(!I2CByteWasAcknowledged(I2C_ID)){
+        printf("Error: Sent byte was not acknowledged\n");
+        Success = FALSE;
+    }
+    return Success;
+}
 
+short I2C_getData(I2C_MODULE I2C_ID){
+    BOOL Success = TRUE;
 
+// Enables the module to receive data from the I2C bus
+    if(I2CReceiverEnable(I2C_ID, TRUE) == I2C_RECEIVE_OVERFLOW){
+        printf("Error: I2C Receive Overflow\n");
+        Success = FALSE;
+    }
+    else{
+    //wait until data is available
+        while(!I2CReceivedDataIsAvailable(I2C_ID));
+    //get a byte of data received from the I2C bus.
+        return I2CGetByte(I2C_ID);
+    }
+}
 
+void I2C_Init(I2C_MODULE I2C_ID, UINT32 I2C_clockFreq){
 
+// Configure Various I2C Options
+    I2CConfigure(I2C_ID, I2C_EN);
 
-
+// Set Desired Operation Frequency
+    I2CSetFrequency(I2C_ID, 40000000L, I2C_clockFreq);
 }

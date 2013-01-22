@@ -5,6 +5,10 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>../../include/I2C.h</itemPath>
+      <itemPath>../../include/serial.h</itemPath>
+      <itemPath>../../include/BOARD.h</itemPath>
+      <itemPath>../../include/timers.h</itemPath>
+      <itemPath>../../include/Barometer.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -13,7 +17,11 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>../../src/serial.c</itemPath>
+      <itemPath>../../src/BOARD.c</itemPath>
+      <itemPath>../../../../../../../CMPE118/src/timers.c</itemPath>
       <itemPath>../../src/I2C.c</itemPath>
+      <itemPath>../../src/Barometer.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -30,9 +38,9 @@
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
-        <languageToolchain>C32</languageToolchain>
-        <languageToolchainVersion>2.02</languageToolchainVersion>
-        <platform>4</platform>
+        <languageToolchain>XC32</languageToolchain>
+        <languageToolchainVersion>1.20</languageToolchainVersion>
+        <platform>3</platform>
       </toolsSet>
       <compileType>
         <linkerTool>
@@ -61,7 +69,7 @@
         <property key="enable-unroll-loops" value="false"/>
         <property key="exclude-floating-point" value="false"/>
         <property key="extra-include-directories"
-                  value="/Users/ddeo/Documents/sdp/include"/>
+                  value="C:\Users\Shehadeh\Documents\GitHub\sdp\include"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
         <property key="make-warnings-into-errors" value="false"/>
@@ -78,7 +86,10 @@
       </C32-AS>
       <C32-LD>
       </C32-LD>
+      <C32CPP>
+      </C32CPP>
       <C32Global>
+        <property key="legacy-libc" value="false"/>
       </C32Global>
       <PICkit3PlatformTool>
       </PICkit3PlatformTool>
