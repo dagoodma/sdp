@@ -45,11 +45,11 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1445274692/I2C.o ${OBJECTDIR}/main.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1445274692/I2C.o.d ${OBJECTDIR}/main.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1445274692/serial.o ${OBJECTDIR}/_ext/1445274692/BOARD.o ${OBJECTDIR}/_ext/107730879/timers.o ${OBJECTDIR}/_ext/1445274692/I2C.o ${OBJECTDIR}/_ext/1445274692/Barometer.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1445274692/serial.o.d ${OBJECTDIR}/_ext/1445274692/BOARD.o.d ${OBJECTDIR}/_ext/107730879/timers.o.d ${OBJECTDIR}/_ext/1445274692/I2C.o.d ${OBJECTDIR}/_ext/1445274692/Barometer.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/1445274692/I2C.o ${OBJECTDIR}/main.o
+OBJECTFILES=${OBJECTDIR}/_ext/1445274692/serial.o ${OBJECTDIR}/_ext/1445274692/BOARD.o ${OBJECTDIR}/_ext/107730879/timers.o ${OBJECTDIR}/_ext/1445274692/I2C.o ${OBJECTDIR}/_ext/1445274692/Barometer.o
 
 
 CFLAGS=
@@ -85,26 +85,56 @@ endif
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: compile
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
+${OBJECTDIR}/_ext/1445274692/serial.o: ../../src/serial.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1445274692 
+	@${RM} ${OBJECTDIR}/_ext/1445274692/serial.o.d 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1445274692/serial.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"C:/Users/Shehadeh/Documents/GitHub/sdp/include" -MMD -MF "${OBJECTDIR}/_ext/1445274692/serial.o.d" -o ${OBJECTDIR}/_ext/1445274692/serial.o ../../src/serial.c   
+	
+${OBJECTDIR}/_ext/1445274692/BOARD.o: ../../src/BOARD.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1445274692 
+	@${RM} ${OBJECTDIR}/_ext/1445274692/BOARD.o.d 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1445274692/BOARD.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"C:/Users/Shehadeh/Documents/GitHub/sdp/include" -MMD -MF "${OBJECTDIR}/_ext/1445274692/BOARD.o.d" -o ${OBJECTDIR}/_ext/1445274692/BOARD.o ../../src/BOARD.c   
+	
+${OBJECTDIR}/_ext/107730879/timers.o: ../../../../../../../CMPE118/src/timers.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/107730879 
+	@${RM} ${OBJECTDIR}/_ext/107730879/timers.o.d 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/107730879/timers.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"C:/Users/Shehadeh/Documents/GitHub/sdp/include" -MMD -MF "${OBJECTDIR}/_ext/107730879/timers.o.d" -o ${OBJECTDIR}/_ext/107730879/timers.o ../../../../../../../CMPE118/src/timers.c   
+	
 ${OBJECTDIR}/_ext/1445274692/I2C.o: ../../src/I2C.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1445274692 
 	@${RM} ${OBJECTDIR}/_ext/1445274692/I2C.o.d 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1445274692/I2C.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"../include" -I"../include" -I"C:/Users/dagoodma/Documents/SDP/include" -MMD -MF "${OBJECTDIR}/_ext/1445274692/I2C.o.d" -o ${OBJECTDIR}/_ext/1445274692/I2C.o ../../src/I2C.c   
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1445274692/I2C.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"C:/Users/Shehadeh/Documents/GitHub/sdp/include" -MMD -MF "${OBJECTDIR}/_ext/1445274692/I2C.o.d" -o ${OBJECTDIR}/_ext/1445274692/I2C.o ../../src/I2C.c   
 	
-${OBJECTDIR}/main.o: main.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR} 
-	@${RM} ${OBJECTDIR}/main.o.d 
-	@${FIXDEPS} "${OBJECTDIR}/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"../include" -I"../include" -I"C:/Users/dagoodma/Documents/SDP/include" -MMD -MF "${OBJECTDIR}/main.o.d" -o ${OBJECTDIR}/main.o main.c   
+${OBJECTDIR}/_ext/1445274692/Barometer.o: ../../src/Barometer.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1445274692 
+	@${RM} ${OBJECTDIR}/_ext/1445274692/Barometer.o.d 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1445274692/Barometer.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"C:/Users/Shehadeh/Documents/GitHub/sdp/include" -MMD -MF "${OBJECTDIR}/_ext/1445274692/Barometer.o.d" -o ${OBJECTDIR}/_ext/1445274692/Barometer.o ../../src/Barometer.c   
 	
 else
+${OBJECTDIR}/_ext/1445274692/serial.o: ../../src/serial.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1445274692 
+	@${RM} ${OBJECTDIR}/_ext/1445274692/serial.o.d 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1445274692/serial.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"C:/Users/Shehadeh/Documents/GitHub/sdp/include" -MMD -MF "${OBJECTDIR}/_ext/1445274692/serial.o.d" -o ${OBJECTDIR}/_ext/1445274692/serial.o ../../src/serial.c   
+	
+${OBJECTDIR}/_ext/1445274692/BOARD.o: ../../src/BOARD.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1445274692 
+	@${RM} ${OBJECTDIR}/_ext/1445274692/BOARD.o.d 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1445274692/BOARD.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"C:/Users/Shehadeh/Documents/GitHub/sdp/include" -MMD -MF "${OBJECTDIR}/_ext/1445274692/BOARD.o.d" -o ${OBJECTDIR}/_ext/1445274692/BOARD.o ../../src/BOARD.c   
+	
+${OBJECTDIR}/_ext/107730879/timers.o: ../../../../../../../CMPE118/src/timers.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/107730879 
+	@${RM} ${OBJECTDIR}/_ext/107730879/timers.o.d 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/107730879/timers.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"C:/Users/Shehadeh/Documents/GitHub/sdp/include" -MMD -MF "${OBJECTDIR}/_ext/107730879/timers.o.d" -o ${OBJECTDIR}/_ext/107730879/timers.o ../../../../../../../CMPE118/src/timers.c   
+	
 ${OBJECTDIR}/_ext/1445274692/I2C.o: ../../src/I2C.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1445274692 
 	@${RM} ${OBJECTDIR}/_ext/1445274692/I2C.o.d 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1445274692/I2C.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"../include" -I"../include" -I"C:/Users/dagoodma/Documents/SDP/include" -MMD -MF "${OBJECTDIR}/_ext/1445274692/I2C.o.d" -o ${OBJECTDIR}/_ext/1445274692/I2C.o ../../src/I2C.c   
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1445274692/I2C.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"C:/Users/Shehadeh/Documents/GitHub/sdp/include" -MMD -MF "${OBJECTDIR}/_ext/1445274692/I2C.o.d" -o ${OBJECTDIR}/_ext/1445274692/I2C.o ../../src/I2C.c   
 	
-${OBJECTDIR}/main.o: main.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR} 
-	@${RM} ${OBJECTDIR}/main.o.d 
-	@${FIXDEPS} "${OBJECTDIR}/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"../include" -I"../include" -I"C:/Users/dagoodma/Documents/SDP/include" -MMD -MF "${OBJECTDIR}/main.o.d" -o ${OBJECTDIR}/main.o main.c   
+${OBJECTDIR}/_ext/1445274692/Barometer.o: ../../src/Barometer.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1445274692 
+	@${RM} ${OBJECTDIR}/_ext/1445274692/Barometer.o.d 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1445274692/Barometer.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -I"C:/Users/Shehadeh/Documents/GitHub/sdp/include" -MMD -MF "${OBJECTDIR}/_ext/1445274692/Barometer.o.d" -o ${OBJECTDIR}/_ext/1445274692/Barometer.o ../../src/Barometer.c   
 	
 endif
 
