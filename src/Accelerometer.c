@@ -1,66 +1,34 @@
-/* 
+/*
  * File:   Barometer.c
- * Author: Shehadeh
+ * Author: David Goodman
  *
- * Created on January 21, 2013, 11:52 AM
+ * Created on January 22, 2013, 6:19 PM
  */
 
 #include <p32xxxx.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <plib.h>
-#include <math.h>
+//#include <math.h>
 #include "I2C.h"
 #include "Serial.h"
 #include "Timer.h"
 #include "Board.h"
-#include "Barometer.h"
+#include "Accelerometer.h"
 
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
-// List of registers for barometer readings
-#define SLAVE_READ_ADDRESS          0xEF
-#define SLAVE_WRITE_ADDRESS         0xEE
-#define BAROMETER_DATA_ADDRESS      0xF4
-#define TEMPERATURE_DATA_ADDRESS    0x2E
-#define PRESSURE_DATA_ADDRESS       0x34 // OSS=0
-#define PRESSURE_DATA_ADDRESS_OSS1  0x74 // OSS=1
-#define PRESSURE_DATA_ADDRESS_OSS2  0xB4 // OSS=2
-#define PRESSURE_DATA_ADDRESS_OSS3  0xF4 // OSS=3
+#define SLAVE_ADDRESS           0x1D // 0x1D if SA0 is high, 0x1C if low
 
-// Oversampling Setting
-#define OSS             0
+// List of registers for accelerometer readings
+#define WHO_AM_I_ADDRESS        0x0D
+#define OUT_X_MSB_ADDRESS       0x01
+#define XYZ_DATA_CFG_ADDRESS    0x0E
+#define CTRL_REG1_ADDRESS       0x2A
 
-// Choose proper pressure address for given OSS
-#if OSS == 1
-#define PRESSURE_DATA_ADDRESS   PRESSURE_DATA_ADDRESS_OSS1
-#elif OSS == 2
-#define PRESSURE_DATA_ADDRESS   PRESSURE_DATA_ADDRESS_OSS2
-#elif OSS == 3
-#define PRESSURE_DATA_ADDRESS   PRESSURE_DATA_ADDRESS_OSS3
-#endif
+#define WHO_AM_I_VALUE          0x2A // WHO_AM_I_ADDRESS should always be 0x2A
 
-// Set Desired Operation Frequency
-#define I2C_CLOCK_FREQ  100000
-
-// Delay for updating (minimum of 10ms)
-//  for each OSS add 15 ms; 0=15, 1=30 ,2=35
-//  (see page 18 in datasheet)
-#define UPDATE_DELAY    100 // (ms)
-
-// Calibration variable addresses
-#define AC1_ADDRESS     0xAA
-#define AC2_ADDRESS     0xAC
-#define AC3_ADDRESS     0xAE
-#define AC4_ADDRESS     0xB0
-#define AC5_ADDRESS     0xB2
-#define AC6_ADDRESS     0xB4
-#define B1_ADDRESS      0xB6
-#define B2_ADDRESS      0xB8
-#define MB_ADDRESS      0xBA
-#define MC_ADDRESS      0xBC
-#define MD_ADDRESS      0xBE
 
 // Printing debug messages over serial
 #define DEBUG
@@ -69,25 +37,8 @@
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 
-// Pick the I2C_MODULE to initialize
-I2C_MODULE      I2C_ID = I2C1;
-
-// Calibration values
-int16_t ac1;
-int16_t ac2;
-int16_t ac3;
-uint16_t ac4;
-uint16_t ac5;
-uint16_t ac6;
-int16_t b1;
-int16_t b2;
-int16_t mb;
-int16_t mc;
-int16_t md;
-
-// Converted readings
-int32_t temperature; // (degrees F)
-int32_t pressure; // (Pascal)
+// Acceleration data
+int32_t accelerationX, accelerationY, accelerationZ; // (m/s^2)
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -101,22 +52,34 @@ int32_t readSensorValue(uint8_t dataAddress);
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 
-void Barometer_init() {
-    ac1 = readData(AC1_ADDRESS);
-    ac2 = readData(AC2_ADDRESS);
-    ac3 = readData(AC3_ADDRESS);
-    ac4 = readData(AC4_ADDRESS);
-    ac5 = readData(AC5_ADDRESS);
-    ac6 = readData(AC6_ADDRESS);
-    b1 = readData(B1_ADDRESS);
-    b2 = readData(B2_ADDRESS);
-    mb = readData(MB_ADDRESS);
-    mc = readData(MC_ADDRESS);
-    md = readData(MD_ADDRESS);
+char Accelerometer_init() {
+    uint8_t c = readRegister(WHO_AM_I_ADDRESS);  // Read WHO_AM_I register
+    if (c == WHO_AM_I_VALUE)
+    {
+#ifdef DEBUG
+        printf("Accelerometer is online...");
+#endif
+    }
+    else
+    {
+#ifdef DEBUG
+        printf("Could not connect to Accelerometer: 0x%X",c);
+#endif
+        return FAILURE;
+    }
+
+    MMA8452Standby();  // Must be in standby to change registers
+
+    // Set up the full scale range to 2, 4, or 8g.
+    byte fsr = GSCALE;
+    if(fsr > 8) fsr = 8; //Easy error check
+    fsr >>= 2; // Neat trick, see page 22. 00 = 2G, 01 = 4A, 10 = 8G
+    writeRegister(XYZ_DATA_CFG, fsr);
 
     updateReadings();
     Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
 
+    return SUCCESS;
 }
 
 int32_t Barometer_getTemperatureData(void){
@@ -128,7 +91,7 @@ int32_t Barometer_getPressureData(void){
 }
 
 void Barometer_runSM() {
-    
+
     if (Timer_isExpired(TIMER_BAROMETER)) {
         updateReadings();
         Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
@@ -140,72 +103,117 @@ void Barometer_runSM() {
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
+
+
 /**
- * Function: readData
- * @param Address, The desired address to to ping for a read.
- * @return Data, (short) returns a 16-bit variable containing the desired data.
- * @remark Does the entire read process by first sending the start bit.
- * Then the slave's address and the read address is sent. Finally, the
- * Master sends a restart bit and then reads the incoming data to return.
- * @author Shehadeh H. Dajani
- * @date 2013.01.21  */
-int16_t readData( uint8_t address) {
-    BOOL Success = TRUE;
-    int8_t     msb, lsb;
-    int16_t   data;
+ * Function: readRegister
+ * @param Address to read from.
+ * @return Single byte register value, or -1 if an error occurs.
+ * @remark Connects to the device and reads the given register address.
+ * @author David Goodman
+ * @date 2013.01.22  */
+int16_t readRegister( uint8_t address) {
+    int8_t  data = 0, success = TRUE;
 
 // Send the start bit with the restart flag low
     if(!I2C_startTransfer(I2C_ID, FALSE)){
 #ifdef DEBUG
         printf("FAILED initial transfer!\n");
 #endif
-        Success = FALSE;
+        return ERROR;
     }
 // Transmit the slave's address to notify it
-    if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS)){
-        Success = FALSE;
+    if (!I2C_sendData(I2C_ID, SLAVE_ADDRESS)){
+        success = FALSE;
     }
 // Tranmit the read address module
     if(!I2C_sendData(I2C_ID,address)){
 #ifdef DEBUG
         printf("Error: Sent byte was not acknowledged\n");
 #endif
-        Success = FALSE;
+        success = FALSE;
     }
-    if(Success){
+    if(success){
     // Send a Repeated Started condition
         if(!I2C_startTransfer(I2C_ID,TRUE)){
 #ifdef DEBUG
             printf("FAILED Repeated start!\n");
 #endif
-            Success = FALSE;
+            success = FALSE;
         }
     // Transmit the address with the READ bit set
-        if (!I2C_sendData(I2C_ID, SLAVE_READ_ADDRESS)) {
-            Success = FALSE;
+        if (!I2C_sendData(I2C_ID, SLAVE_ADDRESS)) {
+            success = FALSE;
         }
     }
-    if(Success){
-    // Read the I2C bus most significan byte and send an acknowledge bit
-        msb = I2C_getData(I2C_ID);
-        I2CAcknowledgeByte(I2C1, TRUE);
-
-        while(!I2CAcknowledgeHasCompleted(I2C_ID));
-
-        if(Success){
-        // Read the I2C bus lest significant byte
-            lsb = I2C_getData(I2C_ID);
-        }
+    if(success){
+    // Read the I2C bus most significant byte and send an acknowledge bit
+        data = I2C_getData(I2C_ID);
     }
-// Send the stop bit to finidh the transfer
+    // Send the stop bit to finidh the transfer
     I2C_stopTransfer(I2C_ID);
-    if(!Success){
+    if(!success){
 #ifdef DEBUG
         printf("Data transfer unsuccessful.\n");
 #endif
-        return FALSE;
+        return ERROR;
     }
-    data = (msb << 8) + lsb;
+    return data;
+}
+
+/**
+ * Function: writeRegister
+ * @param Address to write to.
+ * @return SUCCESS or ERROR.
+ * @remark Connects to the device and writes to the given register address.
+ * @author David Goodman
+ * @date 2013.01.22  */
+int16_t writeRegister( uint8_t address, uint8_t value) {
+    int8_t  data = 0, success = TRUE;
+
+// Send the start bit with the restart flag low
+    if(!I2C_startTransfer(I2C_ID, FALSE)){
+#ifdef DEBUG
+        printf("FAILED initial transfer!\n");
+#endif
+        return ERROR;
+    }
+// Transmit the slave's address to notify it
+    if (!I2C_sendData(I2C_ID, SLAVE_ADDRESS)){
+        success = FALSE;
+    }
+// Tranmit the write address
+    if(!I2C_sendData(I2C_ID,address)){
+#ifdef DEBUG
+        printf("Error: Sent byte was not acknowledged\n");
+#endif
+        success = FALSE;
+    }
+    if(success){
+    // Send a Repeated Started condition
+        if(!I2C_startTransfer(I2C_ID,TRUE)){
+#ifdef DEBUG
+            printf("FAILED Repeated start!\n");
+#endif
+            success = FALSE;
+        }
+    // Transmit the address with the READ bit set
+        if (!I2C_sendData(I2C_ID, SLAVE_ADDRESS)) {
+            success = FALSE;
+        }
+    }
+    if(success){
+    // Read the I2C bus most significant byte and send an acknowledge bit
+        data = I2C_getData(I2C_ID);
+    }
+    // Send the stop bit to finidh the transfer
+    I2C_stopTransfer(I2C_ID);
+    if(!success){
+#ifdef DEBUG
+        printf("Data transfer unsuccessful.\n");
+#endif
+        return ERROR;
+    }
     return data;
 }
 
