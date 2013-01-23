@@ -6,3 +6,4 @@
 */nbproject/*.properties
 *.bash
 */nbproject/Makefile-local-default.mk
+*/nbproject/Makefile-default.mk

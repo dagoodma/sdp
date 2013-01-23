@@ -32,13 +32,13 @@
 
 #define LED1_
 
-void Board_Init()
+void Board_init()
 {
     //unsigned int pbclk=PB_CLOCK;
     //SYSTEMConfig(SYSTEM_CLOCK,SYS_CFG_ALL);
     //SYSTEMConfigPB(PB_CLOCK);
     //OSCSetPBDIV(2);
-    Serial_Init();
+    Serial_init();
     INTEnableSystemMultiVectoredInt();
 }
 
@@ -49,16 +49,14 @@ unsigned int Board_GetPBClock()
 
 
 
-#define BOARD_TEST
+//#define BOARD_TEST
 #ifdef BOARD_TEST
 
 
 int main(void)
 {
-    if (Board_Init()) {
+    Board_init();
         
-    }
-
     printf("If you can see this it worked");
 }
 

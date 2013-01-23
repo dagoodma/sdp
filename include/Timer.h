@@ -7,14 +7,19 @@
 #ifndef Timer_H
 #define Timer_H
 
-#include "Error.h"
-#include "Util.h"
+#include "Board.h"
 
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
 
 #define TIMER_NUMBER_MAX    16
+
+#define TIMER_ACTIVE 1
+#define TIMER_EXPIRED 1
+
+#define TIMER_NOT_ACTIVE 0
+#define TIMER_NOT_EXPIRED 0
 
 
 /**********************************************************************
@@ -34,7 +39,7 @@ void Timer_init(void);
  * @return Whether the timer was initialized.
  * @remark none
  **********************************************************************/
-bool Timer_isInitialized();
+BOOL Timer_isInitialized();
 
 /**********************************************************************
  * Function: Timer_new()
@@ -76,7 +81,7 @@ int8_t Timer_set(uint8_t timerNumber, uint16_t newTime);
  * @return TRUE if the specified timer is active and counting down.
  * @remark none
  **********************************************************************/
-bool Timer_isActive(uint8_t timerNumber);
+BOOL Timer_isActive(uint8_t timerNumber);
 
 /**********************************************************************
  * Function: Timer_isExpired()
@@ -84,7 +89,7 @@ bool Timer_isActive(uint8_t timerNumber);
  * @return TRUE if the specified timer is active and counting down.
  * @remark none
  **********************************************************************/
-bool Timer_isExpired(uint8_t timerNumber);
+BOOL Timer_isExpired(uint8_t timerNumber);
 
 /**********************************************************************
  * Function: Timer_clear()
@@ -100,6 +105,6 @@ int8_t Timer_clear(uint8_t timerNumber);
  * @return The free running time.
  * @remark Used to measure elapsed time.
  **********************************************************************/
-uint16_t get_time(void);
+uint32_t get_time(void);
 
 #endif

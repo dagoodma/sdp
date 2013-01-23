@@ -10,8 +10,11 @@
 #ifndef Board_H
 #define	Board_H
 
-#include <stdint.h>
 #include <xc.h>
+#include <plib.h>
+#include <stdint.h>
+
+
 /*******************************************************************************
  * PUBLIC #DEFINES                                                             *
  ******************************************************************************/
@@ -22,12 +25,14 @@
 #define FALSE ((int8_t) 0)
 #define TRUE ((int8_t) 1)
 #define ERROR ((int8_t) -1)
-#define SUCCESS ((int8_t) 1)
+#define SUCCESS ((int8_t) 0)
+#define FAILURE ((int8_t) 1)
 
 
-void Board_Init();
+// Timer allocation
+#define TIMER_BAROMETER     1
+#define TIMER_TEST          15
 
-unsigned int Board_GetPBClock();
 
 #ifdef Board_H_PRIVATE_INCLUDE
 
@@ -47,5 +52,12 @@ unsigned int Board_GetPBClock();
 #define BOARD_LED5_LAT
 
 #endif
+
+/*******************************************************************************
+ * Public Functions                                                            *
+ ******************************************************************************/
+void Board_init();
+uint32_t Board_GetPBClock();
+
 #endif	/* Board_H */
 

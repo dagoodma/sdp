@@ -39,49 +39,49 @@
  Max Dunne, 2011.11.10 0905
  ****************************************************************************/
 /**
- * Function: Serial_Init
+ * Function: Serial_init
  * @param None
  * @return SUCCESS or ERROR.
  * @remark Initializes the UART subsystem to 115200 and sets up the circular buffer
  * @author Max Dunne
  * @date 2011.11.10  */
-char Serial_Init(void);
+char Serial_init(void);
 
 /**
- * Function: Serial_PutChar
+ * Function: Serial_putChar
  * @param ch, the char to be sent
  * @return None
  * @remark adds character to circular buffer and starts the uart transmitting
  *          if not already
  * @author Max Dunne
  * @date 2011.11.10  */
-void Serial_PutChar(char ch);
+void Serial_putChar(char ch);
 
 /**
- * Function: Serial_GetChar
+ * Function: Serial_getChar
  * @param None
  * @return character or 0
  * @remark retrieves first character from the receive buffer or 0
  * @author Max Dunne
  * @date 2011.11.10  */
-char Serial_GetChar(void);
+char Serial_getChar(void);
 
 /**
- * Function: Serial_IsTransmitEmpty
+ * Function: Serial_isTransmitEmpty
  * @param None
  * @return TRUE or FALSE
  * @remark returns the state of the transmit buffer
  * @author Max Dunne
  * @date 2011.12.15  */
-char Serial_IsTransmitEmpty(void);
+char Serial_isTransmitEmpty(void);
 
 /**
- * Function: Serial_IsReceiveEmpty
+ * Function: Serial_isReceiveEmpty
  * @param None
  * @return TRUE or FALSE
  * @remark returns the state of the receive buffer
  * @author Max Dunne
  * @date 2011.12.15  */
-char Serial_IsReceiveEmpty(void);
+char Serial_isReceiveEmpty(void);
 
 #endif // Serial_H

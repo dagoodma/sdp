@@ -11,10 +11,10 @@
  */
 
 #include <xc.h>
-#include <Serial.h>
 #include <peripheral/uart.h>
-#include <Board.h>
 #include <stdint.h>
+#include "Board.h"
+#include "Serial.h"
 //#include <plib.h>
 //#include <stdlib.h>
 
@@ -84,7 +84,7 @@ CBRef receiveBuffer;
  Max Dunne, 2011.11.10 
  ****************************************************************************/
 
-char Serial_Init(void)
+char Serial_init(void)
 {
     transmitBuffer = (struct CircBuffer*) &outgoingUart; //set up buffer for receive
     newCircBuffer(transmitBuffer);
@@ -107,7 +107,7 @@ char Serial_Init(void)
 
 /****************************************************************************
  Function
-     Serial_PutChar
+     Serial_putChar
 
  Parameters
     char ch, the char to be sent out the serial port
@@ -126,7 +126,7 @@ char Serial_Init(void)
 
 
 
-void Serial_PutChar(char ch)
+void Serial_putChar(char ch)
 {
     if (getLength(transmitBuffer) != QUEUESIZE) {
         writeBack(transmitBuffer, ch);
@@ -138,7 +138,7 @@ void Serial_PutChar(char ch)
 
 /****************************************************************************
  Function
-     Serial_GetChar
+     Serial_getChar
 
  Parameters
      None.
@@ -154,7 +154,7 @@ void Serial_PutChar(char ch)
  Author
  Max Dunne, 2011.11.10
  ****************************************************************************/
-char Serial_GetChar(void)
+char Serial_getChar(void)
 {
     char ch;
     if (getLength(receiveBuffer) == 0) {
@@ -186,7 +186,7 @@ char Serial_GetChar(void)
  ****************************************************************************/
 void _mon_putc(char c)
 {
-    Serial_PutChar(c);
+    Serial_putChar(c);
 }
 
 /****************************************************************************
@@ -212,7 +212,7 @@ void _mon_puts(const char* s)
 {
     int i;
     for (i = 0; i<sizeof (s); i++)
-        Serial_PutChar(s[i]);
+        Serial_putChar(s[i]);
 }
 
 /****************************************************************************
@@ -238,12 +238,12 @@ int _mon_getc(int canblock)
 {
     if (getLength(receiveBuffer) == 0)
         return -1;
-    return Serial_GetChar();
+    return Serial_getChar();
 }
 
 /****************************************************************************
  Function
-    Serial_IsReceiveEmpty
+    Serial_isReceiveEmpty
 
  Parameters
      None.
@@ -259,7 +259,7 @@ int _mon_getc(int canblock)
  Author
  Max Dunne, 2011.12.15
  ****************************************************************************/
-char Serial_IsReceiveEmpty(void)
+char Serial_isReceiveEmpty(void)
 {
     if (getLength(receiveBuffer) == 0)
         return TRUE;
@@ -268,7 +268,7 @@ char Serial_IsReceiveEmpty(void)
 
 /****************************************************************************
  Function
-    Serial IsTransmitEmpty
+    Serial_isTransmitEmpty
 
  Parameters
      None.
@@ -284,7 +284,7 @@ char Serial_IsReceiveEmpty(void)
  Author
  Max Dunne, 2011.12.15
  ****************************************************************************/
-char Serial_IsTransmitEmpty(void)
+char Serial_isTransmitEmpty(void)
 {
     if (getLength(transmitBuffer) == 0)
         return TRUE;
@@ -505,15 +505,14 @@ unsigned char getOverflow(CBRef cB)
 
 int main(void)
 {
-    Serial_Init();
-    Board_Init();
+    Board_init();
     printf("\r\nUno Serial Test Harness\r\nAfter this Message the terminal should mirror anything you type.\r\n");
 
     unsigned char ch = 0;
     while (1) {
-        if (Serial_IsTransmitEmpty() == TRUE)
-            if (Serial_IsReceiveEmpty() == FALSE)
-                Serial_PutChar(Serial_GetChar());
+        if (Serial_isTransmitEmpty() == TRUE)
+            if (Serial_isReceiveEmpty() == FALSE)
+                Serial_putChar(Serial_getChar());
     }
 
     return 0;

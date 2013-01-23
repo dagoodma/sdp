@@ -6,9 +6,28 @@
  *
  * Created on January 18, 2013, 3:42 PM
  */
-#include <p32xxxx.h>
+//include <p32xxxx.h>
+#include <xc.h>
 #include <stdio.h>
 #include <plib.h>
+#include <stdint.h>
+
+
+/***********************************************************************
+ * PRIVATE DEFINITIONS                                                 *
+ ***********************************************************************/
+
+// Printing debug messages over serial
+#define DEBUG
+
+/***********************************************************************
+ * PRIVATE VARIABLES                                                   *
+ ***********************************************************************/
+
+/***********************************************************************
+ * PUBLIC FUNCTIONS                                                    *
+ ***********************************************************************/
+
 
 BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart){
     I2C_STATUS  status;
@@ -16,7 +35,9 @@ BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart){
 // Send the Start (or Restart) signal
     if(restart){
         if(I2CRepeatStart(I2C_ID) != I2C_SUCCESS){
+#ifdef DEBUG
             printf("Error: Bus collision during transfer Start\n");
+#endif
             return FALSE;
         }
     }
@@ -24,7 +45,9 @@ BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart){
     // Wait for the bus to be idle, then start the transfer
         while( !I2CBusIsIdle(I2C_ID) );
         if(I2CStart(I2C_ID) != I2C_SUCCESS){
+#ifdef DEBUG
             printf("Error: Bus collision during transfer Start\n");
+#endif
             return FALSE;
         }
     }
@@ -50,14 +73,16 @@ void I2C_stopTransfer(I2C_MODULE I2C_ID){
     while (!(status & I2C_STOP));
 }
 
-BOOL I2C_transmitOneByte(I2C_MODULE I2C_ID, UINT8 data){
+BOOL I2C_transmitOneByte(I2C_MODULE I2C_ID, uint8_t data) {
 
 // Wait for the transmitter to be ready
     while(!I2CTransmitterIsReady(I2C_ID));
 
 // Transmit the byte and check for bus collision
     if(I2CSendByte(I2C_ID, data) == I2C_MASTER_BUS_COLLISION){
+#ifdef DEBUG
         printf("Error: I2C Master Bus Collision\n");
+#endif
         return FALSE;
     }
 
@@ -67,28 +92,30 @@ BOOL I2C_transmitOneByte(I2C_MODULE I2C_ID, UINT8 data){
     return TRUE;
 }
 
-BOOL I2C_sendData(I2C_MODULE I2C_ID, UINT8 data){
-    BOOL Success = TRUE;
-
-// Initiate a single byte transmit over the I2C bus
+BOOL I2C_sendData(I2C_MODULE I2C_ID, uint8_t data){
+    // Initiate a single byte transmit over the I2C bus
     if (!I2C_transmitOneByte(I2C_ID,data)){
-        Success = FALSE;
+        return FALSE;
     }
 
-// Verify that the byte was acknowledged
+    // Verify that the byte was acknowledged
     if(!I2CByteWasAcknowledged(I2C_ID)){
+#ifdef DEBUG
         printf("Error: Sent byte was not acknowledged\n");
-        Success = FALSE;
+#endif
+        return FALSE;
     }
-    return Success;
+    return TRUE;
 }
 
-short I2C_getData(I2C_MODULE I2C_ID){
+int16_t I2C_getData(I2C_MODULE I2C_ID){
     BOOL Success = TRUE;
 
 // Enables the module to receive data from the I2C bus
     if(I2CReceiverEnable(I2C_ID, TRUE) == I2C_RECEIVE_OVERFLOW){
+#ifdef DEBUG
         printf("Error: I2C Receive Overflow\n");
+#endif
         Success = FALSE;
     }
     else{
@@ -97,13 +124,14 @@ short I2C_getData(I2C_MODULE I2C_ID){
     //get a byte of data received from the I2C bus.
         return I2CGetByte(I2C_ID);
     }
+    return Success;
 }
 
-void I2C_Init(I2C_MODULE I2C_ID, UINT32 I2C_clockFreq){
+void I2C_init(I2C_MODULE I2C_ID, uint32_t I2C_clockFreq) {
 
 // Configure Various I2C Options
     I2CConfigure(I2C_ID, I2C_EN);
 
 // Set Desired Operation Frequency
-    I2CSetFrequency(I2C_ID, 40000000L, I2C_clockFreq);
+    I2CSetFrequency(I2C_ID, Board_GetPBClock(), I2C_clockFreq);
 }

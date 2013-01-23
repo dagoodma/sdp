@@ -8,66 +8,165 @@
 #include <p32xxxx.h>
 #include <stdio.h>
 #include <plib.h>
-#include "I2C.h"
-#include "serial.h"
-#include "timers.h"
 #include <math.h>
+#include "I2C.h"
+#include "Serial.h"
+#include "Timer.h"
+#include "Board.h"
+
+
+/***********************************************************************
+ * PRIVATE DEFINITIONS                                                 *
+ ***********************************************************************/
+// List of registers for barometer readings
+#define SLAVE_READ_ADDRESS          0xEF
+#define SLAVE_WRITE_ADDRESS         0xEE
+#define BAROMETER_DATA_ADDRESS      0xF4
+#define TEMPERATURE_DATA_ADDRESS    0x2E
+#define PRESSURE_DATA_ADDRESS       0x34
+
+// Calibration variable addresses
+#define AC1_ADDRESS     0xAA
+#define AC2_ADDRESS     0xAC
+#define AC3_ADDRESS     0xAE
+#define AC4_ADDRESS     0xB0
+#define AC5_ADDRESS     0xB2
+#define AC6_ADDRESS     0xB4
+#define B1_ADDRESS      0xB6
+#define B2_ADDRESS      0xB8
+#define MB_ADDRESS      0xBA
+#define MC_ADDRESS      0xBC
+#define MD_ADDRESS      0xBE
+
+// Oversampling Setting
+#define OSS             0
+
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000
+
+// Delay for updating
+#define UPDATE_DELAY    100 // (ms)
+
+// Printing debug messages over serial
+#define DEBUG
+
+/***********************************************************************
+ * PRIVATE VARIABLES                                                   *
+ ***********************************************************************/
 
 // Pick the I2C_MODULE to initialize
-    I2C_MODULE      I2C_ID = I2C1;
-// Set Desired Operation Frequency
-    UINT32          I2C_CLOCK_FREQ = 100000;
-// List of registers for barometer readings
-    #define         slaveReadAddress 0xEF
-    #define         slaveWriteAddress 0xEE
-    #define         barometerDataAddress 0xF4
-    #define         temperatureDataAddress 0x2E
-    #define         pressureDataAddress 0x34
-// Oversampling Setting
-    #define         OSS 0
-// Calibration values
-    short           ac1;
-    short           ac2;
-    short           ac3;
-    unsigned short  ac4;
-    unsigned short  ac5;
-    unsigned short  ac6;
-    short           b1;
-    short           b2;
-    short           mb;
-    short           mc;
-    short           md;
-// Converted temperature values in fahrenheit and pressure readings in pascals
-    long            temperature;
-    long            pressure;
+I2C_MODULE      I2C_ID = I2C1;
 
-short readData( unsigned char address){
+// Calibration values
+int16_t ac1;
+int16_t ac2;
+int16_t ac3;
+uint16_t ac4;
+uint16_t ac5;
+uint16_t ac6;
+int16_t b1;
+int16_t b2;
+int16_t mb;
+int16_t mc;
+int16_t md;
+
+// Converted readings
+int32_t temperature; // (degrees F)
+int32_t pressure; // (Pascal)
+
+/***********************************************************************
+ * PRIVATE PROTOTYPES                                                  *
+ ***********************************************************************/
+
+void updateReadings();
+int16_t readData( uint8_t address);
+int32_t readSensorValue(uint8_t dataAddress);
+
+/***********************************************************************
+ * PUBLIC FUNCTIONS                                                    *
+ ***********************************************************************/
+
+void Barometer_init() {
+    ac1 = readData(AC1_ADDRESS);
+    ac2 = readData(AC2_ADDRESS);
+    ac3 = readData(AC3_ADDRESS);
+    ac4 = readData(AC4_ADDRESS);
+    ac5 = readData(AC5_ADDRESS);
+    ac6 = readData(AC6_ADDRESS);
+    b1 = readData(B1_ADDRESS);
+    b2 = readData(B2_ADDRESS);
+    mb = readData(MB_ADDRESS);
+    mc = readData(MC_ADDRESS);
+    md = readData(MD_ADDRESS);
+
+    updateReadings();
+    Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
+
+}
+
+int32_t Barometer_getTemperatureData(void){
+    return temperature;
+}
+
+int32_t Barometer_getPressureData(void){
+    return pressure;
+}
+
+void Barometer_runSM() {
+    
+    if (Timer_isExpired(TIMER_BAROMETER)) {
+        updateReadings();
+        Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
+    }
+}
+
+
+/*******************************************************************************
+ * PRIVATE FUNCTIONS                                                          *
+ ******************************************************************************/
+
+/**
+ * Function: readData
+ * @param Address, The desired address to to ping for a read.
+ * @return Data, (short) returns a 16-bit variable containing the desired data.
+ * @remark Does the entire read process by first sending the start bit.
+ * Then the slave's address and the read address is sent. Finally, the
+ * Master sends a restart bit and then reads the incoming data to return.
+ * @author Shehadeh H. Dajani
+ * @date 2013.01.21  */
+int16_t readData( uint8_t address) {
     BOOL Success = TRUE;
-    char     msb, lsb;
-    short   data;
+    int8_t     msb, lsb;
+    int16_t   data;
 
 // Send the start bit with the restart flag low
     if(!I2C_startTransfer(I2C_ID, FALSE)){
+#ifdef DEBUG
         printf("FAILED initial transfer!\n");
+#endif
         Success = FALSE;
     }
 // Transmit the slave's address to notify it
-    if (!I2C_sendData(I2C_ID,slaveWriteAddress)){
+    if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS)){
         Success = FALSE;
     }
 // Tranmit the read address module
     if(!I2C_sendData(I2C_ID,address)){
+#ifdef DEBUG
         printf("Error: Sent byte was not acknowledged\n");
+#endif
         Success = FALSE;
     }
     if(Success){
     // Send a Repeated Started condition
         if(!I2C_startTransfer(I2C_ID,TRUE)){
+#ifdef DEBUG
             printf("FAILED Repeated start!\n");
+#endif
             Success = FALSE;
         }
     // Transmit the address with the READ bit set
-        if (!I2C_sendData(I2C_ID,slaveReadAddress)){
+        if (!I2C_sendData(I2C_ID, SLAVE_READ_ADDRESS)) {
             Success = FALSE;
         }
     }
@@ -86,77 +185,96 @@ short readData( unsigned char address){
 // Send the stop bit to finidh the transfer
     I2C_stopTransfer(I2C_ID);
     if(!Success){
+#ifdef DEBUG
         printf("Data transfer unsuccessful.\n");
-        return 1;
+#endif
+        return FALSE;
     }
     data = (msb << 8) + lsb;
     return data;
 }
 
-long readSensorValue(unsigned char dataAddress){
+/**
+ * Function: readSensorValue
+ * @param DataAddress, The I2C bus line that will be used
+ * @return Data, (long) send back the temperature or pressure raw value
+ * @remark Notifies the barometer to send back either temperature or pressure
+ * data.
+ * @author Shehadeh H. Dajani
+ * @date 2013.01.21  */
+int32_t readSensorValue(uint8_t dataAddress) {
     BOOL Success = TRUE;
-    long data = 0;
+    int32_t data = 0;
 
 //Send the start bit to notify that a transmission is starting
     if(!I2C_startTransfer(I2C_ID, FALSE)){
+#ifdef DEBUG
         printf("FAILED initial transfer!\n");
+#endif
         Success = FALSE;
     }
 // Transmit the slave's address to notify it
-    if (!I2C_sendData(I2C_ID,slaveWriteAddress)){
+    if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS)){
         Success = FALSE;
     }
-    if(!I2C_sendData(I2C_ID,barometerDataAddress)){
+    if(!I2C_sendData(I2C_ID, BAROMETER_DATA_ADDRESS)){
+#ifdef DEBUG
         printf("Error: Sent byte was not acknowledged\n");
+#endif
         Success = FALSE;
     }
 // Tranmit the read address module
     if(!I2C_sendData(I2C_ID,dataAddress)){
+#ifdef DEBUG
         printf("Error: Sent byte was not acknowledged\n");
+#endif
         Success = FALSE;
     }
 // End the tranmission
     I2C_stopTransfer(I2C_ID);
     if(!Success){
+#ifdef DEBUG
         printf("Data transfer unsuccessful.\n");
+#endif
         return 1;
     }
 // Wait while the sensor gets the desired data in the correct register
-    InitTimer(1,10);
-    while(!IsTimerExpired(1));	// max time is 4.5ms
+    Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
+    while(!Timer_isExpired(TIMER_BAROMETER));	// max time is 4.5ms
 
 // Read the address that has the desired data: temperature or pressure
     data = readData(0xF6);
     return data;
 }
 
-long Barometer_getTemperatureData(void){
-    return temperature;
-}
-
-long Barometer_getPressureData(void){
-    return pressure;
-}
-
-void convert(long* temperature, long* pressure){
-    long ut;
-    long up;
+/**
+ * Function: updateReadings
+ * @return
+ * @remark Gets the raw temperature and pressure readings and then converts
+ * them into actual readings. The final readings are stored into the
+ * temperature and pressure variables for future access.
+ * @author Shehadeh H. Dajani
+ * @date 2013.01.21  */
+void updateReadings() {
+    int32_t ut;
+    int32_t up;
     int x1, x2, b5, b6, x3, b3, p;
     unsigned int b4, b7;
 
 // Read the pressure and temperature values from the sensor.
-    up = readSensorValue(pressureDataAddress);
+    up = readSensorValue(PRESSURE_DATA_ADDRESS);
     up &= 0x0000FFFF;
-    ut = readSensorValue(temperatureDataAddress);	// some bug here, have to read twice to get good data
-
+    ut = readSensorValue(TEMPERATURE_DATA_ADDRESS); // some bug here, have to read twice to get good data
+#ifdef DEBUG
     printf("Raw Pressure: %ld\nRaw Temperature: %ld\n",up,ut);
+#endif
 
  // Temperature conversion
-    x1 = ((long)ut - ac6) * ac5 >> 15;
-    x2 = ((long) mc << 11) / (x1 + md);
+    x1 = ((int32_t)ut - ac6) * ac5 >> 15;
+    x2 = ((int32_t) mc << 11) / (x1 + md);
     b5 = x1 + x2;
-    long init_temperature = (b5 + 8) >> 4;
-    *temperature  = init_temperature/10 * 9/5 + 32;
+    int32_t init_temperature = (b5 + 8) >> 4;
+    temperature  = init_temperature/10 * 9/5 + 32;
     /*
     printf("UT = %d\n",ut);
     printf("X1 = %d\n",x1);
@@ -172,8 +290,8 @@ void convert(long* temperature, long* pressure){
     x1 = ac3 * b6 >> 13;
     x2 = (b1 * (b6 * b6 >> 12)) >> 16;
     x3 = ((x1 + x2) + 2) >> 2;
-    b4 = (ac4 * (unsigned long) (x3 + 32768)) >> 15;
-    b7 = ((unsigned long) up - b3) * (50000 >> OSS);
+    b4 = (ac4 * (uint32_t) (x3 + 32768)) >> 15;
+    b7 = ((uint32_t) up - b3) * (50000 >> OSS);
     if(b7 < 0x80000000){
         p = (b7 * 2)/b4;
     }
@@ -183,8 +301,8 @@ void convert(long* temperature, long* pressure){
     x1 = (p >> 8) * (p >> 8);
     x1 = (x1 * 3038) >> 16;
     x2 = (-7357 * p) >> 16;
-    *pressure = p + ((x1 + x2 + 3791) >> 4);
-/*
+    pressure = p + ((x1 + x2 + 3791) >> 4);
+#ifdef DEBUG_VERBOSE
     printf("B6 = %d\n",b6);
     printf("X1 = %d\n",x1);
     printf("X2 = %d\n",x2);
@@ -199,31 +317,28 @@ void convert(long* temperature, long* pressure){
     printf("X1 = %d\n",x1);
     printf("X1 = %d\n",x1);
     printf("X2 = %d\n",x2);
-*/
+#endif
 }
 
+
+#define BAROMETER_TEST
+#ifdef BAROMETER_TEST
+
+#define PRINT_DELAY     1000 // (ms)
+
 int main(void) {
-    long altitude = 0;
+    int32_t altitude = 0;
     double temp = 0;
 // Initialize the UART,Timers, and I2C1
-    BOARD_Init();
-    TIMERS_Init();
-    I2C_Init(I2C_ID,I2C_CLOCK_FREQ);
+    Board_init();
+    Timer_init();
+    I2C_init(I2C_ID, I2C_CLOCK_FREQ);
+    Barometer_init();
 
 // Get all the calibration data.
     printf("\nCalibration Information:\n");
     printf("------------------------\n");
-    ac1 = readData(0xAA);
-    ac2 = readData(0xAC);
-    ac3 = readData(0xAE);
-    ac4 = readData(0xB0);
-    ac5 = readData(0xB2);
-    ac6 = readData(0xB4);
-    b1 = readData(0xB6);
-    b2 = readData(0xB8);
-    mb = readData(0xBA);
-    mc = readData(0xBC);
-    md = readData(0xBE);
+
     printf("\tAC1 = %d\n", ac1);
     printf("\tAC2 = %d\n", ac2);
     printf("\tAC3 = %d\n", ac3);
@@ -237,20 +352,25 @@ int main(void) {
     printf("\tMD = %d\n", md);
     printf("------------------------\n\n");
 
+    Timer_new(TIMER_TEST, PRINT_DELAY );
+
     while(1){
     // Convert the raw data to real values
-        convert(&temperature, &pressure);
-        printf("Temperature: %ld (in deg F)\n", Barometer_getTemperatureData());
-        printf("Pressure: %ld Pa\n", Barometer_getPressureData());
-        temp = (double) pressure/101325;
-        temp = 1-pow(temp, 0.19029);
-        altitude = 44330*temp;
-        printf("Altitude: %ld Meters\n\n", altitude);
+        if (Timer_isExpired(TIMER_TEST)) {
+            printf("Temperature: %ld (in deg F)\n", Barometer_getTemperatureData());
+            printf("Pressure: %ld Pa\n", Barometer_getPressureData());
+            temp = (double) pressure/101325;
+            temp = 1-pow(temp, 0.19029);
+            altitude = 44330*temp;
+            printf("Altitude: %ld Meters\n\n", altitude);
+            Timer_new(TIMER_TEST, PRINT_DELAY );
 
-        InitTimer(1,1000);
-        while(!IsTimerExpired(1));
+        }
+
+        Barometer_runSM();
     }
 
-    return (EXIT_SUCCESS);
+    return (SUCCESS);
 }
 
+#endif
