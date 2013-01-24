@@ -25,6 +25,9 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
+#define NUMBER_UART 1
+#define REPROGRAM_API
+ 
 uint8 xbeeInitialized = FALSE;
 uint8 xbeeApiMode = FALSE;
 
@@ -43,23 +46,25 @@ uint8 sendArray[10];
 /**********************************************************************
  * Function: Xbee_init()
  * @param An options bitfield.
- * @return none
+ * @return Failure or Success
  * @remark Initializes the Xbee module. This function will also set
  *  the correct API mode for the Xbees to be paired with each other.
  *  Options:
  *      1: Ground Station Xbee
  *      2: Boat Xbee
  **********************************************************************/
-void Xbee_init(uint8_t options) {
-    if(options == GROUND_STATION_XBEE){
-        Xbee_programInit(options);
-        xbeeInitialized = TRUE;
-    }else if(options == BOAT_XBEE){
-        Xbee_programInit(options);
-        xbeeInitialized = TRUE;
-    }else{
-        xbeeInitialized = FALSE;
+uint8_t Xbee_init(uint8_t options){
+    #ifdef REPORGRAM_XBEE
+    if( Xbee_programApi(options) == FAILURE){
+        if( Xbee_programApi(options) == FAILURE){
+            return FAILURE
+        }
     }
+    #endif
+    
+    
+    
+    xbeeInitialized = TRUE;
 }
 
 /**********************************************************************
@@ -73,35 +78,47 @@ bool Xbee_isInitialized() {
 
 
 /**********************************************************************
- * Function: Xbee_programInit()
+ * Function: Xbee_programApi()
  * @param Which Xbee is being programed, ground station or boat
  * @remark Puts the Xbee into API mode.
  **********************************************************************/
-void Xbee_programInit(uint8 whichXbee){
-    int count;
+uint8_t Xbee_programApi(uint8 whichXbee){
+    int i = 0;
+    char confirm[3];
+    //empty recieve buffer before hand.
+    
+    
     Uart2_print("+++");
-    for(count = 0; count < 14; count++){
-        if(count % 3 == 0){
-            Uart2_print("+++");
-        }
-        while(Uart2_recieve_isEmpty() == EMPTY){ };
-        if(Uart2_recieve == "Ok\n"){
-            break;
-        }
+    //wait for "OK\r"
+    do {
+        confirm[i] = UART_XBee_GetChar();
+        if (confirm[i] != 0)
+            i++;
+    } while(i < 3);
+    
+    if (!(confirm[0] == 0x4F && confirm[1] == 0x4B && confirm[2] == 0x0D)){
+        return FAILURE;
     }
-    Uart2_print("ATAP1\r"); //Why does it end in \r? // Puts it in API mode
-    Uart2_print("ATCH14\r"); //sets the channel to something other than default
-    Uart2_print("ATID7806\r"); //Pan ID, needs more research
-    Uart2_print("ATDH"); //High & Low Xbee Destination addresses. 
-    Uart2_print(whichXbee);
-    Uart2_print("\r");
-    Uart2_print("ATDL");
-    Uart2_print(whichXbee);
-    Uart2_print("\r");
-    Uart2_print("ATBD5\r");//Sets the Baud Rate
-    Uart2_print("ATWR\r");//Writes the command to memory
-    Uart2_print("ATCN\r");//Leave the menu.
+    
+    //may need delays between each command
+    
+    UART_sendData(NUMBER_UART, "ATAP1\r", 6); // Puts it in API mode
+    UART_sendData(NUMBER_UART, "ATCH14\r", 7); //sets the channel to something other than default
+    //UART_sendData(NUMBER_UART, "ATID7806\r", 9); //Pan ID, needs more research
+    //High & Low Xbee Destination addresses. 
+    /*
+    UART_sendData(NUMBER_UART, "ATDH", 4); 
+    UART_sendData(NUMBER_UART, whichXbee, ?????);
+    UART_sendData(NUMBER_UART, "\r", 1);
+    UART_sendData(NUMBER_UART, "ATDL", 4);
+    UART_sendData(NUMBER_UART, whichXbee, ??????);
+    UART_sendData(NUMBER_UART, "\r", 1);
+    */
+    UART_sendData(NUMBER_UART, "ATBD5\r", 6);//Sets the Baud Rate
+    UART_sendData(NUMBER_UART, "ATWR\r", 5);//Writes the command to memory
+    UART_sendData(NUMBER_UART, "ATCN\r", 5);//Leave the menu.
     xbeeApiMode = TRUE; 
+    return SUCCESS
 }
 
 
@@ -123,12 +140,12 @@ bool Xbee_isApi(){
 void Xbee_initSend(uint8 whichXbee){
     sendArray[0] = 0x7E; //Start character
     sendArray[1] = 0x00; //MSB of the length
-    sendArray[2] = 0x0F; //LSB of the length
+    sendArray[2] = 0x07; //LSB of the length
     sendArray[3] = 0x01; //API id
-    sendArray[4] = 0x00; //Frame ID, uncertain of what this does.
+    sendArray[4] = 0x01; //Frame ID, 0x00 turns off ackowlegments
     sendArray[5] = 0x00; //Destination Address, MSB
     sendArray[6] = 0x00; //Destination Address, LSB
-    sendArray[7] = 0x04; //Acknowlegment, page 104, maybe it's 0x00
+    sendArray[7] = 0x00; //Acknowlegment, page 104, maybe it's 0x04
     sendArray[8] = 0x00; //Start of Data
     sendArray[9] = 0x00; //CHECK SUM
     
@@ -141,11 +158,26 @@ void Xbee_initSend(uint8 whichXbee){
  * @remark Adds data to the sendArray, than sends that data over the 
  *  UART.
  **********************************************************************/
-void Xbee_sendString(string data){
+void Xbee_sendString(uint8_t data){
 //load all the GPS data into the array
 //compute the checksum
 //send the array through the UART
-//possibly load it intot the circular buffer
+//possibly load it into the circular buffer
+    uint8_t checkSum = 0xFF, x;
+
+    //fill array with data
+    sendArray[8] = data[0];
+
+    //calculate the CheckSum
+    for(x=3; x <= 8; x++){
+        checkSum -= sendArray[x];
+    }
+    sendArray[9] = checkSum;
+    
+    //send data
+    for(x = 0; x <= 9; x++){
+        UART_putChar(sendArray[x]);
+    }
 }
 
 
@@ -160,6 +192,7 @@ void Xbee_recieveData(){
 //compute the checksum
 //send the array through the UART
 //possibly load it intot the circular buffer
+
 }
 
 

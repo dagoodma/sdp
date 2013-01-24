@@ -496,7 +496,7 @@ unsigned char getOverflow(CBRef cB)
 
 
 
-//#define SERIAL_TEST
+#define SERIAL_TEST
 #ifdef SERIAL_TEST
 #include "Serial.h"
 #include "Board.h"

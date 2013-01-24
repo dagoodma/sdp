@@ -26,22 +26,41 @@
  *  functions to the system. Will return the actual baudrate initialzied.
  **********************************************************************/
 
-UINT32 UART_init(UART_MODULE id, UINT32 baudRate);
+uint32_t UART_init(UART_MODULE id, uint32_t baudRate);
 
-/**********************************************************************
- * Function: UART_sendData()
- * @param id: identifies the UART module we want to send data over
- *        data: The location of the bytes of data we want to send
- *        size: The number of bytes we want to send over the UART
- * @remark Uses blocking code to send data over the UART. Does NOT
- *  check the bytes to make sure they are not junk.
- **********************************************************************/
-void UART_sendData(UART_MODULE id, UINT8* data, int size);
+/**
+ * Function: Serial_putChar
+ * @param ch, the char to be sent
+ * @return None
+ * @remark adds character to circular buffer and starts the uart transmitting
+ *          if not already
+ * @author Max Dunne
+ * @date 2011.11.10  */
+void UART_putChar(uint8_t id, char ch);
 
-/**********************************************************************
- * Function: UART_getByte()
- * @param id: identifies the UART module we want to get data from
- * @remark 
- **********************************************************************/
-UINT16 UART_getByte(UART_MODULE id);
+/**
+ * Function: Serial_getChar
+ * @param None
+ * @return character or 0
+ * @remark retrieves first character from the receive buffer or 0
+ * @author Max Dunne
+ * @date 2011.11.10  */
+char UART_getChar(uint8_t id);
 
+/**
+ * Function: Serial_isTransmitEmpty
+ * @param None
+ * @return TRUE or FALSE
+ * @remark returns the state of the transmit buffer
+ * @author Max Dunne
+ * @date 2011.12.15  */
+char UART_isTransmitEmpty(uint8_t id);
+
+/**
+ * Function: Serial_isReceiveEmpty
+ * @param None
+ * @return TRUE or FALSE
+ * @remark returns the state of the receive buffer
+ * @author Max Dunne
+ * @date 2011.12.15  */
+char UART_isReceiveEmpty(uint8_t id);

@@ -166,7 +166,7 @@ int16_t readData( uint8_t address) {
 // Tranmit the read address module
     if(!I2C_sendData(I2C_ID,address)){
 #ifdef DEBUG
-        printf("Error: Sent byte was not acknowledged\n");
+        printf("Error: Sent byte was not acknowledged!!!\n");
 #endif
         Success = FALSE;
     }
@@ -232,14 +232,14 @@ int32_t readSensorValue(uint8_t dataAddress) {
     }
     if(!I2C_sendData(I2C_ID, BAROMETER_DATA_ADDRESS)){
 #ifdef DEBUG
-        printf("Error: Sent byte was not acknowledged\n");
+        printf("Error: Sent byte was not acknowledged!!!\n");
 #endif
         Success = FALSE;
     }
 // Tranmit the read address module
     if(!I2C_sendData(I2C_ID,dataAddress)){
 #ifdef DEBUG
-        printf("Error: Sent byte was not acknowledged\n");
+        printf("Error: Sent byte was not acknowledged!!!\n");
 #endif
         Success = FALSE;
     }
@@ -334,7 +334,7 @@ void updateReadings() {
 }
 
 
-#define BAROMETER_TEST
+//#define BAROMETER_TEST
 #ifdef BAROMETER_TEST
 
 // Set Desired Operation Frequency
@@ -346,6 +346,8 @@ int main(void) {
     double temp = 0;
 // Initialize the UART,Timers, and I2C1
     Board_init();
+    printf("HELLLLLLLLLLLLLLLLLLLLLLLLOOOOOOOOOO!");
+    printf("\nGOOODHELLLLLLLLLLLLLLLLLLLLLLLLOOOOOOOOOO!");
     Timer_init();
     I2C_init(I2C_ID, I2C_CLOCK_FREQ);
     Barometer_init();
