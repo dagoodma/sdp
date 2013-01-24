@@ -19,7 +19,7 @@
  * PUBLIC #DEFINES                                                             *
  ******************************************************************************/
 
-#define DELAY(ms)   do { int i; for (i = 0; i < (ms << 8); i++) { asm ("nop"); } } while();
+#define DELAY(ms)   do { int i; for (i = 0; i < (ms << 8); i++) { asm ("nop"); } } while(0);
 
 /*****************************************************************************/
 // Boolean defines for TRUE, FALSE, SUCCESS and ERROR
