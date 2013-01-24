@@ -36,7 +36,7 @@ BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart){
     if(restart){
         if(I2CRepeatStart(I2C_ID) != I2C_SUCCESS){
 #ifdef DEBUG
-            printf("Error: Bus collision during transfer Start\n");
+            printf("Error: Bus collision during transfer Start at Read\n");
 #endif
             return FALSE;
         }
@@ -46,7 +46,7 @@ BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart){
         while( !I2CBusIsIdle(I2C_ID) );
         if(I2CStart(I2C_ID) != I2C_SUCCESS){
 #ifdef DEBUG
-            printf("Error: Bus collision during transfer Start\n");
+            printf("Error: Bus collision during transfer Start at Write\n");
 #endif
             return FALSE;
         }

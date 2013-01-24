@@ -5,6 +5,19 @@
  * Created on January 21, 2013, 4:55 PM
  */
 
+#ifndef Barometer_H
+#define Barometer_H
+
+
+/*******************************************************************************
+ * PUBLIC #DEFINES                                                             *
+ ******************************************************************************/
+
+
+/*******************************************************************************
+ * PUBLIC FUNCTION PROTOTYPES                                                  *
+ ******************************************************************************/
+
 /**
  * Function: Barometer_getTemperatureData
  * @param
@@ -32,4 +45,4 @@ long Barometer_getPressureData(void);
  * @date 2013.01.22  */
 void Barometer_runSM();
 
-
+#endif // Barometer_H

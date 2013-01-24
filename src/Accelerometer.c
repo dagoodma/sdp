@@ -1,14 +1,13 @@
 /*
- * File:   Barometer.c
+ * File:   Accelerometer.c
  * Author: David Goodman
  *
  * Created on January 22, 2013, 6:19 PM
  */
 
-#include <p32xxxx.h>
-//#include <stdio.h>
+#include <xc.h>
+#include <stdio.h>
 #include <plib.h>
-//#include <math.h>
 #include "I2C.h"
 #include "Serial.h"
 #include "Timer.h"
@@ -20,6 +19,8 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 #define SLAVE_ADDRESS           0x1D // 0x1D if SA0 is high, 0x1C if low
+#define SLAVE_WRITE_ADDRESS     0x3A//((SLAVE_ADDRESS << 1) + 0)
+#define SLAVE_READ_ADDRESS      0x3B//((SLAVE_ADDRESS << 1) + 1)
 
 // List of registers for accelerometer readings
 #define WHO_AM_I_ADDRESS        0x0D
@@ -29,6 +30,10 @@
 
 #define WHO_AM_I_VALUE          0x2A // WHO_AM_I_ADDRESS should always be 0x2A
 
+// Options
+#define GSCALE          2 // Sets full-scale range to +/-2, 4, or 8g. Used to calc real g values.
+
+#define UPDATE_DELAY    50 // (ms) delay for reading
 
 // Printing debug messages over serial
 #define DEBUG
@@ -36,25 +41,35 @@
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
+// Pick the I2C_MODULE to initialize
+I2C_MODULE      I2C_ID = I2C1;
 
 // Acceleration data
 int32_t accelerationX, accelerationY, accelerationZ; // (m/s^2)
+
+struct {
+    uint16_t x, y ,z;
+} gCount;
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
 
 void updateReadings();
-int16_t readData( uint8_t address);
-int32_t readSensorValue(uint8_t dataAddress);
+void setActiveMode();
+void setStandbyMode();
+int16_t readRegister( uint8_t address);
+int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest );
+int16_t writeRegister( uint8_t address, uint8_t data );
+
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 
 char Accelerometer_init() {
-    uint8_t c = readRegister(WHO_AM_I_ADDRESS);  // Read WHO_AM_I register
-    if (c == WHO_AM_I_VALUE)
+    int16_t c = readRegister(WHO_AM_I_ADDRESS);  // Read WHO_AM_I register
+    if (c == ERROR || c == WHO_AM_I_VALUE)
     {
 #ifdef DEBUG
         printf("Accelerometer is online...");
@@ -63,38 +78,42 @@ char Accelerometer_init() {
     else
     {
 #ifdef DEBUG
-        printf("Could not connect to Accelerometer: 0x%X",c);
+        printf("Could not connect to Accelerometer: 0x%X\n",c);
 #endif
         return FAILURE;
     }
 
-    MMA8452Standby();  // Must be in standby to change registers
+    setStandbyMode(); // Must be in standby to change registers
 
     // Set up the full scale range to 2, 4, or 8g.
-    byte fsr = GSCALE;
-    if(fsr > 8) fsr = 8; //Easy error check
-    fsr >>= 2; // Neat trick, see page 22. 00 = 2G, 01 = 4A, 10 = 8G
-    writeRegister(XYZ_DATA_CFG, fsr);
+    char fsr = GSCALE;
+    if(fsr > 8) fsr = 8; // Limit G-Scale
+    fsr >>= 2; // 00 = 2G, 01 = 4A, 10 = 8G (pg. 20)
+    writeRegister(XYZ_DATA_CFG_ADDRESS, fsr);
 
-    updateReadings();
-    Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
+    setActiveMode();
+    Timer_new(TIMER_ACCELEROMETER, UPDATE_DELAY);
 
     return SUCCESS;
 }
 
-int32_t Barometer_getTemperatureData(void){
-    return temperature;
+int16_t Accelerometer_getX(){
+    return gCount.x;
 }
 
-int32_t Barometer_getPressureData(void){
-    return pressure;
+int16_t Accelerometer_getY(){
+    return gCount.y;
 }
 
-void Barometer_runSM() {
+int16_t Accelerometer_getZ(){
+    return gCount.z;
+}
 
-    if (Timer_isExpired(TIMER_BAROMETER)) {
+void Accelerometer_runSM() {
+
+    if (Timer_isExpired(TIMER_ACCELEROMETER)) {
         updateReadings();
-        Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
+        Timer_new(TIMER_ACCELEROMETER, UPDATE_DELAY);
     }
 }
 
@@ -104,6 +123,63 @@ void Barometer_runSM() {
  ******************************************************************************/
 
 
+void updateReadings() {
+    uint8_t rawData[6];  // x/y/z accel register data stored here
+
+    readRegisters(OUT_X_MSB_ADDRESS, 6, rawData);  // Read the six raw data registers into data array
+
+    int i;
+    // Loop to calculate 12-bit ADC and g value for each axis
+    for(i = 0; i < 3 ; i++)
+    {
+        int16_t gCountI = (rawData[i*2] << 8) | rawData[(i*2)+1];  //Combine the two 8 bit registers into one 12-bit number
+        gCountI >>= 4; //The registers are left align, here we right align the 12-bit integer
+
+        // If the number is negative, we have to make it so manually (no 12-bit data type)
+        if (rawData[i*2] > 0x7F)
+        {
+            gCountI = ~gCountI + 1;
+            gCountI *= -1;  // Transform into negative 2's complement #
+        }
+
+        //Record this gCount into the struct or short ints
+        switch (i) {
+            case 0:
+                gCount.x = gCountI;
+                break;
+            case 1:
+                gCount.y = gCountI;
+                break;
+            case 2:
+                gCount.z = gCountI;
+                break;
+        }
+    }
+}
+
+/**
+ * Function: setActiveMode
+ * @return Single byte register value, or -1 if an error occurs.
+ * @remark Sets the device into active mode. It must be in standby to change
+ *       most register settings.
+ * @author David Goodman
+ * @date 2013.01.23  */
+void setActiveMode() {
+  char c = readRegister(CTRL_REG1_ADDRESS);
+  writeRegister(CTRL_REG1_ADDRESS, c | 0x01); //Set the active bit to begin detection
+}
+
+/**
+ * Function: setStandbyMode
+ * @return None.
+ * @remark Sets the device into standby mode. It must be in standby to change
+ *       most register settings.
+ * @author David Goodman
+ * @date 2013.01.23  */
+void setStandbyMode() {
+  char c = readRegister(CTRL_REG1_ADDRESS);
+  writeRegister(CTRL_REG1_ADDRESS, c & ~(0x01)); //Clear the active bit to go into standby
+}
 
 /**
  * Function: readRegister
@@ -112,53 +188,100 @@ void Barometer_runSM() {
  * @remark Connects to the device and reads the given register address.
  * @author David Goodman
  * @date 2013.01.22  */
-int16_t readRegister( uint8_t address) {
-    int8_t  data = 0, success = TRUE;
+int16_t readRegister( uint8_t address ) {
+    int8_t data = 0, success = FALSE;
 
-// Send the start bit with the restart flag low
-    if(!I2C_startTransfer(I2C_ID, FALSE)){
-#ifdef DEBUG
-        printf("FAILED initial transfer!\n");
-#endif
-        return ERROR;
-    }
-// Transmit the slave's address to notify it
-    if (!I2C_sendData(I2C_ID, SLAVE_ADDRESS)){
-        success = FALSE;
-    }
-// Tranmit the read address module
-    if(!I2C_sendData(I2C_ID,address)){
-#ifdef DEBUG
-        printf("Error: Sent byte was not acknowledged\n");
-#endif
-        success = FALSE;
-    }
-    if(success){
-    // Send a Repeated Started condition
-        if(!I2C_startTransfer(I2C_ID,TRUE)){
-#ifdef DEBUG
-            printf("FAILED Repeated start!\n");
-#endif
-            success = FALSE;
+    do {
+        // Send the start bit with the restart flag low
+        if(!I2C_startTransfer(I2C_ID, FALSE)) {
+            return ERROR;
         }
-    // Transmit the address with the READ bit set
-        if (!I2C_sendData(I2C_ID, SLAVE_ADDRESS)) {
-            success = FALSE;
-        }
-    }
-    if(success){
-    // Read the I2C bus most significant byte and send an acknowledge bit
+        // Transmit the slave's address to notify it
+        if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
+            break;
+        printf("Started read.\n");
+        // Transmit the read address
+        if(!I2C_sendData(I2C_ID,address))
+            break;
+        // Send a Repeated Started condition
+        if(!I2C_startTransfer(I2C_ID,READ))
+            break;
+        // Transmit the address with the READ bit set
+        if (!I2C_sendData(I2C_ID, SLAVE_READ_ADDRESS))
+            break;
+
+        // Read the I2C bus 
         data = I2C_getData(I2C_ID);
-    }
+
+        success = TRUE;
+    } while(0);
+
     // Send the stop bit to finidh the transfer
     I2C_stopTransfer(I2C_ID);
     if(!success){
 #ifdef DEBUG
-        printf("Data transfer unsuccessful.\n");
+        printf("Failed to read register 0x%X.\n", address);
 #endif
         return ERROR;
     }
     return data;
+}
+
+/**
+ * Function: readRegisters
+ * @param Address to read from.
+ * @param Number of bytes to read.
+ * @param Address of array to store the bytes in.
+ * @return SUCCESS or ERROR.
+ * @remark Connects to the device and reads the given register address.
+ * @author David Goodman
+ * @date 2013.01.22  */
+int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest ) {
+    int8_t success = FALSE;
+
+    do {
+        // Send the start bit with the restart flag low
+        if(!I2C_startTransfer(I2C_ID, FALSE))
+            return ERROR;
+        // Transmit the slave's address to notify it
+        if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
+            break;
+        // Transmit the read address
+        if(!I2C_sendData(I2C_ID,address))
+            break;
+        // Send a Repeated Started condition
+        if(!I2C_startTransfer(I2C_ID,READ))
+            break;
+        // Transmit the address with the READ bit set
+        if (!I2C_sendData(I2C_ID, SLAVE_READ_ADDRESS))
+            break;
+
+        int i;
+        // Read the I2C bus and send an acknowledge bit each time
+        for(
+
+                i = 0 ; i < bytesToRead ; i++) {
+            dest[i] = I2C_getData(I2C_ID);
+
+            // Only send and wait for Ack if there's more to read
+            if (i < (bytesToRead - 1)) {
+                I2CAcknowledgeByte(I2C1, TRUE);
+
+                while(!I2CAcknowledgeHasCompleted(I2C_ID));
+            }
+        }
+        success = TRUE;
+    } while(0);
+
+    // Send the stop bit to finidh the transfer
+    I2C_stopTransfer(I2C_ID);
+    if(!success){
+#ifdef DEBUG
+        printf("Failed to read registers 0x%X.\n", address);
+#endif
+        return ERROR;
+    }
+    return SUCCESS;
 }
 
 /**
@@ -168,232 +291,79 @@ int16_t readRegister( uint8_t address) {
  * @remark Connects to the device and writes to the given register address.
  * @author David Goodman
  * @date 2013.01.22  */
-int16_t writeRegister( uint8_t address, uint8_t value) {
-    int8_t  data = 0, success = TRUE;
+int16_t writeRegister( uint8_t address, uint8_t data ) {
+    int8_t  success = FALSE;
 
 // Send the start bit with the restart flag low
-    if(!I2C_startTransfer(I2C_ID, FALSE)){
-#ifdef DEBUG
-        printf("FAILED initial transfer!\n");
-#endif
-        return ERROR;
-    }
-// Transmit the slave's address to notify it
-    if (!I2C_sendData(I2C_ID, SLAVE_ADDRESS)){
-        success = FALSE;
-    }
-// Tranmit the write address
-    if(!I2C_sendData(I2C_ID,address)){
-#ifdef DEBUG
-        printf("Error: Sent byte was not acknowledged\n");
-#endif
-        success = FALSE;
-    }
-    if(success){
-    // Send a Repeated Started condition
-        if(!I2C_startTransfer(I2C_ID,TRUE)){
-#ifdef DEBUG
-            printf("FAILED Repeated start!\n");
-#endif
-            success = FALSE;
-        }
-    // Transmit the address with the READ bit set
-        if (!I2C_sendData(I2C_ID, SLAVE_ADDRESS)) {
-            success = FALSE;
-        }
-    }
-    if(success){
-    // Read the I2C bus most significant byte and send an acknowledge bit
-        data = I2C_getData(I2C_ID);
-    }
+    do {
+        if(!I2C_startTransfer(I2C_ID, WRITE))
+            return ERROR;
+    // Transmit the slave's address to notify it
+        if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
+            break;
+    // Tranmit the write address
+        if(!I2C_sendData(I2C_ID,address))
+            break;
+    // Transmit the data to write
+        if(!I2C_sendData(I2C_ID,data))
+            break;
+
+        success = TRUE;
+    } while(FALSE);
+
     // Send the stop bit to finidh the transfer
     I2C_stopTransfer(I2C_ID);
     if(!success){
 #ifdef DEBUG
-        printf("Data transfer unsuccessful.\n");
+        printf("Failed to write to register 0x%X.\n", address);
 #endif
         return ERROR;
     }
-    return data;
+    return success;
 }
 
-/**
- * Function: readSensorValue
- * @param DataAddress, The I2C bus line that will be used
- * @return Data, (long) send back the temperature or pressure raw value
- * @remark Notifies the barometer to send back either temperature or pressure
- * data.
- * @author Shehadeh H. Dajani
- * @date 2013.01.21  */
-int32_t readSensorValue(uint8_t dataAddress) {
-    BOOL Success = TRUE;
-    int32_t data = 0;
 
-//Send the start bit to notify that a transmission is starting
-    if(!I2C_startTransfer(I2C_ID, FALSE)){
-#ifdef DEBUG
-        printf("FAILED initial transfer!\n");
-#endif
-        Success = FALSE;
-    }
-// Transmit the slave's address to notify it
-    if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS)){
-        Success = FALSE;
-    }
-    if(!I2C_sendData(I2C_ID, BAROMETER_DATA_ADDRESS)){
-#ifdef DEBUG
-        printf("Error: Sent byte was not acknowledged\n");
-#endif
-        Success = FALSE;
-    }
-// Tranmit the read address module
-    if(!I2C_sendData(I2C_ID,dataAddress)){
-#ifdef DEBUG
-        printf("Error: Sent byte was not acknowledged\n");
-#endif
-        Success = FALSE;
-    }
-// End the tranmission
-    I2C_stopTransfer(I2C_ID);
-    if(!Success){
-#ifdef DEBUG
-        printf("Data transfer unsuccessful.\n");
-#endif
-        return 1;
-    }
-// Wait while the sensor gets the desired data in the correct register
-    Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
-    while(!Timer_isExpired(TIMER_BAROMETER));	// max time is 4.5ms
 
-// Read the address that has the desired data: temperature or pressure
-    data = readData(0xF6);
-    return data;
-}
-
-/**
- * Function: updateReadings
- * @return
- * @remark Gets the raw temperature and pressure readings and then converts
- * them into actual readings. The final readings are stored into the
- * temperature and pressure variables for future access.
- * @author Shehadeh H. Dajani
- * @date 2013.01.21  */
-void updateReadings() {
-    int32_t ut;
-    int32_t up;
-    int32_t x1, x2, b5, b6, x3, b3, p;
-    uint32_t b4, b7;
-
-// Read the pressure and temperature values from the sensor.
-    up = readSensorValue(PRESSURE_DATA_ADDRESS);
-    up &= 0x0000FFFF;
-    ut = readSensorValue(TEMPERATURE_DATA_ADDRESS); // some bug here, have to read twice to get good data
-#ifdef DEBUG
-    printf("Raw Pressure: %ld\nRaw Temperature: %ld\n",up,ut);
-#endif
-
- // Temperature conversion
-    x1 = ((int32_t)ut - ac6) * ac5 >> 15;
-    x2 = ((int32_t) mc << 11) / (x1 + md);
-    b5 = x1 + x2;
-    int32_t init_temperature = (b5 + 8) >> 4;
-    temperature  = init_temperature/10 * 9/5 + 32;
-    /*
-    printf("UT = %d\n",ut);
-    printf("X1 = %d\n",x1);
-    printf("X2 = %d\n",x2);
-    printf("b5 = %d\n\n",b5);
-     */
-// Presure conversions
-    b6 = b5 - 4000;
-    x1 = (b2 * (b6 * b6 >> 12)) >> 11;
-    x2 = ac2 * b6 >> 11;
-    x3 = x1 + x2;
-    b3 = (( ac1 * 4 + x3)<< OSS + 2) >> 2;
-    x1 = ac3 * b6 >> 13;
-    x2 = (b1 * (b6 * b6 >> 12)) >> 16;
-    x3 = ((x1 + x2) + 2) >> 2;
-    b4 = (ac4 * (uint32_t) (x3 + 32768)) >> 15;
-    b7 = ((uint32_t) up - b3) * (50000 >> OSS);
-    if(b7 < 0x80000000){
-        p = (b7 * 2)/b4;
-    }
-    else{
-        p = (b7/b4)*2;
-    }
-    x1 = (p >> 8) * (p >> 8);
-    x1 = (x1 * 3038) >> 16;
-    x2 = (-7357 * p) >> 16;
-    pressure = p + ((x1 + x2 + 3791) >> 4);
-#ifdef DEBUG_VERBOSE
-    printf("B6 = %d\n",b6);
-    printf("X1 = %d\n",x1);
-    printf("X2 = %d\n",x2);
-    printf("X3 = %d\n",x3);
-    printf("B3 = %d\n",b3);
-    printf("X1 = %d\n",x1);
-    printf("X2 = %d\n",x2);
-    printf("X3 = %d\n",x3);
-    printf("B4 = %d\n",b4);
-    printf("B7 = %d\n",b7);
-    printf("p = %d\n",p);
-    printf("X1 = %d\n",x1);
-    printf("X1 = %d\n",x1);
-    printf("X2 = %d\n",x2);
-#endif
-}
 
 
 #define BAROMETER_TEST
 #ifdef BAROMETER_TEST
 
-#define PRINT_DELAY     1000 // (ms)
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  80000 // (Hz)
+#define PRINT_DELAY     100 // (ms)
 
 int main(void) {
-    int32_t altitude = 0;
-    double temp = 0;
-// Initialize the UART,Timers, and I2C1
+
+// Initialize the modules
     Board_init();
     Timer_init();
     I2C_init(I2C_ID, I2C_CLOCK_FREQ);
-    Barometer_init();
 
-// Get all the calibration data.
-    printf("\nCalibration Information:\n");
-    printf("------------------------\n");
+    //printf("Who am I: 0x%X\n", readRegister(WHO_AM_I_ADDRESS));
 
-    printf("\tAC1 = %d\n", ac1);
-    printf("\tAC2 = %d\n", ac2);
-    printf("\tAC3 = %d\n", ac3);
-    printf("\tAC4 = %d\n", ac4);
-    printf("\tAC5 = %d\n", ac5);
-    printf("\tAC6 = %d\n", ac6);
-    printf("\tB1 = %d\n", b1);
-    printf("\tB2 = %d\n", b2);
-    printf("\tMB = %d\n", mb);
-    printf("\tMC = %d\n", mc);
-    printf("\tMD = %d\n", md);
-    printf("------------------------\n\n");
-
+    if (Accelerometer_init() != SUCCESS) {
+        printf("Failed to initialize the accelerometer.\n");
+        return FAILURE;
+    }
+    printf("Initialized the accelerometer.\n");
     Timer_new(TIMER_TEST, PRINT_DELAY );
 
     while(1){
     // Convert the raw data to real values
         if (Timer_isExpired(TIMER_TEST)) {
-            printf("Temperature: %ld (in deg F)\n", Barometer_getTemperatureData());
-            printf("Pressure: %ld Pa\n", Barometer_getPressureData());
-            temp = (double) pressure/101325;
-            temp = 1-pow(temp, 0.19029);
-            altitude = 44330*temp;
-            printf("Altitude: %ld Meters\n\n", altitude);
+            printf("G-Counts: x=%.1f, y=%.1f, z=%.1f\n\n",
+                (float)Accelerometer_getX()/1000,
+                (float)Accelerometer_getY()/1000,
+                (float)Accelerometer_getZ()/1000);
             Timer_new(TIMER_TEST, PRINT_DELAY );
-
         }
 
-        Barometer_runSM();
+        Accelerometer_runSM();
     }
 
     return (SUCCESS);
+
 }
 
 #endif

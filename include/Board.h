@@ -19,6 +19,7 @@
  * PUBLIC #DEFINES                                                             *
  ******************************************************************************/
 
+#define DELAY(ms)   do { int i; for (i = 0; i < (ms << 8); i++) { asm ("nop"); } } while();
 
 /*****************************************************************************/
 // Boolean defines for TRUE, FALSE, SUCCESS and ERROR
@@ -30,8 +31,9 @@
 
 
 // Timer allocation
-#define TIMER_BAROMETER     1
-#define TIMER_TEST          15
+#define TIMER_BAROMETER         1
+#define TIMER_ACCELEROMETER     2
+#define TIMER_TEST              15
 
 
 #ifdef Board_H_PRIVATE_INCLUDE

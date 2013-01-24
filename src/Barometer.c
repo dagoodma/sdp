@@ -41,8 +41,6 @@
 #define PRESSURE_DATA_ADDRESS   PRESSURE_DATA_ADDRESS_OSS3
 #endif
 
-// Set Desired Operation Frequency
-#define I2C_CLOCK_FREQ  100000
 
 // Delay for updating (minimum of 10ms)
 //  for each OSS add 15 ms; 0=15, 1=30 ,2=35
@@ -339,6 +337,8 @@ void updateReadings() {
 #define BAROMETER_TEST
 #ifdef BAROMETER_TEST
 
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000 // (Hz)
 #define PRINT_DELAY     1000 // (ms)
 
 int main(void) {

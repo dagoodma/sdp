@@ -5,12 +5,18 @@
  *
  * Created on January 21, 2013, 3:42 PM
  */
+
+#ifndef I2C_H
+#define I2C_H
+
 #include <stdint.h>
 
 /*******************************************************************************
  * PUBLIC #DEFINES                                                             *
  ******************************************************************************/
 
+#define READ        1
+#define WRITE       0
 
 /*******************************************************************************
  * PUBLIC FUNCTION PROTOTYPES                                                  *
@@ -76,3 +82,5 @@ int16_t I2C_getData(I2C_MODULE I2C_ID);
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
 void I2C_init(I2C_MODULE I2C_ID, uint32_t I2C_clockFreq);
+
+#endif // I2C_H
