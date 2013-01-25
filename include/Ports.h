@@ -1,31 +1,35 @@
-/*
- * File:   Ports.h
- * Author: Elkaim
- * Edited by: David Goodman
+/**
+ * @file    Ports.h
+ * @author  Elkaim
+ * @author  David Goodman
  *
- * Software module to access the 5 labeled ports on on the Uno32 I/O protection board. 
- * All ports have pins 1-2 and 13-14 grounded at the Uno32 I/O board. The Digital I/O
- * ports (X, Y, and Z) have 12 pins accessibe _03 through _12, and the Analog/Digital
- * I/O ports (V and W) have 6 pins accessible (_03 through _08), with the remaining pins
- * on the connector grounded.
+ * @brief
+ * Interface for access to ports on the Uno32 shield.
  *
- * The individual ports pins can be addressed directly using the appropriate _TRIS and _LAT
- * #defines. Using the _TRIS to set direction (0 for output, 1 for ), and then manipulate
- * the pins direction with the _LAT to drive (1 for high, 0 for low) and the _BIT to read.
- * These can all be manipulated at the bit level. For Port level manipulation, there are
- * provided functions.
+ * @details
+ * Software module to access the 5 labeled ports on on the Uno32 I/O protection
+ * board.  All ports have pins 1-2 and 13-14 grounded at the Uno32 I/O board.
+ * The Digital I/O ports (X, Y, and Z) have 12 pins accessibe _03 through _12,
+ * and the Analog/Digital I/O ports (V and W) have 6 pins accessible (_03
+ * through _08), with the remaining pins on the connector grounded.
  *
- * The convention is that PORTxYY_TRIS (_LAT or _BIT) where x is V,W,X,Y, or Z, and YY is
- * 03 to 12 (with V and W going up only to 08).
+ * The individual ports pins can be addressed directly using the appropriate
+ * _TRIS and _LAT #defines. Using the _TRIS to set direction (0 for output, 1
+ * for ), and then manipulate the pins direction with the _LAT to drive (1 for
+ * high, 0 for low) and the _BIT to read.  These can all be manipulated at the
+ * bit level. For Port level manipulation, there are provided functions.
  *
- * SPI_MASTER should be defined if both jumpers on the SPI CONTROL are towards the top 
- *            of the board. 
+ * The convention is that PORTxYY_TRIS (_LAT or _BIT) where x is V,W,X,Y, or Z,
+ * and YY is 03 to 12 (with V and W going up only to 08).
  *
- * Ports_TEST (in the .c file) conditionally compiles the test harness for the code.
- * Make sure it is commented out for module useage.
+ * SPI_MASTER should be defined if both jumpers on the SPI CONTROL are towards
+ * the top of the board. 
  *
- * Edited on January 19, 2013, 1:07 AM
- * Created on December 26, 2011, 11:21 PM
+ * Ports_TEST (in the .c file) conditionally compiles the test harness for the
+ * code.  Make sure it is commented out for module useage.
+ *
+ * @date January 19, 2013, 1:07 AM      -- Edited
+ * @date December 26, 2011, 11:21 PM    -- Created
  */
 
 #ifndef Ports_H
@@ -309,4 +313,4 @@ char Ports_ClearPortBits(char port, unsigned short pattern);
  * @date 2012.01.06 21:22 */
 char Ports_TogglePortBits(char port, unsigned short pattern);
 
-#endif
+#endif // PORTS_H

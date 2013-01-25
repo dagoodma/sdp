@@ -1,0 +1,205 @@
+\hypertarget{_i2_c_8h}{\section{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-I2\-C.h File Reference}
+\label{_i2_c_8h}\index{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-I2\-C.\-h@{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-I2\-C.\-h}}
+}
+
+
+Interface for communicating over I2\-C.  
+
+
+{\ttfamily \#include $<$stdint.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{_i2_c_8h_ada74e7db007a68e763f20c17f2985356}{\#define {\bfseries R\-E\-A\-D}~1}\label{_i2_c_8h_ada74e7db007a68e763f20c17f2985356}
+
+\item 
+\hypertarget{_i2_c_8h_aa10f470e996d0f51210d24f442d25e1e}{\#define {\bfseries W\-R\-I\-T\-E}~0}\label{_i2_c_8h_aa10f470e996d0f51210d24f442d25e1e}
+
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+B\-O\-O\-L \hyperlink{_i2_c_8h_af63ce9538deda722561c9d4b77e46753}{I2\-C\-\_\-start\-Transfer} (I2\-C\-\_\-\-M\-O\-D\-U\-L\-E I2\-C\-\_\-\-I\-D, B\-O\-O\-L restart)
+\item 
+void \hyperlink{_i2_c_8h_a5e01e4be46d41748a09b1c630ceeb01b}{I2\-C\-\_\-stop\-Transfer} (I2\-C\-\_\-\-M\-O\-D\-U\-L\-E I2\-C\-\_\-\-I\-D)
+\item 
+B\-O\-O\-L \hyperlink{_i2_c_8h_a85f048f5d32094cb901e27f87c7f060f}{I2\-C\-\_\-transmit\-One\-Byte} (I2\-C\-\_\-\-M\-O\-D\-U\-L\-E I2\-C\-\_\-\-I\-D, uint8\-\_\-t data)
+\item 
+B\-O\-O\-L \hyperlink{_i2_c_8h_aa428d1cff803d7c5d7e7a9ed91a38655}{I2\-C\-\_\-send\-Data} (I2\-C\-\_\-\-M\-O\-D\-U\-L\-E I2\-C\-\_\-\-I\-D, uint8\-\_\-t data)
+\item 
+int16\-\_\-t \hyperlink{_i2_c_8h_aa595d0ea2cacd2b19622684452c9328d}{I2\-C\-\_\-get\-Data} (I2\-C\-\_\-\-M\-O\-D\-U\-L\-E I2\-C\-\_\-\-I\-D)
+\item 
+void \hyperlink{_i2_c_8h_ae9f8f1643c47e4cf6d0b7e61276d51f0}{I2\-C\-\_\-init} (I2\-C\-\_\-\-M\-O\-D\-U\-L\-E I2\-C\-\_\-\-I\-D, uint32\-\_\-t I2\-C\-\_\-clock\-Freq)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Interface for communicating over I2\-C. \begin{DoxyAuthor}{Author}
+Shehadeh H. Dajani 
+
+Darrel R. Deo
+\end{DoxyAuthor}
+This interface is for communication with devices of I2\-C.
+
+\begin{DoxyDate}{Date}
+January 21, 2013, 3\-:42 P\-M -- Created 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\hypertarget{_i2_c_8h_aa595d0ea2cacd2b19622684452c9328d}{\index{I2\-C.\-h@{I2\-C.\-h}!I2\-C\-\_\-get\-Data@{I2\-C\-\_\-get\-Data}}
+\index{I2\-C\-\_\-get\-Data@{I2\-C\-\_\-get\-Data}!I2C.h@{I2\-C.\-h}}
+\subsubsection[{I2\-C\-\_\-get\-Data}]{\setlength{\rightskip}{0pt plus 5cm}int16\-\_\-t I2\-C\-\_\-get\-Data (
+\begin{DoxyParamCaption}
+\item[{I2\-C\-\_\-\-M\-O\-D\-U\-L\-E}]{I2\-C\-\_\-\-I\-D}
+\end{DoxyParamCaption}
+)}}\label{_i2_c_8h_aa595d0ea2cacd2b19622684452c9328d}
+Function\-: I2\-C\-\_\-get\-Data 
+\begin{DoxyParams}{Parameters}
+{\em I2\-C\-\_\-\-I\-D,The} & I2\-C bus line that will be used \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+data, (int16\-\_\-t) single byte data from the slave. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+After sending the prerequisites for a read, this function will check if the desired data is on the I2\-C bus line, read it, and return it. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Shehadeh H. Dajani 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-21 
+\end{DoxyDate}
+\hypertarget{_i2_c_8h_ae9f8f1643c47e4cf6d0b7e61276d51f0}{\index{I2\-C.\-h@{I2\-C.\-h}!I2\-C\-\_\-init@{I2\-C\-\_\-init}}
+\index{I2\-C\-\_\-init@{I2\-C\-\_\-init}!I2C.h@{I2\-C.\-h}}
+\subsubsection[{I2\-C\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}void I2\-C\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{I2\-C\-\_\-\-M\-O\-D\-U\-L\-E}]{I2\-C\-\_\-\-I\-D, }
+\item[{uint32\-\_\-t}]{I2\-C\-\_\-clock\-Freq}
+\end{DoxyParamCaption}
+)}}\label{_i2_c_8h_ae9f8f1643c47e4cf6d0b7e61276d51f0}
+Function\-: I2\-C\-\_\-init 
+\begin{DoxyParams}{Parameters}
+{\em I2\-C\-\_\-\-I\-D,The} & I2\-C bus line that will be used \\
+\hline
+{\em I2\-C\-\_\-clock\-Freq,The} & desired frequency for the I2\-C bus \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+None. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Turns on the I2\-C bus line specified and sets the frequency on it. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Shehadeh H. Dajani 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-21 
+\end{DoxyDate}
+\hypertarget{_i2_c_8h_aa428d1cff803d7c5d7e7a9ed91a38655}{\index{I2\-C.\-h@{I2\-C.\-h}!I2\-C\-\_\-send\-Data@{I2\-C\-\_\-send\-Data}}
+\index{I2\-C\-\_\-send\-Data@{I2\-C\-\_\-send\-Data}!I2C.h@{I2\-C.\-h}}
+\subsubsection[{I2\-C\-\_\-send\-Data}]{\setlength{\rightskip}{0pt plus 5cm}B\-O\-O\-L I2\-C\-\_\-send\-Data (
+\begin{DoxyParamCaption}
+\item[{I2\-C\-\_\-\-M\-O\-D\-U\-L\-E}]{I2\-C\-\_\-\-I\-D, }
+\item[{uint8\-\_\-t}]{data}
+\end{DoxyParamCaption}
+)}}\label{_i2_c_8h_aa428d1cff803d7c5d7e7a9ed91a38655}
+Function\-: I2\-C\-\_\-send\-Data 
+\begin{DoxyParams}{Parameters}
+{\em I2\-C\-\_\-\-I\-D,The} & I2\-C bus line that will be used \\
+\hline
+{\em data,The} & one-\/byte address to be sent over I2\-C \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Success, T\-R\-U\-E or F\-A\-L\-S\-E 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Uses \hyperlink{_i2_c_8h_a85f048f5d32094cb901e27f87c7f060f}{I2\-C\-\_\-transmit\-One\-Byte()} to send a single byte of the I2\-C bus and checks for an acknowledgement from the slave. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Shehadeh H. Dajani 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-21 
+\end{DoxyDate}
+\hypertarget{_i2_c_8h_af63ce9538deda722561c9d4b77e46753}{\index{I2\-C.\-h@{I2\-C.\-h}!I2\-C\-\_\-start\-Transfer@{I2\-C\-\_\-start\-Transfer}}
+\index{I2\-C\-\_\-start\-Transfer@{I2\-C\-\_\-start\-Transfer}!I2C.h@{I2\-C.\-h}}
+\subsubsection[{I2\-C\-\_\-start\-Transfer}]{\setlength{\rightskip}{0pt plus 5cm}B\-O\-O\-L I2\-C\-\_\-start\-Transfer (
+\begin{DoxyParamCaption}
+\item[{I2\-C\-\_\-\-M\-O\-D\-U\-L\-E}]{I2\-C\-\_\-\-I\-D, }
+\item[{B\-O\-O\-L}]{restart}
+\end{DoxyParamCaption}
+)}}\label{_i2_c_8h_af63ce9538deda722561c9d4b77e46753}
+Function\-: I2\-C\-\_\-start\-Transfer 
+\begin{DoxyParams}{Parameters}
+{\em I2\-C\-\_\-\-I\-D,The} & I2\-C bus line that will be used \\
+\hline
+{\em restart,determines} & whether you are sending a start or restart bit. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Success, T\-R\-U\-E or F\-A\-L\-S\-E 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Sends a start or restart signal over the I2\-C bus to alert all peripherals of an incoming transmission. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Shehadeh H. Dajani 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-21 
+\end{DoxyDate}
+\hypertarget{_i2_c_8h_a5e01e4be46d41748a09b1c630ceeb01b}{\index{I2\-C.\-h@{I2\-C.\-h}!I2\-C\-\_\-stop\-Transfer@{I2\-C\-\_\-stop\-Transfer}}
+\index{I2\-C\-\_\-stop\-Transfer@{I2\-C\-\_\-stop\-Transfer}!I2C.h@{I2\-C.\-h}}
+\subsubsection[{I2\-C\-\_\-stop\-Transfer}]{\setlength{\rightskip}{0pt plus 5cm}void I2\-C\-\_\-stop\-Transfer (
+\begin{DoxyParamCaption}
+\item[{I2\-C\-\_\-\-M\-O\-D\-U\-L\-E}]{I2\-C\-\_\-\-I\-D}
+\end{DoxyParamCaption}
+)}}\label{_i2_c_8h_a5e01e4be46d41748a09b1c630ceeb01b}
+Function\-: I2\-C\-\_\-stop\-Transfer 
+\begin{DoxyParams}{Parameters}
+{\em I2\-C\-\_\-\-I\-D,The} & I2\-C bus line that will be used \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+None. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Sends the stop signal to terminate I2\-C communication. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Shehadeh H. Dajani 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-21 
+\end{DoxyDate}
+\hypertarget{_i2_c_8h_a85f048f5d32094cb901e27f87c7f060f}{\index{I2\-C.\-h@{I2\-C.\-h}!I2\-C\-\_\-transmit\-One\-Byte@{I2\-C\-\_\-transmit\-One\-Byte}}
+\index{I2\-C\-\_\-transmit\-One\-Byte@{I2\-C\-\_\-transmit\-One\-Byte}!I2C.h@{I2\-C.\-h}}
+\subsubsection[{I2\-C\-\_\-transmit\-One\-Byte}]{\setlength{\rightskip}{0pt plus 5cm}B\-O\-O\-L I2\-C\-\_\-transmit\-One\-Byte (
+\begin{DoxyParamCaption}
+\item[{I2\-C\-\_\-\-M\-O\-D\-U\-L\-E}]{I2\-C\-\_\-\-I\-D, }
+\item[{uint8\-\_\-t}]{data}
+\end{DoxyParamCaption}
+)}}\label{_i2_c_8h_a85f048f5d32094cb901e27f87c7f060f}
+Function\-: I2\-C\-\_\-transmit\-One\-Byte 
+\begin{DoxyParams}{Parameters}
+{\em I2\-C\-\_\-\-I\-D,The} & I2\-C bus line that will be used \\
+\hline
+{\em data,The} & one-\/byte address to be sent over I2\-C \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Success, T\-R\-U\-E or F\-A\-L\-S\-E 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Sends a single byte over the I2\-C bus. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Shehadeh H. Dajani 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-21 
+\end{DoxyDate}

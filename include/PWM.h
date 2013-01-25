@@ -1,19 +1,25 @@
-/*
- * File:   pwm.h
- * Author: mdunne
- * Edited by: David Goodman
+/**
+ * @file    PWM.h
+ * @author  Max Dunne
+ * @author  David Goodman
  *
+ * @brief
+ * Multiplexes a PWM line into many channels.
+ *
+ * @details
  * Software module to run the PWM module of the Uno32. The available pins for
- * which the PWM works are #defined below (PortZ-6, PortY-4,10,12, and PortX-11),
- * and are set by the hardware (cannot be modified).
+ * which the PWM works are #defined below (PortZ-6, PortY-4,10,12, and
+ * PortX-11), and are set by the hardware (cannot be modified).
  *
- * NOTE: Module uses TIMER2 for its interrupts.
+ * @note
+ * Module uses TIMER2 for its interrupts.
  *
- * PWM_TEST (in the .c file) conditionally compiles the test harness for the code. 
- * Make sure it is commented out for module useage.
+ * @note
+ * PWM_TEST (in the .c file) conditionally compiles the test harness for
+ * the code. Make sure it is commented out for module useage.
  * 
- * Edited on January 24, 2013, 2:38 PM
- * Created on November 12, 2011, 9:27 AM
+ * @date January 24, 2013, 2:38 PM  -- Edited
+ * @date November 12, 2011, 9:27 AM -- Created
  */
 
 #ifndef PWM_H
@@ -79,4 +85,4 @@ void PWM_end(void);
 
 
 
-#endif
+#endif // PWM_H

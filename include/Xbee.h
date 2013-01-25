@@ -1,8 +1,17 @@
-/*
- * File: Xbee.h
+/**
+ * @file    Xbee.h
+ * @author  John Ash
+ * @author  David Goodman
  *
- * State machine for Xbee module.
+ * @brief
+ * Interface for communicating wirelessly with XBee.
  *
+ * @details
+ * This module wraps a XBee device in a state machine and uses
+ * UART to communicate with other XBee devices wirelessly.
+ *
+ *
+ * @date January 23, 2013   -- Created
  */
 #ifndef Xbee_H
 #define Xbee_H
@@ -75,4 +84,4 @@ void Xbee_sendString(string data);
  **********************************************************************/
 void Xbee_recieveData();
 
-#endif
+#endif // Xbee_H

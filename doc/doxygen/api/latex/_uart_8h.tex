@@ -1,0 +1,135 @@
+\hypertarget{_uart_8h}{\section{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Uart.h File Reference}
+\label{_uart_8h}\index{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Uart.\-h@{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Uart.\-h}}
+}
+
+
+Interface for communicating over a U\-A\-R\-T.  
+
+
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{_uart_8h_aac5bff5bbd386adf8764a8f984548441}{uint32\-\_\-t {\bfseries U\-A\-R\-T\-\_\-init} (U\-A\-R\-T\-\_\-\-M\-O\-D\-U\-L\-E id, uint32\-\_\-t baud\-Rate)}\label{_uart_8h_aac5bff5bbd386adf8764a8f984548441}
+
+\item 
+void \hyperlink{_uart_8h_abef22b1fb267532e4838d2b09453053f}{U\-A\-R\-T\-\_\-put\-Char} (uint8\-\_\-t id, char ch)
+\item 
+char \hyperlink{_uart_8h_a068a41938d1c619ea6674f6c8dcd9858}{U\-A\-R\-T\-\_\-get\-Char} (uint8\-\_\-t id)
+\item 
+char \hyperlink{_uart_8h_a39814d1d728f3eff2a005f3f0ec69255}{U\-A\-R\-T\-\_\-is\-Transmit\-Empty} (uint8\-\_\-t id)
+\item 
+char \hyperlink{_uart_8h_abf77aa21a74c57bd55b8dd015264f984}{U\-A\-R\-T\-\_\-is\-Receive\-Empty} (uint8\-\_\-t id)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Interface for communicating over a U\-A\-R\-T. \begin{DoxyAuthor}{Author}
+John Ash 
+
+David Goodman
+\end{DoxyAuthor}
+This module is used for communicating with another device over U\-A\-R\-T.
+
+\begin{DoxyDate}{Date}
+January 23, 2013 -- Created 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\hypertarget{_uart_8h_a068a41938d1c619ea6674f6c8dcd9858}{\index{Uart.\-h@{Uart.\-h}!U\-A\-R\-T\-\_\-get\-Char@{U\-A\-R\-T\-\_\-get\-Char}}
+\index{U\-A\-R\-T\-\_\-get\-Char@{U\-A\-R\-T\-\_\-get\-Char}!Uart.h@{Uart.\-h}}
+\subsubsection[{U\-A\-R\-T\-\_\-get\-Char}]{\setlength{\rightskip}{0pt plus 5cm}char U\-A\-R\-T\-\_\-get\-Char (
+\begin{DoxyParamCaption}
+\item[{uint8\-\_\-t}]{id}
+\end{DoxyParamCaption}
+)}}\label{_uart_8h_a068a41938d1c619ea6674f6c8dcd9858}
+Function\-: Serial\-\_\-get\-Char 
+\begin{DoxyParams}{Parameters}
+{\em None} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+character or 0 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+retrieves first character from the receive buffer or 0 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Max Dunne 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2011.\-11.\-10 
+\end{DoxyDate}
+\hypertarget{_uart_8h_abf77aa21a74c57bd55b8dd015264f984}{\index{Uart.\-h@{Uart.\-h}!U\-A\-R\-T\-\_\-is\-Receive\-Empty@{U\-A\-R\-T\-\_\-is\-Receive\-Empty}}
+\index{U\-A\-R\-T\-\_\-is\-Receive\-Empty@{U\-A\-R\-T\-\_\-is\-Receive\-Empty}!Uart.h@{Uart.\-h}}
+\subsubsection[{U\-A\-R\-T\-\_\-is\-Receive\-Empty}]{\setlength{\rightskip}{0pt plus 5cm}char U\-A\-R\-T\-\_\-is\-Receive\-Empty (
+\begin{DoxyParamCaption}
+\item[{uint8\-\_\-t}]{id}
+\end{DoxyParamCaption}
+)}}\label{_uart_8h_abf77aa21a74c57bd55b8dd015264f984}
+Function\-: Serial\-\_\-is\-Receive\-Empty 
+\begin{DoxyParams}{Parameters}
+{\em None} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+T\-R\-U\-E or F\-A\-L\-S\-E 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+returns the state of the receive buffer 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Max Dunne 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2011.\-12.\-15 
+\end{DoxyDate}
+\hypertarget{_uart_8h_a39814d1d728f3eff2a005f3f0ec69255}{\index{Uart.\-h@{Uart.\-h}!U\-A\-R\-T\-\_\-is\-Transmit\-Empty@{U\-A\-R\-T\-\_\-is\-Transmit\-Empty}}
+\index{U\-A\-R\-T\-\_\-is\-Transmit\-Empty@{U\-A\-R\-T\-\_\-is\-Transmit\-Empty}!Uart.h@{Uart.\-h}}
+\subsubsection[{U\-A\-R\-T\-\_\-is\-Transmit\-Empty}]{\setlength{\rightskip}{0pt plus 5cm}char U\-A\-R\-T\-\_\-is\-Transmit\-Empty (
+\begin{DoxyParamCaption}
+\item[{uint8\-\_\-t}]{id}
+\end{DoxyParamCaption}
+)}}\label{_uart_8h_a39814d1d728f3eff2a005f3f0ec69255}
+Function\-: Serial\-\_\-is\-Transmit\-Empty 
+\begin{DoxyParams}{Parameters}
+{\em None} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+T\-R\-U\-E or F\-A\-L\-S\-E 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+returns the state of the transmit buffer 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Max Dunne 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2011.\-12.\-15 
+\end{DoxyDate}
+\hypertarget{_uart_8h_abef22b1fb267532e4838d2b09453053f}{\index{Uart.\-h@{Uart.\-h}!U\-A\-R\-T\-\_\-put\-Char@{U\-A\-R\-T\-\_\-put\-Char}}
+\index{U\-A\-R\-T\-\_\-put\-Char@{U\-A\-R\-T\-\_\-put\-Char}!Uart.h@{Uart.\-h}}
+\subsubsection[{U\-A\-R\-T\-\_\-put\-Char}]{\setlength{\rightskip}{0pt plus 5cm}void U\-A\-R\-T\-\_\-put\-Char (
+\begin{DoxyParamCaption}
+\item[{uint8\-\_\-t}]{id, }
+\item[{char}]{ch}
+\end{DoxyParamCaption}
+)}}\label{_uart_8h_abef22b1fb267532e4838d2b09453053f}
+Function\-: Serial\-\_\-put\-Char 
+\begin{DoxyParams}{Parameters}
+{\em ch,the} & char to be sent \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+None 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+adds character to circular buffer and starts the uart transmitting if not already 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Max Dunne 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2011.\-11.\-10 
+\end{DoxyDate}

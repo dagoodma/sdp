@@ -1,8 +1,15 @@
-/*
- * File:   Accelerometer.h
- * Author: David Goodman
+/**
+ * @file    Accelerometer.h
+ * @author  David Goodman
  *
- * Created on January 23, 2013, 1:24 PM
+ * @brief
+ * Sensor interface for the accelerometer.
+ *
+ * @details
+ * Module that wraps the accelerometer sensor in a state machine
+ * that ocassionally takes readings over an I2C bus.
+ *
+ * @date January 23, 2013, 1:24 PM  -- Created
  */
 
 #ifndef Accelerometer_H

@@ -1,0 +1,56 @@
+\hypertarget{_xbee_8h}{\section{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Xbee.h File Reference}
+\label{_xbee_8h}\index{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Xbee.\-h@{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Xbee.\-h}}
+}
+
+
+Interface for communicating wirelessly with X\-Bee.  
+
+
+{\ttfamily \#include \char`\"{}Error.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}Util.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{_xbee_8h_aae807c70d95948508feb972b8be68053}{\#define {\bfseries G\-R\-O\-U\-N\-D\-\_\-\-S\-T\-A\-T\-I\-O\-N\-\_\-\-X\-B\-E\-E}~74}\label{_xbee_8h_aae807c70d95948508feb972b8be68053}
+
+\item 
+\hypertarget{_xbee_8h_a2f244b75e27e7f8bfcc8230e7103cfe9}{\#define {\bfseries B\-O\-A\-T\-\_\-\-X\-B\-E\-E}~33}\label{_xbee_8h_a2f244b75e27e7f8bfcc8230e7103cfe9}
+
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{_xbee_8h_ae74d1547d2a773261f386e83a3697bbb}{void {\bfseries Xbee\-\_\-init} (uint8\-\_\-t options)}\label{_xbee_8h_ae74d1547d2a773261f386e83a3697bbb}
+
+\item 
+\hypertarget{_xbee_8h_a794cd5d1a28b9af48ec4cf4d511715bb}{bool {\bfseries Xbee\-\_\-is\-Initialized} ()}\label{_xbee_8h_a794cd5d1a28b9af48ec4cf4d511715bb}
+
+\item 
+\hypertarget{_xbee_8h_a9331af64685110a182989611ee4e70a7}{void {\bfseries Xbee\-\_\-program\-Init} (uint8 which\-Xbee)}\label{_xbee_8h_a9331af64685110a182989611ee4e70a7}
+
+\item 
+\hypertarget{_xbee_8h_a0eed14e59b63221cfdea1efc7e0bf0fe}{bool {\bfseries Xbee\-\_\-is\-Api} ()}\label{_xbee_8h_a0eed14e59b63221cfdea1efc7e0bf0fe}
+
+\item 
+\hypertarget{_xbee_8h_aaf049f1d5406e525f90905df845f8429}{void {\bfseries Xbee\-\_\-init\-Send} (uint8 which\-Xbee)}\label{_xbee_8h_aaf049f1d5406e525f90905df845f8429}
+
+\item 
+\hypertarget{_xbee_8h_a986969cd8ce832ae977c91d02d067d99}{void {\bfseries Xbee\-\_\-send\-String} (string data)}\label{_xbee_8h_a986969cd8ce832ae977c91d02d067d99}
+
+\item 
+\hypertarget{_xbee_8h_a05d13f1fbbe08aa8e428c3d14812e1c4}{void {\bfseries Xbee\-\_\-recieve\-Data} ()}\label{_xbee_8h_a05d13f1fbbe08aa8e428c3d14812e1c4}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Interface for communicating wirelessly with X\-Bee. \begin{DoxyAuthor}{Author}
+John Ash 
+
+David Goodman
+\end{DoxyAuthor}
+This module wraps a X\-Bee device in a state machine and uses U\-A\-R\-T to communicate with other X\-Bee devices wirelessly.
+
+\begin{DoxyDate}{Date}
+January 23, 2013 -- Created 
+\end{DoxyDate}

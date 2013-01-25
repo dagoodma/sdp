@@ -1,10 +1,17 @@
-/* 
- * File:   Board.h
- * Author: Max Dunne
- * Edited by: David Goodman
+/**
+ * @file    Board.h
+ * @author  Max Dunne
+ * @author  David Goodman
  *
- * Edited on January 1, 18, 2013
- * Created on December 19, 2012, 2:08 PM
+ * @brief
+ * Interface for PIC32 board.
+ *
+ * @details
+ * Contains functions and definitions for a PIC32 board.
+ *
+ * 
+ * @date January 1, 2013            -- Edited
+ * @date December 19, 2012, 2:08 PM -- Created
  */
 
 #ifndef Board_H
@@ -58,7 +65,19 @@
 /*******************************************************************************
  * Public Functions                                                            *
  ******************************************************************************/
+/**
+ * Function: Board_init
+ * @return None.
+ * @remark Initializes the Serial interface and enables interrupts.
+ * @author David Goodman
+ * @date 2013.01.18  */
 void Board_init();
+
+/**
+ * Function: Board_GetPBClock
+ * @return System bus speed in hertz.
+ * @author David Goodman
+ * @date 2013.01.18  */
 uint32_t Board_GetPBClock();
 
 #endif	/* Board_H */

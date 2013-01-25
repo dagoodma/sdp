@@ -1,0 +1,13 @@
+/*! \mainpage  Application Programming Interface (API)
+ *
+ * \section intro_sec Introduction
+ *
+ * Welcome to the API for the Autonomous Lifeguard Group's embedded
+ * state machines: the AtLAs and the ComPAS. 
+ *
+ * Click <a href="files.html">Files</a> on the bar above to see a list of
+ * modules, click <a href="globals.html">Globals</a> below it to see a
+ * list of all functions in the project, and click
+ * <a href="pages.html">Related Pages</a> for notes.
+ *
+ */

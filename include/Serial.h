@@ -1,9 +1,12 @@
-/*
- *  File:   Serial.h
- *  Author: mdunne
+/**
+ * @file   Serial.h
+ * @author Max Dunne
  *
- *  Edited on January, 18, 2013, 11:52 PM
- *  Created on November 10, 2011, 8:43 AM
+ * @brief
+ * Interace for communicating serially over UART.
+ *
+ * @date January, 18, 2013, 11:52 PM    -- Edited
+ * @date November 10, 2011, 8:43 AM     -- Created
  */
 
 #ifndef Serial_H
@@ -19,25 +22,6 @@
  * PUBLIC FUNCTION PROTOTYPES                                                  *
  ******************************************************************************/
 
-
-/****************************************************************************
- Function
-     
-
- Parameters
-     none
-
- Returns
-     None.
-
- Description
-    
- Notes
-     None.
-
- Author
- Max Dunne, 2011.11.10 0905
- ****************************************************************************/
 /**
  * Function: Serial_init
  * @param None

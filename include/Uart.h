@@ -1,20 +1,16 @@
-/**********************************************************************
- Module
-   Uart.c
-
- Revision
-   1.0.0
-
- Description
- Code for initilazing and running the UART
-
- Notes
-
- History
- When           Who         What/Why
- -------------- ---         --------
- 12-18-13 8:10 PM jash    Create File
-***********************************************************************/
+/**
+ * @file    UART.h
+ * @author  John Ash
+ * @author  David Goodman
+ *
+ * @brief
+ * Interface for communicating over a UART.
+ *
+ * @details
+ * This module is used for communicating with another device over UART.
+ *
+ * @date January 23, 2013   -- Created
+ */
 
 /**********************************************************************
  * Function: UART_init()

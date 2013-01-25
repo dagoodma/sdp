@@ -1,9 +1,15 @@
-/* 
- * File:   I2C.h
- * Author: Shehadeh H. Dajani
- * Author: Darrel R. Deo
+/**
+ * @file   I2C.h
+ * @author Shehadeh H. Dajani
+ * @author Darrel R. Deo
  *
- * Created on January 21, 2013, 3:42 PM
+ * @brief
+ * Interface for communicating over I2C.
+ *
+ * @details
+ * This interface is for communication with devices of I2C.
+ *
+ * @date January 21, 2013, 3:42 PM  -- Created
  */
 
 #ifndef I2C_H
@@ -36,7 +42,7 @@ BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart);
 /**
  * Function: I2C_stopTransfer
  * @param I2C_ID, The I2C bus line that will be used
- * @return
+ * @return None.
  * @remark Sends the stop signal to terminate I2C communication.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
@@ -77,7 +83,7 @@ int16_t I2C_getData(I2C_MODULE I2C_ID);
  * Function: I2C_init
  * @param I2C_ID, The I2C bus line that will be used
  * @param I2C_clockFreq, The desired frequency for the I2C bus
- * @return
+ * @return None.
  * @remark Turns on the I2C bus line specified and sets the frequency on it.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */

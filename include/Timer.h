@@ -1,8 +1,16 @@
-/*
- * File: Timer.h
+/**
+ * @file    Timer.h
+ * @author  Max Dunne
+ * @author  David Goodman
  *
- * Multiplexes a timer into 16 timers with 1 ms resoluton
+ * @brief
+ * Multiplexes a timer into many timers.
  *
+ * @details
+ * This module multiplexes a single timer into 16 timers with 1 ms
+ * resoluton.
+ *
+ * @date December 22, 2012  -- Created
  */
 #ifndef Timer_H
 #define Timer_H
@@ -107,4 +115,4 @@ int8_t Timer_clear(uint8_t timerNumber);
  **********************************************************************/
 uint32_t get_time(void);
 
-#endif
+#endif // Timer_H

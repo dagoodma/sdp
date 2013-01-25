@@ -1,0 +1,131 @@
+\hypertarget{_accelerometer_8h}{\section{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Accelerometer.h File Reference}
+\label{_accelerometer_8h}\index{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Accelerometer.\-h@{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Accelerometer.\-h}}
+}
+
+
+Sensor interface for the accelerometer.  
+
+
+{\ttfamily \#include $<$stdint.\-h$>$}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+char \hyperlink{_accelerometer_8h_a7e69a8b56c6c8df2ed4cc3d629bf72f1}{Accelerometer\-\_\-init} ()
+\item 
+void \hyperlink{_accelerometer_8h_a578544a592f54e03bb1446b50075b696}{Accelerometer\-\_\-run\-S\-M} ()
+\item 
+int16\-\_\-t \hyperlink{_accelerometer_8h_af4569ae914222263883c2a40404610ea}{Accelerometer\-\_\-get\-X} ()
+\item 
+int16\-\_\-t \hyperlink{_accelerometer_8h_aa4837d3a626ef32a9075e609a88fdf84}{Accelerometer\-\_\-get\-Y} ()
+\item 
+int16\-\_\-t \hyperlink{_accelerometer_8h_a9d440b94192ad58d54f0e285a353ce24}{Accelerometer\-\_\-get\-Z} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Sensor interface for the accelerometer. \begin{DoxyAuthor}{Author}
+David Goodman
+\end{DoxyAuthor}
+Module that wraps the accelerometer sensor in a state machine that ocassionally takes readings over an I2\-C bus.
+
+\begin{DoxyDate}{Date}
+January 23, 2013, 1\-:24 P\-M -- Created 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\hypertarget{_accelerometer_8h_af4569ae914222263883c2a40404610ea}{\index{Accelerometer.\-h@{Accelerometer.\-h}!Accelerometer\-\_\-get\-X@{Accelerometer\-\_\-get\-X}}
+\index{Accelerometer\-\_\-get\-X@{Accelerometer\-\_\-get\-X}!Accelerometer.h@{Accelerometer.\-h}}
+\subsubsection[{Accelerometer\-\_\-get\-X}]{\setlength{\rightskip}{0pt plus 5cm}int16\-\_\-t Accelerometer\-\_\-get\-X (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{_accelerometer_8h_af4569ae914222263883c2a40404610ea}
+Function\-: Accelerometer\-\_\-get\-X \begin{DoxyReturn}{Returns}
+G-\/\-Count on the X-\/axis. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+David Goodman 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-23 
+\end{DoxyDate}
+\hypertarget{_accelerometer_8h_aa4837d3a626ef32a9075e609a88fdf84}{\index{Accelerometer.\-h@{Accelerometer.\-h}!Accelerometer\-\_\-get\-Y@{Accelerometer\-\_\-get\-Y}}
+\index{Accelerometer\-\_\-get\-Y@{Accelerometer\-\_\-get\-Y}!Accelerometer.h@{Accelerometer.\-h}}
+\subsubsection[{Accelerometer\-\_\-get\-Y}]{\setlength{\rightskip}{0pt plus 5cm}int16\-\_\-t Accelerometer\-\_\-get\-Y (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{_accelerometer_8h_aa4837d3a626ef32a9075e609a88fdf84}
+Function\-: Accelerometer\-\_\-get\-Y \begin{DoxyReturn}{Returns}
+G-\/\-Count on the Y-\/axis. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+David Goodman 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-23 
+\end{DoxyDate}
+\hypertarget{_accelerometer_8h_a9d440b94192ad58d54f0e285a353ce24}{\index{Accelerometer.\-h@{Accelerometer.\-h}!Accelerometer\-\_\-get\-Z@{Accelerometer\-\_\-get\-Z}}
+\index{Accelerometer\-\_\-get\-Z@{Accelerometer\-\_\-get\-Z}!Accelerometer.h@{Accelerometer.\-h}}
+\subsubsection[{Accelerometer\-\_\-get\-Z}]{\setlength{\rightskip}{0pt plus 5cm}int16\-\_\-t Accelerometer\-\_\-get\-Z (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{_accelerometer_8h_a9d440b94192ad58d54f0e285a353ce24}
+Function\-: Accelerometer\-\_\-get\-Z \begin{DoxyReturn}{Returns}
+G-\/\-Count on the Z-\/axis. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+David Goodman 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-23 
+\end{DoxyDate}
+\hypertarget{_accelerometer_8h_a7e69a8b56c6c8df2ed4cc3d629bf72f1}{\index{Accelerometer.\-h@{Accelerometer.\-h}!Accelerometer\-\_\-init@{Accelerometer\-\_\-init}}
+\index{Accelerometer\-\_\-init@{Accelerometer\-\_\-init}!Accelerometer.h@{Accelerometer.\-h}}
+\subsubsection[{Accelerometer\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}char Accelerometer\-\_\-init (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{_accelerometer_8h_a7e69a8b56c6c8df2ed4cc3d629bf72f1}
+Function\-: Accelerometer\-\_\-init \begin{DoxyReturn}{Returns}
+S\-U\-C\-C\-E\-S\-S or F\-A\-I\-L\-U\-R\-E. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Initializes the module and makes contact with the accelerometer. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+David Goodman 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-23 
+\end{DoxyDate}
+\hypertarget{_accelerometer_8h_a578544a592f54e03bb1446b50075b696}{\index{Accelerometer.\-h@{Accelerometer.\-h}!Accelerometer\-\_\-run\-S\-M@{Accelerometer\-\_\-run\-S\-M}}
+\index{Accelerometer\-\_\-run\-S\-M@{Accelerometer\-\_\-run\-S\-M}!Accelerometer.h@{Accelerometer.\-h}}
+\subsubsection[{Accelerometer\-\_\-run\-S\-M}]{\setlength{\rightskip}{0pt plus 5cm}void Accelerometer\-\_\-run\-S\-M (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{_accelerometer_8h_a578544a592f54e03bb1446b50075b696}
+Function\-: Accelerometer\-\_\-run\-S\-M \begin{DoxyReturn}{Returns}
+None. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Steps into the module's state machine, which updates the x,y,z readings every time a timer expires. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+David Goodman 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-23 
+\end{DoxyDate}

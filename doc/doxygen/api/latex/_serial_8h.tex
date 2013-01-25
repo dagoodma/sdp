@@ -1,0 +1,155 @@
+\hypertarget{_serial_8h}{\section{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Serial.h File Reference}
+\label{_serial_8h}\index{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Serial.\-h@{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Serial.\-h}}
+}
+
+
+Interace for communicating serially over U\-A\-R\-T.  
+
+
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+char \hyperlink{_serial_8h_ad2a3e431be3988d9e22b0f168df0cd0b}{Serial\-\_\-init} (void)
+\item 
+void \hyperlink{_serial_8h_a7e52addc05bffd102587406c168ff3b0}{Serial\-\_\-put\-Char} (char ch)
+\item 
+char \hyperlink{_serial_8h_afa3f8895e1593f99b8375e14ee9afd6c}{Serial\-\_\-get\-Char} (void)
+\item 
+char \hyperlink{_serial_8h_a82a76e763f9b140a1316f0ee5f3edbb2}{Serial\-\_\-is\-Transmit\-Empty} (void)
+\item 
+char \hyperlink{_serial_8h_a34af1add4f44cb27899ceab2b3994d3a}{Serial\-\_\-is\-Receive\-Empty} (void)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Interace for communicating serially over U\-A\-R\-T. \begin{DoxyAuthor}{Author}
+Max Dunne
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+January, 18, 2013, 11\-:52 P\-M -- Edited 
+
+November 10, 2011, 8\-:43 A\-M -- Created 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\hypertarget{_serial_8h_afa3f8895e1593f99b8375e14ee9afd6c}{\index{Serial.\-h@{Serial.\-h}!Serial\-\_\-get\-Char@{Serial\-\_\-get\-Char}}
+\index{Serial\-\_\-get\-Char@{Serial\-\_\-get\-Char}!Serial.h@{Serial.\-h}}
+\subsubsection[{Serial\-\_\-get\-Char}]{\setlength{\rightskip}{0pt plus 5cm}char Serial\-\_\-get\-Char (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{_serial_8h_afa3f8895e1593f99b8375e14ee9afd6c}
+Function\-: Serial\-\_\-get\-Char 
+\begin{DoxyParams}{Parameters}
+{\em None} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+character or 0 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+retrieves first character from the receive buffer or 0 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Max Dunne 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2011.\-11.\-10 
+\end{DoxyDate}
+\hypertarget{_serial_8h_ad2a3e431be3988d9e22b0f168df0cd0b}{\index{Serial.\-h@{Serial.\-h}!Serial\-\_\-init@{Serial\-\_\-init}}
+\index{Serial\-\_\-init@{Serial\-\_\-init}!Serial.h@{Serial.\-h}}
+\subsubsection[{Serial\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}char Serial\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{_serial_8h_ad2a3e431be3988d9e22b0f168df0cd0b}
+Function\-: Serial\-\_\-init 
+\begin{DoxyParams}{Parameters}
+{\em None} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+S\-U\-C\-C\-E\-S\-S or E\-R\-R\-O\-R. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Initializes the U\-A\-R\-T subsystem to 115200 and sets up the circular buffer 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Max Dunne 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2011.\-11.\-10 
+\end{DoxyDate}
+\hypertarget{_serial_8h_a34af1add4f44cb27899ceab2b3994d3a}{\index{Serial.\-h@{Serial.\-h}!Serial\-\_\-is\-Receive\-Empty@{Serial\-\_\-is\-Receive\-Empty}}
+\index{Serial\-\_\-is\-Receive\-Empty@{Serial\-\_\-is\-Receive\-Empty}!Serial.h@{Serial.\-h}}
+\subsubsection[{Serial\-\_\-is\-Receive\-Empty}]{\setlength{\rightskip}{0pt plus 5cm}char Serial\-\_\-is\-Receive\-Empty (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{_serial_8h_a34af1add4f44cb27899ceab2b3994d3a}
+Function\-: Serial\-\_\-is\-Receive\-Empty 
+\begin{DoxyParams}{Parameters}
+{\em None} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+T\-R\-U\-E or F\-A\-L\-S\-E 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+returns the state of the receive buffer 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Max Dunne 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2011.\-12.\-15 
+\end{DoxyDate}
+\hypertarget{_serial_8h_a82a76e763f9b140a1316f0ee5f3edbb2}{\index{Serial.\-h@{Serial.\-h}!Serial\-\_\-is\-Transmit\-Empty@{Serial\-\_\-is\-Transmit\-Empty}}
+\index{Serial\-\_\-is\-Transmit\-Empty@{Serial\-\_\-is\-Transmit\-Empty}!Serial.h@{Serial.\-h}}
+\subsubsection[{Serial\-\_\-is\-Transmit\-Empty}]{\setlength{\rightskip}{0pt plus 5cm}char Serial\-\_\-is\-Transmit\-Empty (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{_serial_8h_a82a76e763f9b140a1316f0ee5f3edbb2}
+Function\-: Serial\-\_\-is\-Transmit\-Empty 
+\begin{DoxyParams}{Parameters}
+{\em None} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+T\-R\-U\-E or F\-A\-L\-S\-E 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+returns the state of the transmit buffer 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Max Dunne 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2011.\-12.\-15 
+\end{DoxyDate}
+\hypertarget{_serial_8h_a7e52addc05bffd102587406c168ff3b0}{\index{Serial.\-h@{Serial.\-h}!Serial\-\_\-put\-Char@{Serial\-\_\-put\-Char}}
+\index{Serial\-\_\-put\-Char@{Serial\-\_\-put\-Char}!Serial.h@{Serial.\-h}}
+\subsubsection[{Serial\-\_\-put\-Char}]{\setlength{\rightskip}{0pt plus 5cm}void Serial\-\_\-put\-Char (
+\begin{DoxyParamCaption}
+\item[{char}]{ch}
+\end{DoxyParamCaption}
+)}}\label{_serial_8h_a7e52addc05bffd102587406c168ff3b0}
+Function\-: Serial\-\_\-put\-Char 
+\begin{DoxyParams}{Parameters}
+{\em ch,the} & char to be sent \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+None 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+adds character to circular buffer and starts the uart transmitting if not already 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Max Dunne 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2011.\-11.\-10 
+\end{DoxyDate}

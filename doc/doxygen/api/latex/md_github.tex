@@ -1,0 +1,66 @@
+\subsubsection*{Forking the project}
+
+To make changes to this project, you should create your own fork, and then issue pull requests when merges are desired. See\-: \href{https://help.github.com/articles/fork-a-repo}{\tt https\-://help.\-github.\-com/articles/fork-\/a-\/repo} for more info.
+
+\subsubsection*{Checkout your fork from Github}
+
+git clone \href{mailto:git@github.com}{\tt git@github.\-com}\-:username/sdp
+
+\subsubsection*{See the changes files}
+
+git status -\/s
+
+\subsubsection*{Add changed files}
+
+git add -\/\-A
+
+\subsubsection*{Commit to local repository}
+
+git commit -\/a -\/m \char`\"{}\-Your message\char`\"{}
+
+\subsubsection*{Commit to github}
+
+To commit code to the github first be sure your S\-S\-H public key is generated in .ssh and added to your github account (see below). Be sure to see\-: \href{http://help.github.com/create-a-repo/}{\tt http\-://help.\-github.\-com/create-\/a-\/repo/} for more info. \begin{DoxyVerb}git push -u origin master
+\end{DoxyVerb}
+
+
+\subsection*{How to configure ssh public key }
+
+Once you have a github account you must configure your public ssh key for each computer you wish to use.
+
+\subsubsection*{Generate an ssh-\/rsa public key}
+
+ssh-\/keygen
+
+Next, copy the contents of id\-\_\-rsa.\-pub and login to your github account. Under account settings $>$ S\-S\-H Keys click Add New S\-S\-H Key, paste, and done.
+
+\subsubsection*{Configure info}
+
+\begin{DoxyVerb}git config --global user.name "Your Name"
+git config --global user.email your@email.com
+\end{DoxyVerb}
+
+
+\subsection*{Add/create a fresh repository }
+
+Be sure to see\-: \href{http://help.github.com/create-a-repo/}{\tt http\-://help.\-github.\-com/create-\/a-\/repo/} for more info.
+
+\subsubsection*{Create a new local and push to Git\-Hub}
+
+\begin{DoxyVerb}mkdir sdp
+cd sdp
+git init
+touch README.md
+git add README.md
+git commit -m 'Initial commit.'
+git remote add origin git@github.com:username/sdp.git
+git push -u origin master
+\end{DoxyVerb}
+
+
+\subsubsection*{Push from existing Git Repo}
+
+\begin{DoxyVerb}cd existing_git_repo
+git remote add origin git@github.com:username/sdp.git
+git push -u origin master\end{DoxyVerb}
+ 

@@ -1,9 +1,18 @@
-/* 
- * File:   Barometer.h
- * Author: Shehadeh H. Dajani
+/**
+ * @file    Barometer.h
+ * @author  Shehadeh H. Dajani
+ * @author  David Goodman
  *
- * Created on January 21, 2013, 4:55 PM
+ * @brief
+ * Sensor interface for the barometer.
+ *
+ * @details
+ * Module that wraps the barometer sensor in a state machine
+ * that ocassionally takes readings over an I2C bus.
+
+ * @date January 21, 2013, 4:55 PM -- Created
  */
+
 
 #ifndef Barometer_H
 #define Barometer_H
@@ -20,7 +29,6 @@
 
 /**
  * Function: Barometer_getTemperatureData
- * @param
  * @return Data, (long) 16-bit temperature data
  * @remark Returns the pre-converted temperature data.
  * @author Shehadeh H. Dajani
@@ -29,7 +37,6 @@ long Barometer_getTemperatureData(void);
 
 /**
  * Function: Barometer_getPressureData
- * @param
  * @return Data, (long) 16-bit temperature data
  * @remark Returns the pre-converted temperature data.
  * @author Shehadeh H. Dajani
@@ -38,7 +45,6 @@ long Barometer_getPressureData(void);
 
 /**
  * Function: Barometer_getPressureData
- * @param
  * @return Data, (long) 16-bit temperature data
  * @remark Updates the barometer's temperature.
  * @author David Goodman

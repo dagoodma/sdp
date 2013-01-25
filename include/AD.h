@@ -1,21 +1,31 @@
-/*
- * File:   AD.h
- * Author: mdunne
- * Edited by: David Goodman
+/**
+ * @file    AD.h
+ * @author  Max Dunne
+ * @author  David Goodman
  *
- * Software module to enable the Analog to Digital converter of the Uno32 boards.
- * All analog pins are are Port V and Port W, with an additional analog input for
- * the battery voltage (through a 10:1 divider).
+ * @brief
+ * Multiplexes the AD/C to read analog ports.
  *
- * NOTE: Analog pins automatically take over digital I/O regardless of which TRIS
- *       state it is in. There remains an error in the ADC code such that if all 12
- *       pins are enabled, one of them does not respond.
+ * @details
+ * Software module to enable the Analog to Digital converter of the
+ * Uno32 boards.  All analog pins are are Port V and Port W, with an
+ * additional analog input for the battery voltage (through a 10:1
+ * divider).
  *
- * AD_TEST (in the .c file) conditionally compiles the test harness for the code. 
+ * @note
+ * Analog pins automatically take over digital I/O regardless of which
+ * TRIS state it is in. There remains an error in the ADC code such that
+ * if all 12 pins are enabled, one of them does not respond.
+ *
+ * @note
+ * AD_TEST (in the .c file) conditionally compiles the test harness for
+ * the code. 
+ * 
+ * @note
  * Make sure it is commented out for module useage.
  *
- * Edited on January 24, 2011, 3:09 AM
- * Created on November 22, 2011, 8:57 AM
+ * @date January 24, 2011, 3:09 AM  -- Edited
+ * @date November 22, 2011, 8:57 AM -- Created
  */
 
 #ifndef AD_H
@@ -48,7 +58,7 @@
 
 /**
  * Function: AD_init
- * @param Pins, used #defined AD_PORTxxx OR'd together for each A/D Pin
+ * @param Pins, use #defined AD_PORTxxx OR'd together for each A/D Pin
  * @return SUCCESS or ERROR
  * @remark Initializes the A/D pins requested into analog inputs and configures the A/D subsystem.
  * It then generates the mapping for correctly reading the pin and then starts the A/D system.
@@ -59,7 +69,7 @@ unsigned char AD_init(unsigned int Pins);
 
 /**
  * Function: AD_readPin
- * @param Pin, used #defined AD_PORTxxx to select pin
+ * @param Pin, use #defined AD_PORTxxx to select pin
  * @return 10-bit AD Value or ERROR
  * @remark Reads current value from buffer for given pin
  * @author Max Dunne

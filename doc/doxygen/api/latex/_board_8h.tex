@@ -1,0 +1,101 @@
+\hypertarget{_board_8h}{\section{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Board.h File Reference}
+\label{_board_8h}\index{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Board.\-h@{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Board.\-h}}
+}
+
+
+Interface for P\-I\-C32 board.  
+
+
+{\ttfamily \#include $<$xc.\-h$>$}\\*
+{\ttfamily \#include $<$plib.\-h$>$}\\*
+{\ttfamily \#include $<$stdint.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{_board_8h_ac5a2126b0fffc034a25862fa0b3200b2}{\#define {\bfseries D\-E\-L\-A\-Y}(ms)~do \{ int i; for (i = 0; i $<$ (ms $<$$<$ 8); i++) \{ asm (\char`\"{}nop\char`\"{}); \} \} while(0);}\label{_board_8h_ac5a2126b0fffc034a25862fa0b3200b2}
+
+\item 
+\hypertarget{_board_8h_aa93f0eb578d23995850d61f7d61c55c1}{\#define {\bfseries F\-A\-L\-S\-E}~((int8\-\_\-t) 0)}\label{_board_8h_aa93f0eb578d23995850d61f7d61c55c1}
+
+\item 
+\hypertarget{_board_8h_aa8cecfc5c5c054d2875c03e77b7be15d}{\#define {\bfseries T\-R\-U\-E}~((int8\-\_\-t) 1)}\label{_board_8h_aa8cecfc5c5c054d2875c03e77b7be15d}
+
+\item 
+\hypertarget{_board_8h_a8fe83ac76edc595f6b98cd4a4127aed5}{\#define {\bfseries E\-R\-R\-O\-R}~((int8\-\_\-t) -\/1)}\label{_board_8h_a8fe83ac76edc595f6b98cd4a4127aed5}
+
+\item 
+\hypertarget{_board_8h_aa90cac659d18e8ef6294c7ae337f6b58}{\#define {\bfseries S\-U\-C\-C\-E\-S\-S}~((int8\-\_\-t) 0)}\label{_board_8h_aa90cac659d18e8ef6294c7ae337f6b58}
+
+\item 
+\hypertarget{_board_8h_a6d58f9ac447476b4e084d7ca383f5183}{\#define {\bfseries F\-A\-I\-L\-U\-R\-E}~((int8\-\_\-t) 1)}\label{_board_8h_a6d58f9ac447476b4e084d7ca383f5183}
+
+\item 
+\hypertarget{_board_8h_abe286af58dae70c9e76e62da46547614}{\#define {\bfseries T\-I\-M\-E\-R\-\_\-\-B\-A\-R\-O\-M\-E\-T\-E\-R}~1}\label{_board_8h_abe286af58dae70c9e76e62da46547614}
+
+\item 
+\hypertarget{_board_8h_a5f40bae1383a95956620f4b26387f620}{\#define {\bfseries T\-I\-M\-E\-R\-\_\-\-A\-C\-C\-E\-L\-E\-R\-O\-M\-E\-T\-E\-R}~2}\label{_board_8h_a5f40bae1383a95956620f4b26387f620}
+
+\item 
+\hypertarget{_board_8h_a208e6ff9660c04cd7f938cb648529f0c}{\#define {\bfseries T\-I\-M\-E\-R\-\_\-\-T\-E\-S\-T}~15}\label{_board_8h_a208e6ff9660c04cd7f938cb648529f0c}
+
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{_board_8h_a2156c2766693e679c1c199628fe05970}{Board\-\_\-init} ()
+\item 
+uint32\-\_\-t \hyperlink{_board_8h_a8681366106f634df71d4aeaa09f68f38}{Board\-\_\-\-Get\-P\-B\-Clock} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Interface for P\-I\-C32 board. \begin{DoxyAuthor}{Author}
+Max Dunne 
+
+David Goodman
+\end{DoxyAuthor}
+Contains functions and definitions for a P\-I\-C32 board.
+
+\begin{DoxyDate}{Date}
+January 1, 2013 -- Edited 
+
+December 19, 2012, 2\-:08 P\-M -- Created 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\hypertarget{_board_8h_a8681366106f634df71d4aeaa09f68f38}{\index{Board.\-h@{Board.\-h}!Board\-\_\-\-Get\-P\-B\-Clock@{Board\-\_\-\-Get\-P\-B\-Clock}}
+\index{Board\-\_\-\-Get\-P\-B\-Clock@{Board\-\_\-\-Get\-P\-B\-Clock}!Board.h@{Board.\-h}}
+\subsubsection[{Board\-\_\-\-Get\-P\-B\-Clock}]{\setlength{\rightskip}{0pt plus 5cm}uint32\-\_\-t Board\-\_\-\-Get\-P\-B\-Clock (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{_board_8h_a8681366106f634df71d4aeaa09f68f38}
+Function\-: Board\-\_\-\-Get\-P\-B\-Clock \begin{DoxyReturn}{Returns}
+System bus speed in hertz. 
+\end{DoxyReturn}
+\begin{DoxyAuthor}{Author}
+David Goodman 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-18 
+\end{DoxyDate}
+\hypertarget{_board_8h_a2156c2766693e679c1c199628fe05970}{\index{Board.\-h@{Board.\-h}!Board\-\_\-init@{Board\-\_\-init}}
+\index{Board\-\_\-init@{Board\-\_\-init}!Board.h@{Board.\-h}}
+\subsubsection[{Board\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}void Board\-\_\-init (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{_board_8h_a2156c2766693e679c1c199628fe05970}
+Function\-: Board\-\_\-init \begin{DoxyReturn}{Returns}
+None. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Initializes the Serial interface and enables interrupts. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+David Goodman 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-18 
+\end{DoxyDate}
