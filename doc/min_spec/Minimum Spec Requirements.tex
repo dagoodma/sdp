@@ -1,0 +1,37 @@
+\documentclass[11pt]{amsart}
+\usepackage{geometry, color, mathtools, amsfonts, graphics,amsmath}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+\begin{document}
+
+\title{Minimum Specification Requirements}
+
+\author{Autonomous Lifeguard Group}
+%\date{}                                           % Activate to display a given date or no date
+
+
+
+\maketitle
+{
+In order to achieve a passing mark in the CMPE 129 Senior Design Series, a minimum specification must be met.
+The Autonomous Lifeguard Group will be expected to demo the entire system in a body of water within a set scope of functionality. 
+
+The demo will take place on a lake in Santa Cruz, where a waypoint will be selected by an advisor within the range of no more than 100 meters from the shoreline. A teammate will operate the Command Center obtaining GPS coordinates of the waypoint of interest. The Autonomous Surface Vessel (ASV) will be docked in the lake at a point no more than 300 meters away from the point of interest. It will be required to navigate to the waypoint within the amount of time it would take a lifeguard to swim to that point. This will be calculated with the formula below:
+
+\section{Command Center}
+The Command Center must offer ease-of-use to the operator by allowing for swift maneuverability and a push-button interface for commands and operation. It is to be mounted at a location on the shore at least 15 feet above water level. The Command Center must be able to obtain the latitudinal and longitudinal coordinates of the selected waypoint, and wirelessly communicate the coordinates to the ASV at a distance of at least 350 meters.
+
+\section{Autonomous Surface Vessel}
+The Autonomous Surface Vessel must be deployable from a location in the water within the above mentioned waypoint radius (300m from waypoint). In addition, the ASV must have enough buoyancy to support a person. The ASV must be able to wirelessly communicate with the Command Center at a distance of at least 350 meters. Finally, the ASV must be able to reach its target waypoint within the amount of time it would take a lifeguard to swim there.
+
+
+}
+
+
+
+\end{document}  

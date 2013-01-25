@@ -1,0 +1,55 @@
+% Dumps packets from the connected serial device
+
+% variables
+DEBUG=1;
+record=1;
+
+%% GPS Configuration
+% device enumeration
+uno32=1;
+
+% device names
+clear names;
+names(uno32)={'Uno32 Thermal Sensor'};
+
+% close all serial ports
+delete(instrfindall)
+
+% com ports (configure these)
+clear portnums;
+portnums(uno32)=4;
+%portnums(ublox1)={'/dev/tty.usbserial-A1012WFD'};
+
+% connect to devices
+clear ports;
+ports(uno32) = {gps_configureDevice(names(uno32),portnums(uno32))};
+
+if DEBUG
+    disp(sprintf('Success!\n'));
+    disp(sprintf('Listening...'));
+end
+
+%% Read GPS data
+% Dump messages
+total=60;
+i=1;
+msg={zeros(1,total)};
+try
+    while i <= total,
+        out = gps_readMessage_ubx(ports{ublox2},0);
+        if out{3} == 1 && out{4} == 2
+            msg{i} = out;
+            i = i + 1;
+        end
+        %disp(out);
+    end
+catch err
+    % Do nothing
+    disp(err.message);
+end
+
+%% Clean up
+delete(instrfindall)
+clear ports portnums names;
+
+% Done
