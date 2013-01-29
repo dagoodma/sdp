@@ -40,34 +40,44 @@ if id(1) == 1
     %  NAV-POSLLH (0x01 0x02) - Geodetic Position Solution Message
     if id(2) == 2
         % iTow (ms) uint32_t - GPS Millisecond Time of Week
-        arr(1) = typecast(uint32(bitconcat(fi(msg{pS + 3},0,8), fi(msg{pS + 2},0,8), fi(msg{pS + 1},0,8), fi(msg{pS},0,8))),'uint32');
+        arr(1) = uint32(bitshift(msg{pS + 3}, 24) + bitshift(msg{pS + 2}, 16) + bitshift(msg{pS + 1}, 8) + msg{pS});
+        %typecast(uint32(bitconcat(fi(msg{pS + 3},0,8), fi(msg{pS + 2},0,8), fi(msg{pS + 1},0,8), fi(msg{pS},0,8))),'uint32');
         % lon (deg) int32_t - Longitude scaled 1e-7
-        arr(2) = typecast(uint32(bitconcat(fi(msg{pS + 7},0,8), fi(msg{pS + 6},0,8), fi(msg{pS + 5},0,8), fi(msg{pS + 4},0,8))),'int32');
+        arr(2) = int32(bitshift(msg{pS + 7}, 24) + bitshift(msg{pS + 6}, 16) + bitshift(msg{pS + 5}, 8) + msg{pS + 4});
+        %typecast(uint32(bitconcat(fi(msg{pS + 7},0,8), fi(msg{pS + 6},0,8), fi(msg{pS + 5},0,8), fi(msg{pS + 4},0,8))),'int32');
         % lat (deg) int32_t - Latitude scaled 1e-7
-        arr(3) = typecast(uint32(bitconcat(fi(msg{pS + 11},0,8), fi(msg{pS + 10},0,8), fi(msg{pS + 9},0,8), fi(msg{pS + 8},0,8))),'int32');
+        arr(3) = int32(bitshift(msg{pS + 11}, 24) + bitshift(msg{pS + 10}, 16) + bitshift(msg{pS + 9}, 8) + msg{pS + 8});
+        %typecast(uint32(bitconcat(fi(msg{pS + 11},0,8), fi(msg{pS + 10},0,8), fi(msg{pS + 9},0,8), fi(msg{pS + 8},0,8))),'int32');
         % height (mm) int32_t - Height above Ellipsoid
-        arr(4) = typecast(uint32(bitconcat(fi(msg{pS + 15},0,8), fi(msg{pS + 14},0,8), fi(msg{pS + 13},0,8), fi(msg{pS + 12},0,8))),'int32');
+        arr(4) = int32(bitshift(msg{pS + 15}, 24) + bitshift(msg{pS + 14}, 16) + bitshift(msg{pS + 13}, 8) + msg{pS + 12});
+        %typecast(uint32(bitconcat(fi(msg{pS + 15},0,8), fi(msg{pS + 14},0,8), fi(msg{pS + 13},0,8), fi(msg{pS + 12},0,8))),'int32');
         % hMSL (mm) int32_t - Height above Mean Sea Level
-        arr(5) = typecast(uint32(bitconcat(fi(msg{pS + 19},0,8), fi(msg{pS + 18},0,8), fi(msg{pS + 17},0,8), fi(msg{pS + 16},0,8))),'int32');
+        arr(5) = int32(bitshift(msg{pS + 19}, 24) + bitshift(msg{pS + 18}, 16) + bitshift(msg{pS + 17}, 8) + msg{pS + 16});
+        %typecast(uint32(bitconcat(fi(msg{pS + 19},0,8), fi(msg{pS + 18},0,8), fi(msg{pS + 17},0,8), fi(msg{pS + 16},0,8))),'int32');
         % hAcc (mm) uint32_t - Horizontal Accuracy Estimate
-        arr(6) = typecast(uint32(bitconcat(fi(msg{pS + 23},0,8), fi(msg{pS + 22},0,8), fi(msg{pS + 21},0,8), fi(msg{pS + 20},0,8))),'uint32');
+        arr(6) = uint32(bitshift(msg{pS + 23}, 24) + bitshift(msg{pS + 22}, 16) + bitshift(msg{pS + 21}, 8) + msg{pS + 20});
+        %typecast(uint32(bitconcat(fi(msg{pS + 23},0,8), fi(msg{pS + 22},0,8), fi(msg{pS + 21},0,8), fi(msg{pS + 20},0,8))),'uint32');
         % vAcc (mm) uint32_t - Vertical Accuracy Estimate
-        arr(7) = typecast(uint32(bitconcat(fi(msg{pS + 27},0,8), fi(msg{pS + 26},0,8), fi(msg{pS + 25},0,8), fi(msg{pS + 24},0,8))),'uint32');
+        arr(7) = uint32(bitshift(msg{pS + 27}, 24) + bitshift(msg{pS + 26}, 16) + bitshift(msg{pS + 25}, 8) + msg{pS + 24});
+        %typecast(uint32(bitconcat(fi(msg{pS + 27},0,8), fi(msg{pS + 26},0,8), fi(msg{pS + 25},0,8), fi(msg{pS + 24},0,8))),'uint32');
     elseif id(2) == 3
         % iTow (ms) uint32_t - GPS Millisecond Time of Week
-        arr(1) = typecast(uint32(bitconcat(fi(msg{pS + 3},0,8), fi(msg{pS + 2},0,8), fi(msg{pS + 1},0,8), fi(msg{pS},0,8))),'uint32');
+        arr(1) = uint32(bitshift(msg{pS + 3}, 24) + bitshift(msg{pS + 2}, 16) + bitshift(msg{pS + 1}, 8) + msg{pS});
+        %typecast(uint32(bitconcat(fi(msg{pS + 3},0,8), fi(msg{pS + 2},0,8), fi(msg{pS + 1},0,8), fi(msg{pS},0,8))),'uint32');
         % gpsFix (enum) uint8_t - GPSfix Type
-        arr(2) = msg{pS + 4};
+        arr(2) = uint8(msg{pS + 4});
         % flags (bitfield) uint8_t - Navigation Status Flags
         arr(3) = msg{pS + 5};
         % diffStat (bitfield) int8_t - Differential Status
-        arr(4) = msg{pS + 6};
+        arr(4) = uint8(msg{pS + 6});
         % res  - Reserved
-        arr(5) = msg{pS + 7};
+        arr(5) = uint8(msg{pS + 7});
         % ttff (ms) uint32_t - Time to first fix (millisecond time tag)
-        arr(6) = typecast(uint32(bitconcat(fi(msg{pS + 11},0,8), fi(msg{pS + 10},0,8), fi(msg{pS + 9},0,8), fi(msg{pS + 8},0,8))),'uint32');
+        arr(6) = uint32(bitshift(msg{pS + 11}, 24) + bitshift(msg{pS + 10}, 16) + bitshift(msg{pS + 9}, 8) + msg{pS + 8});
+        %typecast(uint32(bitconcat(fi(msg{pS + 11},0,8), fi(msg{pS + 10},0,8), fi(msg{pS + 9},0,8), fi(msg{pS + 8},0,8))),'uint32');
         % msss (ms) uint32_t - Milliseconds since Startup / Reset
-        arr(7) = typecast(uint32(bitconcat(fi(msg{pS + 15},0,8), fi(msg{pS + 14},0,8), fi(msg{pS + 13},0,8), fi(msg{pS + 12},0,8))),'uint32');
+        arr(7) = uint32(bitshift(msg{pS + 15}, 24) + bitshift(msg{pS + 14}, 16) + bitshift(msg{pS + 13}, 8) + msg{pS + 12});
+        %typecast(uint32(bitconcat(fi(msg{pS + 15},0,8), fi(msg{pS + 14},0,8), fi(msg{pS + 13},0,8), fi(msg{pS + 12},0,8))),'uint32');
     else
         error(sprintf('Navigation message 0x%X not implemented.', id(2)));
     end
