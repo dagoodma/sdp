@@ -1,0 +1,10 @@
+try
+    while(1)
+        
+    end
+    
+catch err
+    % Do nothing
+    disp('Failed recording GPS data:');
+    disp(err.message);
+end

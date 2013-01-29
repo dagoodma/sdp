@@ -3,6 +3,7 @@
 % variables
 DEBUG=1;
 record=1;
+breakkey = 'q';
 
 %% GPS Configuration
 % device enumeration
@@ -24,10 +25,6 @@ portnums(ublox2)=6;
 %portnums(ublox1)={'/dev/tty.usbserial-A1012WFD'};
 %portnums(ublox2)={'/dev/tty.usbserial-A1012WEE'};
 
-% file names
-files(ublox1)={sprintf('data/%s_ublox1_geodetic',datestr(now,'yyyy.mm.dd-HHMMSS'))};
-files(ublox1)={sprintf('data/%s_ublox2_geodetic',datestr(now,'yyyy.mm.dd-HHMMSS'))};
-
 % connect to devices
 clear ports;
 %ports(ublox1) = {gps_configure_ublox(portnums(ublox1))};
@@ -47,8 +44,19 @@ STATUS_MSG = 3;
 NO_FIX = 0;
 
 % Device Statuses
-fixes(ublox1) = NO_FIX;
-fixes(ublox2) = NO_FIX;
+clear fixes;
+fixes(ublox1) = {NO_FIX};
+fixes(ublox2) = {NO_FIX};
+
+
+% Start a new KML file
+filenames(ublox1)={sprintf('%s_ublox1_geodetic',datestr(now,'yyyy.mm.dd-HHMMSS'))};
+filenames(ublox2)={sprintf('%s_ublox2_geodetic',datestr(now,'yyyy.mm.dd-HHMMSS'))};
+files(ublox1)={sprintf('data/%s',filenames{ublox1})};
+files(ublox2)={sprintf('data/%s',filenames{ublox2})};
+
+%k(ublox1) = {kml(filenames(ublox1))};
+k = kml(filenames{ublox2});
 
 
 %% Read GPS data
@@ -64,34 +72,44 @@ try
             % NAV-STATUS, fix or not
             if (out2{4} == STATUS_MSG)
                 parsed = gps_parseMessage_ubx(out2);
-
-                if DEBUG
-                    disp(sprintf('NAV-STATUS\n\tLat: %.2f\n\tLon: %.2f\n\thMSL: %.2f\n',parsed(3),parsed(2),parsed(5)));
-                end
                 
                 % No lock, so skip
                 if parsed(2) == NO_FIX
                     if DEBUG
-                        disp(sprintf(
+                        disp(sprintf('%s not fixed.',names{ublox2}));
                     end
-                    continue;
+                    continue
                 end
-                if DEBUG
+                
+                if DEBUG && fixes{ublox2} == NO_FIX
                 	disp(sprintf('%s has a lock.\n',names{ublox2}));
                 end
+                fixes{ublox2} = parsed(2);
             end
             % NAV-POSLLH, just want lat, lon data
-            if (out2{4} == POSLLH_MSG)
+            if (fixes{ublox2} ~= NO_FIX && out2{4} == POSLLH_MSG)
                 parsed = gps_parseMessage_ubx(out2);
-
+                lat = parsed(3)*10^(-7);
+                lon = parsed(2)*10^(-7);
+                %hmsl = (parsed(5)*10^(-3))*3.28084; % (ft)
+                hmsl = (parsed(5)*10^(-3)); % (m)
+                
                 if DEBUG
-                    disp(sprintf('NAV-POSLLH\n\tLat: %.2f\n\tLon: %.2f\n\thMSL: %.2f\n',parsed(3),parsed(2),parsed(5)));
+                    disp(sprintf('%s - NAV-POSLLH (%.0f)\n\tLat: %.2f\n\tLon: %.2f\n\thMSL: %.2f\n',names{ublox2},fixes{ublox2},lat,lon,hmsl));
                 end
+                
+                %k{ublox2}.plot3(lon,lat,hmsl)
+                k.plot3(lon,lat,hmsl)
             end
             
         end
-        
-    end
+        pause(0.01);
+        % Check for key press
+        if strcmp(get(gcf,'currentkey'),breakkey)
+            disp(sprintf('Stopped recording.\n'));
+            break
+        end
+    end % while
 catch err
     % Do nothing
     disp('Failed recording GPS data:');
@@ -99,8 +117,12 @@ catch err
 end
 
 %% Clean up
+% Save the results
+disp(sprintf('Saving %s.kml...',files{ublox2}));
+k.save(sprintf('%s.kml',files{ublox2}));
+
 delete(instrfindall)
-clear ports portnums names;
+clear ports portnums names k;
 
 % Done
 
