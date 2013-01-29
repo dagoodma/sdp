@@ -59,7 +59,7 @@ files(ublox2)={sprintf('data/%s',filenames{ublox2})};
 %k(ublox1) = {kml(filenames(ublox1))};
 k = kml(filenames{ublox2});
 
-
+err = 0;
 %% Read GPS data
 % Dump messages
 try
@@ -101,7 +101,7 @@ try
                 end
                 
                 %k{ublox2}.plot3(lon,lat,hmsl)
-                k.plot3(lon,lat,hmsl)
+                k.plot3(lon,lat,hmsl);
             end
             
         end
@@ -114,8 +114,6 @@ try
     end % while
 catch err
     % Do nothing
-    disp('Failed recording GPS data:');
-    disp(err.message);
 end
 
 %% Clean up
@@ -129,6 +127,12 @@ end
 
 closeallSerialPorts;
 clear k;
+
+
+if (strcmp(class(err), 'MException'))
+    disp('Failed recording GPS data:');
+    rethrow(err);
+end
 
 % Done
 

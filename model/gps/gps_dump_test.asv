@@ -39,7 +39,6 @@ end
 total=60;
 i=1;
 msg={zeros(1,total)};
-err = 0;
 try
     while i <= total,
         out = gps_readMessage_ubx(ports{ublox2},1);
@@ -51,14 +50,13 @@ try
     end
 catch err
     % Do nothing
+    disp(err.message);
 end
 
 %% Clean up
 delete(instrfindall)
 clear ports portnums names;
 
-if (strcmp(class(err), 'MException'))
-    rethrow(err);
-end
+
 
 % Done

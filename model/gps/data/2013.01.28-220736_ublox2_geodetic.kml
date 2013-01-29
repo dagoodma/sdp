@@ -1,0 +1,1546 @@
+<?xml version="1.0" encoding="utf-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2">
+   <Document>
+      <name>2013.01.28-220736_ublox2_geodetic</name>
+      <Placemark id="kml_plot3tp4c623be1_f659_413c_ba0f_7d3ec7275a3c">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp4c623be1_f659_413c_ba0f_7d3ec7275a3c">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999858,256.34 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpb4eabf9b_6d75_45a0_af4e_2b1cc9473b13">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpb4eabf9b_6d75_45a0_af4e_2b1cc9473b13">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999839,256.813 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpa13638c6_7637_4d3c_88ea_bb9bd650f6f4">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpa13638c6_7637_4d3c_88ea_bb9bd650f6f4">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999839,256.642 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp528a622e_0b77_4b62_9098_c9ea4c1593f7">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp528a622e_0b77_4b62_9098_c9ea4c1593f7">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999833,256.554 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp30f79c9a_aecf_469f_bc7a_297e9406d281">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp30f79c9a_aecf_469f_bc7a_297e9406d281">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999827,256.698 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp6d51c2de_88fa_4044_8eb6_c44bc8baefe3">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp6d51c2de_88fa_4044_8eb6_c44bc8baefe3">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999816,256.96 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpf16fd115_6696_489f_8997_b8468f156d70">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpf16fd115_6696_489f_8997_b8468f156d70">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999822,257.049 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp62ae52d6_9e5d_41c4_9226_7b946db0c62d">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp62ae52d6_9e5d_41c4_9226_7b946db0c62d">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999828,257.056 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpc362c94f_d8c2_4501_8455_d0273ce3f873">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpc362c94f_d8c2_4501_8455_d0273ce3f873">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999833,256.715 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpe82897bf_5f9d_452d_8187_e9b1c9892d06">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpe82897bf_5f9d_452d_8187_e9b1c9892d06">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999813,256.985 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp5430c0f7_d1aa_47c6_b279_5b6425806f57">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp5430c0f7_d1aa_47c6_b279_5b6425806f57">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999802,257.199 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp2f464272_f77f_40fc_a81a_46e6f23df272">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp2f464272_f77f_40fc_a81a_46e6f23df272">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999805,257.604 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpbefbb283_c09b_4a4c_8784_86a3c360ab20">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpbefbb283_c09b_4a4c_8784_86a3c360ab20">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999815,257.554 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpf62f8473_ad57_475b_86ab_20d4d0ae9e40">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpf62f8473_ad57_475b_86ab_20d4d0ae9e40">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999821,257.148 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpa77e4982_cb8b_45f3_9164_ea9f51f8e113">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpa77e4982_cb8b_45f3_9164_ea9f51f8e113">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999774,257.547 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpa2f08f05_2015_4ac7_a68d_86f6462e0139">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpa2f08f05_2015_4ac7_a68d_86f6462e0139">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999771,257.505 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpd0ec46f2_1cc8_4237_8331_7518b15e86f9">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpd0ec46f2_1cc8_4237_8331_7518b15e86f9">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999756,257.993 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp0b37cfa7_9138_440c_bd0e_fab7fba0b6e9">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp0b37cfa7_9138_440c_bd0e_fab7fba0b6e9">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.99997279999999,258.588 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp7601c3b9_427b_4649_9a52_b8dd8bb816a6">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp7601c3b9_427b_4649_9a52_b8dd8bb816a6">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999729,258.383 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp1c473594_f72a_466b_9945_d999a5c3db7a">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp1c473594_f72a_466b_9945_d999a5c3db7a">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.999968,258.989 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp3ebb4648_9834_449e_b50b_c37e2fc02a0e">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp3ebb4648_9834_449e_b50b_c37e2fc02a0e">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999668,258.782 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpb69c98fc_85af_4791_9f28_92b52aa9fe2a">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpb69c98fc_85af_4791_9f28_92b52aa9fe2a">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999689,257.966 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp44197042_c23e_4a4b_8366_f0df8b13d1b1">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp44197042_c23e_4a4b_8366_f0df8b13d1b1">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999673,257.903 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp4e432032_11fa_4f29_814f_28accfc44ea3">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp4e432032_11fa_4f29_814f_28accfc44ea3">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999639,258.021 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpb2adca94_ead1_4cb3_b832_79777ba4347c">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpb2adca94_ead1_4cb3_b832_79777ba4347c">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999573,258.864 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp7ae7dec5_663a_404b_aa13_5394fabd1d66">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp7ae7dec5_663a_404b_aa13_5394fabd1d66">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999558,258.843 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp03c02121_cb5d_4c0c_8493_eda2dcbdb2e5">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp03c02121_cb5d_4c0c_8493_eda2dcbdb2e5">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999552,258.589 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpc7e4ed98_2db8_4d91_a40a_120a91d917e1">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpc7e4ed98_2db8_4d91_a40a_120a91d917e1">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999509,258.785 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpc67c915d_a912_4109_9594_6760ee5ea1b7">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpc67c915d_a912_4109_9594_6760ee5ea1b7">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999514,258.269 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpf21a57bb_e35a_44c0_beaf_9808392c79c0">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpf21a57bb_e35a_44c0_beaf_9808392c79c0">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999533,257.673 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp28268ca7_7144_458f_9c04_3ce2aab7ae16">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp28268ca7_7144_458f_9c04_3ce2aab7ae16">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999505,257.778 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpfd07e28e_1723_4fcc_8e64_008ea62d4fcb">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpfd07e28e_1723_4fcc_8e64_008ea62d4fcb">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999459,258.199 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp04c076ce_28cd_467f_8f39_8690702bde39">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp04c076ce_28cd_467f_8f39_8690702bde39">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999473,257.762 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp3301f439_88b7_4b28_8fa1_4d40075519ab">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp3301f439_88b7_4b28_8fa1_4d40075519ab">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999441,258.162 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp36002917_3125_43b1_b6b6_0cc1a2d9b909">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp36002917_3125_43b1_b6b6_0cc1a2d9b909">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999421,258.318 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp812f5d6b_9449_4edf_9ad5_e67e8c83f7c9">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp812f5d6b_9449_4edf_9ad5_e67e8c83f7c9">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999415,258.256 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp86453356_4a36_4c10_a735_83a41382e8bd">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp86453356_4a36_4c10_a735_83a41382e8bd">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.999941,258.173 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp6e5f746b_6644_4099_b3cf_292e1062a029">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp6e5f746b_6644_4099_b3cf_292e1062a029">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999445,257.403 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp12e0d214_274c_4040_b853_1478a8bcb0bb">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp12e0d214_274c_4040_b853_1478a8bcb0bb">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.999944,257.336 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpcbdc8f5e_068a_4885_a066_51337d931dcb">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpcbdc8f5e_068a_4885_a066_51337d931dcb">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999436,257.172 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpf52b3062_b342_430c_9d7f_411521e7c8f6">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpf52b3062_b342_430c_9d7f_411521e7c8f6">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999415,257.222 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp2b262a4c_2bb4_4886_981c_253f1a55f75a">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp2b262a4c_2bb4_4886_981c_253f1a55f75a">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.999945,256.401 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp159949d0_4c45_46dc_be8e_a0feab2bdff9">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp159949d0_4c45_46dc_be8e_a0feab2bdff9">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999409,256.857 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpd51473e9_a1ed_4d2c_a36d_ef5c19080c71">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpd51473e9_a1ed_4d2c_a36d_ef5c19080c71">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999439,256.22 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp154f2d91_1c6f_4150_8c00_9693c7782c60">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp154f2d91_1c6f_4150_8c00_9693c7782c60">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999433,256.052 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpdbf1fb54_b19c_4447_a85c_edcf9c668bf3">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpdbf1fb54_b19c_4447_a85c_edcf9c668bf3">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999507,254.637 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp96513813_0e70_4f55_9259_ea2c0b73a73f">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp96513813_0e70_4f55_9259_ea2c0b73a73f">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999496,254.619 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp2db9c85f_bc42_43af_a28b_9747e32bc09e">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp2db9c85f_bc42_43af_a28b_9747e32bc09e">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999517,254.232 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp591a882e_2f98_45ff_bccd_b099ab36599e">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp591a882e_2f98_45ff_bccd_b099ab36599e">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999549,253.752 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpd805b043_0ab5_4b93_99a5_07a1977084a8">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpd805b043_0ab5_4b93_99a5_07a1977084a8">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999543,253.681 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpf7e69b50_8409_4ec6_9114_7277fa42ed58">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpf7e69b50_8409_4ec6_9114_7277fa42ed58">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999557,253.162 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp7e5c2511_b2c7_468e_9a8e_a0a9c2f7af6b">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp7e5c2511_b2c7_468e_9a8e_a0a9c2f7af6b">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999605,252.171 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp55fcce24_d502_4ac0_8c80_023a1fc4fbcb">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp55fcce24_d502_4ac0_8c80_023a1fc4fbcb">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999616,251.681 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp12a36359_dc64_4f2c_9e2c_9dc63e91a848">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp12a36359_dc64_4f2c_9e2c_9dc63e91a848">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999621,251.207 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp2c5d72d6_0ac9_40b3_8db5_8ef85f828587">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp2c5d72d6_0ac9_40b3_8db5_8ef85f828587">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999651,250.428 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpd4d35d3d_58a5_427a_aa05_6e398a09182d">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpd4d35d3d_58a5_427a_aa05_6e398a09182d">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.99996489999999,250.189 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp6fb709b2_067d_4301_8e2e_6e152416f10a">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp6fb709b2_067d_4301_8e2e_6e152416f10a">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999627,250.478 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp05179422_b833_4b7c_bbb5_f89d3c018b48">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp05179422_b833_4b7c_bbb5_f89d3c018b48">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999606,250.766 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp4a0c0e8c_9a69_4fd1_b342_ff84907620fe">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp4a0c0e8c_9a69_4fd1_b342_ff84907620fe">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999584,251.054 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp4c031313_f4db_4c5a_b8c5_25d42af11375">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp4c031313_f4db_4c5a_b8c5_25d42af11375">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999562,251.342 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp05f1bf93_87ab_429b_a749_242bfab8b785">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp05f1bf93_87ab_429b_a749_242bfab8b785">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999541,251.631 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpd77ad3fc_ff26_4543_a086_d321e091529f">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpd77ad3fc_ff26_4543_a086_d321e091529f">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999519,251.919 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp87637e0f_b252_4852_90f1_7179acb18905">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp87637e0f_b252_4852_90f1_7179acb18905">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.999953,251.352 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpb160d09f_01e2_4018_b341_8418e954b0c3">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpb160d09f_01e2_4018_b341_8418e954b0c3">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.999951,250.938 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp9f64e4e7_5d58_4042_b418_45d1e8432b59">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp9f64e4e7_5d58_4042_b418_45d1e8432b59">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999577,249.248 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp68ee16c9_f59b_4e45_a9d3_ce128af2b89e">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp68ee16c9_f59b_4e45_a9d3_ce128af2b89e">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999607,248.204 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp4bf7025b_d0a7_41a9_a5c5_501b46501a7e">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp4bf7025b_d0a7_41a9_a5c5_501b46501a7e">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999602,247.976 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp38b14bb2_db37_4ec8_ab82_eed5b22955a0">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp38b14bb2_db37_4ec8_ab82_eed5b22955a0">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999611,247.436 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpaad19024_5074_4baa_bbc8_419a280f456c">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpaad19024_5074_4baa_bbc8_419a280f456c">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999624,246.653 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpcf12d57b_9eab_4486_96a1_aff6d3a76821">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpcf12d57b_9eab_4486_96a1_aff6d3a76821">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999574,246.809 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp6d76eca6_c34a_47ce_8c55_3e1f82dd50f8">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp6d76eca6_c34a_47ce_8c55_3e1f82dd50f8">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999546,246.568 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp6f54ed48_068f_4d7b_96d6_11c8f955297d">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp6f54ed48_068f_4d7b_96d6_11c8f955297d">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999537,246.385 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp5843a281_efa0_4869_98ac_145e31ca3325">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp5843a281_efa0_4869_98ac_145e31ca3325">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999493,246.67 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp958efe03_e9f4_45bf_bd61_ad891bc62733">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp958efe03_e9f4_45bf_bd61_ad891bc62733">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999537,245.605 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tpbd5517b4_f2bc_4feb_8868_56a0b15ddeb0">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tpbd5517b4_f2bc_4feb_8868_56a0b15ddeb0">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999594,244.915 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp0a029205_bf11_445a_829f_6e59b91f423a">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp0a029205_bf11_445a_829f_6e59b91f423a">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999587,245.24 </coordinates>
+         </LineString>
+      </Placemark>
+      <Placemark id="kml_plot3tp5f8946a8_a9c0_4ba6_a2dd_5caae2f6839f">
+         <name>kml_plot3</name>
+         <visibility>1</visibility>
+         <description/>
+         <Style>
+            <LineStyle>
+               <color>FFFFFFFF</color>
+               <width>1</width>
+            </LineStyle>
+            <PolyStyle>
+               <color>00FFFFFF</color>
+            </PolyStyle>
+         </Style>
+         <LineString id="LineString_kml_plot3tp5f8946a8_a9c0_4ba6_a2dd_5caae2f6839f">
+            <extrude>0</extrude>
+            <tesselate>1</tesselate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>214.7483647,36.9999581,245.354 </coordinates>
+         </LineString>
+      </Placemark>
+   </Document>
+</kml>

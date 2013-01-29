@@ -30,24 +30,22 @@ CHECKSUM_BYTE_NUMBER = 2;
 checksum = {0, 0};
 
 % Get packet length (little endian)
-payloadlength = uint16(bitshift(msg{LENGTH_POS + 1}, 8) + msg{LENGTH_POS});
-checkstop = PAYLOAD_POS + payloadlength;
-msgsize = size(msg);
+payloadlength = uint16(bitshift(msg{LENGTH_POS + 1}, 8) + msg{LENGTH_POS})
+checkstop = payloadlength + PAYLOAD_POS - CHECKSUM_BYTE_NUMBER
+msgsize = size(msg)
 if (checkstop > msgsize(2))
     % Erroneous length field
     return;
 end
+
 ck_a = 0; ck_b = 0;
 
-fprintf('Calculating chk over: %.0f to %.0f\n', CHECK_RANGE_START, checkstop);
 for i=CHECK_RANGE_START:checkstop,
-    ck_a = bitand(ck_a + msg{i}, 255, 'uint8');
-    ck_b = bitand(ck_b + ck_a, 255, 'uint8');
-    
-    
+    ck_a = uint8(ck_a + msg{i});
+    ck_b = uint8(ck_b + ck_a);
 end
 
-checksum = {uint8(ck_a), uint8(ck_b)};
+checksum = {ck_a, ck_b};
 %msg(length + 1) = ck_a;
 %msg(length + 2) = ck_b;
 
