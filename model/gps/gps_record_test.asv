@@ -47,14 +47,13 @@ STATUS_MSG = 3;
 NO_FIX = 0;
 
 % Device Statuses
-clear fixes;
-fixes(ublox1) = {NO_FIX};
-fixes(ublox2) = {NO_FIX};
+fixes(ublox1) = NO_FIX;
+fixes(ublox2) = NO_FIX;
 
 
 %% Read GPS data
 % Dump messages
-% try
+try
     while 1
         out2 = gps_readMessage_ubx(ports{ublox2},0);
         if ~iscell(out2)
@@ -65,38 +64,39 @@ fixes(ublox2) = {NO_FIX};
             % NAV-STATUS, fix or not
             if (out2{4} == STATUS_MSG)
                 parsed = gps_parseMessage_ubx(out2);
+
+                if DEBUG
+                    disp(sprintf('NAV-STATUS\n\tLat: %.2f\n\tLon: %.2f\n\thMSL: %.2f\n',parsed(3),parsed(2),parsed(5)));
+                end
                 
                 % No lock, so skip
                 if parsed(2) == NO_FIX
                     if DEBUG
-                        disp(sprintf('%s not fixed.',names{ublox2}));
+                        disp(sprintf(
                     end
-                    continue
+                    continue;
                 end
-                
-                if DEBUG && fixes{ublox2} == NO_FIX
+                if DEBUG
                 	disp(sprintf('%s has a lock.\n',names{ublox2}));
                 end
-                
-                fixes{ublox2} = parsed(2);
             end
             % NAV-POSLLH, just want lat, lon data
             if (out2{4} == POSLLH_MSG)
                 parsed = gps_parseMessage_ubx(out2);
 
                 if DEBUG
-                    disp(sprintf('%s - NAV-POSLLH (%.0f)\n\tLat: %.2f\n\tLon: %.2f\n\thMSL: %.2f\n',names{ublox2},fixes{ublox2},parsed(3),parsed(2),parsed(5)));
+                    disp(sprintf('NAV-POSLLH\n\tLat: %.2f\n\tLon: %.2f\n\thMSL: %.2f\n',parsed(3),parsed(2),parsed(5)));
                 end
             end
             
         end
         
     end
-% catch err
-%     % Do nothing
-%     disp('Failed recording GPS data:');
-%     disp(err.message);
-% end
+catch err
+    % Do nothing
+    disp('Failed recording GPS data:');
+    disp(err.message);
+end
 
 %% Clean up
 delete(instrfindall)

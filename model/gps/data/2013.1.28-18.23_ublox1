@@ -1,0 +1,949 @@
+>> gps_record_test
+Connecting to uBlox on /dev/tty.usbserial-A1012WFD at 38400 baud
+Connected to uBlox
+Finished configuring uBlox
+Success!
+
+Recording...
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -792014672.00
+	Lon: -259983177.00
+	hMSL: -369770496.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -2134191952.00
+	Lon: -259983177.00
+	hMSL: -1745567744.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1865756496.00
+	Lon: -2004813641.00
+	hMSL: -873218048.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1328885584.00
+	Lon: -1467942729.00
+	hMSL: -789397504.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -993341264.00
+	Lon: -528418633.00
+	hMSL: -1343111168.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -523579216.00
+	Lon: -1937704777.00
+	hMSL: -655310848.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -2134191952.00
+	Lon: -1803487049.00
+	hMSL: -437338112.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -2067083088.00
+	Lon: -1736378185.00
+	hMSL: -1141981184.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1731538768.00
+	Lon: -1602160457.00
+	hMSL: -454246400.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1429548880.00
+	Lon: -1266616137.00
+	hMSL: -420823040.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1261776720.00
+	Lon: -931071817.00
+	hMSL: -35012608.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -859123536.00
+	Lon: -528418633.00
+	hMSL: -1259880448.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -691351376.00
+	Lon: -327092041.00
+	hMSL: -1595490304.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -557133648.00
+	Lon: -259983177.00
+	hMSL: -588922880.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -456470352.00
+	Lon: -2038368073.00
+	hMSL: -2098872320.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -221589328.00
+	Lon: -1803487049.00
+	hMSL: -253509632.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -87371600.00
+	Lon: -1535051593.00
+	hMSL: -136134656.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -2067083088.00
+	Lon: -1333725001.00
+	hMSL: -1897807872.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -2016751440.00
+	Lon: -1098843977.00
+	hMSL: -1562263552.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1966419792.00
+	Lon: -696190793.00
+	hMSL: -2032025600.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1932865360.00
+	Lon: -259983177.00
+	hMSL: -924729344.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1865756496.00
+	Lon: -2139031369.00
+	hMSL: -253640704.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1781870416.00
+	Lon: -2105476937.00
+	hMSL: -1126121472.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1681207120.00
+	Lon: -2122254153.00
+	hMSL: -555761664.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1580543824.00
+	Lon: -2105476937.00
+	hMSL: -1461796864.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1530212176.00
+	Lon: -2021590857.00
+	hMSL: -555827200.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1446326096.00
+	Lon: -1937704777.00
+	hMSL: -1327579136.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1362440016.00
+	Lon: -1920927561.00
+	hMSL: -1864450048.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1228222288.00
+	Lon: -1853818697.00
+	hMSL: -1831026688.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1077227344.00
+	Lon: -1753155401.00
+	hMSL: -1210400768.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -976564048.00
+	Lon: -1719600969.00
+	hMSL: -958808064.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -859123536.00
+	Lon: -1669269321.00
+	hMSL: -170344448.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -792014672.00
+	Lon: -1635714889.00
+	hMSL: -589774848.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -724905808.00
+	Lon: -1568606025.00
+	hMSL: -1613185024.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -590688080.00
+	Lon: -1501497161.00
+	hMSL: -187187200.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -540356432.00
+	Lon: -1451165513.00
+	hMSL: -573128704.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -439693136.00
+	Lon: -1467942729.00
+	hMSL: -1009401856.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -288698192.00
+	Lon: -1434388297.00
+	hMSL: -2133540864.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -171257680.00
+	Lon: -1384056649.00
+	hMSL: -237846528.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -53817168.00
+	Lon: -1384056649.00
+	hMSL: -2116960256.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -2134126416.00
+	Lon: -1367279433.00
+	hMSL: -2100248576.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1597255504.00
+	Lon: -1350502217.00
+	hMSL: -875577344.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1731473232.00
+	Lon: -1417611081.00
+	hMSL: -1060323328.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1328820048.00
+	Lon: -1417611081.00
+	hMSL: -87310336.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -255078224.00
+	Lon: -1400833865.00
+	hMSL: -221593600.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -657731408.00
+	Lon: -1451165513.00
+	hMSL: -1060782080.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -389295952.00
+	Lon: -1467942729.00
+	hMSL: -1899708416.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -2100571984.00
+	Lon: -1417611081.00
+	hMSL: -1111310336.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1899245392.00
+	Lon: -1333725001.00
+	hMSL: -1597849600.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1966354256.00
+	Lon: -1283393353.00
+	hMSL: -607993856.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1630809936.00
+	Lon: -1233061705.00
+	hMSL: -1228947456.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1563701072.00
+	Lon: -1216284489.00
+	hMSL: -1598111744.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1429483344.00
+	Lon: -1199507273.00
+	hMSL: -1346519040.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1429483344.00
+	Lon: -1165952841.00
+	hMSL: -1128415232.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1362374480.00
+	Lon: -1165952841.00
+	hMSL: -88293376.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1328820048.00
+	Lon: -1149175625.00
+	hMSL: -1296252928.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1194602320.00
+	Lon: -1149175625.00
+	hMSL: -1061437440.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1261711184.00
+	Lon: -1132398409.00
+	hMSL: -524500992.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1194602320.00
+	Lon: -1115621193.00
+	hMSL: -491012096.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1093939024.00
+	Lon: -1098843977.00
+	hMSL: -1866809344.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -825503568.00
+	Lon: -1115621193.00
+	hMSL: -960970752.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -422850384.00
+	Lon: -1149175625.00
+	hMSL: -524959744.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -53751632.00
+	Lon: -1182730057.00
+	hMSL: -1967996928.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -2083794768.00
+	Lon: -1149175625.00
+	hMSL: -1968128000.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -2016685904.00
+	Lon: -1165952841.00
+	hMSL: -1833975808.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1882468176.00
+	Lon: -1300170569.00
+	hMSL: -122896384.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1882468176.00
+	Lon: -1367279433.00
+	hMSL: -928202752.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1848913744.00
+	Lon: -1367279433.00
+	hMSL: -2002010112.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1765027664.00
+	Lon: -1333725001.00
+	hMSL: -1834369024.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1815359312.00
+	Lon: -1283393353.00
+	hMSL: -1263878144.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1848913744.00
+	Lon: -1283393353.00
+	hMSL: -1096171520.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1798582096.00
+	Lon: -1266616137.00
+	hMSL: -1565999104.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1731473232.00
+	Lon: -1283393353.00
+	hMSL: -1230585856.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1664364368.00
+	Lon: -1333725001.00
+	hMSL: -106643456.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1614032720.00
+	Lon: -1384056649.00
+	hMSL: -1499217920.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1546923856.00
+	Lon: -1451165513.00
+	hMSL: -492650496.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1530146640.00
+	Lon: -1501497161.00
+	hMSL: -559824896.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1513369424.00
+	Lon: -1501497161.00
+	hMSL: -123617280.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1530146640.00
+	Lon: -1467942729.00
+	hMSL: -1079918592.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1563701072.00
+	Lon: -1400833865.00
+	hMSL: -157106176.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1647587152.00
+	Lon: -1367279433.00
+	hMSL: -593248256.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1580478288.00
+	Lon: -1350502217.00
+	hMSL: -1230848000.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1530146640.00
+	Lon: -1367279433.00
+	hMSL: -1281245184.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1395928912.00
+	Lon: -1384056649.00
+	hMSL: -2069905408.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1513369424.00
+	Lon: -1384056649.00
+	hMSL: -677330944.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1412706128.00
+	Lon: -1350502217.00
+	hMSL: -73482240.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1328820048.00
+	Lon: -1333725001.00
+	hMSL: -1113735168.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1261711184.00
+	Lon: -1266616137.00
+	hMSL: -744701952.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1244933968.00
+	Lon: -1199507273.00
+	hMSL: -1566785536.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1194602320.00
+	Lon: -1199507273.00
+	hMSL: -1852063744.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1093939024.00
+	Lon: -1149175625.00
+	hMSL: -526729216.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1077161808.00
+	Lon: -1082066761.00
+	hMSL: -1130708992.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1043607376.00
+	Lon: -998180681.00
+	hMSL: -241582080.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1026830160.00
+	Lon: -947849033.00
+	hMSL: -1332035584.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1060384592.00
+	Lon: -914294601.00
+	hMSL: -1382367232.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1161047888.00
+	Lon: -931071817.00
+	hMSL: -2137276416.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1144270672.00
+	Lon: -931071817.00
+	hMSL: -526663680.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1161047888.00
+	Lon: -880740169.00
+	hMSL: -862208000.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1144270672.00
+	Lon: -780076873.00
+	hMSL: -1868840960.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1127493456.00
+	Lon: -679413577.00
+	hMSL: -1801732096.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1110716240.00
+	Lon: -561973065.00
+	hMSL: -308625408.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1177825104.00
+	Lon: -494864201.00
+	hMSL: -660881408.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1177825104.00
+	Lon: -444532553.00
+	hMSL: -593772544.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1194602320.00
+	Lon: -427755337.00
+	hMSL: -694435840.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1244933968.00
+	Lon: -410978121.00
+	hMSL: -325271552.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1312042832.00
+	Lon: -377423689.00
+	hMSL: -1331838976.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1295265616.00
+	Lon: -343869257.00
+	hMSL: -2070036480.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1395928912.00
+	Lon: -310314825.00
+	hMSL: -610353152.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1362374480.00
+	Lon: -226428745.00
+	hMSL: -945897472.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1379151696.00
+	Lon: -192874313.00
+	hMSL: -1868578816.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1379151696.00
+	Lon: -159319881.00
+	hMSL: -1868578816.00
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1463037776.00
+	Lon: -192874313.00
+	hMSL: -257900544.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1496592208.00
+	Lon: -209651529.00
+	hMSL: -1465794560.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1530146640.00
+	Lon: -192874313.00
+	hMSL: -123551744.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1546923856.00
+	Lon: -142542665.00
+	hMSL: -626868224.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1580478288.00
+	Lon: -92211017.00
+	hMSL: -1063010304.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1614032720.00
+	Lon: -58656585.00
+	hMSL: -861618176.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1697918800.00
+	Lon: -58656585.00
+	hMSL: -509231104.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1681141584.00
+	Lon: -8324937.00
+	hMSL: -710557696.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1681141584.00
+	Lon: -25102153.00
+	hMSL: -643448832.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1714696016.00
+	Lon: -58656585.00
+	hMSL: -2069446656.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1781804880.00
+	Lon: -92211017.00
+	hMSL: -945307648.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1798582096.00
+	Lon: -92211017.00
+	hMSL: -1867988992.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1798582096.00
+	Lon: -125765449.00
+	hMSL: -1599553536.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1781804880.00
+	Lon: -125765449.00
+	hMSL: -2136424448.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1798582096.00
+	Lon: -125765449.00
+	hMSL: -626475008.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1781804880.00
+	Lon: -108988233.00
+	hMSL: -1045905408.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1765027664.00
+	Lon: -92211017.00
+	hMSL: -240599040.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1798582096.00
+	Lon: -41879369.00
+	hMSL: -1079394304.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1882468176.00
+	Lon: -92211017.00
+	hMSL: -1465139200.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1983131472.00
+	Lon: -192874313.00
+	hMSL: -726876160.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1966354256.00
+	Lon: -209651529.00
+	hMSL: -793985024.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -2016685904.00
+	Lon: -226428745.00
+	hMSL: -424886272.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1999908688.00
+	Lon: -259983177.00
+	hMSL: -726941696.00
+
+Ublox-2 has a lock.
+
+Ublox-2 - NAV-POSLLH (3.000000)
+	Lat: -1983131472.00
+	Lon: -293537609.00
+	hMSL: -743718912.00

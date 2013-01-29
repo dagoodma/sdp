@@ -20,9 +20,9 @@ delete(instrfindall)
 % com ports (configure these)
 clear portnums;
 %portnums(ublox1)=1;
-%portnums(ublox2)=2;
-portnums(ublox1)={'/dev/tty.usbserial-A1012WFD'};
-portnums(ublox2)={'/dev/tty.usbserial-A1012WEE'};
+portnums(ublox2)=6;
+%portnums(ublox1)={'/dev/tty.usbserial-A1012WFD'};
+%portnums(ublox2)={'/dev/tty.usbserial-A1012WEE'};
 
 % connect to devices
 clear ports;
@@ -41,12 +41,12 @@ i=1;
 msg={zeros(1,total)};
 try
     while i <= total,
-        out = gps_readMessage_ubx(ports{ublox2},0);
+        out = gps_readMessage_ubx(ports{ublox2},1);
         if out{3} == 1 && out{4} == 2
             msg{i} = out;
             i = i + 1;
         end
-        %disp(out);
+        disp(out);
     end
 catch err
     % Do nothing

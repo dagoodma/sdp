@@ -50,12 +50,12 @@ if id(1) == 1
         % hMSL (mm) int32_t - Height above Mean Sea Level
         arr(5) = typecast(uint32(bitconcat(fi(msg{pS + 19},0,8), fi(msg{pS + 18},0,8), fi(msg{pS + 17},0,8), fi(msg{pS + 16},0,8))),'int32');
         % hAcc (mm) uint32_t - Horizontal Accuracy Estimate
-        arr(6) = typecast(uint32(bitconcat(fi(msg{pS + 23},0,8), fi(msg{pS + 22},0,8), fi(msg{pS + 21},0,8), fi(msg{pS + 20},0,8))),'uint32');
+        arr(6) = typecast(uint32(bitconcat(fi(msg{pS + 20},0,8), fi(msg{pS + 21},0,8), fi(msg{pS + 22},0,8), fi(msg{pS + 23},0,8))),'uint32');
         % vAcc (mm) uint32_t - Vertical Accuracy Estimate
-        arr(7) = typecast(uint32(bitconcat(fi(msg{pS + 27},0,8), fi(msg{pS + 26},0,8), fi(msg{pS + 25},0,8), fi(msg{pS + 24},0,8))),'uint32');
+        arr(7) = typecast(uint32(bitconcat(fi(msg{pS + 24},0,8), fi(msg{pS + 25},0,8), fi(msg{pS + 26},0,8), fi(msg{pS + 27},0,8))),'uint32');
     elseif id(2) == 3
         % iTow (ms) uint32_t - GPS Millisecond Time of Week
-        arr(1) = typecast(uint32(bitconcat(fi(msg{pS + 3},0,8), fi(msg{pS + 2},0,8), fi(msg{pS + 1},0,8), fi(msg{pS},0,8))),'uint32');
+        arr(1) = typecast(uint32(bitconcat(fi(msg{pS},0,8), fi(msg{pS + 1},0,8), fi(msg{pS + 2},0,8), fi(msg{pS + 3},0,8))),'uint32');
         % gpsFix (enum) uint8_t - GPSfix Type
         arr(2) = msg{pS + 4};
         % flags (bitfield) uint8_t - Navigation Status Flags
@@ -65,9 +65,9 @@ if id(1) == 1
         % res  - Reserved
         arr(5) = msg{pS + 7};
         % ttff (ms) uint32_t - Time to first fix (millisecond time tag)
-        arr(6) = typecast(uint32(bitconcat(fi(msg{pS + 11},0,8), fi(msg{pS + 10},0,8), fi(msg{pS + 9},0,8), fi(msg{pS + 8},0,8))),'uint32');
+        arr(6) = typecast(uint32(bitconcat(fi(msg{pS + 8},0,8), fi(msg{pS + 9},0,8), fi(msg{pS + 10},0,8), fi(msg{pS + 11},0,8))),'uint32');
         % msss (ms) uint32_t - Milliseconds since Startup / Reset
-        arr(7) = typecast(uint32(bitconcat(fi(msg{pS + 15},0,8), fi(msg{pS + 14},0,8), fi(msg{pS + 13},0,8), fi(msg{pS + 12},0,8))),'uint32');
+        arr(7) = typecast(uint32(bitconcat(fi(msg{pS + 12},0,8), fi(msg{pS + 13},0,8), fi(msg{pS + 14},0,8), fi(msg{pS + 15},0,8))),'uint32');
     else
         error(sprintf('Navigation message 0x%X not implemented.', id(2)));
     end
