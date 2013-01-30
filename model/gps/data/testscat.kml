@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2">
+   <Document>
+      <name>testscat</name>
+      <Folder>
+         <Placemark id="kml_scatter3tp9154a226_d7cb_44af_973f_2ec76b8b3310_1">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FFFFFFFF</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp9154a226_d7cb_44af_973f_2ec76b8b3310">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0634308,36.9997639,244.738 </coordinates>
+            </Point>
+         </Placemark>
+         <name>kml_scatter3</name>
+         <id>kml_scatter3tp9154a226_d7cb_44af_973f_2ec76b8b3310</id>
+      </Folder>
+   </Document>
+</kml>

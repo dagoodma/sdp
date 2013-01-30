@@ -1,0 +1,2620 @@
+<?xml version="1.0" encoding="utf-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2">
+   <Document>
+      <name>2013.01.29-154816_ublox2_geodetic</name>
+      <Folder>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_1">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636498,36.9998235,287.499 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_2">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636506,36.999851,286.944 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_3">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636506,36.9998611,287.106 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_4">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636542,36.9998827,287.435 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_5">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636537,36.9998942,288.151 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_6">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636519,36.9999053,286.763 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_7">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063654,36.999913,287.053 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_8">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636529,36.9999197,287.394 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_9">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636524,36.9999217,287.632 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_10">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636519,36.999924,287.334 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_11">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636502,36.9999265,287.758 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_12">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636488,36.99992659999999,288.692 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_13">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636494,36.999927,288.854 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_14">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636507,36.9999303,287.762 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_15">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636504,36.9999302,288.385 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_16">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636498,36.9999282,289.169 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_17">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636475,36.9999255,290.379 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_18">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636468,36.9999223,291.299 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_19">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636489,36.9999244,291.113 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_20">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636462,36.9999217,291.8 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_21">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636462,36.999919,292.193 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_22">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636464,36.9999155,292.763 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_23">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063647,36.9999125,293.072 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_24">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636468,36.9999071,293.493 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_25">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636517,36.99991139999999,290.82 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_26">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636531,36.999915,289.204 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_27">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636468,36.999922,287.547 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_28">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636428,36.9999213,286.897 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_29">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636389,36.99991199999999,288.653 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_30">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636367,36.9999057,289.197 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_31">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636317,36.9998991,290.538 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_32">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636253,36.9998892,293.048 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_33">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636188,36.9998762,295.651 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_34">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636132,36.9998544,298.402 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_35">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063607,36.9998329,302.024 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_36">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636019,36.9998148,304.438 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_37">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635965,36.9997907,308.172 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_38">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635907,36.9997641,311.171 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_39">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063586,36.9997392,313.585 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_40">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635809,36.9997195,316.257 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_41">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635779,36.999703,318.814 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_42">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635764,36.9996859,320.939 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_43">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635719,36.9996631,323.191 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_44">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635678,36.9996448,325.053 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_45">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635666,36.9996288,326.506 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_46">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635627,36.999616,327.241 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_47">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635608,36.9996063,327.843 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_48">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635595,36.9995874,329.656 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_49">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635586,36.9995804,330.481 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_50">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063558,36.9995679,331.692 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_51">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635564,36.9995566,332.577 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_52">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635553,36.9995324,334.416 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_53">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635556,36.9995175,334.824 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_54">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635587,36.9995006,335.377 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_55">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635598,36.9994863,335.438 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_56">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635607,36.9994738,335.569 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_57">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.06356,36.9994597,335.924 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_58">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635604,36.9994495,336.611 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_59">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635604,36.9994384,337.128 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_60">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063564,36.9994328,337.552 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_61">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635647,36.9994305,337.033 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_62">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635642,36.9994215,337.267 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_63">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635604,36.9993975,339.857 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_64">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635577,36.9993956,342.275 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_65">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635626,36.9994245,341.016 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_66">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635636,36.9994408,341.235 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_67">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635648,36.9994613,342.18 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_68">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635648,36.9994629,344.313 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_69">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635695,36.9994695,344.61 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_70">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635704,36.9994682,345.955 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_71">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635714,36.9994721,346.263 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_72">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635726,36.9994704,347.543 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_73">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635765,36.999478,346.551 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_74">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635804,36.9994873,345.621 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_75">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635842,36.9994918,345.361 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_76">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635874,36.9995047,343.758 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_77">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063593,36.9995212,341.094 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_78">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0635993,36.9995371,338.484 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_79">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063603,36.9995433,337.177 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_80">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636064,36.9995463,336.438 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_81">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636094,36.9995505,335.6 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_82">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636129,36.9995562,334.582 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_83">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636158,36.9995593,334.136 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_84">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636221,36.9995702,332.02 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_85">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636273,36.9995806,330.103 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_86">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636316,36.9995938,327.178 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_87">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636361,36.9996022,325.25 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_88">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.06364,36.9996099,323.706 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_89">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636443,36.9996195,321.71 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_90">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636474,36.999628,320.044 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_91">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636522,36.9996408,317.298 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_92">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636553,36.9996506,315.655 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_93">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636573,36.9996571,314.609 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_94">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636605,36.9996635,313.45 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_95">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636633,36.9996725,311.66 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_96">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636643,36.9996815,309.792 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_97">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636671,36.9996889,308.451 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_98">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636693,36.9996961,307.149 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_99">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636722,36.9997032,305.662 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_100">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636744,36.9997055,305.175 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_101">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636787,36.9997107,304.018 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_102">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636821,36.9997171,303.281 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_103">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636859,36.9997252,302.337 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_104">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636905,36.9997276,301.998 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_105">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636921,36.9997324,301.256 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_106">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636941,36.9997355,301.081 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_107">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636956,36.9997368,300.924 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_108">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636964,36.9997393,300.306 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_109">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636996,36.999744,298.999 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_110">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0637001,36.9997446,299.045 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_111">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636994,36.9997465,298.897 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_112">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0637,36.9997507,298.187 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_113">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0637019,36.9997538,297.547 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_114">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0637039,36.9997553,297.532 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_115">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0637047,36.9997584,297.131 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_116">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0637048,36.9997623,296.34 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_117">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0637052,36.9997654,295.886 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_118">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0637049,36.99976729999999,295.776 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_119">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0637027,36.9997691,295.542 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_120">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0637033,36.999773,295.002 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_121">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0637029,36.999776,294.327 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_122">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063702,36.9997778,294.204 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_123">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063699,36.9997792,293.986 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_124">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636991,36.9997827,293.483 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_125">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636988,36.9997846,293.651 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_126">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636973,36.999785,294.005 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_127">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636951,36.9997848,294.47 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_128">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636913,36.9997859,294.37 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_129">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636896,36.9997881,294.073 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_130">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063688,36.9997893,294.244 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_131">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636858,36.9997918,293.968 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_132">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636835,36.9997942,293.714 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_133">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636811,36.9997944,294.165 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_134">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636785,36.9997952,294.347 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_135">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636759,36.9997953,294.534 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_136">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636739,36.99979769999999,294.348 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_137">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636729,36.9997985,294.914 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_138">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636706,36.9998009,295.327 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_139">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636692,36.9998029,295.551 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_140">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636684,36.9998048,295.454 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_141">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636665,36.9998038,296.253 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_142">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636647,36.9998046,296.23 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_143">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.0636612,36.9998083,296.016 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_144">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063666,36.9998125,295.148 </coordinates>
+            </Point>
+         </Placemark>
+         <Placemark id="kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4_145">
+            <name/>
+            <visibility>1</visibility>
+            <description/>
+            <Style>
+               <IconStyle>
+                  <color>FF00FF00</color>
+                  <scale>1</scale>
+                  <Icon>
+                     <href>http://maps.google.com/mapfiles/kml/pal2/icon18.png</href>
+                  </Icon>
+               </IconStyle>
+            </Style>
+            <Point id="Point_kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4">
+               <altitudeMode>relativeToGround</altitudeMode>
+               <coordinates>-122.063667,36.9998148,295.367 </coordinates>
+            </Point>
+         </Placemark>
+         <name>kml_scatter3</name>
+         <id>kml_scatter3tp7612e18d_d53d_47ff_b130_8598869d28a4</id>
+      </Folder>
+   </Document>
+</kml>

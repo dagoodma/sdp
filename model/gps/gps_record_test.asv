@@ -1,9 +1,16 @@
 % Records geodetic position from GPS devices into files
+close all;
 
-% variables
-DEBUG=1;
-record=1;
-breakkey = 'q';
+% Options
+DEBUG=1; % toggle printing of debug messages
+breakkey = 'q'; % key to stop recording
+
+RECORD_DML = 1; % Record to a DML file for analysis
+RECORD_KML = 1; % Record to a KML file for viewing in google maps
+% KML plot settings
+KML_COLOR = [ 0 1 0 1];
+KML_SCALE = 1;
+
 
 %% GPS Configuration
 % device enumeration
@@ -47,7 +54,8 @@ NO_FIX = 0;
 clear fixes;
 fixes(ublox1) = {NO_FIX};
 fixes(ublox2) = {NO_FIX};
-
+everfixed(ublox1) = {0};
+everfixed(ublox2) = {0};
 
 % Start a new KML file
 filenames(ublox1)={sprintf('%s_ublox1_geodetic',datestr(now,'yyyy.mm.dd-HHMMSS'))};
@@ -58,8 +66,11 @@ files(ublox2)={sprintf('data/%s',filenames{ublox2})};
 %k(ublox1) = {kml(filenames(ublox1))};
 k = kml(filenames{ublox2});
 
-
+err = 0;
 %% Read GPS data
+lonArr = [];
+latArr = [];
+altArr = [];
 % Dump messages
 try
     while 1
@@ -85,6 +96,7 @@ try
                 	disp(sprintf('%s has a lock.\n',names{ublox2}));
                 end
                 fixes{ublox2} = parsed(2);
+                everfixed{ublox2} = 1;
             end
             % NAV-POSLLH, just want lat, lon data
             if (fixes{ublox2} ~= NO_FIX && out2{4} == POSLLH_MSG)
@@ -99,7 +111,10 @@ try
                 end
                 
                 %k{ublox2}.plot3(lon,lat,hmsl)
-                k.plot3(lon,lat,hmsl)
+                lonArr = [lonArr lon];
+                latArr = [latArr lat];
+                altArr = [altArr alt];
+                
             end
             
         end
@@ -112,17 +127,37 @@ try
     end % while
 catch err
     % Do nothing
-    disp('Failed recording GPS data:');
-    disp(err.message);
 end
 
 %% Clean up
 % Save the results
-disp(sprintf('Saving %s.kml...',files{ublox2}));
-k.save(sprintf('%s.kml',files{ublox2}));
+if everfixed{ublox2}
+    % Record to a DML file for analysis
+    if RECORD_DML
+        coords = [ latArr' lonArr' altArr' ];
+        disp(sprintf('Saving %s.dml...',files{ublox2}));
+        
+        dmlwrite(sprintf('%s.dml',files{ublox2}));
+    end
+    
+    % Record to a KML file for viewing in google maps
+    if RECORD_KML
+        disp(sprintf('Saving %s.kml...',files{ublox2}));
+        k.scatter3(lonArr',latArr',hmsl','iconScale',iconScale,'iconColor',iconColor);
+        k.save(sprintf('%s.kml',files{ublox2}));
+    end
+else
+    disp('Skipping kml file since never fixed.');
+end
 
-delete(instrfindall)
-clear ports portnums names k;
+closeallSerialPorts;
+clear k;
+
+
+if (strcmp(class(err), 'MException'))
+    disp('Failed recording GPS data:');
+    rethrow(err);
+end
 
 % Done
 

@@ -1,9 +1,16 @@
 % Records geodetic position from GPS devices into files
 close all;
-% variables
-DEBUG=1;
-record=1;
-breakkey = 'q';
+
+% Options
+DEBUG=1; % toggle printing of debug messages
+breakkey = 'q'; % key to stop recording
+
+RECORD_DLM = 1; % Record to a DLM file for analysis
+RECORD_KML = 1; % Record to a KML file for viewing in google maps
+% KML plot settings
+KML_COLOR = [ 0 1 0 1];
+KML_SCALE = 1;
+
 
 %% GPS Configuration
 % device enumeration
@@ -53,14 +60,14 @@ everfixed(ublox2) = {0};
 % Start a new KML file
 filenames(ublox1)={sprintf('%s_ublox1_geodetic',datestr(now,'yyyy.mm.dd-HHMMSS'))};
 filenames(ublox2)={sprintf('%s_ublox2_geodetic',datestr(now,'yyyy.mm.dd-HHMMSS'))};
-files(ublox1)={sprintf('data/%s',filenames{ublox1})};
-files(ublox2)={sprintf('data/%s',filenames{ublox2})};
-
-%k(ublox1) = {kml(filenames(ublox1))};
-k = kml(filenames{ublox2});
+files(ublox1)={sprintf('data\\%s',filenames{ublox1})};
+files(ublox2)={sprintf('data\\%s',filenames{ublox2})};
 
 err = 0;
 %% Read GPS data
+lonArr = [];
+latArr = [];
+altArr = [];
 % Dump messages
 try
     while 1
@@ -101,7 +108,9 @@ try
                 end
                 
                 %k{ublox2}.plot3(lon,lat,hmsl)
-                k.plot3(lon,lat,hmsl);
+                lonArr = [lonArr lon];
+                latArr = [latArr lat];
+                altArr = [altArr hmsl];
             end
             
         end
@@ -119,10 +128,23 @@ end
 %% Clean up
 % Save the results
 if everfixed{ublox2}
-    disp(sprintf('Saving %s.kml...',files{ublox2}));
-    k.save(sprintf('%s.kml',files{ublox2}));
+    % Record to a DLM file for analysis
+    if RECORD_DLM
+        coords = [ latArr' lonArr' altArr' ];
+        disp(sprintf('Saving %s.dlm...',files{ublox2}));
+        dlmwrite(sprintf('%s.dlm',files{ublox2}),coords,'precision','%.7f');
+    end
+    
+    % Record to a KML file for viewing in google maps
+    if RECORD_KML
+        %k(ublox1) = {kml(filenames(ublox1))};
+        k = kml(filenames{ublox2});
+        disp(sprintf('Saving %s.kml...',files{ublox2}));
+        k.scatter3(lonArr',latArr',altArr','iconScale',KML_SCALE,'iconColor',KML_COLOR);
+        k.save(sprintf('%s.kml',files{ublox2}));
+    end
 else
-    disp('Skipping kml file since never fixed.');
+    disp('Skipping saving of data since never fixed.');
 end
 
 closeallSerialPorts;
