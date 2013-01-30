@@ -1,23 +1,13 @@
-/**
- * @file    Xbee.h
- * @author  John Ash
- * @author  David Goodman
+/*
+ * File: Xbee.h
  *
- * @brief
- * Interface for communicating wirelessly with XBee.
+ * State machine for Xbee module.
  *
- * @details
- * This module wraps a XBee device in a state machine and uses
- * UART to communicate with other XBee devices wirelessly.
- *
- *
- * @date January 23, 2013   -- Created
  */
 #ifndef Xbee_H
 #define Xbee_H
 
-#include "Error.h"
-#include "Util.h"
+
 
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *
@@ -36,28 +26,28 @@
  * @return none
  * @remark Initializes the GPS module.
  **********************************************************************/
-void Xbee_init(uint8_t options);
+uint8_t Xbee_init();
 
 /**********************************************************************
  * Function: Xbee_isInitialized()
  * @return Whether the GPS was initialized.
  * @remark none
  **********************************************************************/
-bool Xbee_isInitialized();
+uint8_t Xbee_isInitialized(void);
 
 /**********************************************************************
  * Function: Xbee_programInit()
  * @param Which Xbee is being programed, ground station or boat
  * @remark Puts the Xbee into API mode.
  **********************************************************************/
-void Xbee_programInit(uint8 whichXbee);
+uint8_t Xbee_programApi();
 
 /**********************************************************************
  * Function: Xbee_isApi()
  * @return Whether the Xbee was succesfully put into API mode
  * @remark none
  **********************************************************************/
-bool Xbee_isApi();
+uint8_t Xbee_isApi(void);
 
 /**********************************************************************
  * Function: Xbee_programInit()
@@ -65,7 +55,7 @@ bool Xbee_isApi();
  * @remark Initializes an array with data required for sending a
  *  message in API mode.
  **********************************************************************/
-void Xbee_initSend(uint8 whichXbee);
+void Xbee_initSend();
 
 /**********************************************************************
  * Function: Xbee_sendString()
@@ -73,7 +63,7 @@ void Xbee_initSend(uint8 whichXbee);
  * @remark Adds data to the sendArray, than sends that data over the 
  *  UART.
  **********************************************************************/
-void Xbee_sendString(string data);
+void Xbee_sendString(uint8_t data);
 
 
 /**********************************************************************
@@ -84,4 +74,4 @@ void Xbee_sendString(string data);
  **********************************************************************/
 void Xbee_recieveData();
 
-#endif // Xbee_H
+#endif

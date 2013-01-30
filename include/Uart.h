@@ -41,7 +41,7 @@ void UART_putChar(uint8_t id, char ch);
  * @remark retrieves first character from the receive buffer or 0
  * @author Max Dunne
  * @date 2011.11.10  */
-char UART_getChar(uint8_t id);
+uint16_t UART_getChar(uint8_t id);
 
 /**
  * Function: Serial_isTransmitEmpty
