@@ -1,23 +1,22 @@
-/**
- * @file    Xbee.h
- * @author  John Ash
- * @author  David Goodman
+/*
+ * @file  Xbee.h
+ *
+ * @author John Ash
  *
  * @brief
- * Interface for communicating wirelessly with XBee.
+ * State machine for Xbee module.
  *
  * @details
- * This module wraps a XBee device in a state machine and uses
- * UART to communicate with other XBee devices wirelessly.
+ * Module that wraps the bee in a statemachine that
+ * reads from the UART.
  *
+ * @date February 1, 2013 2:59 AM -- created
  *
- * @date January 23, 2013   -- Created
  */
 #ifndef Xbee_H
 #define Xbee_H
 
-#include "Error.h"
-#include "Util.h"
+
 
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *
@@ -32,56 +31,62 @@
 
 /**********************************************************************
  * Function: Xbee_init()
- * @param An options bitfield.
- * @return none
- * @remark Initializes the GPS module.
+ * @param N/A
+ * @return Failure or Success
+ * @remark Initializes the Xbee module. Sets up API mode if the flag is
+ * enabled. The function than initializes the sendArray.
+ * @author John Ash
+ * @date February 1st 2013
  **********************************************************************/
-void Xbee_init(uint8_t options);
-
-/**********************************************************************
- * Function: Xbee_isInitialized()
- * @return Whether the GPS was initialized.
- * @remark none
- **********************************************************************/
-bool Xbee_isInitialized();
+uint8_t Xbee_init();
 
 /**********************************************************************
  * Function: Xbee_programInit()
- * @param Which Xbee is being programed, ground station or boat
- * @remark Puts the Xbee into API mode.
+ * @return Success or Failure based on weather API mode could be set.
+ * @remark Puts the Xbee into API mode. Will only be called if
+ *  REPROGRAM_API is defined
+ * @author John Ash
+ * @date February 1st 2013
  **********************************************************************/
-void Xbee_programInit(uint8 whichXbee);
-
-/**********************************************************************
- * Function: Xbee_isApi()
- * @return Whether the Xbee was succesfully put into API mode
- * @remark none
- **********************************************************************/
-bool Xbee_isApi();
-
-/**********************************************************************
- * Function: Xbee_programInit()
- * @param Which Xbee is being programed, ground station or boat
- * @remark Initializes an array with data required for sending a
- *  message in API mode.
- **********************************************************************/
-void Xbee_initSend(uint8 whichXbee);
+uint8_t Xbee_programApi();
 
 /**********************************************************************
  * Function: Xbee_sendString()
- * @param data that needs to be transmitted, split up into proper bytes
- * @remark Adds data to the sendArray, than sends that data over the 
- *  UART.
+ * @param Array of data that is intended to be sent over Xbee
+ * @param Length of Data array in bytes
+ * @return none
+ * @remark Sends data over the Xbee
+ * @author John Ash
+ * @date February 1st 2013
  **********************************************************************/
-void Xbee_sendString(string data);
+void Xbee_sendData(char* data, int Length);
 
 
 /**********************************************************************
- * Function: Xbee_recieveData()
- * @remark Beings taking in data, once a packet has been fully read in,
- * we will analyze that packet for it's useful information, namely
- * the GPS cordinate we should be driving towards.
+ * Function: void Xbee_runSM();
+ * @remark This function should be called every iteration of the
+ *  statemachine. We load the recieve array with the data bytes, if we
+ *  are actually reading a packet and not just noise.
+ * @return none
+ * @author John Ash
+ * @date February 1st 2013
  **********************************************************************/
-void Xbee_recieveData();
+void Xbee_runSM();
 
-#endif // Xbee_H
+/**********************************************************************
+ * Function: Xbee_isInitialized()
+ * @return Whether the Xbee was initialized.
+ * @author John Ash
+ * @date February 1st 2013
+ **********************************************************************/
+uint8_t Xbee_isInitialized(void);
+
+/**********************************************************************
+ * Function: Xbee_hasNewPacket()
+ * @return Whether the recieve array has a new packet in it
+ * @author John Ash
+ * @date February 1st 2013
+ **********************************************************************/
+uint8_t Xbee_hasNewPacket(void);
+
+#endif
