@@ -2,20 +2,19 @@
  Module
    Xbee.c
 
- Revision
-   1.0.0
+ Author: John Ash
 
  Description
-	Code to initialzie and control the Xbee modules for both 
-	ground station and boat.
+	Code to initialzie and control the Xbee modules in API mode
    
  Notes
 
  History
- When           Who         What/Why
- -------------- ---         --------
- 12-29-12 2:10 jash    Created file.
- 12-17-13 4:10 jash    Work on functions, add receieve pseudo code
+ When               Who         What/Why
+ --------------     ---         --------
+ 12-29-12 2:10 PM   jash    Created file.
+ 1-17-13 4:10 PM    jash    Work on functions, add receieve pseudo code
+ 2-1-13  2:50 AM    jash    Complete functions and add comments.
 ***********************************************************************/
 
 #include <xc.h>
@@ -32,39 +31,30 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-#define NUMBER_UART     1
-#define UART_ID         UART2_ID
+#define UART_ID             UART2_ID
+#define NUMBER_DATA_BYTES   1
+#define OVERHEAD_BYTES      8
+#define API_DELAY           1000
+
 /*    FOR IFDEFS     */
 #define REPROGRAM_API
- 
+
+/*Variables used within Xbee*/
 uint8_t xbeeInitialized = FALSE;
-uint8_t xbeeApiMode = FALSE;
-
-uint8_t sendArray[10];
-uint8_t recieveArray[10];
-
-uint8_t FLAG_PACKET_RECIEVED; //1 a packet has been recieved, 0 no packet
+uint8_t sendArray[OVERHEAD_BYTES+NUMBER_DATA_BYTES+1];
+uint8_t recieveArray[OVERHEAD_BYTES+NUMBER_DATA_BYTES+1];
+uint8_t packetWasRecieved; //1 a packet has been recieved, 0 no packet
 
 
 /**********************************************************************
- * PRIVATE FUNCTIONS                                                  *
+ * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
-
+void Xbee_initSend();
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
 
-/**********************************************************************
- * Function: Xbee_init()
- * @param An options bitfield.
- * @return Failure or Success
- * @remark Initializes the Xbee module. This function will also set
- *  the correct API mode for the Xbees to be paired with each other.
- *  Options:
- *      1: Ground Station Xbee
- *      2: Boat Xbee
- **********************************************************************/
 uint8_t Xbee_init(){
     #ifdef REPROGRAM_API
     if( Xbee_programApi() == FAILURE){
@@ -80,29 +70,16 @@ uint8_t Xbee_init(){
     return SUCCESS; 
 }
 
-/**********************************************************************
- * Function: Xbee_isInitialized()
- * @return Whether the Xbee was initialized.
- * @remark none
- **********************************************************************/
-uint8_t Xbee_isInitialized(void) {
-    return xbeeInitialized;
-}
 
-
-/**********************************************************************
- * Function: Xbee_programApi()
- * @param Which Xbee is being programed, ground station or boat
- * @remark Puts the Xbee into API mode.
- **********************************************************************/
 uint8_t Xbee_programApi(){
     int i = 0;
     char confirm[3];
-    //empty recieve buffer before hand.
-    
-    
+    //empty recieve buffer before hand.  --NEED TO DO
+
+    //This opens up command mode
     UART_putString(UART_ID, "+++", 3);
-    DELAY(1000);
+    DELAY(API_DELAY);
+    //confirm we are in Xbee by recieving "OK\r"
     do {
         confirm[i] = UART_getChar(UART_ID);
         if (confirm[i] != 0)
@@ -113,12 +90,12 @@ uint8_t Xbee_programApi(){
         return FAILURE;
     }
     
-    //may need delays between each command
-    
-    UART_putString(UART_ID, "ATAP1\r", 6); // Puts it in API mode
-    DELAY(1000);
+    // Puts it in API mode
+    UART_putString(UART_ID, "ATAP1\r", 6);
+    DELAY(API_DELAY);
     //UART_putString(UART_ID, "ATID7806\r", 9); //Pan ID, needs more research
-    //High & Low Xbee Destination addresses. 
+    //High & Low Xbee Destination addresses.
+    
     /*
     UART_getChar(UART_ID, "ATDH");
     UART_getChar(UART_ID, whichXbee);
@@ -126,34 +103,82 @@ uint8_t Xbee_programApi(){
     UART_getChar(UART_ID, "ATDL");
     UART_getChar(UART_ID, whichXbee);
     UART_getChar(UART_ID, "\r");
-    */
+    //Sets the Baud Rate
     //1 = 2400 2 = 4800 3 = 9600 4 = 19200 5 = 38400 6 = 57600 7 = 11520
-    //UART_putString(UART_ID, "ATBD3\r", 6);//Sets the Baud Rate
+    UART_putString(UART_ID, "ATBD3\r", 6);
+    */
 
-    UART_putString(UART_ID, "ATWR\r", 5);//Writes the command to memory
-    DELAY(1000);
-    UART_putString(UART_ID, "ATCN\r", 5);//Leave the menu.
-    DELAY(1000);
-    xbeeApiMode = TRUE; 
+    //Writes the changes to memory
+    UART_putString(UART_ID, "ATWR\r", 5);
+    DELAY(API_DELAY);
+    //Leave the menu.
+    UART_putString(UART_ID, "ATCN\r", 5);
+    DELAY(API_DELAY);
     return SUCCESS;
 }
 
+uint8_t Xbee_sendData(char* data, int Length){
+    uint8_t checkSum = 0xFF, x;
+    /* check if sending this amount of data will
+       cause an array out of bounds error */
+    if(Length  > NUMBER_DATA_BYTES){
+        return FAILURE;
+    }
+    //fill array with data
+    for(x = OVERHEAD_BYTES; x <= Length+8; x++){
+        sendArray[8] = data[x-8];
+    }
+    //calculate the CheckSum
+    for(x=3; x <= OVERHEAD_BYTES; x++){
+        checkSum -= sendArray[x];
+    }
+    sendArray[NUMBER_DATA_BYTES+OVERHEAD_BYTES] = checkSum;
+    
+    //send data
+    for(x = 0; x <= OVERHEAD_BYTES + NUMBER_DATA_BYTES; x++){
+        UART_putChar(UART_ID, sendArray[x]);
+    }
+}
+
+void Xbee_runSM(){
+    static int x = 0;
+    uint16_t data;
+    //get data from the recieve buffer
+    data = UART_getChar(UART_ID);
+    //check to make sure this is data
+    if(data>>8 != 0)
+        return;
+    //load data into array recieve array
+    recieveArray[x] = data;
+    x++;
+    //if we haven't found the start of a new packet, ABORT
+    if(recieveArray[0] != 0x7E)
+        x = 0;
+   //if rx array is full set Flag
+    if(x >= OVERHEAD_BYTES + NUMBER_DATA_BYTES){
+       packetWasRecieved = 1;
+       x=0;
+    }
+}
+
+uint8_t Xbee_hasNewPacket(void){
+    return packetWasRecieved;
+}
+
+uint8_t Xbee_isInitialized(void) {
+    return xbeeInitialized;
+}
 
 
 /**********************************************************************
- * Function: Xbee_isApi()
- * @return Whether the Xbee was succesfully put into API mode
- * @remark none
+ * PRIVATE FUNCTIONS                                                  *
  **********************************************************************/
-uint8_t Xbee_isApi(){
-    return xbeeApiMode;
-}
 
 /**********************************************************************
  * Function: Xbee_initSend()
- * @param Which Xbee is being programed, ground station or boat
  * @remark Initializes an array with data required for sending a
  *  message in API mode.
+ * @return none
  **********************************************************************/
 void Xbee_initSend(){
     sendArray[0] = 0x7E; //Start character
@@ -165,85 +190,33 @@ void Xbee_initSend(){
     sendArray[6] = 0x00; //Destination Address, LSB
     sendArray[7] = 0x01; //Acknowlegment, page 104, maybe it's 0x04
     sendArray[8] = 0x00; //Start of Data
-    sendArray[9] = 0x00; //CHECK SUM
-    
-}
+    //other Data Init should go here (For loop?)
+    sendArray[(OVERHEAD_BYTES+NUMBER_DATA_BYTES)] = 0x00; //CHECK SUM
 
-
-/**********************************************************************
- * Function: Xbee_sendString()
- * @param data that needs to be transmitted, split up into proper bytes
- * @remark Adds data to the sendArray, than sends that data over the 
- *  UART.
- **********************************************************************/
-void Xbee_sendData(char* data, int Length){
-//load all the GPS data into the array
-//compute the checksum
-//send the array through the UART
-//possibly load it into the circular buffer
-    uint8_t checkSum = 0xFF, x;
-    DELAY(1000);
-    //fill array with data
-    sendArray[8] = data[0];
-
-    //calculate the CheckSum
-    for(x=3; x <= 8; x++){
-        checkSum -= sendArray[x];
-    }
-    sendArray[9] = checkSum;
-    
-    //send data
-    //printf("\nSend Data Function: ");
-    for(x = 0; x <= 9; x++){
-        UART_putChar(UART_ID, sendArray[x]);
-        //printf("%x\t",sendArray[x]);
-    }
-    //printf("\n");
-}
-
-
-/**********************************************************************
- * Function: Xbee_recieveData()
- * @remark Beings taking in data, once a packet has been fully read in,
- * we will analyze that packet for it's useful information, namely
- * the GPS cordinate we should be driving towards.
- **********************************************************************/
-void Xbee_getData(){
-    //load all the GPS data into the array
-    //compute the checksum
-    //send the array through the UART
-    //possibly load it intot the circular buffer
-    static int x = 0;
-    uint16_t data;
-    data = UART_getChar(UART_ID);
-    //check to make sure this is data
-    if(data>>8 != 0)
-        return;
-    recieveArray[x] = data;
-    printf("%X\t", recieveArray[x]);
-    x++;
-    if(recieveArray[0] != 0x7E)
-        x = 0;
-   //if rx array is full
-    if(x >= 9){
-       FLAG_PACKET_RECIEVED = 1;
-       x=0;
-    }
 }
 
 
 
 
 
-
-
-
-
+/*************************************************************
+ * This test function will program two Xbees, Master & Slave.
+ * The Master will send data packets 1-255. However before
+ * sending the next packet in sequence it has to recieve a
+ * return packet from Slave.
+ *
+ * Slave will look for packets, and then return the packet data
+ * field in  a packet to the Master
+ */
 #define XBEE_TEST
 #ifdef XBEE_TEST
 
-#define MASTER
-//#define SLAVE
+//Comment this out to program the Slave mode
+//#define MASTER
+
+#ifndef MASTER
+#define SLAVE
+#endif
 
 int main(){
     Board_init();
@@ -263,20 +236,15 @@ int main(){
 
         Xbee_sendData(&x, 1);
         Xbee_sendData(&x, 1);
-//        Xbee_sendData(&x, 1);
-//        Xbee_sendData(&x, 1);
 
    while(1){
         Xbee_sendData(&x, 1);
         printf("Sent Packet: %d", x);
-        //DELAY(1000);
-        while(FLAG_PACKET_RECIEVED != 1){
+        while(packetWasRecieved != 1){
             Xbee_getData();
-            //DELAY(1000);
         }
-        //DELAY(1000);
-        if(FLAG_PACKET_RECIEVED == 1){
-            FLAG_PACKET_RECIEVED = 0;
+        if(packetWasRecieved == 1){
+            packetWasRecieved = 0;
             y = recieveArray[8];
         }
         printf(" Receieved Packet: %d\n", y);
@@ -289,19 +257,12 @@ int main(){
     #endif
     #ifdef SLAVE
     while(1){
-        while(FLAG_PACKET_RECIEVED != 1){
-            Xbee_getData();
-            //DELAY(1000);
+        while(packetWasRecieved != 1){
+            Xbee_runSM();
         }
-        if(FLAG_PACKET_RECIEVED == 1){
-            FLAG_PACKET_RECIEVED = 0;
+        if(packetWasRecieved == 1){
+            packetWasRecieved = 0;
             y = recieveArray[8];
-            /*
-            for(x = 0; x <= 9; x++){
-                printf("%X ", recieveArray[x]);
-            }
-            printf("\n");
-             */
         }
         printf("Recieved Packet: %d", y);
         Xbee_sendData(&y, 1);
@@ -309,45 +270,5 @@ int main(){
    
     }
     #endif
-    printf("WTF");
-    DELAY(1000);
 }
 #endif
-
-//#define XBEE_TEST_2
-#ifdef XBEE_TEST_2
-
-int main(){
-    Board_init();
-    printf("Welcome to Xbee Test\n");
-    UART_init(UART2_ID,9600);
-    printf("UART INIT\n");
-    if(Xbee_init() == FAILURE){
-        printf("Xbee Failed to initilize\n");
-        DELAY(1000);
-        return FAILURE;
-    }
-    printf("XBEE Initialized\n");
-    int x = 1, y= 0;
-    DELAY(5000);
-    #ifdef MASTER
-    while(1){
-        Xbee_sendData((char*)x, 1);
-    }
-    printf("GOT HERE");
-    #endif
-    #ifdef SLAVE
-    while(1){
-        while(FLAG_PACKET_RECIEVED != 1){
-            Xbee_getData();
-            DELAY(1000);
-        }
-        printf("DATA: %c\n", recieveArray[8]);
-    }
-    #endif
-
-}
-#endif
-
-
-

@@ -13,7 +13,7 @@
  History
  When           Who         What/Why
  -------------- ---         --------
- 1-18-13 8:10 PM jash    Create File
+ 1-18-13 8:10 PM jash    Used file from Max Dunne/ created
  1-22-13 5:24 PM jash    Move functions from Serial.c to Uart.c
  1-23-13 11:20AM jash    Make two circular buffers
 ***********************************************************************/
@@ -88,7 +88,7 @@ CBRef receiveBufferUart2;
  * Written by John Ash, help from Max Dunne 1/20/2013
  **********************************************************************/
 
-uint8_t UART_init(uint8_t id, uint32_t baudRate){
+void UART_init(uint8_t id, uint32_t baudRate){
 
     //will need buffers for both the UARTS
     if(id == UART1_ID){
@@ -124,31 +124,7 @@ uint8_t UART_init(uint8_t id, uint32_t baudRate){
         mU2RXIntEnable(1);
         mU2TXIntEnable(1);
     }
-
-    return SUCCESS;
 }
-
-
-/****************************************************************************
- Function
-     UART_putChar
-
- Parameters
-    char ch, the char to be sent out the serial port
-
- Returns
-     None.
-
- Description
-    adds char to the end of the circular buffer and forces the interrupt flag high is nothing is currently transmitting
- Notes
-
-
- Author
-    Max Dunne, 2011.11.10
- ****************************************************************************/
-
-
 
 void UART_putChar(uint8_t id, char ch)
 {
@@ -177,32 +153,15 @@ void UART_putString(uint8_t id, char* Data, int Length){
     }
 }
 
-/****************************************************************************
- Function
-     UART_getChar
 
- Parameters
-     None.
-
- Returns
-    ch - char from the serial port
-
- Description
-    reads first character from buffer or returns 0 if no chars available
- Notes
-     
-
- Author
- Max Dunne, 2011.11.10
- ****************************************************************************/
 uint16_t UART_getChar(uint8_t id)
 {
     uint16_t ch;
     if(id == UART1_ID){
         if (getLength(receiveBufferUart1) == 0) {
-            ch = 0;
+            ch = 0xFF00;
         } else {
-            ch = readFront(receiveBufferUart1);
+            ch = (readFront(receiveBufferUart1) & 0x00FF);
         }
         return ch;
     }else if(id == UART2_ID){
@@ -214,6 +173,37 @@ uint16_t UART_getChar(uint8_t id)
         return ch;
     }
 }
+
+char UART_isTransmitEmpty(uint8_t id)
+{
+    if(id == UART1_ID){
+        if (getLength(transmitBufferUart1) == 0)
+            return TRUE;
+        return FALSE;
+    } else if(id == UART2_ID){
+        if (getLength(transmitBufferUart2) == 0)
+            return TRUE;
+        return FALSE;
+    }
+}
+
+char UART_isReceiveEmpty(uint8_t id)
+{
+    if(id == UART1_ID){
+        if (getLength(receiveBufferUart1) == 0)
+            return TRUE;
+        return FALSE;
+    } else if(id == UART2_ID){
+        if (getLength(receiveBufferUart2) == 0)
+            return TRUE;
+        return FALSE;
+    }
+}
+
+
+/***************************************************
+ *              Uno32/Pic Functions
+ ***************************************************/
 
 /****************************************************************************
  Function
@@ -291,67 +281,8 @@ int _mon_getc(int canblock)
     return UART_getChar(UART_SERIAL_ID);
 }
 
-/****************************************************************************
- Function
-    UART_isReceiveEmpty
-
- Parameters
-     None.
-
- Returns
-    TRUE or FALSE
-
- Description
-    returns the state of the receive buffer
- Notes
-     
-
- Author
- Max Dunne, 2011.12.15
- ****************************************************************************/
-char UART_isReceiveEmpty(uint8_t id)
-{
-    if(id == UART1_ID){
-        if (getLength(receiveBufferUart1) == 0)
-            return TRUE;
-        return FALSE;
-    } else if(id == UART2_ID){
-        if (getLength(receiveBufferUart2) == 0)
-            return TRUE;
-        return FALSE;
-    }
-}
-
-/****************************************************************************
- Function
-    UART_isTransmitEmpty
-
- Parameters
-     None.
-
- Returns
-    TRUE or FALSE
-
- Description
-    returns the state of the transmit buffer
- Notes
 
 
- Author
- Max Dunne, 2011.12.15
- ****************************************************************************/
-char UART_isTransmitEmpty(uint8_t id)
-{
-    if(id == UART1_ID){
-        if (getLength(transmitBufferUart1) == 0)
-            return TRUE;
-        return FALSE;
-    } else if(id == UART2_ID){
-        if (getLength(transmitBufferUart2) == 0)
-            return TRUE;
-        return FALSE;
-    }
-}
 
 /****************************************************************************
  Function
@@ -629,114 +560,6 @@ int main(void)
             }
         }
     }
-
-    return 0;
-}
-
-
-
-
-#endif
-
-//#define UART2_TEST
-#ifdef UART2_TEST
-
-#define UART_DESIRED_ID     UART2_ID
-#include<ports.h>
-int main(void)
-{
-    
-    UART_init(UART_DESIRED_ID,115200);
-    
-    INTEnableSystemMultiVectoredInt();
-    PORTX05_TRIS = 0;
-  /*  while(1){
-    PORTX05_LAT = 1;
-    DELAY(1000);
-    PORTX05_LAT = 0;
-    DELAY(1000);
-    }
-    */
-    
-    uint8_t x;
-    uint16_t y;
-    
-    for(x=1; ;x = ((++x)%5) + 1){
-    
-        //if (UART_isTransmitEmpty(UART_DESIRED_ID) == TRUE)
-            UART_putChar(UART_DESIRED_ID, x);
-        y = 1024;
-        while(--y){
-            if(UART_isReceiveEmpty(UART_DESIRED_ID) == FALSE)
-                break;
-        }
-
-
-        if(UART_isReceiveEmpty(UART_DESIRED_ID) == FALSE){
-
-            for(y = UART_getChar(UART_DESIRED_ID); y != 0; y--){
-            //for(y = x; y != 0; y--){
-                DELAY(1000);
-                PORTX05_LAT = 1;
-                DELAY(1000);
-                PORTX05_LAT = 0;
-            }
-            DELAY(5000);
-     
-        }else{
-            PORTX05_LAT = 1;
-            DELAY(5000);
-            PORTX05_LAT = 0;
-        }
-        DELAY(5000);
-    }
-
     return 0;
 }
 #endif
-
-//#define UART3_TEST
-#ifdef UART3_TEST
-#define UART_DESIRED_ID     UART2_ID
-
-int main(void)
-{
-    Board_init();
-    UART_init(UART_DESIRED_ID,115200);
-
-
-
-    printf("Welcom to the Serial 2 test harness\nbe sure to have a wire between input and output\r\n");
-    //INTEnableSystemMultiVectoredInt();
-    PORTX05_TRIS = 0;
-    PORTX05_TRIS = 0;
-    DELAY(1000);
-
-    while (!UART_isReceiveEmpty(UART_DESIRED_ID));
-    printf("Filling Uart 2 with 7 Characters\r\n");
-    UART_putChar(UART_DESIRED_ID, 0x1);
-    UART_putChar(UART_DESIRED_ID, 0x1);
-    UART_putChar(UART_DESIRED_ID, 0x1);
-    UART_putChar(UART_DESIRED_ID, 0x1);
-    UART_putChar(UART_DESIRED_ID, 0x1);
-    UART_putChar(UART_DESIRED_ID, 0x1);
-    UART_putChar(UART_DESIRED_ID, 0x1);
-    if (!UART_isTransmitEmpty(UART_DESIRED_ID))
-    {
-        printf("Uart 2 is not empty\r\n");
-       PORTX05_LAT = 1;
-    }
-    while (!UART_isTransmitEmpty(UART_DESIRED_ID));
-    PORTX05_LAT = 0;
-    printf("Get here");
-    while (UART_isReceiveEmpty(UART_DESIRED_ID));
-    if (UART_getChar(UART_DESIRED_ID) == 1) {
-        DELAY(5000);
-        //PORTX05_LAT = 1;
-    }
-
-    return ERROR;
-}
-
-
-#endif //UART3_TEST
