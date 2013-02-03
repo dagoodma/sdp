@@ -3,7 +3,7 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>atlas</name>
+            <name>Atlas</name>
             <creation-uuid>b7c4d685-5676-4b53-9a84-144ab2a8fb18</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>

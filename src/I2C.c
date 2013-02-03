@@ -2,6 +2,7 @@
  * File:   I2C.c
  * Author: Shehadeh H. Dajani
  * Author: Darrel R. Deo
+ * @author David Goodman
  *
  *
  * Created on January 18, 2013, 3:42 PM
@@ -29,15 +30,23 @@
  ***********************************************************************/
 
 
+void I2C_acknowledgeRead(I2C_MODULE I2C_ID, BOOL ack) {
+    I2CAcknowledgeByte(I2C_ID, ack);
+}
+
+BOOL I2C_hasAcknowledged(I2C_MODULE I2C_ID) {
+    I2CAcknowledgeHasCompleted(I2C_ID);
+}
+
 BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart){
     I2C_STATUS  status;
 
 // Send the Start (or Restart) signal
     if(restart){
         if(I2CRepeatStart(I2C_ID) != I2C_SUCCESS){
-#ifdef DEBUG
+            #ifdef DEBUG
             printf("Error: Bus collision during transfer Start at Read\n");
-#endif
+            #endif
             return FALSE;
         }
     }
@@ -45,13 +54,13 @@ BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart){
     // Wait for the bus to be idle, then start the transfer
         while( !I2CBusIsIdle(I2C_ID) );
         if(I2CStart(I2C_ID) != I2C_SUCCESS){
-#ifdef DEBUG
+            #ifdef DEBUG
             printf("Error: Bus collision during transfer Start at Write\n");
-#endif
+            #endif
             return FALSE;
         }
     }
-// Wait for the signal to complete
+    // Wait for the signal to complete
     do{
         status = I2CGetStatus(I2C_ID);
     }
@@ -63,10 +72,10 @@ BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart){
 void I2C_stopTransfer(I2C_MODULE I2C_ID){
     I2C_STATUS  status;
 
-// Send the Stop signal
+    // Send the Stop signal
     I2CStop(I2C_ID);
 
-// Wait for the signal to complete
+    // Wait for the signal to complete
     do{
         status = I2CGetStatus(I2C_ID);
     }
@@ -75,14 +84,14 @@ void I2C_stopTransfer(I2C_MODULE I2C_ID){
 
 BOOL I2C_transmitOneByte(I2C_MODULE I2C_ID, uint8_t data) {
 
-// Wait for the transmitter to be ready
+    // Wait for the transmitter to be ready
     while(!I2CTransmitterIsReady(I2C_ID));
 
-// Transmit the byte and check for bus collision
+    // Transmit the byte and check for bus collision
     if(I2CSendByte(I2C_ID, data) == I2C_MASTER_BUS_COLLISION){
-#ifdef DEBUG
+        #ifdef DEBUG
         printf("Error: I2C Master Bus Collision\n");
-#endif
+        #endif
         return FALSE;
     }
 
@@ -100,9 +109,9 @@ BOOL I2C_sendData(I2C_MODULE I2C_ID, uint8_t data){
 
     // Verify that the byte was acknowledged
     if(!I2CByteWasAcknowledged(I2C_ID)){
-#ifdef DEBUG
+        #ifdef DEBUG
         printf("Error: Sent byte was not acknowledged\n");
-#endif
+        #endif
         return FALSE;
     }
     return TRUE;
@@ -111,11 +120,11 @@ BOOL I2C_sendData(I2C_MODULE I2C_ID, uint8_t data){
 int16_t I2C_getData(I2C_MODULE I2C_ID){
     BOOL Success = TRUE;
 
-// Enables the module to receive data from the I2C bus
+        // Enables the module to receive data from the I2C bus
     if(I2CReceiverEnable(I2C_ID, TRUE) == I2C_RECEIVE_OVERFLOW){
-#ifdef DEBUG
+        #ifdef DEBUG
         printf("Error: I2C Receive Overflow\n");
-#endif
+        #endif
         Success = FALSE;
     }
     else{
@@ -129,9 +138,9 @@ int16_t I2C_getData(I2C_MODULE I2C_ID){
 
 void I2C_init(I2C_MODULE I2C_ID, uint32_t I2C_clockFreq) {
 
-// Configure Various I2C Options
+    // Configure Various I2C Options
     I2CConfigure(I2C_ID, I2C_EN);
 
-// Set Desired Operation Frequency
+    // Set Desired Operation Frequency
     I2CSetFrequency(I2C_ID, Board_GetPBClock(), I2C_clockFreq);
 }

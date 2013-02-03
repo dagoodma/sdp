@@ -1,4 +1,3 @@
-
  
 
 		Latitude    |	Longitude
@@ -19,6 +18,9 @@ Decimal Degrees
 
 
 
+How to measure the accuracy of latitude and longitude?
+(http://gis.stackexchange.com/questions/8650/how-to-measure-the-accuracy-of-latitude-and-longitude)
+-------------------------------------------
 decimal places   degrees      distance
        0         1            111   km
        1         0.1          11.1  km

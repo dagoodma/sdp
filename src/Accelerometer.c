@@ -193,7 +193,7 @@ int16_t readRegister( uint8_t address ) {
 
     do {
         // Send the start bit with the restart flag low
-        if(!I2C_startTransfer(I2C_ID, FALSE)) {
+        if(!I2C_startTransfer(I2C_ID, I2C_WRITE )) {
             return ERROR;
         }
         // Transmit the slave's address to notify it
@@ -204,7 +204,7 @@ int16_t readRegister( uint8_t address ) {
         if(!I2C_sendData(I2C_ID,address))
             break;
         // Send a Repeated Started condition
-        if(!I2C_startTransfer(I2C_ID,READ))
+        if(!I2C_startTransfer(I2C_ID,I2C_READ))
             break;
         // Transmit the address with the READ bit set
         if (!I2C_sendData(I2C_ID, SLAVE_READ_ADDRESS))
@@ -241,7 +241,7 @@ int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest ) {
 
     do {
         // Send the start bit with the restart flag low
-        if(!I2C_startTransfer(I2C_ID, FALSE))
+        if(!I2C_startTransfer(I2C_ID, I2C_WRITE))
             return ERROR;
         // Transmit the slave's address to notify it
         if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
@@ -250,7 +250,7 @@ int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest ) {
         if(!I2C_sendData(I2C_ID,address))
             break;
         // Send a Repeated Started condition
-        if(!I2C_startTransfer(I2C_ID,READ))
+        if(!I2C_startTransfer(I2C_ID,I2C_READ))
             break;
         // Transmit the address with the READ bit set
         if (!I2C_sendData(I2C_ID, SLAVE_READ_ADDRESS))
@@ -265,9 +265,9 @@ int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest ) {
 
             // Only send and wait for Ack if there's more to read
             if (i < (bytesToRead - 1)) {
-                I2CAcknowledgeByte(I2C1, TRUE);
+                I2C_acknowledgeRead(I2C1, I2C_ACK);
 
-                while(!I2CAcknowledgeHasCompleted(I2C_ID));
+                while(!I2C_hasAcknowledged(I2C_ID));
             }
         }
         success = TRUE;
@@ -296,7 +296,7 @@ int16_t writeRegister( uint8_t address, uint8_t data ) {
 
 // Send the start bit with the restart flag low
     do {
-        if(!I2C_startTransfer(I2C_ID, WRITE))
+        if(!I2C_startTransfer(I2C_ID, I2C_WRITE))
             return ERROR;
     // Transmit the slave's address to notify it
         if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
@@ -335,7 +335,7 @@ int16_t writeRegister( uint8_t address, uint8_t data ) {
 
 int main(void) {
 
-// Initialize the modules
+    // Initialize the modules
     Board_init();
     Timer_init();
     I2C_init(I2C_ID, I2C_CLOCK_FREQ);
