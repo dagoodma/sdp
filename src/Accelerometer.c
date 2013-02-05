@@ -199,7 +199,6 @@ int16_t readRegister( uint8_t address ) {
         // Transmit the slave's address to notify it
         if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
             break;
-        printf("Started read.\n");
         // Transmit the read address
         if(!I2C_sendData(I2C_ID,address))
             break;
@@ -265,9 +264,11 @@ int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest ) {
 
             // Only send and wait for Ack if there's more to read
             if (i < (bytesToRead - 1)) {
-                I2C_acknowledgeRead(I2C1, I2C_ACK);
+                I2CAcknowledgeByte(I2C1, TRUE);
+                //I2C_acknowledgeRead(I2C1, I2C_ACK);
 
-                while(!I2C_hasAcknowledged(I2C_ID));
+                //while(!I2C_hasAcknowledged(I2C_ID));
+                while(!I2CAcknowledgeHasCompleted(I2C_ID));
             }
         }
         success = TRUE;

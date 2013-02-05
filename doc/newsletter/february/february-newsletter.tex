@@ -114,11 +114,11 @@
 		\setlength{\fboxrule}{1pt}%
 		\fbox{\includegraphics[width=0.42\textwidth]{group-bad1.jpg}}%
 		}%
-		\\	% this spacer is needed to make the text on the right fit OK
+		%\\	% this spacer is needed to make the text on the right fit OK
 	\end{wrapfigure}
 	
 	\NewsItem{Who Are We}
-	\emph{We are a group of UC Santa Cruz computer and robotics engineering students who are building a robot to assist lifeguards in saving drowning individuals on beaches, at sea, and in other bodies of water. In the United States, there have been a reported 99 people that have drowned in the past year alone, with a good number of them occurring while a lifeguard was on duty. We propose an autonomous boat that can navigate to a person, allowing them to hang on and stay a float until the lifeguard arrives. Our aim is to keep beaches safer by reducing the risk of drowning.}
+	\emph{We are a group of UC Santa Cruz computer and robotics engineering students who are building a robot to assist lifeguards in saving drowning individuals on beaches, at sea, and in other bodies of water. In the United States, there has been a reported 99 people that have drowned in the past year alone, with a good number of them occurring while a lifeguard was on duty. We propose an autonomous boat that can navigate to a person, allowing them to hang on and stay a float until the lifeguard arrives. Our aim is to keep beaches safer by reducing the risk of drowning.}
 \end{minipage}
 \end{center}
 % -----
@@ -132,19 +132,30 @@
 \begin{multicols}{3}
 	\NewsItem{Progress}
 	\NewsAuthor{D. Goodman}
-	January has been a very productive month for our team. We are making tremendous progress on the project. Throughout January we have been hard at work writing, researching, coding, and soldering. In terms of administrative tasks, we have completed a Gantt chart, a website, and have entered into the Texas Instruments Analog Design Contest. In the hardware and software aspects, we have been progressing by leaps and bounds. Not only have we purchased a boat and begun to modify it, but we have also bought our motors, ESCs, and batteries to power the boat.  The command center---an encoded tripod assembly that the lifeguard will use to designate a drowning person---is also coming together as well. We have acquired a tripod and some absolute rotary encoders. The encoder housing has been created, and a software interface is now on-line to take angular measurements. Great care has be taken to ensure that the encoders are very precise so that we can triangulate the position of a drowning person accurately with minimal error. Many of our other sensors are nearly complete as well. We have our accelerometer up and running, our thermal sensor array nearly complete, our altimeter is working, our GPS modules are running and we are analyzing their data in MATLAB, and we have been planning our approach to implementing the microwave radar and sonar sensors after inspecting their analog waveforms with an oscilloscope. 
+	January has been a very productive month for our team. We are making substantial progress on the project. Throughout January, we have been hard at work writing, researching, coding, and soldering. Administratively, we have completed a Gantt chart, a website, and have entered into the Texas Instruments Analog Design Contest. In the hardware portion, we have purchased a boat and begun to modify it with new motors, electronic speed controllers, and batteries.  The command center---an encoded tripod assembly that the lifeguard will use to designate a drowning person---is coming together as well. We have acquired a tripod and absolute rotary encoders for triangulation. The encoder housing has been created, and a software interface is now in the works to take angular measurements and translate them into distance. Great care has been taken to ensure that the encoders are very precise so that we can triangulate the position of a drowning person accurately with minimal error. Many of our other sensors are nearly complete as well. We have an accelerometer up and running, our thermal imagining nearly complete, our altimeter is working, our GPSs running and we are analyzing their data in MATLAB, and we have been planning our approach to implementing the microwave radar and sonar sensors after inspecting their analog waveforms with an oscilloscope. 
+\begin{center}
+			\includegraphics[width=0.78\linewidth]{old_motors.jpg}
+		\end{center}
+Overall, this past month has been productive on all fronts and the team is anxious to continue with work in February.
+		
 % -----
 
 \vspace{1cm}
 % Other news (2)
 % -----
 \NewsItem{Direction}
-\NewsAuthor{J. Doe}
-	\blindtext[1]
-		\begin{center}
-			\includegraphics[width=0.78\linewidth]{old_motors.jpg}
-		\end{center}
-		\blindtext[1]
+\NewsAuthor{D. Deo}
+	Every week, the team specifies a minimum set of personal goals that they wish to complete.
+ This week the group will focus on modeling accurate data from the encoders, XBee, GPS, and thermal sensor. The goal is to get the encoders to read accurate angles and have the ability to be calibrated to a zero degree point within software. Data from the GPS and XBee need to be obtained over a duration of time to analyze and correct for any error that may be present. The thermal sensor data is to be mapped to an RGB array so that heat signatures may be seen in real time. These sensors and modules are the last that need be implemented before the integration phase where the various components will be mounted on their respective subsystem. Comprehensive testing will occur after each sensor is up and running. We will also begin designing hierarchical finite state machines for the boat and the command center. These will provide our systems with the intelligence to act autonomously and make decisions on its own. So far, we are ahead of schedule for February.
+
+% -----
+%\columnbreak
+\vspace{1cm}
+% Other news (2)
+% -----
+\NewsItem{Support}
+\NewsAuthor{D. Deo}
+The Autonomous Lifeguard Group is moving quite swiftly and is hopeful that the next phases of the project will yield exceptional results. As a devoted team, we are currently funding the project entirely ourselves. Optimistic about the future of the Autonomous Lifeguard Project, we would appreciate any form of support that would help the project advance. Donations are welcome and can be submitted via our website. All considerations will be recognized by the team.
 \end{multicols}
 % -----
 \end{document} 
