@@ -39,7 +39,8 @@ void Board_init()
     //SYSTEMConfig(SYSTEM_CLOCK,SYS_CFG_ALL);
     //SYSTEMConfigPB(PB_CLOCK);
     //OSCSetPBDIV(2);
-    Serial_init(UART1, 115200);
+    UART_init(UART1_ID,115200);
+    //Serial_init();
     INTEnableSystemMultiVectoredInt();
 }
 
