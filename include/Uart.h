@@ -2,6 +2,7 @@
  * @file    UART.h
  * @author  John Ash
  * @author  David Goodman
+ * @author  Max Dunne
  *
  * @brief
  * Interface for communicating over a UART.
@@ -12,51 +13,78 @@
  * @date January 23, 2013   -- Created
  */
 
-/**********************************************************************
- * Function: UART_init()
- * @param id: identifies the UART module we want to initialize
- *        baudRate: The baudRate we want to initialize the function too.
- * @return a UINT32 value with the actual baudrate initialized. Check against
- *  desired to see if the system can handle the desired baud rate.
- * @remark Initializes the UART to the specific ID and BaudRate given as
- *  functions to the system. Will return the actual baudrate initialzied.
- **********************************************************************/
 
-uint32_t UART_init(UART_MODULE id, uint32_t baudRate);
+#define UART1_ID 1
+#define UART2_ID 2
+#define UART_SERIAL_ID UART1_ID
 
 /**
- * Function: Serial_putChar
- * @param ch, the char to be sent
+ * Function: UART_init()
+ * @param id: identifies the UART module we want to initialize.
+ *        baudRate: The baudRate we want to initialize the function to.
+ * @return None
+ * @remark Initializes the UART to the specific ID and BaudRate
+ * @author Max Dunne
+ * @author John Ash
+ * @date February 1st, 2013 */
+
+void UART_init(uint8_t id, uint32_t baudRate);
+
+/**
+ * Function: UART_putChar
+ * @param identifies the UART module
+ * @param the char to be sent
  * @return None
  * @remark adds character to circular buffer and starts the uart transmitting
  *          if not already
  * @author Max Dunne
- * @date 2011.11.10  */
+ * @author John Ash
+ * @date February 1st, 2013 */
 void UART_putChar(uint8_t id, char ch);
 
-/**
- * Function: Serial_getChar
- * @param None
- * @return character or 0
- * @remark retrieves first character from the receive buffer or 0
- * @author Max Dunne
- * @date 2011.11.10  */
-char UART_getChar(uint8_t id);
 
 /**
- * Function: Serial_isTransmitEmpty
- * @param None
+ * Function: UART_putChar
+ * @param identifies the UART module
+ * @param an array of character to be sent
+ * @param The length of the array
+ * @return None
+ * @remark adds character to circular buffer and starts the uart transmitting
+ *          if not already
+ * @author John Ash
+ * @date February 1st, 2013 */
+void UART_putString(uint8_t id, char* Data, int Length);
+
+
+/**
+ * Function: UART_getChar
+ * @param identifies the UART module
+ * @return 0xFF00 if the data is not valid, and 0x00FF & data if the
+ *      data is valid. It is the job of the function caller to check
+ *      for valid data.
+ * @remark retrieves first character from the receive buffer or 0. Currently
+ *      uses blocking code between each character.
+ * @author Max Dunne
+ * @author John Ash
+ * @date February 1st, 2013  */
+uint16_t UART_getChar(uint8_t id);
+
+/**
+ * Function: UART_isTransmitEmpty
+ * @param identifies the UART module
  * @return TRUE or FALSE
  * @remark returns the state of the transmit buffer
  * @author Max Dunne
- * @date 2011.12.15  */
+ * @author John Ash
+ * @date February 1st, 2013  */
 char UART_isTransmitEmpty(uint8_t id);
 
 /**
- * Function: Serial_isReceiveEmpty
- * @param None
+ * Function: UART_isReceiveEmpty
+ * @param identifies the UART module
  * @return TRUE or FALSE
  * @remark returns the state of the receive buffer
  * @author Max Dunne
- * @date 2011.12.15  */
+ * @author John Ash
+ * @date February 1st, 2013  */
 char UART_isReceiveEmpty(uint8_t id);
