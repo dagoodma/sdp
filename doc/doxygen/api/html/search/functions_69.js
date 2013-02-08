@@ -1,6 +1,8 @@
 var searchData=
 [
+  ['i2c_5facknowledgeread',['I2C_acknowledgeRead',['../_i2_c_8h.html#a4a50cd09019257b351ab820e98abd61d',1,'I2C.h']]],
   ['i2c_5fgetdata',['I2C_getData',['../_i2_c_8h.html#aa595d0ea2cacd2b19622684452c9328d',1,'I2C.h']]],
+  ['i2c_5fhasacknowledged',['I2C_hasAcknowledged',['../_i2_c_8h.html#a4265631ba0dbf914f1c34e3caa4956c4',1,'I2C.h']]],
   ['i2c_5finit',['I2C_init',['../_i2_c_8h.html#ae9f8f1643c47e4cf6d0b7e61276d51f0',1,'I2C.h']]],
   ['i2c_5fsenddata',['I2C_sendData',['../_i2_c_8h.html#aa428d1cff803d7c5d7e7a9ed91a38655',1,'I2C.h']]],
   ['i2c_5fstarttransfer',['I2C_startTransfer',['../_i2_c_8h.html#af63ce9538deda722561c9d4b77e46753',1,'I2C.h']]],

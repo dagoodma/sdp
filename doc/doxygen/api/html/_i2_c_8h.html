@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.3.1"/>
-<title>Autonomous Lifeguard: C:/Users/dagoodma/Documents/SDP/include/I2C.h File Reference</title>
+<title>Autonomous Lifeguard: include/I2C.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -82,7 +82,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_69bb74a583b5d54896df6bac1850568d.html">SDP</a></li><li class="navelem"><a class="el" href="dir_45d6afcbcf27c51ede5c963533a0a427.html">include</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -102,12 +102,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:ada74e7db007a68e763f20c17f2985356"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ada74e7db007a68e763f20c17f2985356"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>READ</b>&#160;&#160;&#160;1</td></tr>
-<tr class="separator:ada74e7db007a68e763f20c17f2985356"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa10f470e996d0f51210d24f442d25e1e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa10f470e996d0f51210d24f442d25e1e"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>WRITE</b>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:aa10f470e996d0f51210d24f442d25e1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab5c0fbe837494c5f9130a5914854250d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab5c0fbe837494c5f9130a5914854250d"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>I2C_READ</b>&#160;&#160;&#160;1</td></tr>
+<tr class="separator:ab5c0fbe837494c5f9130a5914854250d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9536bf85bced4f4e549a82fb18eb6140"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9536bf85bced4f4e549a82fb18eb6140"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>I2C_WRITE</b>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:a9536bf85bced4f4e549a82fb18eb6140"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -123,15 +123,59 @@ Functions</h2></td></tr>
 <tr class="separator:aa595d0ea2cacd2b19622684452c9328d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9f8f1643c47e4cf6d0b7e61276d51f0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_i2_c_8h.html#ae9f8f1643c47e4cf6d0b7e61276d51f0">I2C_init</a> (I2C_MODULE I2C_ID, uint32_t I2C_clockFreq)</td></tr>
 <tr class="separator:ae9f8f1643c47e4cf6d0b7e61276d51f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a50cd09019257b351ab820e98abd61d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_i2_c_8h.html#a4a50cd09019257b351ab820e98abd61d">I2C_acknowledgeRead</a> (I2C_MODULE I2C_ID, BOOL ack)</td></tr>
+<tr class="separator:a4a50cd09019257b351ab820e98abd61d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4265631ba0dbf914f1c34e3caa4956c4"><td class="memItemLeft" align="right" valign="top">BOOL&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_i2_c_8h.html#a4265631ba0dbf914f1c34e3caa4956c4">I2C_hasAcknowledged</a> (I2C_MODULE I2C_ID)</td></tr>
+<tr class="separator:a4265631ba0dbf914f1c34e3caa4956c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for communicating over I2C. </p>
 <dl class="section author"><dt>Author</dt><dd>Shehadeh H. Dajani </dd>
 <dd>
-Darrel R. Deo</dd></dl>
+Darrel R. Deo </dd>
+<dd>
+David Goodman</dd></dl>
 <p>This interface is for communication with devices of I2C.</p>
 <dl class="section date"><dt>Date</dt><dd>January 21, 2013, 3:42 PM &ndash; Created </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="a4a50cd09019257b351ab820e98abd61d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void I2C_acknowledgeRead </td>
+          <td>(</td>
+          <td class="paramtype">I2C_MODULE&#160;</td>
+          <td class="paramname"><em>I2C_ID</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">BOOL&#160;</td>
+          <td class="paramname"><em>ack</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Function: I2C_acknowledgeRead </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">I2C</td><td>bus line that will be used </td></tr>
+    <tr><td class="paramname">Determines</td><td>how the byte should be acknoweldged (I2C_ACK or I2C_NACK). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>None. </dd></dl>
+<dl class="section remark"><dt>Remarks</dt><dd>Turns on the I2C bus line specified and sets the frequency on it. </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>Shehadeh H. Dajani </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2013.01.21 </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="aa595d0ea2cacd2b19622684452c9328d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -154,6 +198,32 @@ Darrel R. Deo</dd></dl>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>data, (int16_t) single byte data from the slave. </dd></dl>
 <dl class="section remark"><dt>Remarks</dt><dd>After sending the prerequisites for a read, this function will check if the desired data is on the I2C bus line, read it, and return it. </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>Shehadeh H. Dajani </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2013.01.21 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a4265631ba0dbf914f1c34e3caa4956c4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">BOOL I2C_hasAcknowledged </td>
+          <td>(</td>
+          <td class="paramtype">I2C_MODULE&#160;</td>
+          <td class="paramname"><em>I2C_ID</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Function: I2C_hasAcknowledged </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">I2C</td><td>bus line that will be used. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Whether an acknowledgement was received. </dd></dl>
 <dl class="section author"><dt>Author</dt><dd>Shehadeh H. Dajani </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2013.01.21 </dd></dl>
 
@@ -262,7 +332,7 @@ Darrel R. Deo</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">I2C_ID,The</td><td>I2C bus line that will be used </td></tr>
-    <tr><td class="paramname">restart,determines</td><td>whether you are sending a start or restart bit. </td></tr>
+    <tr><td class="paramname">whether</td><td>you are sending a start or restart bit (use I2C_SEND_START or I2C_SEND_RESTART). </td></tr>
   </table>
   </dd>
 </dl>
@@ -341,7 +411,7 @@ Darrel R. Deo</dd></dl>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jan 25 2013 01:59:30 for Autonomous Lifeguard by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Feb 7 2013 17:42:13 for Autonomous Lifeguard by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>

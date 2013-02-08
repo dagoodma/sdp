@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.3.1"/>
-<title>Autonomous Lifeguard: C:/Users/dagoodma/Documents/SDP/include/Uart.h File Reference</title>
+<title>Autonomous Lifeguard: include/Uart.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -82,11 +82,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_69bb74a583b5d54896df6bac1850568d.html">SDP</a></li><li class="navelem"><a class="el" href="dir_45d6afcbcf27c51ede5c963533a0a427.html">include</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">Uart.h File Reference</div>  </div>
@@ -98,15 +99,28 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <p><a href="_uart_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:af7f307e3b5db721adb0b3051a6d9ff8e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af7f307e3b5db721adb0b3051a6d9ff8e"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>UART1_ID</b>&#160;&#160;&#160;1</td></tr>
+<tr class="separator:af7f307e3b5db721adb0b3051a6d9ff8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfe1a670185a0c563bf424f5bc005b60"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acfe1a670185a0c563bf424f5bc005b60"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>UART2_ID</b>&#160;&#160;&#160;2</td></tr>
+<tr class="separator:acfe1a670185a0c563bf424f5bc005b60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af41f66acdd4cad08d2f80872f04da597"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af41f66acdd4cad08d2f80872f04da597"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>UART_SERIAL_ID</b>&#160;&#160;&#160;UART1_ID</td></tr>
+<tr class="separator:af41f66acdd4cad08d2f80872f04da597"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aac5bff5bbd386adf8764a8f984548441"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aac5bff5bbd386adf8764a8f984548441"></a>
-uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>UART_init</b> (UART_MODULE id, uint32_t baudRate)</td></tr>
-<tr class="separator:aac5bff5bbd386adf8764a8f984548441"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26d179a5c929c9d9a5a245abb7c293a1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_uart_8h.html#a26d179a5c929c9d9a5a245abb7c293a1">UART_init</a> (uint8_t id, uint32_t baudRate)</td></tr>
+<tr class="separator:a26d179a5c929c9d9a5a245abb7c293a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abef22b1fb267532e4838d2b09453053f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_uart_8h.html#abef22b1fb267532e4838d2b09453053f">UART_putChar</a> (uint8_t id, char ch)</td></tr>
 <tr class="separator:abef22b1fb267532e4838d2b09453053f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a068a41938d1c619ea6674f6c8dcd9858"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_uart_8h.html#a068a41938d1c619ea6674f6c8dcd9858">UART_getChar</a> (uint8_t id)</td></tr>
-<tr class="separator:a068a41938d1c619ea6674f6c8dcd9858"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70b735dfbdd10341b12362d3c1f84eb4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_uart_8h.html#a70b735dfbdd10341b12362d3c1f84eb4">UART_putString</a> (uint8_t id, char *Data, int Length)</td></tr>
+<tr class="separator:a70b735dfbdd10341b12362d3c1f84eb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa543771b54fcdd82c585caeee1cd9fc3"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_uart_8h.html#aa543771b54fcdd82c585caeee1cd9fc3">UART_getChar</a> (uint8_t id)</td></tr>
+<tr class="separator:aa543771b54fcdd82c585caeee1cd9fc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a39814d1d728f3eff2a005f3f0ec69255"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_uart_8h.html#a39814d1d728f3eff2a005f3f0ec69255">UART_isTransmitEmpty</a> (uint8_t id)</td></tr>
 <tr class="separator:a39814d1d728f3eff2a005f3f0ec69255"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf77aa21a74c57bd55b8dd015264f984"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_uart_8h.html#abf77aa21a74c57bd55b8dd015264f984">UART_isReceiveEmpty</a> (uint8_t id)</td></tr>
@@ -116,16 +130,18 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>UART_init</b> (UA
 <div class="textblock"><p>Interface for communicating over a UART. </p>
 <dl class="section author"><dt>Author</dt><dd>John Ash </dd>
 <dd>
-David Goodman</dd></dl>
+David Goodman </dd>
+<dd>
+Max Dunne</dd></dl>
 <p>This module is used for communicating with another device over UART.</p>
 <dl class="section date"><dt>Date</dt><dd>January 23, 2013 &ndash; Created </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a068a41938d1c619ea6674f6c8dcd9858"></a>
+<a class="anchor" id="aa543771b54fcdd82c585caeee1cd9fc3"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">char UART_getChar </td>
+          <td class="memname">uint16_t UART_getChar </td>
           <td>(</td>
           <td class="paramtype">uint8_t&#160;</td>
           <td class="paramname"><em>id</em></td><td>)</td>
@@ -133,17 +149,58 @@ David Goodman</dd></dl>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Function: Serial_getChar </p>
+<p>Function: UART_getChar </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">None</td><td></td></tr>
+    <tr><td class="paramname">identifies</td><td>the UART module </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>character or 0 </dd></dl>
-<dl class="section remark"><dt>Remarks</dt><dd>retrieves first character from the receive buffer or 0 </dd></dl>
-<dl class="section author"><dt>Author</dt><dd>Max Dunne </dd></dl>
-<dl class="section date"><dt>Date</dt><dd>2011.11.10 </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>0xFF00 if the data is not valid, and 0x00FF &amp; data if the data is valid. It is the job of the function caller to check for valid data. </dd></dl>
+<dl class="section remark"><dt>Remarks</dt><dd>retrieves first character from the receive buffer or 0. Currently uses blocking code between each character. </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>Max Dunne </dd>
+<dd>
+John Ash </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>February 1st, 2013 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a26d179a5c929c9d9a5a245abb7c293a1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UART_init </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>baudRate</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Function: <a class="el" href="_uart_8h.html#a26d179a5c929c9d9a5a245abb7c293a1">UART_init()</a> </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">id,:</td><td>identifies the UART module we want to initialize. baudRate: The baudRate we want to initialize the function to. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>None </dd></dl>
+<dl class="section remark"><dt>Remarks</dt><dd>Initializes the UART to the specific ID and BaudRate </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>Max Dunne </dd>
+<dd>
+John Ash </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>February 1st, 2013 </dd></dl>
 
 </div>
 </div>
@@ -160,17 +217,19 @@ David Goodman</dd></dl>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Function: Serial_isReceiveEmpty </p>
+<p>Function: UART_isReceiveEmpty </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">None</td><td></td></tr>
+    <tr><td class="paramname">identifies</td><td>the UART module </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>TRUE or FALSE </dd></dl>
 <dl class="section remark"><dt>Remarks</dt><dd>returns the state of the receive buffer </dd></dl>
-<dl class="section author"><dt>Author</dt><dd>Max Dunne </dd></dl>
-<dl class="section date"><dt>Date</dt><dd>2011.12.15 </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>Max Dunne </dd>
+<dd>
+John Ash </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>February 1st, 2013 </dd></dl>
 
 </div>
 </div>
@@ -187,17 +246,19 @@ David Goodman</dd></dl>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Function: Serial_isTransmitEmpty </p>
+<p>Function: UART_isTransmitEmpty </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">None</td><td></td></tr>
+    <tr><td class="paramname">identifies</td><td>the UART module </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>TRUE or FALSE </dd></dl>
 <dl class="section remark"><dt>Remarks</dt><dd>returns the state of the transmit buffer </dd></dl>
-<dl class="section author"><dt>Author</dt><dd>Max Dunne </dd></dl>
-<dl class="section date"><dt>Date</dt><dd>2011.12.15 </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>Max Dunne </dd>
+<dd>
+John Ash </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>February 1st, 2013 </dd></dl>
 
 </div>
 </div>
@@ -224,24 +285,72 @@ David Goodman</dd></dl>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Function: Serial_putChar </p>
+<p>Function: UART_putChar </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ch,the</td><td>char to be sent </td></tr>
+    <tr><td class="paramname">identifies</td><td>the UART module </td></tr>
+    <tr><td class="paramname">the</td><td>char to be sent </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>None </dd></dl>
 <dl class="section remark"><dt>Remarks</dt><dd>adds character to circular buffer and starts the uart transmitting if not already </dd></dl>
-<dl class="section author"><dt>Author</dt><dd>Max Dunne </dd></dl>
-<dl class="section date"><dt>Date</dt><dd>2011.11.10 </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>Max Dunne </dd>
+<dd>
+John Ash </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>February 1st, 2013 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a70b735dfbdd10341b12362d3c1f84eb4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UART_putString </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>Data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>Length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Function: UART_putChar </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">identifies</td><td>the UART module </td></tr>
+    <tr><td class="paramname">an</td><td>array of character to be sent </td></tr>
+    <tr><td class="paramname">The</td><td>length of the array </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>None </dd></dl>
+<dl class="section remark"><dt>Remarks</dt><dd>adds character to circular buffer and starts the uart transmitting if not already </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>John Ash </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>February 1st, 2013 </dd></dl>
 
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jan 25 2013 01:59:30 for Autonomous Lifeguard by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Feb 7 2013 17:42:13 for Autonomous Lifeguard by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>

@@ -1,5 +1,5 @@
-\hypertarget{_barometer_8h}{\section{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Barometer.h File Reference}
-\label{_barometer_8h}\index{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Barometer.\-h@{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-Barometer.\-h}}
+\hypertarget{_barometer_8h}{\section{include/\-Barometer.h File Reference}
+\label{_barometer_8h}\index{include/\-Barometer.\-h@{include/\-Barometer.\-h}}
 }
 
 
@@ -9,9 +9,15 @@ Sensor interface for the barometer.
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-long \hyperlink{_barometer_8h_a2b9d40a41c9d511025556523985e2365}{Barometer\-\_\-get\-Temperature\-Data} (void)
+void \hyperlink{_barometer_8h_aee1e2d4d38f6153a83fa3f8f757af525}{Barometer\-\_\-init} ()
 \item 
-long \hyperlink{_barometer_8h_aa36449f5573b36e6cf9bde4aa01a3783}{Barometer\-\_\-get\-Pressure\-Data} (void)
+int32\-\_\-t \hyperlink{_barometer_8h_a15a635cede7fba78070aadea8c8ddaaf}{Barometer\-\_\-get\-Temperature} (void)
+\item 
+int32\-\_\-t \hyperlink{_barometer_8h_a4187886cb26e3454635a49ad72db7a45}{Barometer\-\_\-get\-Temperature\-Fahrenheit} (void)
+\item 
+int32\-\_\-t \hyperlink{_barometer_8h_af6319d1836e852d7778680b61c608fbb}{Barometer\-\_\-get\-Pressure} (void)
+\item 
+int32\-\_\-t \hyperlink{_barometer_8h_a628d532c794efbff35c66370f71236d9}{Barometer\-\_\-get\-Altitude} (void)
 \item 
 void \hyperlink{_barometer_8h_af7275b986fbbae22aa2fd4f714ae6bb8}{Barometer\-\_\-run\-S\-M} ()
 \end{DoxyCompactItemize}
@@ -31,15 +37,34 @@ January 21, 2013, 4\-:55 P\-M -- Created
 
 
 \subsection{Function Documentation}
-\hypertarget{_barometer_8h_aa36449f5573b36e6cf9bde4aa01a3783}{\index{Barometer.\-h@{Barometer.\-h}!Barometer\-\_\-get\-Pressure\-Data@{Barometer\-\_\-get\-Pressure\-Data}}
-\index{Barometer\-\_\-get\-Pressure\-Data@{Barometer\-\_\-get\-Pressure\-Data}!Barometer.h@{Barometer.\-h}}
-\subsubsection[{Barometer\-\_\-get\-Pressure\-Data}]{\setlength{\rightskip}{0pt plus 5cm}long Barometer\-\_\-get\-Pressure\-Data (
+\hypertarget{_barometer_8h_a628d532c794efbff35c66370f71236d9}{\index{Barometer.\-h@{Barometer.\-h}!Barometer\-\_\-get\-Altitude@{Barometer\-\_\-get\-Altitude}}
+\index{Barometer\-\_\-get\-Altitude@{Barometer\-\_\-get\-Altitude}!Barometer.h@{Barometer.\-h}}
+\subsubsection[{Barometer\-\_\-get\-Altitude}]{\setlength{\rightskip}{0pt plus 5cm}int32\-\_\-t Barometer\-\_\-get\-Altitude (
 \begin{DoxyParamCaption}
 \item[{void}]{}
 \end{DoxyParamCaption}
-)}}\label{_barometer_8h_aa36449f5573b36e6cf9bde4aa01a3783}
-Function\-: Barometer\-\_\-get\-Pressure\-Data \begin{DoxyReturn}{Returns}
-Data, (long) 16-\/bit temperature data 
+)}}\label{_barometer_8h_a628d532c794efbff35c66370f71236d9}
+Function\-: Barometer\-\_\-get\-Altitude \begin{DoxyReturn}{Returns}
+Returns the altitude in meters. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Converts pressure from altitude above sea level in meters. See\-: \href{http://psas.pdx.edu/RocketScience/PressureAltitude_Derived.pdf}{\tt http\-://psas.\-pdx.\-edu/\-Rocket\-Science/\-Pressure\-Altitude\-\_\-\-Derived.\-pdf} 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+David Goodman 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-02.\-01 
+\end{DoxyDate}
+\hypertarget{_barometer_8h_af6319d1836e852d7778680b61c608fbb}{\index{Barometer.\-h@{Barometer.\-h}!Barometer\-\_\-get\-Pressure@{Barometer\-\_\-get\-Pressure}}
+\index{Barometer\-\_\-get\-Pressure@{Barometer\-\_\-get\-Pressure}!Barometer.h@{Barometer.\-h}}
+\subsubsection[{Barometer\-\_\-get\-Pressure}]{\setlength{\rightskip}{0pt plus 5cm}int32\-\_\-t Barometer\-\_\-get\-Pressure (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{_barometer_8h_af6319d1836e852d7778680b61c608fbb}
+Function\-: Barometer\-\_\-get\-Pressure \begin{DoxyReturn}{Returns}
+Pressure in pascals. 
 \end{DoxyReturn}
 \begin{DoxyRemark}{Remarks}
 Returns the pre-\/converted temperature data. 
@@ -50,24 +75,62 @@ Shehadeh H. Dajani
 \begin{DoxyDate}{Date}
 2013.\-01.\-21 
 \end{DoxyDate}
-\hypertarget{_barometer_8h_a2b9d40a41c9d511025556523985e2365}{\index{Barometer.\-h@{Barometer.\-h}!Barometer\-\_\-get\-Temperature\-Data@{Barometer\-\_\-get\-Temperature\-Data}}
-\index{Barometer\-\_\-get\-Temperature\-Data@{Barometer\-\_\-get\-Temperature\-Data}!Barometer.h@{Barometer.\-h}}
-\subsubsection[{Barometer\-\_\-get\-Temperature\-Data}]{\setlength{\rightskip}{0pt plus 5cm}long Barometer\-\_\-get\-Temperature\-Data (
+\hypertarget{_barometer_8h_a15a635cede7fba78070aadea8c8ddaaf}{\index{Barometer.\-h@{Barometer.\-h}!Barometer\-\_\-get\-Temperature@{Barometer\-\_\-get\-Temperature}}
+\index{Barometer\-\_\-get\-Temperature@{Barometer\-\_\-get\-Temperature}!Barometer.h@{Barometer.\-h}}
+\subsubsection[{Barometer\-\_\-get\-Temperature}]{\setlength{\rightskip}{0pt plus 5cm}int32\-\_\-t Barometer\-\_\-get\-Temperature (
 \begin{DoxyParamCaption}
 \item[{void}]{}
 \end{DoxyParamCaption}
-)}}\label{_barometer_8h_a2b9d40a41c9d511025556523985e2365}
-Function\-: Barometer\-\_\-get\-Temperature\-Data \begin{DoxyReturn}{Returns}
-Data, (long) 16-\/bit temperature data 
+)}}\label{_barometer_8h_a15a635cede7fba78070aadea8c8ddaaf}
+Function\-: Barometer\-\_\-get\-Temperature \begin{DoxyReturn}{Returns}
+Temperature in celcius. 
 \end{DoxyReturn}
 \begin{DoxyRemark}{Remarks}
-Returns the pre-\/converted temperature data. 
+Returns the temperature measured by the barometer. 
 \end{DoxyRemark}
 \begin{DoxyAuthor}{Author}
 Shehadeh H. Dajani 
 \end{DoxyAuthor}
 \begin{DoxyDate}{Date}
 2013.\-01.\-21 
+\end{DoxyDate}
+\hypertarget{_barometer_8h_a4187886cb26e3454635a49ad72db7a45}{\index{Barometer.\-h@{Barometer.\-h}!Barometer\-\_\-get\-Temperature\-Fahrenheit@{Barometer\-\_\-get\-Temperature\-Fahrenheit}}
+\index{Barometer\-\_\-get\-Temperature\-Fahrenheit@{Barometer\-\_\-get\-Temperature\-Fahrenheit}!Barometer.h@{Barometer.\-h}}
+\subsubsection[{Barometer\-\_\-get\-Temperature\-Fahrenheit}]{\setlength{\rightskip}{0pt plus 5cm}int32\-\_\-t Barometer\-\_\-get\-Temperature\-Fahrenheit (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{_barometer_8h_a4187886cb26e3454635a49ad72db7a45}
+Function\-: Barometer\-\_\-get\-Temperature\-Fahrenheit \begin{DoxyReturn}{Returns}
+Temperature in fahrenheit. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Returns the temperature measured by the barometer in fahrenheit. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+David Goodman 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-02.\-01 
+\end{DoxyDate}
+\hypertarget{_barometer_8h_aee1e2d4d38f6153a83fa3f8f757af525}{\index{Barometer.\-h@{Barometer.\-h}!Barometer\-\_\-init@{Barometer\-\_\-init}}
+\index{Barometer\-\_\-init@{Barometer\-\_\-init}!Barometer.h@{Barometer.\-h}}
+\subsubsection[{Barometer\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}void Barometer\-\_\-init (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{_barometer_8h_aee1e2d4d38f6153a83fa3f8f757af525}
+Function\-: Barometer\-\_\-init \begin{DoxyReturn}{Returns}
+None 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Intializes the Barometer and state machine. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+David Goodman 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-02.\-01 
 \end{DoxyDate}
 \hypertarget{_barometer_8h_af7275b986fbbae22aa2fd4f714ae6bb8}{\index{Barometer.\-h@{Barometer.\-h}!Barometer\-\_\-run\-S\-M@{Barometer\-\_\-run\-S\-M}}
 \index{Barometer\-\_\-run\-S\-M@{Barometer\-\_\-run\-S\-M}!Barometer.h@{Barometer.\-h}}

@@ -1,5 +1,5 @@
-\hypertarget{_i2_c_8h}{\section{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-I2\-C.h File Reference}
-\label{_i2_c_8h}\index{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-I2\-C.\-h@{C\-:/\-Users/dagoodma/\-Documents/\-S\-D\-P/include/\-I2\-C.\-h}}
+\hypertarget{_i2_c_8h}{\section{include/\-I2\-C.h File Reference}
+\label{_i2_c_8h}\index{include/\-I2\-C.\-h@{include/\-I2\-C.\-h}}
 }
 
 
@@ -10,10 +10,10 @@ Interface for communicating over I2\-C.
 \subsection*{Macros}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{_i2_c_8h_ada74e7db007a68e763f20c17f2985356}{\#define {\bfseries R\-E\-A\-D}~1}\label{_i2_c_8h_ada74e7db007a68e763f20c17f2985356}
+\hypertarget{_i2_c_8h_ab5c0fbe837494c5f9130a5914854250d}{\#define {\bfseries I2\-C\-\_\-\-R\-E\-A\-D}~1}\label{_i2_c_8h_ab5c0fbe837494c5f9130a5914854250d}
 
 \item 
-\hypertarget{_i2_c_8h_aa10f470e996d0f51210d24f442d25e1e}{\#define {\bfseries W\-R\-I\-T\-E}~0}\label{_i2_c_8h_aa10f470e996d0f51210d24f442d25e1e}
+\hypertarget{_i2_c_8h_a9536bf85bced4f4e549a82fb18eb6140}{\#define {\bfseries I2\-C\-\_\-\-W\-R\-I\-T\-E}~0}\label{_i2_c_8h_a9536bf85bced4f4e549a82fb18eb6140}
 
 \end{DoxyCompactItemize}
 \subsection*{Functions}
@@ -30,6 +30,10 @@ B\-O\-O\-L \hyperlink{_i2_c_8h_aa428d1cff803d7c5d7e7a9ed91a38655}{I2\-C\-\_\-sen
 int16\-\_\-t \hyperlink{_i2_c_8h_aa595d0ea2cacd2b19622684452c9328d}{I2\-C\-\_\-get\-Data} (I2\-C\-\_\-\-M\-O\-D\-U\-L\-E I2\-C\-\_\-\-I\-D)
 \item 
 void \hyperlink{_i2_c_8h_ae9f8f1643c47e4cf6d0b7e61276d51f0}{I2\-C\-\_\-init} (I2\-C\-\_\-\-M\-O\-D\-U\-L\-E I2\-C\-\_\-\-I\-D, uint32\-\_\-t I2\-C\-\_\-clock\-Freq)
+\item 
+void \hyperlink{_i2_c_8h_a4a50cd09019257b351ab820e98abd61d}{I2\-C\-\_\-acknowledge\-Read} (I2\-C\-\_\-\-M\-O\-D\-U\-L\-E I2\-C\-\_\-\-I\-D, B\-O\-O\-L ack)
+\item 
+B\-O\-O\-L \hyperlink{_i2_c_8h_a4265631ba0dbf914f1c34e3caa4956c4}{I2\-C\-\_\-has\-Acknowledged} (I2\-C\-\_\-\-M\-O\-D\-U\-L\-E I2\-C\-\_\-\-I\-D)
 \end{DoxyCompactItemize}
 
 
@@ -37,7 +41,9 @@ void \hyperlink{_i2_c_8h_ae9f8f1643c47e4cf6d0b7e61276d51f0}{I2\-C\-\_\-init} (I2
 Interface for communicating over I2\-C. \begin{DoxyAuthor}{Author}
 Shehadeh H. Dajani 
 
-Darrel R. Deo
+Darrel R. Deo 
+
+David Goodman
 \end{DoxyAuthor}
 This interface is for communication with devices of I2\-C.
 
@@ -47,6 +53,33 @@ January 21, 2013, 3\-:42 P\-M -- Created
 
 
 \subsection{Function Documentation}
+\hypertarget{_i2_c_8h_a4a50cd09019257b351ab820e98abd61d}{\index{I2\-C.\-h@{I2\-C.\-h}!I2\-C\-\_\-acknowledge\-Read@{I2\-C\-\_\-acknowledge\-Read}}
+\index{I2\-C\-\_\-acknowledge\-Read@{I2\-C\-\_\-acknowledge\-Read}!I2C.h@{I2\-C.\-h}}
+\subsubsection[{I2\-C\-\_\-acknowledge\-Read}]{\setlength{\rightskip}{0pt plus 5cm}void I2\-C\-\_\-acknowledge\-Read (
+\begin{DoxyParamCaption}
+\item[{I2\-C\-\_\-\-M\-O\-D\-U\-L\-E}]{I2\-C\-\_\-\-I\-D, }
+\item[{B\-O\-O\-L}]{ack}
+\end{DoxyParamCaption}
+)}}\label{_i2_c_8h_a4a50cd09019257b351ab820e98abd61d}
+Function\-: I2\-C\-\_\-acknowledge\-Read 
+\begin{DoxyParams}{Parameters}
+{\em I2\-C} & bus line that will be used \\
+\hline
+{\em Determines} & how the byte should be acknoweldged (I2\-C\-\_\-\-A\-C\-K or I2\-C\-\_\-\-N\-A\-C\-K). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+None. 
+\end{DoxyReturn}
+\begin{DoxyRemark}{Remarks}
+Turns on the I2\-C bus line specified and sets the frequency on it. 
+\end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Shehadeh H. Dajani 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-21 
+\end{DoxyDate}
 \hypertarget{_i2_c_8h_aa595d0ea2cacd2b19622684452c9328d}{\index{I2\-C.\-h@{I2\-C.\-h}!I2\-C\-\_\-get\-Data@{I2\-C\-\_\-get\-Data}}
 \index{I2\-C\-\_\-get\-Data@{I2\-C\-\_\-get\-Data}!I2C.h@{I2\-C.\-h}}
 \subsubsection[{I2\-C\-\_\-get\-Data}]{\setlength{\rightskip}{0pt plus 5cm}int16\-\_\-t I2\-C\-\_\-get\-Data (
@@ -65,6 +98,27 @@ data, (int16\-\_\-t) single byte data from the slave.
 \begin{DoxyRemark}{Remarks}
 After sending the prerequisites for a read, this function will check if the desired data is on the I2\-C bus line, read it, and return it. 
 \end{DoxyRemark}
+\begin{DoxyAuthor}{Author}
+Shehadeh H. Dajani 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2013.\-01.\-21 
+\end{DoxyDate}
+\hypertarget{_i2_c_8h_a4265631ba0dbf914f1c34e3caa4956c4}{\index{I2\-C.\-h@{I2\-C.\-h}!I2\-C\-\_\-has\-Acknowledged@{I2\-C\-\_\-has\-Acknowledged}}
+\index{I2\-C\-\_\-has\-Acknowledged@{I2\-C\-\_\-has\-Acknowledged}!I2C.h@{I2\-C.\-h}}
+\subsubsection[{I2\-C\-\_\-has\-Acknowledged}]{\setlength{\rightskip}{0pt plus 5cm}B\-O\-O\-L I2\-C\-\_\-has\-Acknowledged (
+\begin{DoxyParamCaption}
+\item[{I2\-C\-\_\-\-M\-O\-D\-U\-L\-E}]{I2\-C\-\_\-\-I\-D}
+\end{DoxyParamCaption}
+)}}\label{_i2_c_8h_a4265631ba0dbf914f1c34e3caa4956c4}
+Function\-: I2\-C\-\_\-has\-Acknowledged 
+\begin{DoxyParams}{Parameters}
+{\em I2\-C} & bus line that will be used. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Whether an acknowledgement was received. 
+\end{DoxyReturn}
 \begin{DoxyAuthor}{Author}
 Shehadeh H. Dajani 
 \end{DoxyAuthor}
@@ -137,7 +191,7 @@ Function\-: I2\-C\-\_\-start\-Transfer
 \begin{DoxyParams}{Parameters}
 {\em I2\-C\-\_\-\-I\-D,The} & I2\-C bus line that will be used \\
 \hline
-{\em restart,determines} & whether you are sending a start or restart bit. \\
+{\em whether} & you are sending a start or restart bit (use I2\-C\-\_\-\-S\-E\-N\-D\-\_\-\-S\-T\-A\-R\-T or I2\-C\-\_\-\-S\-E\-N\-D\-\_\-\-R\-E\-S\-T\-A\-R\-T). \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}

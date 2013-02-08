@@ -15,9 +15,13 @@
 #include <stdint.h>
 #include "Board.h"
 #include "Serial.h"
+#include "Uart.h"
 //#include <plib.h>
 //#include <stdlib.h>
 
+
+#define SERIAL_UART_ID         UART1_ID
+#define SERIAL_UART_BAUDRATE   115200
 
 
 /*******************************************************************************
@@ -93,8 +97,8 @@ char Serial_init(void)
     newCircBuffer(receiveBuffer);
 
     UARTConfigure(UART1, 0x00);
-    UARTSetDataRate(UART1, F_PB, 115200);
-    UARTSetFifoMode(UART1, UART_INTERRUPT_ON_RX_NOT_EMPTY | UART_INTERRUPT_ON_RX_NOT_EMPTY);
+    UARTSetDataRate(SERIAL_UART_ID , F_PB, SERIAL_UART_BAUDRATE );
+    UARTSetFifoMode(SERIAL_UART_ID , UART_INTERRUPT_ON_RX_NOT_EMPTY | UART_INTERRUPT_ON_RX_NOT_EMPTY);
 
     mU1SetIntPriority(4); //set the interrupt priority
 
@@ -506,6 +510,7 @@ unsigned char getOverflow(CBRef cB)
 int main(void)
 {
     Board_init();
+    Serial_init();
     printf("\r\nUno Serial Test Harness\r\nAfter this Message the terminal should mirror anything you type.\r\n");
 
     unsigned char ch = 0;

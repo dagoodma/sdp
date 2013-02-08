@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.3.1"/>
-<title>Autonomous Lifeguard: C:/Users/dagoodma/Documents/SDP/include/Barometer.h File Reference</title>
+<title>Autonomous Lifeguard: include/Barometer.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -82,7 +82,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_69bb74a583b5d54896df6bac1850568d.html">SDP</a></li><li class="navelem"><a class="el" href="dir_45d6afcbcf27c51ede5c963533a0a427.html">include</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -100,10 +100,16 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a2b9d40a41c9d511025556523985e2365"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_barometer_8h.html#a2b9d40a41c9d511025556523985e2365">Barometer_getTemperatureData</a> (void)</td></tr>
-<tr class="separator:a2b9d40a41c9d511025556523985e2365"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa36449f5573b36e6cf9bde4aa01a3783"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_barometer_8h.html#aa36449f5573b36e6cf9bde4aa01a3783">Barometer_getPressureData</a> (void)</td></tr>
-<tr class="separator:aa36449f5573b36e6cf9bde4aa01a3783"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee1e2d4d38f6153a83fa3f8f757af525"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_barometer_8h.html#aee1e2d4d38f6153a83fa3f8f757af525">Barometer_init</a> ()</td></tr>
+<tr class="separator:aee1e2d4d38f6153a83fa3f8f757af525"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15a635cede7fba78070aadea8c8ddaaf"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_barometer_8h.html#a15a635cede7fba78070aadea8c8ddaaf">Barometer_getTemperature</a> (void)</td></tr>
+<tr class="separator:a15a635cede7fba78070aadea8c8ddaaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4187886cb26e3454635a49ad72db7a45"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_barometer_8h.html#a4187886cb26e3454635a49ad72db7a45">Barometer_getTemperatureFahrenheit</a> (void)</td></tr>
+<tr class="separator:a4187886cb26e3454635a49ad72db7a45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6319d1836e852d7778680b61c608fbb"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_barometer_8h.html#af6319d1836e852d7778680b61c608fbb">Barometer_getPressure</a> (void)</td></tr>
+<tr class="separator:af6319d1836e852d7778680b61c608fbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a628d532c794efbff35c66370f71236d9"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_barometer_8h.html#a628d532c794efbff35c66370f71236d9">Barometer_getAltitude</a> (void)</td></tr>
+<tr class="separator:a628d532c794efbff35c66370f71236d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7275b986fbbae22aa2fd4f714ae6bb8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_barometer_8h.html#af7275b986fbbae22aa2fd4f714ae6bb8">Barometer_runSM</a> ()</td></tr>
 <tr class="separator:af7275b986fbbae22aa2fd4f714ae6bb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -115,12 +121,12 @@ David Goodman</dd></dl>
 <p>Module that wraps the barometer sensor in a state machine that ocassionally takes readings over an I2C bus.</p>
 <dl class="section date"><dt>Date</dt><dd>January 21, 2013, 4:55 PM &ndash; Created </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="aa36449f5573b36e6cf9bde4aa01a3783"></a>
+<a class="anchor" id="a628d532c794efbff35c66370f71236d9"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">long Barometer_getPressureData </td>
+          <td class="memname">int32_t Barometer_getAltitude </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -128,20 +134,41 @@ David Goodman</dd></dl>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Function: Barometer_getPressureData </p>
-<dl class="section return"><dt>Returns</dt><dd>Data, (long) 16-bit temperature data </dd></dl>
+<p>Function: Barometer_getAltitude </p>
+<dl class="section return"><dt>Returns</dt><dd>Returns the altitude in meters. </dd></dl>
+<dl class="section remark"><dt>Remarks</dt><dd>Converts pressure from altitude above sea level in meters. See: <a href="http://psas.pdx.edu/RocketScience/PressureAltitude_Derived.pdf">http://psas.pdx.edu/RocketScience/PressureAltitude_Derived.pdf</a> </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>David Goodman </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2013.02.01 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="af6319d1836e852d7778680b61c608fbb"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int32_t Barometer_getPressure </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Function: Barometer_getPressure </p>
+<dl class="section return"><dt>Returns</dt><dd>Pressure in pascals. </dd></dl>
 <dl class="section remark"><dt>Remarks</dt><dd>Returns the pre-converted temperature data. </dd></dl>
 <dl class="section author"><dt>Author</dt><dd>Shehadeh H. Dajani </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2013.01.21 </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a2b9d40a41c9d511025556523985e2365"></a>
+<a class="anchor" id="a15a635cede7fba78070aadea8c8ddaaf"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">long Barometer_getTemperatureData </td>
+          <td class="memname">int32_t Barometer_getTemperature </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -149,11 +176,52 @@ David Goodman</dd></dl>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Function: Barometer_getTemperatureData </p>
-<dl class="section return"><dt>Returns</dt><dd>Data, (long) 16-bit temperature data </dd></dl>
-<dl class="section remark"><dt>Remarks</dt><dd>Returns the pre-converted temperature data. </dd></dl>
+<p>Function: Barometer_getTemperature </p>
+<dl class="section return"><dt>Returns</dt><dd>Temperature in celcius. </dd></dl>
+<dl class="section remark"><dt>Remarks</dt><dd>Returns the temperature measured by the barometer. </dd></dl>
 <dl class="section author"><dt>Author</dt><dd>Shehadeh H. Dajani </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2013.01.21 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a4187886cb26e3454635a49ad72db7a45"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int32_t Barometer_getTemperatureFahrenheit </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Function: Barometer_getTemperatureFahrenheit </p>
+<dl class="section return"><dt>Returns</dt><dd>Temperature in fahrenheit. </dd></dl>
+<dl class="section remark"><dt>Remarks</dt><dd>Returns the temperature measured by the barometer in fahrenheit. </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>David Goodman </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2013.02.01 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="aee1e2d4d38f6153a83fa3f8f757af525"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Barometer_init </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Function: Barometer_init </p>
+<dl class="section return"><dt>Returns</dt><dd>None </dd></dl>
+<dl class="section remark"><dt>Remarks</dt><dd>Intializes the Barometer and state machine. </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>David Goodman </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2013.02.01 </dd></dl>
 
 </div>
 </div>
@@ -180,7 +248,7 @@ David Goodman</dd></dl>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jan 25 2013 01:59:30 for Autonomous Lifeguard by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Feb 7 2013 17:42:13 for Autonomous Lifeguard by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>

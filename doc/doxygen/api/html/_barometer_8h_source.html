@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.3.1"/>
-<title>Autonomous Lifeguard: C:/Users/dagoodma/Documents/SDP/include/Barometer.h Source File</title>
+<title>Autonomous Lifeguard: include/Barometer.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -82,7 +82,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_69bb74a583b5d54896df6bac1850568d.html">SDP</a></li><li class="navelem"><a class="el" href="dir_45d6afcbcf27c51ede5c963533a0a427.html">include</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -104,17 +104,22 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="comment"> * PUBLIC FUNCTION PROTOTYPES                                                  *</span></div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="comment"> ******************************************************************************/</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keywordtype">long</span> <a class="code" href="_barometer_8h.html#a2b9d40a41c9d511025556523985e2365">Barometer_getTemperatureData</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keywordtype">void</span> <a class="code" href="_barometer_8h.html#aee1e2d4d38f6153a83fa3f8f757af525">Barometer_init</a>();</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="keywordtype">long</span> <a class="code" href="_barometer_8h.html#aa36449f5573b36e6cf9bde4aa01a3783">Barometer_getPressureData</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;int32_t <a class="code" href="_barometer_8h.html#a15a635cede7fba78070aadea8c8ddaaf">Barometer_getTemperature</a>(<span class="keywordtype">void</span>);</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keywordtype">void</span> <a class="code" href="_barometer_8h.html#af7275b986fbbae22aa2fd4f714ae6bb8">Barometer_runSM</a>();</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;int32_t <a class="code" href="_barometer_8h.html#a4187886cb26e3454635a49ad72db7a45">Barometer_getTemperatureFahrenheit</a>(<span class="keywordtype">void</span>);</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">#endif // Barometer_H</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;int32_t <a class="code" href="_barometer_8h.html#af6319d1836e852d7778680b61c608fbb">Barometer_getPressure</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;int32_t <a class="code" href="_barometer_8h.html#a628d532c794efbff35c66370f71236d9">Barometer_getAltitude</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keywordtype">void</span> <a class="code" href="_barometer_8h.html#af7275b986fbbae22aa2fd4f714ae6bb8">Barometer_runSM</a>();</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="preprocessor">#endif // Barometer_H</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jan 25 2013 01:59:30 for Autonomous Lifeguard by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Feb 7 2013 17:42:12 for Autonomous Lifeguard by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>

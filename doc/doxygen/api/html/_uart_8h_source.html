@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.3.1"/>
-<title>Autonomous Lifeguard: C:/Users/dagoodma/Documents/SDP/include/Uart.h Source File</title>
+<title>Autonomous Lifeguard: include/Uart.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -82,7 +82,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_69bb74a583b5d54896df6bac1850568d.html">SDP</a></li><li class="navelem"><a class="el" href="dir_45d6afcbcf27c51ede5c963533a0a427.html">include</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -91,29 +91,27 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <a href="_uart_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">/**********************************************************************</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> * Function: UART_init()</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment"> * @param id: identifies the UART module we want to initialize</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment"> *        baudRate: The baudRate we want to initialize the function too.</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="comment"> * @return a UINT32 value with the actual baudrate initialized. Check against</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="comment"> *  desired to see if the system can handle the desired baud rate.</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="comment"> * @remark Initializes the UART to the specific ID and BaudRate given as</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="comment"> *  functions to the system. Will return the actual baudrate initialzied.</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="comment"> **********************************************************************/</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;uint32_t UART_init(UART_MODULE <span class="keywordtype">id</span>, uint32_t baudRate);</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keywordtype">void</span> <a class="code" href="_uart_8h.html#abef22b1fb267532e4838d2b09453053f">UART_putChar</a>(uint8_t <span class="keywordtype">id</span>, <span class="keywordtype">char</span> ch);</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="keywordtype">char</span> <a class="code" href="_uart_8h.html#a068a41938d1c619ea6674f6c8dcd9858">UART_getChar</a>(uint8_t <span class="keywordtype">id</span>);</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#define UART1_ID 1</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define UART2_ID 2</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define UART_SERIAL_ID UART1_ID</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keywordtype">void</span> <a class="code" href="_uart_8h.html#a26d179a5c929c9d9a5a245abb7c293a1">UART_init</a>(uint8_t <span class="keywordtype">id</span>, uint32_t baudRate);</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keywordtype">void</span> <a class="code" href="_uart_8h.html#abef22b1fb267532e4838d2b09453053f">UART_putChar</a>(uint8_t <span class="keywordtype">id</span>, <span class="keywordtype">char</span> ch);</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keywordtype">char</span> <a class="code" href="_uart_8h.html#a39814d1d728f3eff2a005f3f0ec69255">UART_isTransmitEmpty</a>(uint8_t <span class="keywordtype">id</span>);</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="keywordtype">char</span> <a class="code" href="_uart_8h.html#abf77aa21a74c57bd55b8dd015264f984">UART_isReceiveEmpty</a>(uint8_t <span class="keywordtype">id</span>);</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keywordtype">void</span> <a class="code" href="_uart_8h.html#a70b735dfbdd10341b12362d3c1f84eb4">UART_putString</a>(uint8_t <span class="keywordtype">id</span>, <span class="keywordtype">char</span>* Data, <span class="keywordtype">int</span> Length);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;uint16_t <a class="code" href="_uart_8h.html#aa543771b54fcdd82c585caeee1cd9fc3">UART_getChar</a>(uint8_t <span class="keywordtype">id</span>);</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keywordtype">char</span> <a class="code" href="_uart_8h.html#a39814d1d728f3eff2a005f3f0ec69255">UART_isTransmitEmpty</a>(uint8_t <span class="keywordtype">id</span>);</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="keywordtype">char</span> <a class="code" href="_uart_8h.html#abf77aa21a74c57bd55b8dd015264f984">UART_isReceiveEmpty</a>(uint8_t <span class="keywordtype">id</span>);</div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jan 25 2013 01:59:30 for Autonomous Lifeguard by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Feb 7 2013 17:42:12 for Autonomous Lifeguard by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>
