@@ -21,25 +21,44 @@
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
 
-
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
-
-
-/**********************************************************************
- * Function: GPS_init
- * @param An options bitfield.
- * @return none
- * @remark Initializes the GPS module.
- **********************************************************************/
-void GPS_init(uint8_t options);
+BOOL GPS_init(uint8_t options);
 
 /**********************************************************************
- * Function: GPS_isInitialized
+ * Function: GPS_isInitialized()
  * @return Whether the GPS was initialized.
  * @remark none
  **********************************************************************/
-bool GPS_isInitialized();
+BOOL GPS_isInitialized();
+
+/**********************************************************************
+ * Function: GPS_runSM()
+ * @return None
+ * @remark Executes the GPS's currently running state.
+ **********************************************************************/
+void GPS_runSM();
+
+/**********************************************************************
+ * Function: GPS_hasLock
+ * @return TRUE if a lock has been obtained.
+ * @remark
+ **********************************************************************/
+BOOL GPS_hasLock();
+
+/**********************************************************************
+ * Function: GPS_getLatitude
+ * @return The GPS's latitude value (N/S) scaled 1e7.
+ * @remark
+ **********************************************************************/
+int32_t GPS_getLatitude();
+
+/**********************************************************************
+ * Function: GPS_getLongitude
+ * @return The GPS's longitude value (E/W) scaled 1e7.
+ * @remark
+ **********************************************************************/
+int32_t GPS_getLongitude();
 
 #endif

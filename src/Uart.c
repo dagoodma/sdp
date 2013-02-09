@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include "Uart.h"
 #include "Board.h"
-#include<ports.h>
+#include <ports.h>
 
 
 /***********************************************************************
@@ -204,84 +204,6 @@ char UART_isReceiveEmpty(uint8_t id)
 /***************************************************
  *              Uno32/Pic Functions
  ***************************************************/
-
-/****************************************************************************
- Function
-     _mon_putc
-
- Parameters
-    c - char to be sent
-
- Returns
-    None.
-
- Description
-    overwrites weakly define extern to use circular buffer instead of Microchip functions
- 
- Notes
-     
-
- Author
- Max Dunne, 2011.11.10
- ****************************************************************************/
-void _mon_putc(char c)
-{
-    UART_putChar(UART_SERIAL_ID, c);
-}
-
-/****************************************************************************
- Function
-     _mon_puts
-
- Parameters
-    s - pointer to the string to be sent
-
- Returns
-    None.
-
- Description
-    overwrites weakly defined extern to use circular buffer instead of Microchip functions
-
- Notes
-
-
- Author
- Max Dunne, 2011.11.10
- ****************************************************************************/
-void _mon_puts(const char* s)
-{
-    int i;
-    for (i = 0; i<sizeof (s); i++)
-        UART_putChar(UART_SERIAL_ID, s[i]);
-}
-
-/****************************************************************************
- Function
-     _mon_getc
-
- Parameters
-    canblock - unused variable but required to match Microchip form
-
- Returns
-    None.
-
- Description
-    overwrites weakly defined extern to use circular buffer instead of Microchip functions
-
- Notes
-
-
- Author
- Max Dunne, 2011.11.10
- ****************************************************************************/
-int _mon_getc(int canblock)
-{
-    if (getLength(receiveBufferUart1) == 0)
-        return -1;
-    return UART_getChar(UART_SERIAL_ID);
-}
-
-
 
 
 /****************************************************************************

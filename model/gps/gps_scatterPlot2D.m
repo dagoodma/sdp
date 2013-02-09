@@ -35,12 +35,12 @@ LAT_TO_FEET = 365223; % (ft/deg)
 
 
 % Read the raw data
-coords = dlmread(filename)
+coords = dlmread(filename);
 
 % Limit data read length by max
 if nargin == 2
     maximum_length = min(maximum_length,length(coords));
-    if (maxmimum_length == 0)
+    if (maximum_length == 0)
         maximum_length = length(coords);
     end
     coords = coords(1:maximum_length,:);

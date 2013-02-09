@@ -6,9 +6,15 @@
  */
 
 #include <xc.h>
+#include <xc.h>
+#include <stdio.h>
+#include <plib.h>
+#include "Serial.h"
+#include "Timer.h"
 #include "Board.h"
 #include "Uart.h"
 #include "Gps.h"
+
 
 
 /***********************************************************************
@@ -46,12 +52,12 @@
 #define NOFIX_STATUS            0x00
 
 // unpacking functions
-#define UNPACK_LITTLE_ENDIAN_32(uint8_t *data, uint8_t start) \
+#define UNPACK_LITTLE_ENDIAN_32(data, start) \
     ((uint32_t)data[start] + data[start+1] << 8 + data[start+2] << 16 \
-    + data[start+3] << 24)L
+    + data[start+3] << 24)
 
 /**********************************************************************
- * PRIVATE FUNCTIONS                                                  *
+ * PRIVATE VARIABLES                                                  *
  **********************************************************************/
 BOOL gpsInitialized = FALSE;
 static enum {
@@ -64,6 +70,17 @@ uint8_t rawMessage[RAW_BUFFER_SIZE];
 uint8_t byteIndex = 0, messageLength = LENGTH2_INDEX + 1,
         messageClass = 0, messageId = 0, gpsStatus = NOFIX_STATUS;
 int32_t lat, lon, alt;
+
+/**********************************************************************
+ * PRIVATE PROTOTYPES                                                 *
+ **********************************************************************/
+
+BOOL hasNewMessage();
+void startReadState();
+void startIdleState();
+void startParseState();
+int8_t parseMessageByte();
+void parsePayloadField();
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
@@ -143,9 +160,12 @@ int32_t GPS_getLatitude() {
 int32_t GPS_getLongitude() {
     return lon;
 }
+
+
 /**********************************************************************
  * PRIVATE FUNCTIONS                                                  *
  **********************************************************************/
+
 
 /**********************************************************************
  * Function: hasNewMessage
@@ -253,18 +273,18 @@ void parsePayloadField() {
                             byteIndex += sizeof(uint32_t);
                             break;
                         case 4: // lon
-                            lon = (int32_t)UNPACK_LITTLE_ENDIAN_32(rawMessage[byteIndex],4+PAYLOAD_INDEX);
+                            lon = (int32_t)UNPACK_LITTLE_ENDIAN_32(rawMessage,byteIndex);
                             byteIndex += sizeof(int32_t);
                             break;
                         case 8: // lat
-                            lat = (int32_t)UNPACK_LITTLE_ENDIAN_32(rawMessage[byteIndex],8+PAYLOAD_INDEX);
+                            lat = (int32_t)UNPACK_LITTLE_ENDIAN_32(rawMessage,byteIndex);
                             byteIndex += sizeof(int32_t);
                             break;
                         case 12: // height (not implemented)
                             byteIndex += sizeof(int32_t);
                             break;
                         case 16: // hMSL
-                            lat = (int32_t)UNPACK_LITTLE_ENDIAN_32(rawMessage[byteIndex],16+PAYLOAD_INDEX);
+                            lat = (int32_t)UNPACK_LITTLE_ENDIAN_32(rawMessage,byteIndex);
                             byteIndex += sizeof(int32_t);
                             break;
                         case 20: // hAcc (not implemented)
@@ -276,12 +296,12 @@ void parsePayloadField() {
                     break;
                 // ------------- NAV-STATUS (0x01 0x03) --------------
                 case NAV_STATUS_ID:
-                    // ------------- NAV-POSLLH (0x01 0x02) --------------
                     switch (byteIndex - PAYLOAD_INDEX) {
                         case 0: // iTow (not implemented)
                             byteIndex += sizeof(uint32_t);
                             break;
                         case 4: // gpsFix
+                            gpsStatus = rawMessage[byteIndex];
                             byteIndex += sizeof(uint8_t);
                             break;
                         case 5: // flags (not implemented)
@@ -318,17 +338,19 @@ void parsePayloadField() {
 /****************************** TESTS ************************************/
 // Test harness that spits out GPS packets over the serial port
 int main() {
+    uint8_t options = 0x0;
     Board_init(); // initalize interrupts
     Serial_init(); // init serial port for printing messages
-    GPS_init();
+    GPS_init(options);
     Timer_init();
+    printf("GPS initialized.\n");
 
     Timer_new(TIMER_TEST,1000);
     while(1) {
         if (Timer_isExpired(TIMER_TEST)) {
             if (GPS_hasLock())
-                printf("Lat:%0.5lf, Lon: %0.5lf, Alt: %ld (m)\n",(float)lat/(10000000L),
-                        (float)lon/(10000000L), (uint32_t)alt/(1000L));
+                printf("Lat:%0.5lf, Lon: %0.5lf, Alt: %ld (m)\n",(((float)lat)/10000000),
+                        (((float)lon)/10000000), (((uint32_t)alt)/1000));
             else
                 printf("No fix!\n");
 

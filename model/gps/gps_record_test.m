@@ -6,7 +6,7 @@ DEBUG=1; % toggle printing of debug messages
 breakkey = 'q'; % key to stop recording
 
 RECORD_DLM = 1; % Record to a DLM file for analysis
-RECORD_KML = 1; % Record to a KML file for viewing in google maps
+RECORD_KML = 0; % Record to a KML file for viewing in google maps
 % KML plot settings
 KML_COLOR = [ 0 1 0 1];
 KML_SCALE = 1;
