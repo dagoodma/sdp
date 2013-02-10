@@ -21,6 +21,7 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 //#define DEBUG
+//#define DEBUG_STATE
 
 
 #define START_BAUDRATE      38400 // (baud)
@@ -53,8 +54,8 @@
 
 // unpacking functions
 #define UNPACK_LITTLE_ENDIAN_32(data, start) \
-    ((uint32_t)data[start] + data[start+1] << 8 + data[start+2] << 16 \
-    + data[start+3] << 24)
+    ((uint32_t)(data[start] + ((uint32_t)data[start+1] << 8) \
+    + ((uint32_t)data[start+2] << 16) + ((uint32_t)data[start+3] << 24)))
 
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
@@ -124,6 +125,7 @@ void GPS_runSM() {
             if (hasNewByte() && (readMessageByte() != SUCCESS)) {
                 #ifdef DEBUG
                 printf("Failed reading GPS message at byte %d.\n", byteIndex);
+                while (!Serial_isTransmitEmpty()) { asm("nop"); }
                 #endif
                 startIdleState();
             }
@@ -136,14 +138,6 @@ void GPS_runSM() {
                 parseMessage();
             else
                 startIdleState();
-            /*
-            if (parseMessage() != SUCCESS) {
-                #ifdef DEBUG
-                printf("Failed parsing GPS message at byte %d.\n", byteIndex);
-                #endif
-                startIdleState();
-            }
-             */
            break;
             // Should not be here!
     } // switch
@@ -198,11 +192,11 @@ BOOL hasNewByte() {
  **********************************************************************/
 void startIdleState() {
     state = STATE_IDLE;
-    /*
-#ifdef DEBUG
+#ifdef DEBUG_STATE
     printf("Entered idle state.\n");
+    while (!Serial_isTransmitEmpty()) { asm("nop"); }
 #endif
-     */
+
 }
 
 /**********************************************************************
@@ -215,11 +209,11 @@ void startReadState() {
     byteIndex = 0;
     messageLength = PAYLOAD_INDEX;
     hasNewMessage = FALSE;
-    /*
-#ifdef DEBUG
+    
+#ifdef DEBUG_STATE
     printf("Entered read state.\n");
+    while (!Serial_isTransmitEmpty()) { asm("nop"); }
 #endif
-     */
 }
 
 /**********************************************************************
@@ -230,11 +224,11 @@ void startReadState() {
 void startParseState() {
     state = STATE_PARSE;
     byteIndex = PAYLOAD_INDEX;
-    /*
-#ifdef DEBUG
+    
+#ifdef DEBUG_STATE
     printf("Entered parse state.\n");
+    while (!Serial_isTransmitEmpty()) { asm("nop"); }
 #endif
-     */
 }
 
 /**********************************************************************
@@ -246,11 +240,13 @@ void startParseState() {
  *  when a new message is received and ready for parsing.
  **********************************************************************/
 int8_t readMessageByte() {
+    // Read a new byte from the UART or return FAILURE
     if (hasNewByte() && !hasNewMessage)
-        rawMessage[byteIndex++] = UART_getChar(GPS_UART_ID);
+        rawMessage[byteIndex] = UART_getChar(GPS_UART_ID);
     else
         return FAILURE;
 
+    // Look at the new byte
     switch(byteIndex) {
         case SYNC1_INDEX:
             if (rawMessage[byteIndex] != SYNC1_CHAR)
@@ -275,12 +271,13 @@ int8_t readMessageByte() {
             messageLength += PAYLOAD_INDEX + CHECKSUM_BYTES;
             break;
         default:
-            // Just reading payload and checksum
-            if (byteIndex >= messageLength) {
+            // Just reading payload and checksum (look these later)
+            if (byteIndex >= (messageLength - 1)) {
                 hasNewMessage = TRUE;
             }
     } // switch
 
+    byteIndex++;
     return SUCCESS;
 }
 
@@ -328,18 +325,28 @@ void parsePayloadField() {
                             byteIndex += sizeof(uint32_t);
                             break;
                         case 4: // lon
-                            lon = (int32_t)UNPACK_LITTLE_ENDIAN_32(rawMessage,byteIndex);
+                            lon = (int32_t)(rawMessage[byteIndex]
+                                    + ((int32_t)rawMessage[byteIndex + 1] << 8)
+                                    + ((int32_t)rawMessage[byteIndex + 2] << 16)
+                                    + ((int32_t)rawMessage[byteIndex + 3] << 24));
+                            //(int32_t)UNPACK_LITTLE_ENDIAN_32(rawMessage,byteIndex);
                             byteIndex += sizeof(int32_t);
                             break;
                         case 8: // lat
-                            lat = (int32_t)UNPACK_LITTLE_ENDIAN_32(rawMessage,byteIndex);
+                            lat = (int32_t)(rawMessage[byteIndex]
+                                    + ((int32_t)rawMessage[byteIndex + 1] << 8)
+                                    + ((int32_t)rawMessage[byteIndex + 2] << 16)
+                                    + ((int32_t)rawMessage[byteIndex + 3] << 24));
                             byteIndex += sizeof(int32_t);
                             break;
                         case 12: // height (not implemented)
                             byteIndex += sizeof(int32_t);
                             break;
                         case 16: // hMSL
-                            lat = (int32_t)UNPACK_LITTLE_ENDIAN_32(rawMessage,byteIndex);
+                            alt = (int32_t)(rawMessage[byteIndex]
+                                    + ((int32_t)rawMessage[byteIndex + 1] << 8)
+                                    + ((int32_t)rawMessage[byteIndex + 2] << 16)
+                                    + ((int32_t)rawMessage[byteIndex + 3] << 24));
                             byteIndex += sizeof(int32_t);
                             break;
                         case 20: // hAcc (not implemented)
@@ -347,7 +354,7 @@ void parsePayloadField() {
                             break;
                         case 24: // vAcc (not implemented)
                             byteIndex += sizeof(uint32_t);
-                    }
+                    } // NAV_POSLLH_ID byte
                     break;
                 // ------------- NAV-STATUS (0x01 0x03) --------------
                 case NAV_STATUS_ID:
@@ -373,19 +380,23 @@ void parsePayloadField() {
                             break;
                         case 12: // msss (not implemented)
                             byteIndex += sizeof(uint32_t);
-                    }
+                    } //  NAV_STATUS_ID byte
                     break;
+                // ------------- End of Valid NAV message IDs --------------
                 default:
                     byteIndex = messageLength; // skip rest of message
                 #ifdef DEBUG
-                    printf("Received unhandled navigation message.\n");
+                    printf("Received unhandled navigation message id: 0x%X.\n", messageId);
+                    while (!Serial_isTransmitEmpty()) { asm("nop"); }
                 #endif
-            } // switch NAV_CLASS
+            } // switch messageID = NAV_CLASS
             break;
+        // #################### End of NAV messages #######################
         default:
             byteIndex = messageLength; // skip rest of message
         #ifdef DEBUG
-            printf("Received unhandled message class.\n");
+            printf("Received unhandled message class: 0x%X.\n", messageClass);
+            while (!Serial_isTransmitEmpty()) { asm("nop"); }
         #endif
     } // switch messageClass
 }
@@ -404,8 +415,9 @@ int main() {
     while(1) {
         if (Timer_isExpired(TIMER_TEST)) {
             if (GPS_hasLock())
-                printf("Lat:%0.5lf, Lon: %0.5lf, Alt: %ld (m)\n",(((float)lat)/10000000),
-                        (((float)lon)/10000000), (((uint32_t)alt)/1000));
+             /*printf("Lat:%ld, Lon: %ld, Alt: %ld (m)\n",lat,lon,alt);*/
+             printf("Lat:%.6f, Lon: %.6f, Alt: %.2f (m)\n",((float)lat/10000000),
+                        ((float)lon/10000000), ((float)alt/1000) );
             else
                 printf("No fix!\n");
 

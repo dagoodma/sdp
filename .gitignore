@@ -1,4 +1,5 @@
 # Do not track files with the following extensions
+.DS_Store
 ~*.tmp
 *~
 ~$*
