@@ -22,11 +22,11 @@
 
 Autonomous Lifeguard -- Senior Design Project for UCSC
 
-*   Website: http://
+*   Website: http://lifeguardrobotics.com
 *   Source: https://github.com/dagoodma/sdp
 *   Mailing list: [Google Groups](https://groups.google.com/a/ucsc.edu/forum/#!forum/albs-group)
 
-This project proposes an autonomous surface vehicle to aid a drowning
+This project consists of an autonomous surface vessel to aid a drowning
 individual in the critical minutes that it takes a lifeguard to make it
 out to a person. 
 
