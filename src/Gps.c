@@ -20,7 +20,7 @@
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
-#define DEBUG
+//#define DEBUG
 
 
 #define START_BAUDRATE      38400 // (baud)
@@ -69,17 +69,19 @@ static enum {
 uint8_t rawMessage[RAW_BUFFER_SIZE];
 uint8_t byteIndex = 0, messageLength = LENGTH2_INDEX + 1,
         messageClass = 0, messageId = 0, gpsStatus = NOFIX_STATUS;
+BOOL hasNewMessage = FALSE;
 int32_t lat, lon, alt;
 
 /**********************************************************************
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
 
-BOOL hasNewMessage();
+BOOL hasNewByte();
 void startReadState();
 void startIdleState();
 void startParseState();
-int8_t parseMessageByte();
+int8_t readMessageByte();
+int8_t parseMessage();
 void parsePayloadField();
 
 /**********************************************************************
@@ -91,7 +93,7 @@ BOOL GPS_init(uint8_t options) {
     printf("Intializing the GPS on uart %d.\n", GPS_UART_ID);
 #endif
     UART_init(GPS_UART_ID,GPS_UART_BAUDRATE);
-
+    startIdleState();
     gpsInitialized = TRUE;
 }
 
@@ -111,25 +113,38 @@ BOOL GPS_isInitialized() {
  **********************************************************************/
 void GPS_runSM() {
     switch (state) {
+        // Waiting for data
         case STATE_IDLE:
             // check for a new packet to start reading
-            if (hasNewMessage())
+            if (hasNewByte())
                 startReadState();
             break;
+        // Reading the message in and verifying sync, length, and checksum
         case STATE_READ:
-            if (hasNewMessage())
-                rawMessage[byteIndex++] = UART_getChar(GPS_UART_ID);
-            else
-                startIdleState();
-            break;
-        case STATE_PARSE:
-            if (parseMessageByte() != SUCCESS) {
-#ifdef DEBUG
-                printf("Failed parsing GPS message at byte %d.\n", byteIndex);
-#endif
+            if (hasNewByte() && (readMessageByte() != SUCCESS)) {
+                #ifdef DEBUG
+                printf("Failed reading GPS message at byte %d.\n", byteIndex);
+                #endif
                 startIdleState();
             }
+            if (hasNewMessage)
+                startParseState(); // finished reading, start parsing the payload
             break;
+        // Parsing the new message's payload
+        case STATE_PARSE:
+            if (hasNewMessage)
+                parseMessage();
+            else
+                startIdleState();
+            /*
+            if (parseMessage() != SUCCESS) {
+                #ifdef DEBUG
+                printf("Failed parsing GPS message at byte %d.\n", byteIndex);
+                #endif
+                startIdleState();
+            }
+             */
+           break;
             // Should not be here!
     } // switch
 }
@@ -172,19 +187,8 @@ int32_t GPS_getLongitude() {
  * @return Returns true if a new message is ready to be read
  * @remark 
  **********************************************************************/
-BOOL hasNewMessage() {
+BOOL hasNewByte() {
     return !UART_isReceiveEmpty(GPS_UART_ID);
-}
-
-
-/**********************************************************************
- * Function: startReadState()
- * @return None
- * @remark Switches into the read state for the GPS.
- **********************************************************************/
-void startReadState() {
-    state = STATE_READ;
-    byteIndex = 0;
 }
 
 /**********************************************************************
@@ -194,6 +198,28 @@ void startReadState() {
  **********************************************************************/
 void startIdleState() {
     state = STATE_IDLE;
+    /*
+#ifdef DEBUG
+    printf("Entered idle state.\n");
+#endif
+     */
+}
+
+/**********************************************************************
+ * Function: startReadState()
+ * @return None
+ * @remark Switches into the read state for the GPS.
+ **********************************************************************/
+void startReadState() {
+    state = STATE_READ;
+    byteIndex = 0;
+    messageLength = PAYLOAD_INDEX;
+    hasNewMessage = FALSE;
+    /*
+#ifdef DEBUG
+    printf("Entered read state.\n");
+#endif
+     */
 }
 
 /**********************************************************************
@@ -203,55 +229,84 @@ void startIdleState() {
  **********************************************************************/
 void startParseState() {
     state = STATE_PARSE;
+    byteIndex = PAYLOAD_INDEX;
+    /*
+#ifdef DEBUG
+    printf("Entered parse state.\n");
+#endif
+     */
 }
+
 /**********************************************************************
  * Function: parseMessageByte()
  * @return SUCCESS, FAILURE, or ERROR.
- * @remark Parses the newly received GPS message.
+ * @remark Reads a GPS packet from the UART. This function will return
+ *  SUCCESS every time a valid byte is read (interpets the sync, length,
+ *  and checksum fields). The hasNewMessage field will be set to TRUE
+ *  when a new message is received and ready for parsing.
  **********************************************************************/
-int8_t parseMessageByte() {
-    byteIndex = 0;
+int8_t readMessageByte() {
+    if (hasNewByte() && !hasNewMessage)
+        rawMessage[byteIndex++] = UART_getChar(GPS_UART_ID);
+    else
+        return FAILURE;
 
-    //for (byteIndex = 0; byteIndex < RAW_BUFFER_SIZE; byteIndex++) {
-    // interpret message fields
     switch(byteIndex) {
-            case SYNC1_INDEX:
-                if (rawMessage[byteIndex] != SYNC1_CHAR)
-                    return FAILURE;
-                break;
-            case SYNC2_INDEX:
-                if (rawMessage[byteIndex] != SYNC2_CHAR)
-                    return FAILURE;
-                break;
-            case CLASS_INDEX:
-                messageClass = rawMessage[byteIndex];
-                break;
-            case ID_INDEX:
-                messageId = rawMessage[byteIndex];
-                break;
-            case LENGTH1_INDEX:
-                messageLength = rawMessage[byteIndex];
-                break;
-            case LENGTH2_INDEX:
-                messageLength += rawMessage[byteIndex] << 8;
-                // Make length total for whole message
-                messageLength += PAYLOAD_INDEX + CHECKSUM_BYTES;
-                break;
-            default:
-                if (byteIndex < (messageLength - CHECKSUM_BYTES)) {
-                    parsePayloadField(); // Processing payload field by field
-                }
-                else if (byteIndex > (messageLength - CHECKSUM_BYTES) < messageLength) {
-                    //if (verifyChecksum() != SUCCESS) return FAILURE;
-                    startIdleState();
-                    return SUCCESS;
-                }
-                else {
-                    return ERROR;
-                }
+        case SYNC1_INDEX:
+            if (rawMessage[byteIndex] != SYNC1_CHAR)
+                return FAILURE;
+            break;
+        case SYNC2_INDEX:
+            if (rawMessage[byteIndex] != SYNC2_CHAR)
+                return FAILURE;
+            break;
+        case CLASS_INDEX:
+            messageClass = rawMessage[byteIndex];
+            break;
+        case ID_INDEX:
+            messageId = rawMessage[byteIndex];
+            break;
+        case LENGTH1_INDEX:
+            messageLength = rawMessage[byteIndex];
+            break;
+        case LENGTH2_INDEX:
+            messageLength += rawMessage[byteIndex] << 8;
+            // Make length total for whole message
+            messageLength += PAYLOAD_INDEX + CHECKSUM_BYTES;
+            break;
+        default:
+            // Just reading payload and checksum
+            if (byteIndex >= messageLength) {
+                hasNewMessage = TRUE;
+            }
+    } // switch
+
+    return SUCCESS;
+}
+
+/**********************************************************************
+ * Function: parseMessageByte()
+ * @return SUCCESS, FAILURE, or ERROR.
+ * @remark Parses the payload fields of a newly received GPS message.
+ **********************************************************************/
+int8_t parseMessage() {
+    //for (byteIndex = 0; byteIndex < RAW_BUFFER_SIZE; byteIndex++) {
+
+    // interpret message by parsing payload fields
+    if (byteIndex < (messageLength - CHECKSUM_BYTES)) {
+        parsePayloadField(); // Processing payload field by field
+    }
+    /*
+    else if (byteIndex > (messageLength - CHECKSUM_BYTES) < messageLength) {
+        //if (verifyChecksum() != SUCCESS) return FAILURE;
+        startIdleState();
+        return SUCCESS;
+    }*/
+    else {
+        // Done parsing the message
+        hasNewMessage = FALSE;
     }
 
-    byteIndex++;
     return SUCCESS; // ready to parse next byte
 }
 
