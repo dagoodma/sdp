@@ -3,8 +3,8 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>Thermal</name>
-            <creation-uuid>c6d84fc4-a257-4b03-a577-a74dc1671c1f</creation-uuid>
+            <name>Serial</name>
+            <creation-uuid>1780c342-3a94-4d5f-b535-24a7b787a5ef</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>

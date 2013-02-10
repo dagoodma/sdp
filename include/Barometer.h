@@ -37,19 +37,21 @@ void Barometer_init();
 
 /**
  * Function: Barometer_getTemperature
- * @return Temperature in celcius.
- * @remark Returns the temperature measured by the barometer.
+ * @return Temperature in 1E1 celcius.
+ * @remark Returns the temperature measured by the barometer in 10's of
+ *      degerees C.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-int32_t Barometer_getTemperature(void);
+float Barometer_getTemperatureFahrenheit();
 
 /**
  * Function: Barometer_getTemperatureFahrenheit
  * @return Temperature in fahrenheit.
- * @remark Returns the temperature measured by the barometer in fahrenheit.
+ * @remark Returns the temperature measured by the barometer in degrees
+ *      fahrenheit.
  * @author David Goodman
  * @date 2013.02.01  */
-int32_t Barometer_getTemperatureFahrenheit(void);
+float Barometer_getTemperatureFahrenheit();
 
 /**
  * Function: Barometer_getPressure
@@ -57,16 +59,15 @@ int32_t Barometer_getTemperatureFahrenheit(void);
  * @remark Returns the pre-converted temperature data.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-int32_t Barometer_getPressure(void);
+int32_t Barometer_getPressure();
 
 /**
  * Function: Barometer_getAltitude
  * @return Returns the altitude in meters.
- * @remark Converts pressure from altitude above sea level in meters. See:
- *      http://psas.pdx.edu/RocketScience/PressureAltitude_Derived.pdf
+ * @remark Converts pressure from altitude above sea level in meters. 
  * @author David Goodman
  * @date 2013.02.01  */
-int32_t Barometer_getAltitude(void);
+int32_t Barometer_getAltitude();
 /**
  * Function: Barometer_getPressureData
  * @return Data, (long) 16-bit temperature data

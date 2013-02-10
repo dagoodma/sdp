@@ -32,6 +32,16 @@
 char Serial_init(void);
 
 /**
+ * Function: Serial_initSM
+ * @param Whether printf will act as blocking code.
+ * @return SUCCESS or ERROR.
+ * @remark If non-blocking serial use is desired, Serial_runSM must be called
+ *      repeatability to ensure all bytes are sent.
+ * @author David Goodman
+ * @date 2013.02.09  */
+char Serial_initSM();
+
+/**
  * Function: Serial_putChar
  * @param ch, the char to be sent
  * @return None

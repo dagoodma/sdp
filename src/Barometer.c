@@ -24,9 +24,9 @@
 #define SLAVE_WRITE_ADDRESS         0xEE
 
 // Oversampling setting
-#define OSS							3
+#define OSS                         3
 #define SENSOR_SELECT_ADDRESS       0xF4 // either the temp. or pressure
-#define SENSOR_DATA_ADDRESS     	0xF6
+#define SENSOR_DATA_ADDRESS         0xF6
 
 #define TEMPERATURE_DATA_ADDRESS    0x2E
 #define PRESSURE_DATA_ADDRESS       0x34 + (OSS << 6)
@@ -52,10 +52,11 @@
 #define MD_ADDRESS      0xBE
 
 // Printing debug messages over serial
-#define DEBUG
+//#define DEBUG
 
 /************************************************************************/
-#define FAHRENHEIT_TO_CELCIUS(T)    ((T * (9/5)) + 32)
+//#define FAHRENHEIT_TO_CELCIUS(T)    ((T * (9/5)) + 32)
+#define CELCIUS_TO_FAHRENHEIT(T)    (((float)T/10)*1.8 + 32)
 //#define PASCALS_TO_METERS(P)        () // Converts pressure to altitude
 
 #define PRESSURE_P0		101325 // (Pa)
@@ -65,7 +66,10 @@
  ***********************************************************************/
 
 // Pick the I2C_MODULE to initialize
-I2C_MODULE      I2C_ID = I2C1;
+I2C_MODULE      BAROMETER_I2C_ID = I2C1;
+
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000 // (Hz)
 
 // Calibration values
 int16_t ac1;
@@ -98,17 +102,20 @@ void updateReadings();
  ***********************************************************************/
 
 void Barometer_init() {
-    ac1 = readeTwoDataBytes(AC1_ADDRESS);
-    ac2 = readeTwoDataBytes(AC2_ADDRESS);
-    ac3 = readeTwoDataBytes(AC3_ADDRESS);
-    ac4 = readeTwoDataBytes(AC4_ADDRESS);
-    ac5 = readeTwoDataBytes(AC5_ADDRESS);
-    ac6 = readeTwoDataBytes(AC6_ADDRESS);
-    b1 = readeTwoDataBytes(B1_ADDRESS);
-    b2 = readeTwoDataBytes(B2_ADDRESS);
-    mb = readeTwoDataBytes(MB_ADDRESS);
-    mc = readeTwoDataBytes(MC_ADDRESS);
-    md = readeTwoDataBytes(MD_ADDRESS);
+
+    I2C_init(BAROMETER_I2C_ID, I2C_CLOCK_FREQ);
+
+    ac1 = readTwoDataBytes(AC1_ADDRESS);
+    ac2 = readTwoDataBytes(AC2_ADDRESS);
+    ac3 = readTwoDataBytes(AC3_ADDRESS);
+    ac4 = readTwoDataBytes(AC4_ADDRESS);
+    ac5 = readTwoDataBytes(AC5_ADDRESS);
+    ac6 = readTwoDataBytes(AC6_ADDRESS);
+    b1 = readTwoDataBytes(B1_ADDRESS);
+    b2 = readTwoDataBytes(B2_ADDRESS);
+    mb = readTwoDataBytes(MB_ADDRESS);
+    mc = readTwoDataBytes(MC_ADDRESS);
+    md = readTwoDataBytes(MD_ADDRESS);
 
     updateReadings();
     Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
@@ -118,9 +125,11 @@ void Barometer_init() {
 int32_t Barometer_getTemperature(){
     return temperature;
 }
-int32_t Barometer_getTemperatureFahrenheit() {
-    return FAHRENHEIT_TO_CELCIUS(Barometer_getTemperature());
+
+float Barometer_getTemperatureFahrenheit() {
+    return CELCIUS_TO_FAHRENHEIT(temperature);
 }
+
 int32_t Barometer_getPressure(){
     return pressure;
 }
@@ -156,18 +165,18 @@ int16_t readTwoDataBytes( uint8_t address) {
 
     do {
         // Send the start bit with the restart flag low
-        if(!I2C_startTransfer(I2C_ID, I2C_WRITE )){
+        if(!I2C_startTransfer(BAROMETER_I2C_ID, I2C_WRITE )){
             #ifdef DEBUG
             printf("FAILED initial transfer!\n");
             #endif
             break;
         }
         // Transmit the slave's address to notify it
-        if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
+        if (!I2C_sendData(BAROMETER_I2C_ID, SLAVE_WRITE_ADDRESS))
             break;
 
         // Tranmit the read address module
-        if(!I2C_sendData(I2C_ID,address)){
+        if(!I2C_sendData(BAROMETER_I2C_ID,address)){
             #ifdef DEBUG
             printf("Error: Sent byte was not acknowledged\n");
             #endif
@@ -175,24 +184,24 @@ int16_t readTwoDataBytes( uint8_t address) {
         }
 
         // Send a Repeated Started condition
-        if(!I2C_startTransfer(I2C_ID,I2C_READ)){
+        if(!I2C_startTransfer(BAROMETER_I2C_ID,I2C_READ)){
             #ifdef DEBUG
             printf("FAILED Repeated start!\n");
             #endif
             break;
         }
         // Transmit the address with the READ bit set
-        if (!I2C_sendData(I2C_ID, SLAVE_READ_ADDRESS))
+        if (!I2C_sendData(BAROMETER_I2C_ID, SLAVE_READ_ADDRESS))
             break;
         
         // Read the I2C bus twice
-        data = (I2C_getData(I2C_ID) << 8);
+        data = (I2C_getData(BAROMETER_I2C_ID) << 8);
         I2C_acknowledgeRead(I2C1, TRUE);
-        while(!I2C_hasAcknowledged(I2C_ID));
-        data += I2C_getData(I2C_ID);
+        while(!I2C_hasAcknowledged(BAROMETER_I2C_ID));
+        data += I2C_getData(BAROMETER_I2C_ID);
 
         // Send the stop bit to finish the transfer
-        I2C_stopTransfer(I2C_ID);
+        I2C_stopTransfer(BAROMETER_I2C_ID);
 
         success = TRUE;
     } while(0);
@@ -219,18 +228,18 @@ int32_t readThreeDataBytes( uint8_t address) {
 
     do {
         // Send the start bit with the restart flag low
-        if(!I2C_startTransfer(I2C_ID, I2C_WRITE )){
+        if(!I2C_startTransfer(BAROMETER_I2C_ID, I2C_WRITE )){
             #ifdef DEBUG
             printf("FAILED initial transfer!\n");
             #endif
             break;
         }
         // Transmit the slave's address to notify it
-        if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
+        if (!I2C_sendData(BAROMETER_I2C_ID, SLAVE_WRITE_ADDRESS))
             break;
 
         // Tranmit the read address module
-        if(!I2C_sendData(I2C_ID,address)){
+        if(!I2C_sendData(BAROMETER_I2C_ID,address)){
             #ifdef DEBUG
             printf("Error: Sent byte was not acknowledged\n");
             #endif
@@ -238,31 +247,34 @@ int32_t readThreeDataBytes( uint8_t address) {
         }
 
         // Send a Repeated Started condition
-        if(!I2C_startTransfer(I2C_ID,I2C_READ)){
+        if(!I2C_startTransfer(BAROMETER_I2C_ID,I2C_READ)){
             #ifdef DEBUG
             printf("FAILED Repeated start!\n");
             #endif
             break;
         }
         // Transmit the address with the READ bit set
-        if (!I2C_sendData(I2C_ID, SLAVE_READ_ADDRESS))
+        if (!I2C_sendData(BAROMETER_I2C_ID, SLAVE_READ_ADDRESS))
             break;
         
         // Read the I2C bus twice
-        data = (I2C_getData(I2C_ID) << 16);
-        I2C_acknowledgeRead(I2C_ID, TRUE);
-        while(!I2C_hasAcknowledged(I2C_ID));
+        data = (I2C_getData(BAROMETER_I2C_ID) << 16);
+        I2C_acknowledgeRead(BAROMETER_I2C_ID, TRUE);
+        while(!I2C_hasAcknowledged(BAROMETER_I2C_ID));
 		
-        data += (I2C_getData(I2C_ID) << 8);
-		I2CAcknowledgeByte(I2C_ID, TRUE);
-        while(!I2CAcknowledgeHasCompleted(I2C_ID));
+        data += (I2C_getData(BAROMETER_I2C_ID) << 8);
+        I2CAcknowledgeByte(BAROMETER_I2C_ID, TRUE);
+        while(!I2CAcknowledgeHasCompleted(BAROMETER_I2C_ID));
 
-        data += I2C_getData(I2C_ID);
-		I2CAcknowledgeByte(I2C_ID, FALSE);
-        while(!I2CAcknowledgeHasCompleted(I2C_ID));
+        data += I2C_getData(BAROMETER_I2C_ID);
+	I2CAcknowledgeByte(BAROMETER_I2C_ID, FALSE);
+        while(!I2CAcknowledgeHasCompleted(BAROMETER_I2C_ID));\
+
+        // Roll off extra
+        data = data >> (8 - OSS);
 		
         // Send the stop bit to finish the transfer
-        I2C_stopTransfer(I2C_ID);
+        I2C_stopTransfer(BAROMETER_I2C_ID);
 
         success = TRUE;
     } while(0);
@@ -288,18 +300,18 @@ int32_t readSensor(uint8_t sensorSelectAddress) {
 
     do {
         //Send the start bit to notify that a transmission is starting
-        if(!I2C_startTransfer(I2C_ID, I2C_WRITE)){
+        if(!I2C_startTransfer(BAROMETER_I2C_ID, I2C_WRITE)){
             #ifdef DEBUG
             printf("FAILED initial transfer!\n");
             #endif
             break;
         }
         // Transmit the slave's address to notify it
-        if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
+        if (!I2C_sendData(BAROMETER_I2C_ID, SLAVE_WRITE_ADDRESS))
             break;
 
         // Designate the sensor select register for writing
-        if(!I2C_sendData(I2C_ID, SENSOR_SELECT_ADDRESS)){
+        if(!I2C_sendData(BAROMETER_I2C_ID, SENSOR_SELECT_ADDRESS)){
             #ifdef DEBUG
             printf("Error: Sent byte was not acknowledged\n");
             #endif
@@ -307,14 +319,14 @@ int32_t readSensor(uint8_t sensorSelectAddress) {
         }
 
         // Tranmit the sensor to read's address
-        if(!I2C_sendData(I2C_ID,sensorSelectAddress)){
+        if(!I2C_sendData(BAROMETER_I2C_ID,sensorSelectAddress)){
             #ifdef DEBUG
             printf("Error: Sent byte was not acknowledged\n");
             #endif
             break;
         }
         // End the tranmission
-        I2C_stopTransfer(I2C_ID);
+        I2C_stopTransfer(BAROMETER_I2C_ID);
 
 
         // Wait while the sensor gets the desired data in the correct register
@@ -322,13 +334,13 @@ int32_t readSensor(uint8_t sensorSelectAddress) {
         Timer_new(TIMER_BAROMETER2,READ_SENSOR_DELAY);
         while(!Timer_isExpired(TIMER_BAROMETER2));	// max time is 4.5ms
 
-		// Read the address that has the desired data: temperature or pressure
-		if(sensorSelectAddress == PRESSURE_DATA_ADDRESS)
-			data = readThreeDataBytes(SENSOR_DATA_ADDRESS);
-		else
-			data = readTwoDataBytes(SENSOR_DATA_ADDRESS);
-        
-		success = TRUE;
+        // Read the address that has the desired data: temperature or pressure
+        if(sensorSelectAddress == PRESSURE_DATA_ADDRESS)
+            data = readThreeDataBytes(SENSOR_DATA_ADDRESS);
+        else
+            data = readTwoDataBytes(SENSOR_DATA_ADDRESS);
+
+        success = TRUE;
     } while(0);
 
     if(!success){
@@ -417,17 +429,13 @@ void updateReadings() {
 #define BAROMETER_TEST
 #ifdef BAROMETER_TEST
 
-// Set Desired Operation Frequency
-#define I2C_CLOCK_FREQ  100000 // (Hz)
 #define PRINT_DELAY     1000 // (ms)
 
 int main(void) {
-    int32_t altitude = 0;
-    double temp = 0;
 // Initialize the UART,Timers, and I2C1
     Board_init();
     Timer_init();
-    I2C_init(I2C_ID, I2C_CLOCK_FREQ);
+    Serial_init();
     Barometer_init();
 
 // Get all the calibration data.
@@ -449,10 +457,12 @@ int main(void) {
 
     Timer_new(TIMER_TEST, PRINT_DELAY );
 
+    printf("long size:%d\n",sizeof(long));
+
     while(1){
         // Convert the raw data to real values
         if (Timer_isExpired(TIMER_TEST)) {
-            printf("Temperature: %ld (deg F)\n", Barometer_getTemperatureFahrenheit());
+            printf("Temperature: %.1f (deg F)\n", Barometer_getTemperatureFahrenheit());
             printf("Pressure: %ld (Pa)\n", Barometer_getPressure());
             printf("Altitude: %ld (m)\n\n", Barometer_getAltitude());
             Timer_new(TIMER_TEST, PRINT_DELAY );

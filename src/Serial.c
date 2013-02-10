@@ -45,6 +45,9 @@
 /*******************************************************************************
  * PRIVATE VARIABLES                                                           *
  ******************************************************************************/
+BOOL canBlock = TRUE;
+const char *buffer;
+uint16_t bufferIndex = 0;
 
 
 /*******************************************************************************
@@ -70,13 +73,19 @@
  Max Dunne, 2011.11.10 
  ****************************************************************************/
 
-char Serial_init(void)
+char Serial_init()
 {
     #ifdef DEBUG
     printf("Intializing the Serial on UART %d.\n", SERIAL_UART_ID);
     #endif
     UART_init(SERIAL_UART_ID,SERIAL_UART_BAUDRATE);
     return SUCCESS;
+}
+
+char Serial_initSM()
+{
+    canBlock = TRUE;
+    return Serial_init();
 }
 
 /****************************************************************************
@@ -102,6 +111,30 @@ void Serial_putChar(char ch)
 {
     UART_putChar(SERIAL_UART_ID, ch);
 }
+
+/****************************************************************************
+ Function
+     Serial_runSM
+
+ Parameters
+     None.
+
+ Returns
+     None.
+
+ Description
+    Sends one character from buffer if there are any characters and the trasmit
+ *  buffer is empty.
+
+
+ Author
+    Max Dunne, 2011.11.10
+ ****************************************************************************/
+void Serial_runSM() {
+    if (Serial_isTransmitEmpty() && bufferIndex < sizeof(buffer))
+        Serial_putChar(buffer[bufferIndex++]);
+}
+
 
 /****************************************************************************
  Function
@@ -172,8 +205,13 @@ void _mon_putc(char c)
 void _mon_puts(const char* s)
 {
     int i;
-    for (i = 0; i<sizeof (s); i++)
-        Serial_putChar(s[i]);
+    if (canBlock) {
+        for (i = 0; i<sizeof (s); i++)
+            Serial_putChar(s[i]);
+    }
+    else {
+        bufferIndex = 0;
+    }
 }
 
 /****************************************************************************
@@ -260,6 +298,7 @@ char Serial_isTransmitEmpty(void)
 #ifdef SERIAL_TEST
 #include "Serial.h"
 #include "Board.h"
+#include "Uart.h"
 #include <GenericTypeDefs.h>
 //#include <plib.h>
 
@@ -274,6 +313,29 @@ int main(void)
         if (Serial_isTransmitEmpty() == TRUE)
             if (Serial_isReceiveEmpty() == FALSE)
                 Serial_putChar(Serial_getChar());
+    }
+
+    return 0;
+}
+
+#endif
+
+#define SERIAL_TEST2
+#ifdef SERIAL_TEST2
+#include "Serial.h"
+#include "Board.h"
+#include "Uart.h"
+#include <GenericTypeDefs.h>
+//#include <plib.h>
+
+int main(void)
+{
+    Board_init();
+    Serial_initSM();
+    printf("\r\nUno Serial Test Harness\r\nAfter this Message the terminal should mirror anything you type.\r\n");
+
+    while (1) {
+        Serial_runSM();
     }
 
     return 0;
