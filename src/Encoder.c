@@ -23,18 +23,24 @@
 // WDT OFF
 // Other options are don't care
 //
+
 #pragma config FPLLMUL = MUL_20, FPLLIDIV = DIV_2, FPLLODIV = DIV_1, FWDTEN = OFF
 #pragma config POSCMOD = HS, FNOSC = PRIPLL, FPBDIV = DIV_8
+
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
+/*
 #define FOSC           80E6 //80 MHz Clockrate
 #define PB_DIV         8    //Peripheral Bus Divider ==> 10Mhz
 #define PRESCALE       1    //Prescale 1:1 ==> 1 timer tick = 1 peripheral clk cycle
 #define MSEC           10E-3
-#define T1_TICK        0xFFFF// (500 * MSEC * FOSC)/(PB_DIV * PRESCALE)
+*/
+#define T3_TICK        0xFFFF// (500 * MSEC * FOSC)/(PB_DIV * PRESCALE)
 #define CaptureTimer   2
+
+#define PRINT_DELAY     1000
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
@@ -68,10 +74,11 @@ int main(void){
     //initialize modules
     Board_init();
     Timer_init();
-    Serial_init();
-    INTEnableSystemMultiVectoredInt();
+    Serial_initSM();
+    //INTEnableSystemMultiVectoredInt();
     printf("OK WE ARE IN!\n");
-while(!Serial_isTransmitEmpty()) ;
+    Timer_new(TIMER_TEST,PRINT_DELAY);
+
 
     //using J5, J5-03: RD3 IO input, J5-02: RD5: PORTY
     PORTY04_TRIS = 0;
@@ -83,7 +90,7 @@ while(!Serial_isTransmitEmpty()) ;
       mIC1ClearIntFlag();
 
       //setup Timer 3
-      OpenTimer3(T3_ON | T1_PS_1_1, T1_TICK); //T3 on, Prescale 1:256,
+      OpenTimer3(T3_ON | T3_PS_1_1, T3_TICK); //T3 on, Prescale 1:256,
 
       //Enable Capture Module and settings:
       // Capture every edge
@@ -97,10 +104,7 @@ while(!Serial_isTransmitEmpty()) ;
       mIC1IntEnable( 1);
 
       //}
-    
-
-
-    
+   
     
     while(1){
         switch(state){
@@ -112,29 +116,31 @@ while(!Serial_isTransmitEmpty()) ;
                     //printf("start: %u  stop: %u\n\n\n",start,stop);
                 //}
                 //printf("CALCULATE\n\n\n");
-//                    if (stop > start){
-//                       pwidth = (stop - start);
-//                       pulsewidth[j] = pwidth/10;
-//                    }else{
-//                       pwidth = (T1_TICK - start) + stop;
-//                       pulsewidth[j] = pwidth/10;
-//                    }
-//
+                    if (stop > start){
+                       pwidth = (stop - start);
+                       pulsewidth[j] = pwidth/10;
+                    }else{
+                       pwidth = (T3_TICK - start) + stop;
+                       pulsewidth[j] = pwidth/10;
+                    }
+
+                    mIC1IntEnable(1);
 
                // printf("YOU CAUGHT ONE PULSE!");
             //state = poll;
-                if (i == 10000){
-//                    exit(1);
-                    i = 0;
-                    Serial_putChar('I');
-                    mIC1IntEnable(1);
-                }
+//
             break;
 
             case(poll):
                    //printf("Polling\n\n");
             break;
         }
+
+        if (Timer_isExpired(TIMER_TEST)) {
+            printf("START: %d     STOP: %d    PWIDTH: %d\n\n",start,stop,pwidth);
+            Timer_new(TIMER_TEST,PRINT_DELAY);
+        }
+        Serial_runSM();
 
     }
     return(SUCCESS);
@@ -155,7 +161,7 @@ void __ISR( _INPUT_CAPTURE_1_VECTOR, ipl1) IC1Interrupt( void){
         start = tempBuff;
         start_array[count];
         mIC1ClearIntFlag();
-        Serial_putChar('R');
+        //Serial_putChar('R');
         
         
     }else{
@@ -169,7 +175,7 @@ void __ISR( _INPUT_CAPTURE_1_VECTOR, ipl1) IC1Interrupt( void){
         //Timer_new(5,300);
         count = count + 1;
         mIC1ClearIntFlag();
-        Serial_putChar('F');
+        //Serial_putChar('F');
 
     }
 }

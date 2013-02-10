@@ -320,7 +320,7 @@ int main(void)
 
 #endif
 
-#define SERIAL_TEST2
+//#define SERIAL_TEST2
 #ifdef SERIAL_TEST2
 #include "Serial.h"
 #include "Board.h"
