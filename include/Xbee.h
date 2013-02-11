@@ -40,27 +40,6 @@
  **********************************************************************/
 uint8_t Xbee_init();
 
-/**********************************************************************
- * Function: Xbee_programInit()
- * @return Success or Failure based on weather API mode could be set.
- * @remark Puts the Xbee into API mode. Will only be called if
- *  REPROGRAM_API is defined
- * @author John Ash
- * @date February 1st 2013
- **********************************************************************/
-uint8_t Xbee_programApi();
-
-/**********************************************************************
- * Function: Xbee_sendString()
- * @param Array of data that is intended to be sent over Xbee
- * @param Length of Data array in bytes
- * @return none
- * @remark Sends data over the Xbee
- * @author John Ash
- * @date February 1st 2013
- **********************************************************************/
-void Xbee_sendData(char* data, int Length);
-
 
 /**********************************************************************
  * Function: void Xbee_runSM();
@@ -73,20 +52,17 @@ void Xbee_sendData(char* data, int Length);
  **********************************************************************/
 void Xbee_runSM();
 
-/**********************************************************************
- * Function: Xbee_isInitialized()
- * @return Whether the Xbee was initialized.
- * @author John Ash
- * @date February 1st 2013
- **********************************************************************/
-uint8_t Xbee_isInitialized(void);
 
 /**********************************************************************
- * Function: Xbee_hasNewPacket()
- * @return Whether the recieve array has a new packet in it
+ * Function: void Xbee_message_data_test();
+ * @remark This function will be calle once a "data_test" packet has been
+ *  recieved. It will send the data back immediatly, and restart the time out
+ *  timer.
+ * @param The test_data struct from Mavlink
+ * @return none
  * @author John Ash
  * @date February 1st 2013
  **********************************************************************/
-uint8_t Xbee_hasNewPacket(void);
+void Xbee_message_data_test(mavlink_test_data_t* packet);
 
 #endif
