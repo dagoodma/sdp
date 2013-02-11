@@ -40,142 +40,150 @@
 #define T3_TICK        0xFFFF// (500 * MSEC * FOSC)/(PB_DIV * PRESCALE)
 #define CaptureTimer   2
 
-#define PRINT_DELAY     1000
+#define PRINT_DELAY    1000//1 second
+#define AngleScalar    2195E-6
+#define DEBUG
+
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
-
-
-
-/***********************************************************************
- * GLOBAL VARIABLES                                                    *
- ***********************************************************************/
-static int Rise = 0;
-static int Fall = 0;
-static unsigned int start = 0;
-static unsigned int stop = 0;
-static  uint16_t tempBuff = 0;
-//static int pulsewidth = 0;
-enum state {calculate, poll};
-static int state = poll;
-static int count = 0;
-    int start_array[200];
-    int stop_array[200];
-    int pulsewidth[200];
-
-int main(void){
-
-
-
-
-    int i = 0;
-    int j = 0;
-    int pwidth = 0;
-    //initialize modules
-    Board_init();
-    Timer_init();
-    Serial_initSM();
-    //INTEnableSystemMultiVectoredInt();
-    printf("OK WE ARE IN!\n");
-    Timer_new(TIMER_TEST,PRINT_DELAY);
-
-
-    //using J5, J5-03: RD3 IO input, J5-02: RD5: PORTY
-    PORTY04_TRIS = 0;
-    PORTZ08_TRIS = 1;
-    PORTY04_LAT = 0;
-
-
-      //clear interrupt flag
-      mIC1ClearIntFlag();
+ void Encoder_init(){
+    
 
       //setup Timer 3
-      OpenTimer3(T3_ON | T3_PS_1_1, T3_TICK); //T3 on, Prescale 1:256,
+      OpenTimer3(T3_ON | T3_PS_1_1, T3_TICK);
 
       //Enable Capture Module and settings:
       // Capture every edge
       // Enable capture interrupts
       // Use timer 3 source
       //Capture rising edge first
-
       OpenCapture1(IC_EVERY_EDGE | IC_INT_1CAPTURE | IC_TIMER3_SRC | IC_FEDGE_RISE | IC_ON);
-      //IC1CON &= ~(_IC1CON_C32_MASK);
+
+      //Enable the Interrupt for input capture, set priority level 1
       ConfigIntCapture1(IC_INT_ON | IC_INT_PRIOR_1);
-      mIC1IntEnable( 1);
+      mIC1IntEnable(1);
 
-      //}
-   
-    
+      //clear interrupt flag
+      mIC1ClearIntFlag();
+    }
+
+ float calculate_Angle(uint16_t pwidth){
+     return (pwidth * AngleScalar);
+ }
+
+/***********************************************************************
+ * GLOBAL VARIABLES                                                    *
+ ***********************************************************************/
+//Rising and Falling edge flags
+static int16_t Rise = 0;
+static int16_t Fall = 0;
+
+//start,stop, temporary buffer for captured time
+static uint16_t start = 0;
+static uint16_t stop = 0;
+static uint16_t Pulse = 0;
+static uint16_t tempBuff = 0;
+static float    angle = 0;
+
+//State declarations
+enum state {calculate, poll};
+static int16_t state = poll;
+
+/************************************************************************/
+
+
+#define Test_Harness
+#ifdef Test_Harness
+int main(void){
+
+    //Module Initializations
+    Board_init();
+    Timer_init();
+    Serial_initSM();
+    Encoder_init();
+
+
+   // printf("Encoder Test Harness!\n");
+   Timer_new(TIMER_TEST,PRINT_DELAY);
+
+
+    //Port Y04 : J5-3, set for debug PWM
+    PORTY04_TRIS = 0;
+    PORTY04_LAT = 0;
+
+    //State Machine
     while(1){
+
         switch(state){
+
             case(calculate):
-                i++;
-               // if(Serial_isTransmitEmpty()){
-                    //printf("CALCULATE\n\n\n");
-                 //   if(Timer_isActive(5)) printf("YES TIMER\n\n");
-                    //printf("start: %u  stop: %u\n\n\n",start,stop);
-                //}
-                //printf("CALCULATE\n\n\n");
-                    if (stop > start){
-                       pwidth = (stop - start);
-                       pulsewidth[j] = pwidth/10;
-                    }else{
-                       pwidth = (T3_TICK - start) + stop;
-                       pulsewidth[j] = pwidth/10;
+                //printf("Calculate");
+                //Serial_putChar('C');
+                if(stop > start)
+                {
+                    Pulse = stop - start;
+                }else{
+                    Pulse = (T3_TICK - start) + stop;
+                }
+
+                angle = calculate_Angle(Pulse);
+                //state = poll;
+
+                if(Timer_isExpired(TIMER_TEST)){
+                    while(!Serial_isTransmitEmpty()) {
+                     ;
                     }
-
-                    mIC1IntEnable(1);
-
-               // printf("YOU CAUGHT ONE PULSE!");
-            //state = poll;
-//
-            break;
+                    printf("START: %u      STOP: %u     Pulse: %u      Angle: %.3f degrees\n\n\n",start,stop,Pulse,angle);
+                    //Serial_runSM();
+                    while(!Serial_isTransmitEmpty()) {
+                     ;
+                    }
+                    state = poll;
+                    mIC1IntEnable(1);                                           //Enable Interrupt
+                }
+                break;
 
             case(poll):
                    //printf("Polling\n\n");
-            break;
+                //Serial_putChar('P');
+                break;
         }
-
-        if (Timer_isExpired(TIMER_TEST)) {
-            printf("START: %d     STOP: %d    PWIDTH: %d\n\n",start,stop,pwidth);
-            Timer_new(TIMER_TEST,PRINT_DELAY);
-        }
-        Serial_runSM();
-
+        //Serial_runSM();
     }
     return(SUCCESS);
-    
-
-
-
 }
+#endif
 
+
+
+/*********************************************************************
+ *                  INTERRUPT SERVICE ROUTINES                       *
+ * *******************************************************************/
 void __ISR( _INPUT_CAPTURE_1_VECTOR, ipl1) IC1Interrupt( void){
+    //Read Timer Buffer as soon as you enter
+
     tempBuff = mIC1ReadCapture();
-  //  tempBuff &= 0xFF;
-    //mIC1ClearIntFlag();
+    mIC1IntEnable(0);
+    //Serial_putChar('I');
+    //Rising Edge
     if (Rise == 0){
         PORTY04_LAT = 1;
-        //Rising Edge
-        Rise = 1;
-        start = tempBuff;
-        start_array[count];
-        mIC1ClearIntFlag();
-        //Serial_putChar('R');
-        
-        
+        //Serial_putChar('R');                                                        //DEBUG PWM
+        Rise = 1;                                                               //Set to Rise
+        start = tempBuff;                                                       //Start holds timer buffer of rising edge
+        mIC1IntEnable(1);
+    //Falling Edge
     }else{
         PORTY04_LAT = 0;
-        //Falling Edge
-        Rise = 0;
-        state = calculate;
-        stop = tempBuff;
-        stop_array[count];
-        mIC1IntEnable(0);
-        //Timer_new(5,300);
-        count = count + 1;
-        mIC1ClearIntFlag();
-        //Serial_putChar('F');
-
+        //Serial_putChar('F');                                                        //DEBUG PWM
+        Rise = 0;                                                               //Set to fall
+        state = calculate;                                                      //Change state to Calculate Pulsewidth
+        stop = tempBuff;                                                        //Stop holds timer buffer of falling edge
+        //mIC1IntEnable(1);                                                       //Disable IC interrupt
+        Timer_new(TIMER_TEST,PRINT_DELAY);                                       //Set Timer for Prints
     }
+
+    //Clear Interrupt Flag
+    mIC1ClearIntFlag();
 }
