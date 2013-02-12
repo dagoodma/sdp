@@ -11,6 +11,7 @@ uno32=1;
 % device names
 clear names;
 names(uno32)={'Uno32 Thermal Sensor'};
+baudrate = 115200;
 
 % close all serial ports
 delete(instrfindall)
@@ -22,30 +23,24 @@ portnums(uno32)=4;
 
 % connect to devices
 clear ports;
-ports(uno32) = {gps_configureDevice(names(uno32),portnums(uno32))};
+ports(uno32) = {thermal_configureDevice(names{uno32}, portnums(uno32), baudrate)};
 
 if DEBUG
     disp(sprintf('Success!\n'));
-    disp(sprintf('Listening...'));
+    disp(sprintf('Listening to the %s...',names{uno32}));
 end
 
-%% Read GPS data
+%% Read Thermal data
 % Dump messages
 total=60;
-i=1;
-msg={zeros(1,total)};
-try
-    while i <= total,
-        out = gps_readMessage_ubx(ports{ublox2},0);
-        if out{3} == 1 && out{4} == 2
-            msg{i} = out;
-            i = i + 1;
-        end
-        %disp(out);
+while i <= total,
+    c = 0;
+    str = '';
+    while(c ~= 10)
+        c = fread(ports{uno32},1);
+        str = strcat(str, c);
     end
-catch err
-    % Do nothing
-    disp(err.message);
+    disp(str);
 end
 
 %% Clean up

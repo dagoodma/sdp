@@ -13,4 +13,5 @@
 *.doc~
 *.pyc
 *.hex
+*.asv
 temp/
