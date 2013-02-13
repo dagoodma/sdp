@@ -16,13 +16,10 @@
 #ifndef Xbee_H
 #define Xbee_H
 
-
-
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
-#define GROUND_STATION_XBEE 74
-#define BOAT_XBEE 33
+#define XBEE_TEST //used for testing Xbee
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
@@ -53,6 +50,7 @@ uint8_t Xbee_init();
 void Xbee_runSM();
 
 
+#ifdef XBEE_TEST
 /**********************************************************************
  * Function: void Xbee_message_data_test();
  * @remark This function will be calle once a "data_test" packet has been
@@ -64,5 +62,6 @@ void Xbee_runSM();
  * @date February 1st 2013
  **********************************************************************/
 void Xbee_message_data_test(mavlink_test_data_t* packet);
+#endif
 
 #endif

@@ -33,13 +33,13 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-#define UART_ID             UART2_ID
+#define XBEE_UART_ID             UART2_ID
 #define NUMBER_DATA_BYTES   1
 #define OVERHEAD_BYTES      8
 #define API_DELAY           1000
 
 /*    FOR IFDEFS     */
-//#define REPROGRAM_API
+//#define XBEE_RESET_FACTORY
 
 #define TIMER_TIMEOUT 2
 #define DELAY_TIMEOUT 1000 // (ms)
@@ -52,15 +52,10 @@ static uint8_t Xbee_programMode();
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
-void Xbee_message_data_test(mavlink_test_data_t* packet){
-    Mavlink_send_Test_data(UART_ID, (packet->data+1)%255);
-    Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
-}
-
 
 uint8_t Xbee_init(){
-    UART_init(UART_ID,9600);
-#ifdef REPROGRAM_API
+    UART_init(XBEE_UART_ID,9600);
+#ifdef XBEE_RESET_FACTORY
     if( Xbee_programMode() == FAILURE){
         return FAILURE
     }
@@ -70,8 +65,8 @@ uint8_t Xbee_init(){
 
 
 void Xbee_runSM(){
-    if(UART_isReceiveEmpty(UART_ID) == FALSE){
-        Mavlink_recieve(UART_ID);
+    if(UART_isReceiveEmpty(XBEE_UART_ID) == FALSE){
+        Mavlink_recieve(XBEE_UART_ID);
     }
 }
 
@@ -92,11 +87,11 @@ void Xbee_runSM(){
 static uint8_t Xbee_programMode(){
     int i = 0;
     char confirm[3];
-    UART_putString(UART_ID, "+++", 3);
+    UART_putString(XBEE_UART_ID, "+++", 3);
 
     //wait for "OK\r"
     do {
-        confirm[i] = UART_getChar(UART_ID);
+        confirm[i] = UART_getChar(XBEE_UART_ID);
         if (confirm[i] != 0)
             i++;
     } while(i < 3);
@@ -104,9 +99,9 @@ static uint8_t Xbee_programMode(){
     if (!(confirm[0] == 0x4F && confirm[1] == 0x4B && confirm[2] == 0x0D)){
         return FAILURE;
     }
-    UART_putString(UART_ID, "ATRE\r", 5); // Puts it in API mode
-    UART_putString(UART_ID, "ATWR\r", 5);//Writes the command to memory
-    UART_putString(UART_ID, "ATCN\r", 5);//Leave the menu.
+    UART_putString(XBEE_UART_ID, "ATRE\r", 5);// Resets to Factory settings
+    UART_putString(XBEE_UART_ID, "ATWR\r", 5);//Writes the command to memory
+    UART_putString(XBEE_UART_ID, "ATCN\r", 5);//Leave the menu.
     return SUCCESS;
 }
 
@@ -121,7 +116,6 @@ static uint8_t Xbee_programMode(){
  * Slave will look for packets, and then return the packet data
  * field in  a packet to the Master
  */
-#define XBEE_TEST
 #ifdef XBEE_TEST
 
 //Comment this out to program the Slave mode
@@ -142,12 +136,12 @@ int main(){
 
 // Master sends packets and listens for responses
     #ifdef MASTER
-    Mavlink_send_Test_data(UART2_ID, 1);
+    Mavlink_send_Test_data(XBEE_UART_ID, 1);
     Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
     while(1){
         Xbee_runSM();
         if(Timer_isActive(TIMER_TIMEOUT) != TRUE){
-            Mavlink_send_Test_data(UART2_ID, 1);
+            Mavlink_send_Test_data(XBEE_UART_ID, 1);
             Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
             printf("lost_packet: %d\n", get_time());
         }
@@ -158,4 +152,11 @@ int main(){
     }
     #endif
 }
+
+
+void Xbee_message_data_test(mavlink_test_data_t* packet){
+    Mavlink_send_Test_data(XBEE_UART_ID, (packet->data+1)%255);
+    Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
+}
+
 #endif
