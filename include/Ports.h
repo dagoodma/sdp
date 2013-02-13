@@ -43,6 +43,7 @@
 #ifndef SUCCESS
 #define SUCCESS 0
 #define ERROR -1
+#define FAILURE 1
 #endif
 
 #ifndef TRUE

@@ -1,0 +1,9 @@
+<?xml version='1.0'?>
+<mavlink>
+     <messages>
+          <message id="236" name="TEST_DATA">
+				<description>This message will send a single byte of data for debugging.</description>
+				<field type="uint8_t" name="data">Holds raw data for use in testing</field>
+          </message>
+     </messages>
+</mavlink>

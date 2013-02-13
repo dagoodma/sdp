@@ -1,0 +1,17 @@
+<?xml version='1.0'?>
+<mavlink>
+     <version>3</version>
+     <messages>
+          <message id="236" name="TEST_DATA">
+				<description>This message will send a single byte of data for debugging.</description>
+                <field type="uint8_t" name="start_byte">API start byte of 0x7E</field>
+				<field type="uint16_t" name="length">The raw data from the position sensor, generally a potentiometer.</field>
+				<field type="uint8_t" name="API_Identifier">0x01 => API mode 0x02 API mode escaped character mode</field>
+				<field type="uint8_t" name="frame_id">Id message for the message, 0x01 is sending data, see XBEE datasheet</field>
+				<field type="uint16_t" name="dest_adress">Destination Address of the message 0xFF is broadcast to all.</field>
+				<field type="uint8_t" name="ACK">0x00, no ACK</field>
+				<field type="uint8_t" name="data">Holds raw data for use in testing</field>
+                <field type="uint8_t" name="checksum">Checksum</field>
+          </message>
+     </messages>
+</mavlink>
