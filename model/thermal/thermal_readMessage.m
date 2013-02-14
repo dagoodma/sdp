@@ -12,7 +12,7 @@ function [pixels] = thermal_readMessage(serial_obj,use_hex_str)
 %   a cell array containing ubx packet data
 %
 
-DEBUG = 1;
+DEBUG = 0;
 USE_HEX_STRING = 0; % default
 
 if nargin < 1
@@ -38,9 +38,9 @@ end
 c = 0;
 while 1
      % Wait for the start int
-     c = fread(serial_obj,1,'uint8');
+     c = fread(serial_obj,1,'uint32');
      while (c ~= START_INT)
-         disp(sprintf('%X != %X',c,START_INT));
+         %disp(sprintf('%X != %X',c,START_INT));
      end
      if DEBUG
      	disp(sprintf('Saw beginning of sequence.\n'));

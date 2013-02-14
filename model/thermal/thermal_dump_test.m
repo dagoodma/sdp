@@ -32,11 +32,22 @@ end
 %% Read Thermal data
 % Dump messages
 while 1
+    %c = 0;
+    %str = '';
+    %while(c ~= 10)
+    %    c = fread(ports{uno32},1);
+    %    str = strcat(str, c);
+    %end
+    %disp(str);
     pixels = thermal_readMessage(ports{uno32});    
     if DEBUG
-        disp('Thermal Pixels: ');
-        pixels
-        disp(sprintf('------------------\n'));
+        %disp('Thermal Pixels: ');
+        %pixels
+        %disp(sprintf('------------------\n'));
+        clf;
+        figure(1)
+        heatmap(pixels);
+        pause(0.1)
     end
 end
 

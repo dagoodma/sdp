@@ -585,12 +585,12 @@ int main(void){
 #define THERMAL_TEST2
 #ifdef THERMAL_TEST2
 
-#define DEBUG_TEST2         1
+//#define DEBUG_TEST2         1
 
 #define END_ROW_SEQUENCE    (0xFFFFAAAA)
 #define START_SEQUENCE      (0xFFFF1234)
 
-#define PRINT_DELAY         2000
+#define PRINT_DELAY         200
 
 void sendSerial32(uint32_t data);
 void sendSerialFloat(float data) ;
@@ -654,7 +654,7 @@ void sendSerialFloat(float data) {
     int i;
     for (i = 0; i < 4; i++) {
         //while (!Serial_isTransmitEmpty()) { asm("nop"); }
-            Serial_putChar((uint8_t)(data >>  (8 * i)));
+            Serial_putChar(((uint8_t)data >>  (8 * i)));
     }
     #else
     printf("_%.8f/",data);
