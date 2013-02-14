@@ -67,7 +67,7 @@ int32_t Barometer_getPressure();
  * @remark Converts pressure from altitude above sea level in meters. 
  * @author David Goodman
  * @date 2013.02.01  */
-int32_t Barometer_getAltitude();
+float Barometer_getAltitude();
 /**
  * Function: Barometer_getPressureData
  * @return Data, (long) 16-bit temperature data
