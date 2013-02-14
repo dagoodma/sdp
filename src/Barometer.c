@@ -59,7 +59,7 @@
 #define CELCIUS_TO_FAHRENHEIT(T)    (((float)T/10)*1.8 + 32)
 //#define PASCALS_TO_METERS(P)        () // Converts pressure to altitude
 
-#define PRESSURE_P0		101325 // (Pa)
+#define PRESSURE_P0		102201.209 // (Pa)
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -141,9 +141,9 @@ void Barometer_runSM() {
     }
 }
 
-int32_t Barometer_getAltitude() {
+float Barometer_getAltitude() {
     //return 44330.8 - 4946.54 * pow(pressure,0.1902632);
-	return (int32_t)(44330*(1 - pow(((double)pressure/PRESSURE_P0),0.19029)));
+	return (float)((44330*(1 - pow(((float)pressure/PRESSURE_P0),0.19029)))*3.2808);
 }
 
 
@@ -196,7 +196,7 @@ int16_t readTwoDataBytes( uint8_t address) {
         
         // Read the I2C bus twice
         data = (I2C_getData(BAROMETER_I2C_ID) << 8);
-        I2C_acknowledgeRead(I2C1, TRUE);
+        I2C_acknowledgeRead(BAROMETER_I2C_ID, TRUE);
         while(!I2C_hasAcknowledged(BAROMETER_I2C_ID));
         data += I2C_getData(BAROMETER_I2C_ID);
 
@@ -328,7 +328,6 @@ int32_t readSensor(uint8_t sensorSelectAddress) {
         // End the tranmission
         I2C_stopTransfer(BAROMETER_I2C_ID);
 
-
         // Wait while the sensor gets the desired data in the correct register
 		// TODO remove this blocking code
         Timer_new(TIMER_BAROMETER2,READ_SENSOR_DELAY);
@@ -371,57 +370,33 @@ void updateReadings() {
     up = readSensor(PRESSURE_DATA_ADDRESS);
     //up &= 0x0000FFFF;
     ut = readSensor(TEMPERATURE_DATA_ADDRESS);
-    #ifdef DEBUG
-    printf("Raw Pressure: %ld\nRaw Temperature: %ld\n",up,ut);
-    #endif
-	
-    //printf("Raw Pressure: %ld\nRaw Temperature: %ld\n",up,ut);
 
 	// Temperature conversion
     x1 = (((long)ut - ac6) * ac5) >> 15;
     x2 = ((long) mc << 11) / (x1 + md);
     b5 = x1 + x2;
     temperature = (b5 + 8) >> 4;
-	/*
-    printf("UT = %d\n",ut);
-    printf("X1 = %d\n",x1);
-    printf("X2 = %d\n",x2);
-    printf("b5 = %d\n\n",b5);
-     */
+
 	// Presure conversions
     b6 = b5 - 4000;
     x1 = (b2 * (b6 * (b6/pow(2,12))))/pow(2,11);
-    //printf("X1 = %d\n",x1);
     x2 = (ac2 * b6)/(pow(2,11));
-    //printf("X2 = %d\n",x2);
     x3 = x1 + x2;
-   //printf("X3 = %d\n",x3);
     b3 = ((((ac1 * 4) + x3)<< OSS) + 2)/4;
-    //printf("B3 = %d\n",b3);
     x1 = (ac3 * b6) >> 13;
-    //printf("X1 = %d\n",x1);
     x2 = (b1 * ((b6 * b6) >> 12)) >> 16;
-    //printf("X2 = %d\n",x2);
     x3 = ((x1 + x2) + 2) >> 2;
-    //printf("X3 = %d\n",x3);
     b4 = (ac4 * (unsigned long)(x3 + 32768)) >> 15;
-    //printf("B4 = %d\n",b4);
     b7 = ((unsigned long)up - b3) * (50000 >> OSS);
-    //printf("B7 = %d\n",b7);
     if(b7 < 0x80000000){
         p = (b7 * 2)/b4;
-        //printf("p = %d\n",p);
     }
     else{
         p = (b7/b4)*2;
-        //printf("p = %d\n",p);
     }
     x1 = (p/(pow(2,8))) * (p/(pow(2,8)));
-    //printf("X1 = %d\n",x1);
     x1 = (x1 * 3038) >> 16;
-    //printf("X1 = %d\n",x1);
     x2 = (-7357 * p) >> 16;
-    //printf("X2 = %d\n",x2);
     pressure = p + ((x1 + x2 + 3791) >> 4);
 
 }
@@ -437,34 +412,14 @@ int main(void) {
     Timer_init();
     Serial_init();
     Barometer_init();
-
-// Get all the calibration data.
-    printf("\nCalibration Information:\n");
-    printf("------------------------\n");
-
-    printf("\tAC1 = %d\n", ac1);
-    printf("\tAC2 = %d\n", ac2);
-    printf("\tAC3 = %d\n", ac3);
-    printf("\tAC4 = %d\n", ac4);
-    printf("\tAC5 = %d\n", ac5);
-    printf("\tAC6 = %d\n", ac6);
-    printf("\tB1 = %d\n", b1);
-    printf("\tB2 = %d\n", b2);
-    printf("\tMB = %d\n", mb);
-    printf("\tMC = %d\n", mc);
-    printf("\tMD = %d\n", md);
-    printf("------------------------\n\n");
-
     Timer_new(TIMER_TEST, PRINT_DELAY );
-
-    printf("long size:%d\n",sizeof(long));
 
     while(1){
         // Convert the raw data to real values
         if (Timer_isExpired(TIMER_TEST)) {
             printf("Temperature: %.1f (deg F)\n", Barometer_getTemperatureFahrenheit());
             printf("Pressure: %ld (Pa)\n", Barometer_getPressure());
-            printf("Altitude: %ld (m)\n\n", Barometer_getAltitude());
+            printf("Altitude: %.1f (ft)\n\n", Barometer_getAltitude());
             Timer_new(TIMER_TEST, PRINT_DELAY );
         }
 
