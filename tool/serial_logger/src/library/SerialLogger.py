@@ -179,14 +179,12 @@ class SerialLogger:
         while (not self.want_exit):
             # user_input = raw_input(self.prompt)
             data = self.connection.read(1)
-            if os.name == 'nt':
-                sys.stdout.write(data)
-                #sys.stdout.write(repr(data)[1:-1])
+            sys.stdout.write(data)
 
 
             if (data == '\n'):
                 line.rstrip('\r\n')
-                #logging.info(line)
+                logging.info(line)
                 line = ''
             elif (data == '\r'):
                 pass

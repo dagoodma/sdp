@@ -26,8 +26,7 @@ clear ports;
 ports(uno32) = {thermal_configureDevice(names{uno32}, portnums(uno32), baudrate)};
 
 if DEBUG
-    disp(sprintf('Success!\n'));
-    disp(sprintf('Listening to the %s...',names{uno32}));
+    disp(sprintf('\nListening to the %s...',names{uno32}));
 end
 
 %% Read Thermal data

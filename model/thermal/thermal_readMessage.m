@@ -35,11 +35,12 @@ else
     pixels = {};
 end
 
-
+c = 0;
 while 1
      % Wait for the start int
-     while (fread(serial_obj,1,'uint32') ~= START_INT)
-         % Do nothing
+     c = fread(serial_obj,1,'uint8');
+     while (c ~= START_INT)
+         disp(sprintf('%X != %X',c,START_INT));
      end
      if DEBUG
      	disp(sprintf('Saw beginning of sequence.\n'));
