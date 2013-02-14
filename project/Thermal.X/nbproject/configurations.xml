@@ -71,7 +71,7 @@
         <property key="enable-unroll-loops" value="false"/>
         <property key="exclude-floating-point" value="false"/>
         <property key="extra-include-directories"
-                  value="C:\Users\Shehadeh\Documents\GitHub\sdp\include;C:\Users\dagoodma\Documents\SDP\include"/>
+                  value="C:\Users\dagoodma\Documents\SDP\include;C:\Users\Shehadeh\Documents\GitHub\sdp\include"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
         <property key="make-warnings-into-errors" value="false"/>
