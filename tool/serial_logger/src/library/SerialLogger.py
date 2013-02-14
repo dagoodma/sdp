@@ -1,10 +1,12 @@
 # Module SerialLogger
+import os
 import serial
 import pprint
 import logging
 from SerialLoggerException import *
 from serial.tools.list_ports import *
-    
+
+   
 class SerialLogger:
     """\
     SerialLogger connects to the specified serial port. If none is
@@ -33,6 +35,13 @@ class SerialLogger:
         self.device_port = device_port
         self.interactive = interactive
         self.last_id = 0
+
+        # --------------------------------
+        # Initialize logger
+        FORMAT = "(message)s"
+        logging.basicConfig(format=FORMAT, propogate=True)
+
+
         try:
             self.timeout = int(timeout)
         except ValueError, TypeError:
@@ -49,8 +58,12 @@ class SerialLogger:
             self.ask_connect()
 
 
-        self.connect()
+        if self.want_exit:
+            return
 
+
+        self.connect()
+        
 
     
     def ask_connect(self):
@@ -67,6 +80,11 @@ class SerialLogger:
         self.validate_port() # clears the port if it does not exist
         if not self.device_port:
             self.list_ports()
+
+            if self.want_exit:
+                logging.debug('No available ports to connect to.')
+                return
+
             while not self.device_port:
                 self.device_port = self.ask_port()
                 self.validate_port()
@@ -86,7 +104,7 @@ class SerialLogger:
         """
         logging.debug('Connecting to \'{0}\' at {1!s} baud'.format(self.device_port, self.baud_rate))
         try:
-            self.connection = serial.Serial(port = self.device_port, baudrate = self.baud_rate, timeout=self.timeout)
+            self.connection = serial.Serial(port = self.device_port, baudrate = self.baud_rate, timeout=self.timeout, rtscts = False, dsrdtr = False)
         except (ValueError, SerialException) as ex:
             message = 'Failed to connect to \'{0}\': {1!s}'.format(self.device_port, ex)
             logging.exception(message)
@@ -127,7 +145,7 @@ class SerialLogger:
 
         """
         logging.debug('Validating port \'{0}\''.format(self.device_port))
-        if self.device_port and not os.path.exists(self.device_port):
+        if (not os.name == 'nt') and self.device_port and not os.path.exists(self.device_port):
             print('No such device \'{0}\''.format(self.device_port))
             self.device_port = None
 
@@ -140,6 +158,7 @@ class SerialLogger:
         if (self.is_connected and self.connection):
             logging.debug('Disconnecting from device \'{0}\''.format(self.device_port))
             self.connection.close()
+            sys.stdout.write('\nDisconnected from device \'{0}\''.format(self.device_port))
             logging.info('Disconnected from device \'{0}\''.format(self.device_port))
  
                 
@@ -160,13 +179,22 @@ class SerialLogger:
         while (not self.want_exit):
             # user_input = raw_input(self.prompt)
             data = self.connection.read(1)
+            if os.name == 'nt':
+                sys.stdout.write(data)
+                #sys.stdout.write(repr(data)[1:-1])
 
-            sys.stdout.write(data)
-            if data == '\n' or data == '\r':
-                logging.info(line)
+
+            if (data == '\n'):
+                line.rstrip('\r\n')
+                #logging.info(line)
                 line = ''
+            elif (data == '\r'):
+                pass
             else:
-                line += data
+                line += repr(data)[1:-1]
+
+            #if data == '\n':
+            #    line.rstrip('\r\n')
 
 
             # print(self.connection.readline())
@@ -208,7 +236,6 @@ class SerialLogger:
 
     
     def ask_port(self):
-        print('HERE')
         """\
         Queries the user to enter a serial device port.
 
@@ -244,9 +271,16 @@ class SerialLogger:
         port_list = list()
         for device in port_list_all:
             port_list.append(device[0])
+    
+        if len(port_list) < 1:
+            print('There are no available serial ports.');
+            self.want_exit = True
+            return
 
         print('Available serial ports:')
         for port in port_list:
             print('\t{0}'.format(port))
+
+        print('\n')
 
 
