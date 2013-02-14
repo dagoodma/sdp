@@ -37,6 +37,9 @@
 #define NUMBER_DATA_BYTES   1
 #define OVERHEAD_BYTES      8
 #define API_DELAY           1000
+// note, need to reprogram Xbee for different Baud Rates.
+//  factory settings are 9600 baud rate
+#define XBEE_BAUD_RATE      9600
 
 /*    FOR IFDEFS     */
 //#define XBEE_RESET_FACTORY
@@ -54,7 +57,7 @@ static uint8_t Xbee_programMode();
  **********************************************************************/
 
 uint8_t Xbee_init(){
-    UART_init(XBEE_UART_ID,9600);
+    UART_init(XBEE_UART_ID,XBEE_BAUD_RATE);
 #ifdef XBEE_RESET_FACTORY
     if( Xbee_programMode() == FAILURE){
         return FAILURE
@@ -118,11 +121,19 @@ static uint8_t Xbee_programMode(){
  */
 #ifdef XBEE_TEST
 
+#include "Serial.h"
+
 //Comment this out to program the Slave mode
 #define MASTER
 
+#define TIMER_STATUS 3
+#define DELAY_STATUS 4000
+
+uint32_t count_recieved = 0, count_lost = 0;
+
 int main(){
     Board_init();
+    Serial_init();
     printf("Welcome to Xbee Test1\n");
     printf("UART INIT\n");
     Timer_init();
@@ -138,13 +149,22 @@ int main(){
     #ifdef MASTER
     Mavlink_send_Test_data(XBEE_UART_ID, 1);
     Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
+    Timer_new(TIMER_STATUS, DELAY_STATUS);
     while(1){
         Xbee_runSM();
+        //lost a packet, report it, and restart
         if(Timer_isActive(TIMER_TIMEOUT) != TRUE){
             Mavlink_send_Test_data(XBEE_UART_ID, 1);
+            count_lost++;
             Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
             printf("lost_packet: %d\n", get_time());
         }
+        //Printout the status
+        if(Timer_isActive(TIMER_STATUS) != TRUE){
+            Timer_new(TIMER_STATUS, DELAY_STATUS);
+            printf("Status: %d,%d [Recieved,Lost] TIME: %d\n", count_recieved, count_lost, get_time());
+        }
+
     }
     #else
     while(1){
@@ -156,6 +176,7 @@ int main(){
 
 void Xbee_message_data_test(mavlink_test_data_t* packet){
     Mavlink_send_Test_data(XBEE_UART_ID, (packet->data+1)%255);
+    count_recieved++;
     Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
 }
 

@@ -149,7 +149,7 @@ void UART_putString(uint8_t id, char* Data, int Length){
     int x;
     for(x = 0; x < Length; x++){
         UART_putChar(id, Data[x]);
-        DELAY(10);
+        //DELAY(10);
     }
 }
 
