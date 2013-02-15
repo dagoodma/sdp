@@ -10,12 +10,13 @@
  Notes
 
  History
- When               Who         What/Why
- --------------     ---         --------
- 12-29-12 2:10 PM    jash    Created file.
- 1-17-13  4:10 PM    jash    Work on functions, add receieve pseudo code
- 2-1-13   2:50 AM    jash    Complete functions and add comments.
- 2-9-13   5:08 PM    jash    Added Mavlink functionality
+ When                   Who         What/Why
+ --------------         ---         --------
+ 12-29-12 2:10  PM      jash        Created file.
+ 1-17-13  4:10  PM      jash        Work on functions, add receieve pseudo code
+ 2-1-13   2:50  AM      jash        Complete functions and add comments.
+ 2-9-13   5:08  PM      jash        Added Mavlink functionality
+ 2-9-15   12:40 PM      jash        MAVLink test up and running, and set channel
 ***********************************************************************/
 
 #include <xc.h>
@@ -44,6 +45,9 @@
 /*    FOR IFDEFS     */
 //#define XBEE_RESET_FACTORY
 
+//Leave uncommented when programming XBEE_1, comment out when programming XBEE_2
+//#define XBEE_1
+
 #define TIMER_TIMEOUT 2
 #define DELAY_TIMEOUT 1000 // (ms)
 /**********************************************************************
@@ -60,7 +64,7 @@ uint8_t Xbee_init(){
     UART_init(XBEE_UART_ID,XBEE_BAUD_RATE);
 #ifdef XBEE_RESET_FACTORY
     if( Xbee_programMode() == FAILURE){
-        return FAILURE
+        return FAILURE;
     }
 #endif
     return SUCCESS; 
@@ -103,7 +107,25 @@ static uint8_t Xbee_programMode(){
         return FAILURE;
     }
     UART_putString(XBEE_UART_ID, "ATRE\r", 5);// Resets to Factory settings
+    DELAY(1000);
+    UART_putString(XBEE_UART_ID, "ATCH15\r", 7);
+    DELAY(1000);
+    UART_putString(XBEE_UART_ID, "ATDH0\r", 6);
+    DELAY(1000);
+    UART_putString(XBEE_UART_ID, "ATSH0\r", 6);
+    DELAY(1000);
+  /* #ifdef XBEE_1
+    UART_putString(XBEE_UART_ID, "ATDLAAC3\r", 9);
+    DELAY(1000);
+    UART_putString(XBEE_UART_ID, "ATSLBC64\r", 9);
+    #else
+    UART_putString(XBEE_UART_ID, "ATDLBC64\r", 9);
+    DELAY(1000);
+    UART_putString(XBEE_UART_ID, "ATSLAAC3\r", 9);
+    #endif*/
+    DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATWR\r", 5);//Writes the command to memory
+    DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATCN\r", 5);//Leave the menu.
     return SUCCESS;
 }
@@ -122,9 +144,6 @@ static uint8_t Xbee_programMode(){
 #ifdef XBEE_TEST
 
 #include "Serial.h"
-
-//Comment this out to program the Slave mode
-#define MASTER
 
 #define TIMER_STATUS 3
 #define DELAY_STATUS 4000
@@ -146,7 +165,7 @@ int main(){
     printf("XBEE Initialized\n");
 
 // Master sends packets and listens for responses
-    #ifdef MASTER
+    #ifdef XBEE_1
     Mavlink_send_Test_data(XBEE_UART_ID, 1);
     Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
     Timer_new(TIMER_STATUS, DELAY_STATUS);
