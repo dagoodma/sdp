@@ -23,22 +23,18 @@ extern "C" {
 
 
 
-
 /*******************************************************************************
  * Public Functions                                                            *
  ******************************************************************************/
 /**
  * Function: Encoder_init
  * @return None.
- * @remark Initializes the Encoder interface and enables interrupts for input capture/compare1.
+ * @remark Initializes the Encoder interface and configures interrupts for input capture/compare1. DOES NOT ENABLE INTERRUPT.
  * @author Darrel R. Deo
  * @date 2013.02.10  */
 void Encoder_init();
 
 
-/*******************************************************************************
- * Public Functions                                                            *
- ******************************************************************************/
 /**
  * Function: calculate_Angle
  * @return floating point of the angle for approximate.
@@ -46,3 +42,12 @@ void Encoder_init();
  * @author Darrel R. Deo
  * @date 2013.02.10  */
 float calculate_Angle(uint16_t pwidth);
+
+
+/**
+ * Function: Is_lockOnButtonPressed
+ * @return TRUE or FALSE of whether the button was pressed or not
+ * @remark Event Checker Routine that checks state of pushbutton for Lock on
+ * @author Darrel R. Deo
+ * @date 2013.02.10  */
+BOOL Is_lockOnButtonPressed();
