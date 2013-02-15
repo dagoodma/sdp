@@ -1,0 +1,46 @@
+\documentclass[11pt]{article}
+\usepackage[pdftex]{graphicx}
+\usepackage{siunitx}
+\usepackage{verbatim}
+\usepackage{float}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+\usepackage[normalem]{ulem}
+\usepackage[margin=1in, paperwidth=8.5in, paperheight=11in]{geometry}
+%\usepackage{indentfirst}
+
+% Header and Footer
+\pagestyle{fancy}
+%\fancyhead{} % clear all header fields
+%\rhead{\vspace*{1em}\headone{David Goodman}\\
+%	$118$ Hainline Road $\bullet$ Aptos, CA 95003\\
+%	Phone: 714.363.1280\\
+%	E-Mail: dagoodma@gmail.com}
+%\cfoot{}
+
+\renewcommand{\headrulewidth}{0pt}
+%\renewcommand{\footrulewidth}{0.4pt}
+%\cfoot{}
+%\rfoot{Goodman \thepage},
+
+\begin{document}
+\begin{center} 
+{
+    {\Large \textbf{Log Book Instructions}}\\
+  	{\large Autonomous Lifeguard Project}
+}
+\end{center}
+
+This book is to be used for recording notes and data from field tests, displaying wiring diagrams and instructions for setting up a test harness, and bug reports for both the AtLAs (water surface vehicle) and the ComPAS (command center).\\
+
+\noindent All entries should display a title at the top left of the first page and should be signed and dated in the respective boxes at the bottom of each page. If entries span multiple pages, the next page number should be written on the bottom right, and the previous page number on the top left. If you are performing a test, be sure to write the time when you are making a note. For example:
+
+\begin{quote}
+\begin{itemize}
+\item[\uline{4:31}:]{Started testing of cliff edge near light house (36.95128, -122.02692).}
+\item[\uline{4:35}:]{Dropped GPS connection, but restored. Very humid conditions, tide is coming within 10 feet of the closest rock wall on the beach.}
+\end{itemize}
+\end{quote}
+
+\noindent For an example of how to document the setup of a test harness see \uline{GPS Test Harness Setup} on page \ \ \ .
+\end{document}
