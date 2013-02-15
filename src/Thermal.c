@@ -281,6 +281,8 @@ void writeConfigReg(void){
     BOOL Success = TRUE;
     UINT8 MSByte, LSByte, MSByteCheck, LSByteCheck;
     LSByte = eepromData[245];
+    LSByte &= 0xF0;
+    LSByte |= 0x0C;
     LSByteCheck = LSByte - 0x55;
     MSByte = eepromData[246];
     MSByteCheck = MSByte - 0x55;
@@ -350,7 +352,6 @@ void configCalculationData(void){
         }
     }
 }
-
 
 void readChipTemp(void){
     BOOL Success = TRUE;
@@ -531,7 +532,7 @@ void calculateIRTemp(void){
 }
 
 
-#define THERMAL_TEST
+//#define THERMAL_TEST
 #ifdef THERMAL_TEST
 int main(void){
 // Initialize the UART,Timers, and I2C1
@@ -563,12 +564,12 @@ int main(void){
 
 
 
-//#define THERMAL_TEST2
+#define THERMAL_TEST2
 #ifdef THERMAL_TEST2
 
 //#define DEBUG_TEST2         1
 
-#define END_ROW_SEQUENCE    (0xFFFFAAAA)
+#define END_COL_SEQUENCE    (0xFFFFAAAA)
 #define START_SEQUENCE      (0xFFFF1234)
 
 #define PRINT_DELAY         200
@@ -586,7 +587,6 @@ int main(void) {
 
     /*Timer_new(TIMER_TEST,100);
     while(!Timer_isExpired(TIMER_TEST);*/
-    Thermal_init();
 #ifdef DEBUG_TEST2
     printf("Initialized Thermal module.\n");
 #endif
@@ -599,14 +599,14 @@ int main(void) {
             #ifdef DEBUG_TEST2
                 printf("Sending thermal data...\n");
             #endif
-            sendSerial32(START_SEQUENCE);
+            sendSerial32(0xFFFF1234);
 
             for(col = 0; col < TOTAL_PIXEL_COLS; col++) {
                 for(row = 0; row < TOTAL_PIXEL_ROWS; row++){
                     uint8_t pixel = row + (col * TOTAL_PIXEL_ROWS);
-                    sendSerialFloat((float)pixelData[pixel]);
+                    sendSerialFloat(finalPixelTempF[pixel]);
                 }
-                sendSerial32(END_ROW_SEQUENCE);
+                sendSerial32(END_COL_SEQUENCE);
             }
 
             #ifdef DEBUG_TEST2
