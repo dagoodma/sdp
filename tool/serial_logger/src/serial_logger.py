@@ -1,4 +1,15 @@
 #!/usr/bin/env python
+"""\
+serial_logger.py is a tool for reading data from a connected serial device.
+
+Author: David Goodman (dagoodma@ucsc.edu)
+
+Notes:
+-----
+* 2013-02-15 -- dagoodma
+    Created this header.
+
+"""
 import sys
 import os
 sys.path.append('library')
@@ -72,8 +83,7 @@ interactive = True
 parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
     description="""\
-Connects to an Animus system and retrieves log fies from an SD card
-over a serial connection.
+Connects to a serial device and sends and receives data.
 """,
     usage='serial_logger.py -h | [-l log_file] [--loglevel=LEVEL] [-c config_file] [-t timeout] [-b baud_rate] [device_path] ',
     add_help=False
