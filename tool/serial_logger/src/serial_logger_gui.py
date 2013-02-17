@@ -12,21 +12,22 @@ Notes:
 
 """
 import sys
-import os
 sys.path.append('library')
-import SerialLogger
+import os
 import string
 import pprint
 import argparse
 import ConfigParser
-# import textwrap
-# import tree # RB Tree
 import logging
 import signal
+import threading
+#from threading import Thread
+from time import sleep
+import Queue
 import serial
-# for creating our own port list
-from SerialLoggerException import *
 from serial.tools.list_ports import *
+import SerialLogger
+from SerialLoggerException import *
 
 
 # Python 2.x and 3.x compatability 
@@ -46,183 +47,321 @@ except ImportError as ex:
     tkinter.messagebox = tkMessageBox
     del tkMessageBox
 
-DEBUG = False
-title = "Serial Logger"
+# ----------------------------------
+# Initialize some global variables
+
+DEBUG = True
+
+TITLE = "Serial Logger"
 START_STRING = '--------------------- Started ------------------------'
 EXIT_STRING  = '---------------------- Exited ------------------------'
-myTerminalLogger = None
 
-# Catches Ctrl-C
-def signal_handler(signal, frame):
-    if DEBUG:
-        sys.stdout.write('\n\nYou pressed Ctrl-C.')
+# Fallback defaults
+DEFAULT_CONFIG_FILE = '.config.cfg'
+DEFAULT_LOG_FILE = 'serial_logger.log'
+DEFAULT_BAUDRATE = 9600
+DEFAULT_TIMEOUT = 6
+DEFAULT_LOG_LEVEL = 'INFO'
+DEFAULT_LOG_FORMAT = "%(levelname)s %(asctime)-15s %(message)s"
+READ_DELAY = 0.001# (sec)
 
-    cleanup()
-    sys.exit(0)
-
-# Clean up for serial port and log when exiting.
-def cleanup():
-    try:
-        myTerminalLogger.__del__()
-        myTerminalLogger = None
-        #if not myTerminalLogger is None:
-        #    del myTerminalLogger
-
-    except NameError as ex:
-        # Don't handle
-        pass
-    except Exception as ex:
-        logging.exception(ex)
-        # Do nothing
-    try:
-        logging.info(EXIT_STRING)
-    except NameError as ex:
-        pass
-
-"""
-class OptionMenu2(OptionMenu):
-    def __init__(self, *args, **kw):
-        self._command = kw.get("command")
-        OptionMenu.__init__(self, *args, **kw)
-    def addOption(self, label):
-        self["menu"].add_command(label=label, command=tkinter._setit(variable, label, self._command))
-
-"""
+terminal_lock = threading.Lock()
 
 #------------------------------ Gui -------------------------------
-class Application(Frame):              
-    def __init__(self, master=None):
-        Frame.__init__(self, master)
-        self.pack_propagate(0)
-        self.grid( sticky=N+S+E+W)                    
+class Application():#Frame):              
+    def __init__(self, master, queue, endCommand):
+        """\
+        Contructor for the application.
+
+        """
+        self.pp = pprint.PrettyPrinter(indent=4)
+        self.queue = queue
+        self.endCommand = endCommand
+        #------------------------------------------
+        # Parse arguments, read config file, and start logger
+        self.parseArguments()
+        self.readConfigFile()
+        self.startLogger()
+
+        #------------------------------------------
+        # Initialize the GUI
+        #tkMaster = Frame.__init__(self, tkMaster)
+        self.frame = Frame(master)
+        self.master = master
+        self.frame.pack_propagate(0)
+        self.frame.grid( sticky=N+S+E+W)                    
         self.updateAvailablePorts()
         self.createWidgets()
-        self.pp = pprint.PrettyPrinter(indent=4)
+        self.master.protocol('WM_DELETE_WINDOW', self.quit)
 
 
-        # Start the SerialLogger
+        #-
+        # Serial print loop
+        self.is_connected = False
+        self.readSerialByte()
 
-    """\
-    Creates the gui and all of its content.
-    """
+
+    def parseArguments(self):
+        """\
+        Reads settings from the config file.
+
+        """
+        # ----------------------------------
+        # Load default settings
+        self.configfile = DEFAULT_CONFIG_FILE
+        self.baudrate = DEFAULT_BAUDRATE
+        self.logfile = DEFAULT_LOG_FILE
+        self.timeout = DEFAULT_TIMEOUT
+        self.loglevel = DEFAULT_LOG_LEVEL
+        self.device = False
+
+        # ----------------------------------
+        # Parse arguments
+        args_raw = ''
+        if (len(sys.argv) > 1):
+            args_raw = string.join(sys.argv)
+        self.args_obj = None
+
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description="""\
+Connects to a serial device and sends and receives data.
+""",
+            usage='serial_logger_gui.py -h | [-l log_file] [--loglevel=LEVEL] [-c config_file] [-t timeout] [-b baud_rate] [device_path] ',
+            add_help=False
+            )
+        parser.add_argument('device', nargs='?',
+            help='device path or id of the serial port')
+        parser.add_argument('-b', '--baud', dest='baud_rate', nargs=1, type=int,
+            help='baud rate for the serial connection (default: {0!s})'.format(self.baudrate))
+        parser.add_argument('-c','--config', dest='config_file', nargs=1,
+            help='config file with default values (default: {0})'.format(self.configfile))
+        parser.add_argument('-t', '--timeout', dest='timeout', nargs=1, type=int,
+            help='serial connection timeout in seconds (default: {0!s})'.format(self.timeout))
+        parser.add_argument('-l','--log', dest='log_file', nargs=1,
+            help='log file to record session to (default: {0})'.format(self.logfile))
+        parser.add_argument('--loglevel', dest='log_level', action='store', default=self.loglevel,
+            help='sets the logging level (default: %(default)s)', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'])
+        parser.add_argument('-h', '--help', action='store_true', dest='want_help',
+            help='show this help message and exit')
+
+        # Actually parse the arguments given
+        try:
+            self.args_obj = parser.parse_args()
+            #pp.pprint(args_obj)
+            if (self.args_obj.want_help):
+                parser.print_help()
+                self.quit()
+            if (self.args_obj.config_file):
+                self.configfile = self.args_obj.config_file
+            if (self.args_obj.log_file):
+                self.logfile = self.args_obj.log_file
+            if (self.args_obj.baud_rate):
+                self.baudrate = self.args_obj.baud_rate
+            if (self.args_obj.device):
+                self.device = self.args_obj.device
+            if (self.args_obj.timeout):
+                self.timeout = self.args_obj.timeout
+
+        except Exception, ex:
+            # Handle exception here
+            raise
+            self.quit()
+            
+
+    def processIncoming(self):
+        """\
+        Handle all the messages in the queue.
+        """
+        while (self.queue.qsize()):
+            try:
+                callable= self.queue.get() # get_nowait
+                #callable, args, kwargs = self.queue.get() # get_nowait
+            except Queue.Empty:
+                pass
+            else:
+                callable()
+
+
+
+    def readConfigFile(self):
+        """\
+        Reads settings from the config file.
+
+        """
+        self.config_obj = ConfigParser.ConfigParser()
+        self.config_obj.readfp(open(self.configfile))
+
+        # Set the log file
+        if (not self.args_obj.log_file and self.config_obj.has_option('DEFAULT','logfile')):
+            self.logfile = self.config_obj.get('DEFAULT', 'logfile')
+
+        # Set the baud rate
+        if (not self.args_obj.baud_rate and self.config_obj.has_option('DEFAULT','baud')):
+            self.baudrate = self.config_obj.get('DEFAULT', 'baud')
+
+        # Set the device port 
+        if (not self.args_obj.device and self.config_obj.has_option('DEFAULT','device')):
+            self.device = self.config_obj.get('DEFAULT', 'device')
+
+        # Set the connection timeout
+        if (not self.args_obj.timeout and self.config_obj.has_option('DEFAULT','timeout')):
+            self.timeout = self.config_obj.get('DEFAULT','timeout')
+
+        if DEBUG:
+            print('(DEBUG) Config Options:')
+            self.pp.pprint(self.config_obj.sections())
+
+
+    def startLogger(self):
+        """\
+        Starts the logger.
+        
+        """
+        #------------------------------------------
+        # Initialize logger
+        log_level = getattr(logging, str(self.loglevel).upper())
+        logging.basicConfig(filename=self.logfile,level=log_level, format=DEFAULT_LOG_FORMAT)
+        logging.info(START_STRING)
+   
+
     def createWidgets(self):
+        """\
+        Creates the gui and all of its content.
 
-
+        """
         #----------------------------------------
-        # Create the Port entry
+        # Create the Device entry
 
-        self.port_value = StringVar()
-        self.port_label = Label( self, text="Port: " )
-        self.port_label.grid(row=0, column = 0)
-        #self.port_menu = Listbox(self, height=1, width=40)
-        self.port_menu = OptionMenu( self,  self.port_value, *self.port_choices) 
-            #w idth = 40, textvariable=self.port_value )
-        self.port_menu.config(width=40)
-        self.port_value.set(self.port_choices[0])
-        self.port_menu.grid(row=0, column = 1)
-        # self.port_button = Button (self, text="<", command=self.choosePortValue)
-        # self.port_button.grid(row=0, column = 5)
-
+        self.device_value = StringVar()
+        self.device_label = Label( self.master, text="Port:" )
+        self.device_label.grid(row=0, column = 0,sticky=E)
+        #self.device_menu = Listbox(self.master, height=1, width=40)
+        self.device_menu = OptionMenu( self.master,  self.device_value, *self.device_choices) 
+        self.device_menu.config(width=40)
+        self.device_value.set(self.device_choices[0])
+        self.device_menu.grid(row=0, column = 1)
 
         #----------------------------------------
         # Create the Baud rate entry
 
         self.baudrate_value = IntVar()
+        self.baudrate_value.set(self.baudrate) # loaded from default, args, or config
         self.baudrate_choices = [ 9600, 14400, 19200, 28800, 38400, 57600, 102400, 115200, 128000, 230400, 256000, 460800, 512000, 921600, 1843200, 2048000 ]
-        self.baudrate_label = Label( self, text="Baud rate: " )
-        self.baudrate_label.grid(row=0, column = 2)
-        self.baudrate_menu  = OptionMenu( self,  self.baudrate_value, *self.baudrate_choices)
-            # width = 10, textvariable=self.baudrate_value )
+        self.baudrate_label = Label( self.master, text="Baud rate:" )
+        self.baudrate_label.grid(row=0, column = 2, sticky=E)
+        self.baudrate_menu  = OptionMenu( self.master,  self.baudrate_value, *self.baudrate_choices)
         self.baudrate_menu.config(width=10)
-        self.baudrate_value.set(self.baudrate_choices[0])
         self.baudrate_menu.grid(row=0, column = 3)
-        #self.baudrate_button = Button (self, text="<", command=self.chooseBaudrateValue)
+        #self.baudrate_button = Button (self.master, text="<", command=self.chooseBaudrateValue)
         #self.baurdrate_button.grid(row=0, column = 2)
 
         #----------------------------------------
         # Create the Log file entry
 
         self.log_value = StringVar()
-        self.log_label = Label( self, text="Out" )
-        self.log_label.grid(row=1,column = 0)
-        self.log_entry = Entry( self, width = 40, textvariable=self.log_value )
+        self.log_value.set(self.logfile)
+        self.log_label = Label( self.master, text="Log file:" )
+        self.log_label.grid(row=1,column = 0, sticky=E)
+        self.log_entry = Entry( self.master, width = 46, textvariable=self.log_value )
         self.log_entry.grid(row=1, column = 1)
-        self.log_button = Button (self, text="Browse", command=self.browseLogFile)
-        self.log_button.grid(row=1, column = 2)
+        self.log_button = Button (self.master, text="Browse", command=self.browseLogFile)
+        self.log_button.grid(row=1, column = 2, sticky=W)
 
-        #----------------------------------------
-        # Create the Lang box
-        """
-
-        self.language_value = StringVar()
-        self.language_choices = [ "C", "Python" ]
-        self.language_label = Label( self, text="Lang" )
-        self.language_label.grid(row=2, column=0)
-        self.language_menu = OptionMenu(self,self.language_value,*self.language_choices)
-        self.language_value.set(self.language_choices[0])
-        self.language_menu.config(width=10)
-        self.language_menu.grid(row=2, column=1,sticky=W)
-
-        #----------------------------------------
-        # Create the Protocol box
-        self.protocol_value = StringVar()
-        self.protocol_choices = [ "v0.9", "v1.0" ]
-        self.protocol_label = Label( self, text="Protocol")
-        self.protocol_label.grid(row=3, column=0)
-        self.protocol_menu = OptionMenu(self,self.protocol_value,*self.protocol_choices)
-        self.protocol_value.set(self.protocol_choices[1])
-        self.protocol_menu.config(width=10)
-        self.protocol_menu.grid(row=3, column=1,sticky=W)
-        #----------------------------------------
-        # Create the generate button
-
-        self.generate_button = Button ( self, text="Generate", command=self.generateHeaders)
-        self.generate_button.grid(row=4,column=1)
-        """
         #----------------------------------------
         # Create the connect/disconnect button
 
-        self.connect_button = Button ( self, text="Connect", command=self.connect,width=9)
+        self.connect_button = Button ( self.master, text="Connect", command=self.connect,width=12)
         self.connect_button.grid(row=1,column=3)
 
         #----------------------------------------
-        # Create the connect/disconnect button
+        # Create the terminal window
 
-        #self.terminal = Text( self, width = 40 )
-        #self.terminal.grid(row=0, column = 0)
+        self.terminal = Text( self.master, width = 65 )
+        self.terminal.grid(row=2, column = 0, columnspan=4)
+
+        # scroll bar
+        self.terminal_scroller = AutoScrollbar(self.master, command=self.terminal.yview)
+        self.terminal_scroller.grid(row=2,column=4, sticky=N+S)
+        self.terminal.config(yscrollcommand=self.terminal_scroller.set)
+        self.terminal_scroller_lastpos = (0.0, 1.0)
+        #self.terminal_scroller_command = self.terminal_scroller.command
+        self.pp.pprint(getattr(self.terminal_scroller,'_tclCommands'))
+        
+
+    def readSerialByte(self):
+        if (self.is_connected):
+            self.mySerialConnection.do_terminal()
+
+
+    def printTerminal(self,message):
+        # Blocking
+        while not terminal_lock.acquire(False):
+            pass
+        try:
+            self.terminal.insert(END,message)
+
+            if (self.terminal_scroller.getY() == float(1.0)):
+                self.terminal.yview(END)
+
+        finally:
+            terminal_lock.release()
+       
 
     """\
     Open a file selection window to choose the XML message definition.
     """
     def browseLogFile(self):
-        log_file = tkinter.filedialog.askopenfilename(parent=self, title='Choose a log file')
+        log_file = tkinter.filedialog.askopenfilename(parent=self.master, title='Choose a log file')
         if DEBUG:
             print("Log: " + log_file)
-        if log_file != None:
+        if log_file and log_file != '':
             self.log_value.set(log_file)
 
-    """\
-    Open a directory selection window to choose an output directory for
-    headers.
-    ""
-    def browseOutDirectory(self):
-        mavlinkFolder = os.path.dirname(os.path.realpath(__file__))
-        out_dir = tkinter.filedialog.askdirectory(parent=self,initialdir=mavlinkFolder,title='Please select an output directory')
-        if DEBUG:
-            print("Output: " + out_dir)
-        if out_dir != None:
-            self.out_value.set(out_dir)
-    """
-
     def connect(self):
+        """\
+        Opens a connection to a serial device over the selected port.
+
+        """
+        logging.debug('Initializing SerialLogger')
+
+        # Initial new terminal object
+        self.mySerialConnection = SerialLogger.SerialLogger(
+            baud_rate = self.baudrate_value.get(),
+            device_port = self.device_value.get(),
+            timeout = self.timeout,
+            interactive = False,
+            print_callback = self.printTerminal
+        )
+
+        self.is_connected = True
         self.connect_button.config(command=self.disconnect);
         self.connect_button.config(text="Disconnect")
         pass
 
     def disconnect(self):
+        """\
+        Closes a connection to a serial device.
+        Deconstructor for Application.
+
+        """
+        self.is_connected = False
+        self.mySerialConnection = None
         self.connect_button.config(command=self.connect);
         self.connect_button.config(text="Connect")
-        pass
+
+    def quit(self):
+        """\
+        Deconstructor for Application.
+
+        """
+        self.disconnect()
+        mySerialConnection = None
+        logging.info(EXIT_STRING)
+        self.frame.destroy()
+        self.endCommand()
+        #sys.exit()
+
 
 
     def updateAvailablePorts(self):
@@ -231,205 +370,110 @@ class Application(Frame):
 
         """
         # Build a port list
-        port_list_all = comports()
-        #self.port_menu.delete(0,self.port_menu.size())
-        #self.port_menu.option_clear()
-        self.port_choices = list()
-        for device in port_list_all:
-            self.port_choices.append(device[0])
-            #self.port_menu.addOption(device[0])
+        device_list_all = comports()
+        self.device_choices = list()
+        for device in device_list_all:
+            self.device_choices.append(device[0])
 
-        #self.port_menu.insert(0,*self.port_choices)
-        
-        if len(self.port_choices) < 1:
+        if len(self.device_choices) < 1:
             tkinter.messagebox.showerror('No Available Serial Ports','No serial ports are available.')
-       
+
+class AutoScrollbar(Scrollbar):
+
+    def __init__(self, *args, **kw):
+        self.old_x = 0.0
+        self.old_y = 1.0
+        self.supa = Scrollbar.__init__(self,*args, **kw)
 
 
-    """\
-    Generates the header files and place them in the output directory.
-    ""
-    def generateHeaders(self):
-        # Verify settings
-        rex = re.compile(".*\\.xml$", re.IGNORECASE)
-        if not self.xml_value.get():
-            tkinter.messagebox.showerror('Error Generating Headers','An XML message defintion file must be specified.')
-            return
+    def set(self, lo, hi):
+        pos = Scrollbar.get(self)
+        self.old_x = float(pos[0])
+        self.old_y = float(pos[1])
+        Scrollbar.set(self, lo, hi)
 
-        if not self.out_value.get():
-            tkinter.messagebox.showerror('Error Generating Headers', 'An output directory must be specified.')
-            return
-
-
-        if os.path.isdir(self.out_value.get()):
-            if not tkinter.messagebox.askokcancel('Overwrite Headers?','The output directory \'{0}\' already exists. Headers may be overwritten if they already exist.'.format(self.out_value.get())):
-                return
-
-        # Verify XML file with schema (or do this in mavgen)
-        # TODO write XML schema (XDS)
-
-        # Generate headers
-        opts = MavgenOptions(self.language_value.get(), self.protocol_value.get()[1:], self.out_value.get());
-        args = [self.xml_value.get()]
-        if DEBUG:
-            print("Generating headers")
-            self.pp.pprint(opts)
-            self.pp.pprint(args)
-        try:
-            mavgen(opts,args)
-            tkinter.messagebox.showinfo('Successfully Generated Headers', 'Headers generated succesfully.')
-
-        except Exception as ex:
-            if DEBUG:
-                print('An occurred while generating headers:\n\t{0!s}'.format(ex))
-            tkinter.messagebox.showerror('Error Generating Headers','An error occurred in mavgen: {0!s}'.format(ex))
-            return
-"""
+    def getY(self):
+        return self.old_y
 
 # End of Application class 
 # ---------------------------------
 
+class ThreadedClient:
+
+    def __init__(self, master):
+        self.master = master
+        self.queue = Queue.Queue()
+        self.gui = Application(master, self.queue, self.endApplication)
+
+        self.running = 1
+        self.thread1 = threading.Thread(target=self.workerThread1)
+        self.thread1.start()
+
+        self.periodicCall()
+
+    def periodicCall(self):
+        self.gui.processIncoming()
+        if not self.running:
+            import sys
+            sys.exit(1)
+        self.master.after(10, self.periodicCall)
+
+    def workerThread1(self):
+        while self.running:
+            sleep(READ_DELAY)
+            #self.queue.put(self.gui.readSerialByte)
+            self.gui.readSerialByte()
+
+    def endApplication(self):
+        self.running = 0
+
+#----------------------------------------------------------
+def submit_to_application(callable, *args, **kwargs):
+    #request_queue.put((callable, args, kwargs))
+    return 'faq'
+    #return result_queue.get()
+
+def handle_uncaught_exception(ex_type, ex, tb):
+    message1 = ''.join(traceback.format_tb(tb))
+    logging.critical(message1)
+    print(message1)
+    message2 = '{0}: {1}'.format(exception_type, exception)
+    logging.critical(message2)
+    print(message2)
+
 """-------------------------------------------------------------
                               Start
    -------------------------------------------------------------"""
-
 """
-# ----------------------------------
-# Initialize some variables
-args_raw = string.join(sys.argv)
-args_obj = None
-pp = pprint.PrettyPrinter(indent=4)
-
-# Fallback defaults
-config_file = '.config.cfg'
-log_file = 'serial_logger.log'
-log_from_config = True
-baud_rate = 9600
-device_port = None
-timeout = 5
-log_level='INFO'
-interactive = True
+appThread = None
+app = None
+#app = None;
+def threadmain():
+    global app
+    app = Application()                    
+    app.master.title(TITLE) 
+    timertick()
+    app.mainloop()  
 
 
 
-# ----------------------------------
-# Parse arguments
+if __name__ == '__main__':
+    client = ThreadedClient(    
+    try:
+        
+        appThread = Thread(target=threadmain, args=())
+        #appThread.setDaemon(True)
+        appThread.start()
 
-parser = argparse.ArgumentParser(
-    formatter_class=argparse.RawDescriptionHelpFormatter,
-    description=""\
-Connects to a serial device and sends and receives data.
-"",
-    usage='serial_logger_gui.py -h | [-l log_file] [--loglevel=LEVEL] [-c config_file] [-t timeout] [-b baud_rate] [device_path] ',
-    add_help=False
-    )
-parser.add_argument('device', nargs='?',
-    help='device path or id of the serial port')
-parser.add_argument('-b', '--baud', dest='baud_rate', nargs=1, type=int,
-    help='baud rate for the serial connection (default: {0!s})'.format(baud_rate))
-parser.add_argument('-c','--config', dest='config_file', nargs=1,
-    help='config file with default values (default: {0})'.format(config_file))
-parser.add_argument('-t', '--timeout', dest='timeout', nargs=1, type=int,
-    help='serial connection timeout in seconds (default: {0!s})'.format(timeout))
-parser.add_argument('-l','--log', dest='log_file', nargs=1,
-    help='log file to record session to (default: {0})'.format(log_file))
-parser.add_argument('--loglevel', dest='log_level', action='store', default=log_level,
-    help='sets the logging level (default: %(default)s)', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'])
-parser.add_argument('-h', '--help', action='store_true', dest='want_help',
-    help='show this help message and exit')
+    except Exception as err:
+        print err
 
-
-# Actually parse the arguments given
-try:
-    args_obj = parser.parse_args()
-    #pp.pprint(args_obj)
-    if (args_obj.want_help):
-        parser.print_help()
-        sys.exit()
-    if (args_obj.config_file):
-        config_file = args_obj.config_file
-    if (args_obj.log_file):
-        log_file = args_obj.log_file
-        log_from_config = False
-except Exception, ex:
-    raise
-    sys.exit()
-
-
-# -------------------------------
-# Read config file
-
-config_obj = ConfigParser.ConfigParser()
-config_obj.readfp(open(config_file))
-
-if log_from_config :
-    log_file = config_obj.get('DEFAULT', 'logfile')
-
-# Set the baud rate
-if args_obj.baud_rate:
-    baud_rate = args_obj.baud_rate
-elif config_obj.has_option('DEFAULT','baud'):
-    baud_rate = config_obj.get('DEFAULT', 'baud')
-
-# Set the device port 
-if args_obj.device:
-    device_port = args_obj.device
-elif config_obj.has_option('DEFAULT','device'):
-    device_port = config_obj.get('DEFAULT', 'device')
-
-# Set the connection timeout
-if args_obj.timeout:
-    timeout = args_obj.timeout
-elif config_obj.has_option('DEFAULT', 'timeout'):
-    timeout = config_obj.get('DEFAULT','timeout')
-
-# --------------------------------
-# Initialize logger
-log_level = getattr(logging, str(args_obj.log_level).upper())
-FORMAT = "%(levelname)s %(asctime)-15s %(message)s"
-logging.basicConfig(filename=log_file,level=log_level, format=FORMAT)
-logging.info(START_STRING)
-
-if DEBUG:
-    print('(DEBUG) Config Options:')
-    pp.pprint(config_obj.sections())
-
-# --------------------------------
-# Create and initialize SerialLogger object
-try:
-    logging.debug('Initializing SerialLogger')
-
-    # Override Ctrl-C with definition
-    signal.signal(signal.SIGINT, signal_handler)
-
-    # Initial new terminal object
-    myTerminalLogger = SerialLogger.SerialLogger(
-        baud_rate = baud_rate,
-        device_port = device_port,
-        timeout = timeout,
-        interactive = interactive
-    )
-# Start the SerialLogger
-    interactive_str = 'interactive'
-    if not interactive:
-        interactive_str = 'non-interactive'
-    logging.debug('Starting SerialLogger in {0} mode'.format(interactive_str))
-    if interactive:
-        myTerminalLogger.start_terminal()
-except Exception, ex:
-    logging.exception('SerialLogger failed: {0!s}'.format(ex))
-    cleanup()
-    raise
-
+    while 1: #(appThread.is_alive()):
+        #sleep(READ_DELAY)
+        print submit_to_application(app.readSerialByte, "")
 """
-
-
-#----------------------------------------------------------
-
-
-app = Application()                    
-app.master.title(title) 
-app.mainloop()  
-
-cleanup()
+if __name__ == '__main__':
+    root = Tk()
+    client = ThreadedClient(root)
+    root.mainloop()
 

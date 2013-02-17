@@ -22,7 +22,7 @@ class SerialLogger:
         
        
     """
-    def __init__(self, baud_rate, device_port, timeout, interactive=True):
+    def __init__(self, baud_rate, device_port, timeout, interactive=True, print_callback=sys.stdout.write):
         self.greeting = "\nWelcome to the serial_logger tool."
 
         self.goodbye = "\nGoodbye!"
@@ -34,7 +34,9 @@ class SerialLogger:
         self.baud_rate = baud_rate
         self.device_port = device_port
         self.interactive = interactive
+        self.print_callback = print_callback
         self.last_id = 0
+        self.line = ''
 
         # --------------------------------
         # Initialize logger
@@ -74,7 +76,7 @@ class SerialLogger:
 
         """
 
-        print(self.greeting)
+        self.print_callback(self.greeting)
 
         # Query the user for a serial port
         self.validate_port() # clears the port if it does not exist
@@ -109,14 +111,13 @@ class SerialLogger:
             message = 'Failed to connect to \'{0}\': {1!s}'.format(self.device_port, ex)
             logging.exception(message)
             if self.interactive:
-                print(message)
+                self.print_callback(message)
             raise
             # TODO try again or prompt for a new port
         self.is_connected = True
         message = 'Connected to \'{0}\''.format(self.device_port)
         logging.info(message)
-        if self.interactive:
-            print('{0}.\n'.format(message))
+        self.print_callback('\n{0}.'.format(message))
 
 
 
@@ -136,7 +137,7 @@ class SerialLogger:
         try:
             self.baud_rate = int(self.baud_rate)
         except ValueError, TypeError:
-            print('Invalid baud rate \'{0!s}\''.format(self.baud_rate))
+            self.print_callback('Invalid baud rate \'{0!s}\''.format(self.baud_rate))
             self.baud_rate = None
 
     def validate_port(self):
@@ -146,7 +147,7 @@ class SerialLogger:
         """
         logging.debug('Validating port \'{0}\''.format(self.device_port))
         if (not os.name == 'nt') and self.device_port and not os.path.exists(self.device_port):
-            print('No such device \'{0}\''.format(self.device_port))
+            self.print_callback('No such device \'{0}\''.format(self.device_port))
             self.device_port = None
 
     def disconnect(self):
@@ -158,7 +159,7 @@ class SerialLogger:
         if (self.is_connected and self.connection):
             logging.debug('Disconnecting from device \'{0}\''.format(self.device_port))
             self.connection.close()
-            sys.stdout.write('\nDisconnected from device \'{0}\''.format(self.device_port))
+            self.print_callback('\nDisconnected from device \'{0}\''.format(self.device_port))
             logging.info('Disconnected from device \'{0}\''.format(self.device_port))
  
                 
@@ -179,7 +180,7 @@ class SerialLogger:
         while (not self.want_exit):
             # user_input = raw_input(self.prompt)
             data = self.connection.read(1)
-            sys.stdout.write(data)
+            self.print_callback(data)
 
 
             if (data == '\n'):
@@ -191,13 +192,32 @@ class SerialLogger:
             else:
                 line += repr(data)[1:-1]
 
-            #if data == '\n':
-            #    line.rstrip('\r\n')
-
-
-            # print(self.connection.readline())
-            # self.execute_command(user_input)
             sys.stdout.flush()
+
+    def do_terminal(self):
+        """\
+        Reads one byte from the serial device and eventually logs and prints
+        using the given callback.
+        """
+        # Ensure characters are in the receive buffer to prevent read() from blocking
+        if not self.connection.inWaiting():
+            return
+
+        data = self.connection.read(1)
+        self.print_callback(data)
+
+
+        if (data == '\n'):
+            self.line.rstrip('\r\n')
+            logging.info(self.line)
+            self.line = ''
+        elif (data == '\r'):
+            pass
+        else:
+            self.line += repr(data)[1:-1]
+
+        #sys.stdout.flush()
+
 
     
     def execute_command(self,command):
@@ -218,18 +238,18 @@ class SerialLogger:
 
         # Execute command
         if (command == 'exit'):
-            print self.goodbye
+            self.print_callback(self.goodbye)
             self.want_exit = True
         elif (command == 'help'):
             self.show_help()
         elif (command == 'listing'):
-            print('Not implemented!')
+            self.print_callback('Not implemented!')
         elif (command == 'dumpfile'):
-            print('Not implemented!')
+            self.print_callback('Not implemented!')
         elif (command == 'info'):
-            print('Connected to \'{0}\' at {1!s} baud.'.format(self.device_port,self.baud_rate))
+            self.print_callback('Connected to \'{0}\' at {1!s} baud.'.format(self.device_port,self.baud_rate))
         else:
-            print('Unknown command \'{0}\'\nUse \'help\' for a list of valid commands.'.format(command))
+            self.print_callback('Unknown command \'{0}\'\nUse \'help\' for a list of valid commands.'.format(command))
 
 
     
@@ -271,14 +291,14 @@ class SerialLogger:
             port_list.append(device[0])
     
         if len(port_list) < 1:
-            print('There are no available serial ports.');
+            self.print_callback('There are no available serial ports.\n');
             self.want_exit = True
             return
 
-        print('Available serial ports:')
+        self.print_callback('Available serial ports:\n')
         for port in port_list:
-            print('\t{0}'.format(port))
+            self.print_callback('\t{0}\n'.format(port))
 
-        print('\n')
+        self.print_callback('\n')
 
 
