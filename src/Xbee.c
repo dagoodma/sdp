@@ -94,8 +94,9 @@ void Xbee_runSM(){
 static uint8_t Xbee_programMode(){
     int i = 0;
     char confirm[3];
+    DELAY(2000);
     UART_putString(XBEE_UART_ID, "+++", 3);
-
+    DELAY(1000);
     //wait for "OK\r"
     do {
         confirm[i] = UART_getChar(XBEE_UART_ID);
@@ -106,23 +107,22 @@ static uint8_t Xbee_programMode(){
     if (!(confirm[0] == 0x4F && confirm[1] == 0x4B && confirm[2] == 0x0D)){
         return FAILURE;
     }
+    DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATRE\r", 5);// Resets to Factory settings
     DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATCH15\r", 7);
     DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATDH0\r", 6);
     DELAY(1000);
-    UART_putString(XBEE_UART_ID, "ATSH0\r", 6);
-    DELAY(1000);
-  /* #ifdef XBEE_1
+   #ifdef XBEE_1
     UART_putString(XBEE_UART_ID, "ATDLAAC3\r", 9);
     DELAY(1000);
-    UART_putString(XBEE_UART_ID, "ATSLBC64\r", 9);
+    UART_putString(XBEE_UART_ID, "ATMYBC64\r", 9);
     #else
     UART_putString(XBEE_UART_ID, "ATDLBC64\r", 9);
     DELAY(1000);
-    UART_putString(XBEE_UART_ID, "ATSLAAC3\r", 9);
-    #endif*/
+    UART_putString(XBEE_UART_ID, "ATMYAAC3\r", 9);
+    #endif
     DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATWR\r", 5);//Writes the command to memory
     DELAY(1000);
