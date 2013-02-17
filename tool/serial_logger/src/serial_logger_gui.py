@@ -30,7 +30,7 @@ import SerialLogger
 from SerialLoggerException import *
 
 
-# Python 2.x and 3.x compatability 
+# Python 2.x and 3.x tkinter compatability 
 try:
     from tkinter import *
     import tkinter.filedialog
@@ -50,7 +50,7 @@ except ImportError as ex:
 # ----------------------------------
 # Initialize some global variables
 
-DEBUG = True
+DEBUG = False
 
 TITLE = "Serial Logger"
 START_STRING = '--------------------- Started ------------------------'
@@ -63,7 +63,7 @@ DEFAULT_BAUDRATE = 9600
 DEFAULT_TIMEOUT = 6
 DEFAULT_LOG_LEVEL = 'INFO'
 DEFAULT_LOG_FORMAT = "%(levelname)s %(asctime)-15s %(message)s"
-READ_DELAY = 0.001# (sec)
+READ_DELAY = 0.01# (sec)
 
 terminal_lock = threading.Lock()
 
@@ -74,6 +74,7 @@ class Application():#Frame):
         Contructor for the application.
 
         """
+        self.is_connected = False
         self.pp = pprint.PrettyPrinter(indent=4)
         self.queue = queue
         self.endCommand = endCommand
@@ -88,17 +89,12 @@ class Application():#Frame):
         #tkMaster = Frame.__init__(self, tkMaster)
         self.frame = Frame(master)
         self.master = master
+        self.master.title(TITLE)
         self.frame.pack_propagate(0)
         self.frame.grid( sticky=N+S+E+W)                    
         self.updateAvailablePorts()
         self.createWidgets()
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
-
-
-        #-
-        # Serial print loop
-        self.is_connected = False
-        self.readSerialByte()
 
 
     def parseArguments(self):
@@ -169,21 +165,6 @@ Connects to a serial device and sends and receives data.
             self.quit()
             
 
-    def processIncoming(self):
-        """\
-        Handle all the messages in the queue.
-        """
-        while (self.queue.qsize()):
-            try:
-                callable= self.queue.get() # get_nowait
-                #callable, args, kwargs = self.queue.get() # get_nowait
-            except Queue.Empty:
-                pass
-            else:
-                callable()
-
-
-
     def readConfigFile(self):
         """\
         Reads settings from the config file.
@@ -230,6 +211,18 @@ Connects to a serial device and sends and receives data.
         Creates the gui and all of its content.
 
         """
+        # create top menus
+        self.menu= Menu(self.master)
+        self.master.config(menu=self.menu)
+        self.file_menu = Menu(self.menu)
+        self.menu.add_cascade(label="File", menu=self.file_menu)
+        self.file_menu.add_command(label="Quit", command=self.quit)
+
+        self.edit_menu = Menu(self.menu)
+        self.menu.add_cascade(label="Edit", menu=self.edit_menu)
+        self.edit_menu.add_command(label="Clear Terminal", command=lambda: self.terminal.delete(1.0,END))
+
+
         #----------------------------------------
         # Create the Device entry
 
@@ -239,7 +232,7 @@ Connects to a serial device and sends and receives data.
         #self.device_menu = Listbox(self.master, height=1, width=40)
         self.device_menu = OptionMenu( self.master,  self.device_value, *self.device_choices) 
         self.device_menu.config(width=40)
-        self.device_value.set(self.device_choices[0])
+        self.device_value.set(self.device)#self.device_choices[0])
         self.device_menu.grid(row=0, column = 1)
 
         #----------------------------------------
@@ -278,40 +271,54 @@ Connects to a serial device and sends and receives data.
         # Create the terminal window
 
         self.terminal = Text( self.master, width = 65 )
-        self.terminal.grid(row=2, column = 0, columnspan=4)
+        self.terminal.grid(row=2, column = 0, columnspan=4, sticky=E+W)
 
         # scroll bar
         self.terminal_scroller = AutoScrollbar(self.master, command=self.terminal.yview)
         self.terminal_scroller.grid(row=2,column=4, sticky=N+S)
         self.terminal.config(yscrollcommand=self.terminal_scroller.set)
         self.terminal_scroller_lastpos = (0.0, 1.0)
-        #self.terminal_scroller_command = self.terminal_scroller.command
-        self.pp.pprint(getattr(self.terminal_scroller,'_tclCommands'))
+
+    def do_terminal(self):
+        """\
+        Reads a byte from the serial connection
         
-
-    def readSerialByte(self):
+        Note:
+        - Beware, is_connected cannot be shared without a lock!
+        """
         if (self.is_connected):
-            self.mySerialConnection.do_terminal()
+            self.mySerialConnection.do_serial()
 
-
+    
     def printTerminal(self,message):
-        # Blocking
-        while not terminal_lock.acquire(False):
-            pass
-        try:
-            self.terminal.insert(END,message)
+        """\
+        Callback function for printing to the terminal window, which queues
+        the message from the worker thread to the gui thread.
+        """
+        self.queue.put(message)
 
-            if (self.terminal_scroller.getY() == float(1.0)):
-                self.terminal.yview(END)
+    def processIncoming(self):
+        """\
+        Handle all the messages in the queue by printing them in the terminal.
+        """
+        while (self.queue.qsize()):
+            try:
+                message = self.queue.get_nowait()
+            
+                self.terminal.insert(END,message)
 
-        finally:
-            terminal_lock.release()
-       
+                # Autoscroll the terminal if set
+                #if (self.terminal_scroller.autoscroll() == True):
+                #    self.terminal.yview(END)
 
-    """\
-    Open a file selection window to choose the XML message definition.
-    """
+            except Queue.Empty:
+                pass
+
+
     def browseLogFile(self):
+        """\
+        Open a file selection window to choose the XML message definition.
+        """
         log_file = tkinter.filedialog.askopenfilename(parent=self.master, title='Choose a log file')
         if DEBUG:
             print("Log: " + log_file)
@@ -378,12 +385,18 @@ Connects to a serial device and sends and receives data.
         if len(self.device_choices) < 1:
             tkinter.messagebox.showerror('No Available Serial Ports','No serial ports are available.')
 
+
 class AutoScrollbar(Scrollbar):
+    """\
+    Extends the Tkinter scrollbar to remember previous scroll positions,
+    which is used in the autoscroll feautre.
+    """
 
     def __init__(self, *args, **kw):
         self.old_x = 0.0
         self.old_y = 1.0
         self.supa = Scrollbar.__init__(self,*args, **kw)
+        self.autoscroll = True
 
 
     def set(self, lo, hi):
@@ -393,13 +406,24 @@ class AutoScrollbar(Scrollbar):
         Scrollbar.set(self, lo, hi)
 
     def getY(self):
-        return self.old_y
+        return float(self.old_y)
+
+    def autoscroll(self):
+        """\
+        Auto scroll to the bottom if desired.
+        """
+        return self.getY() == float(1.0)
 
 # End of Application class 
 # ---------------------------------
 
+# --------------- Threaded Client ------------------
 class ThreadedClient:
+    """\
+    This threaded client reads bytes from the serial device and sends
+    them to the Gui as queues requests.
 
+    """
     def __init__(self, master):
         self.master = master
         self.queue = Queue.Queue()
@@ -412,66 +436,42 @@ class ThreadedClient:
         self.periodicCall()
 
     def periodicCall(self):
+        """\
+        Updates the gui's terminal window by pulling messages off the queue.
+
+        Note:
+        - Consider moving instantiation of Application into this function.
+        - Rename: doGui()
+        """
         self.gui.processIncoming()
         if not self.running:
             import sys
             sys.exit(1)
-        self.master.after(10, self.periodicCall)
+        self.master.after(100, self.periodicCall)
 
     def workerThread1(self):
+        """\
+        Reads bytes from the serial device, where they're sent to the Gui as messages.
+        """
         while self.running:
             sleep(READ_DELAY)
-            #self.queue.put(self.gui.readSerialByte)
-            self.gui.readSerialByte()
+
+            self.gui.do_terminal() 
+
+            #self.queue.put(self.gui.readSerialByte) # this didn't
+            #self.gui.readSerialByte() # this works
 
     def endApplication(self):
+        """\
+        Causes the terminal update thread to quit.
+
+        """
         self.running = 0
-
-#----------------------------------------------------------
-def submit_to_application(callable, *args, **kwargs):
-    #request_queue.put((callable, args, kwargs))
-    return 'faq'
-    #return result_queue.get()
-
-def handle_uncaught_exception(ex_type, ex, tb):
-    message1 = ''.join(traceback.format_tb(tb))
-    logging.critical(message1)
-    print(message1)
-    message2 = '{0}: {1}'.format(exception_type, exception)
-    logging.critical(message2)
-    print(message2)
 
 """-------------------------------------------------------------
                               Start
    -------------------------------------------------------------"""
-"""
-appThread = None
-app = None
-#app = None;
-def threadmain():
-    global app
-    app = Application()                    
-    app.master.title(TITLE) 
-    timertick()
-    app.mainloop()  
 
-
-
-if __name__ == '__main__':
-    client = ThreadedClient(    
-    try:
-        
-        appThread = Thread(target=threadmain, args=())
-        #appThread.setDaemon(True)
-        appThread.start()
-
-    except Exception as err:
-        print err
-
-    while 1: #(appThread.is_alive()):
-        #sleep(READ_DELAY)
-        print submit_to_application(app.readSerialByte, "")
-"""
 if __name__ == '__main__':
     root = Tk()
     client = ThreadedClient(root)

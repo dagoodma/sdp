@@ -194,10 +194,13 @@ class SerialLogger:
 
             sys.stdout.flush()
 
-    def do_terminal(self):
+    def do_serial(self):
         """\
-        Reads one byte from the serial device and eventually logs and prints
-        using the given callback.
+        Reads one byte from the serial device and logs and prints
+        using the given callback. 
+
+        Note:
+        - Non-blocking
         """
         # Ensure characters are in the receive buffer to prevent read() from blocking
         if not self.connection.inWaiting():
@@ -205,7 +208,6 @@ class SerialLogger:
 
         data = self.connection.read(1)
         self.print_callback(data)
-
 
         if (data == '\n'):
             self.line.rstrip('\r\n')
