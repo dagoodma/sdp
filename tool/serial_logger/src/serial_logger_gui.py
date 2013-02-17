@@ -270,7 +270,7 @@ Connects to a serial device and sends and receives data.
         #----------------------------------------
         # Create the terminal window
 
-        self.terminal = Text( self.master, width = 65 )
+        self.terminal = Text( self.master, width = 65, background='black', foreground='white' )
         self.terminal.grid(row=2, column = 0, columnspan=4, sticky=E+W)
 
         # scroll bar
