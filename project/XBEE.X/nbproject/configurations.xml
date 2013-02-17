@@ -9,6 +9,7 @@
       <itemPath>../../include/Xbee.h</itemPath>
       <itemPath>../../include/Timer.h</itemPath>
       <itemPath>../../include/Mavlink.h</itemPath>
+      <itemPath>../../include/Serial.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -22,6 +23,7 @@
       <itemPath>../../src/Xbee.c</itemPath>
       <itemPath>../../src/Timer.c</itemPath>
       <itemPath>../../src/Mavlink.c</itemPath>
+      <itemPath>../../src/Serial.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
