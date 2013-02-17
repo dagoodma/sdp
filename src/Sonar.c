@@ -20,9 +20,15 @@
 #include <xc.h>
 #include <stdint.h>
 #include <ports.h>
-#include "Board.h"
+//#include "Board.h"
 #include "Sonar.h"
-#include "Timer.h"
+//#include "Timer.h"
+#include "AD.h"
+
+//#include <peripheral/uart.h>
+
+
+#include "Uart.h"
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
@@ -47,8 +53,8 @@ void Sonar_init(){
     Timer_new(TIMER_NUMBER, TIMER_TIME);
 }
 
-uint32_t Xbee_runSM(){
-    if(Timer_isExpired()){
+uint32_t Sonar_runSM(){
+    if(Timer_isExpired(TIMER_NUMBER)){
         uint32_t analogData = getAnalog();
         Timer_new(TIMER_NUMBER, TIMER_TIME);
         return analogData;
@@ -86,67 +92,16 @@ static uint32_t getAnalog(){
  * Slave will look for packets, and then return the packet data
  * field in  a packet to the Master
  */
-//#define SONAR_TEST
+#define SONAR_TEST
 #ifdef SONAR_TEST
 
 //Comment this out to program the Slave mode
 //#define MASTER
 
-#ifndef MASTER
-#define SLAVE
-#endif
 
 int main(){
     Board_init();
     printf("Welcome to Xbee Test\n");
-    UART_init(UART2_ID,9600);
-    printf("UART INIT\n");
-    if(Xbee_init() == FAILURE){
-        printf("Xbee Failed to initilize\n");
-        DELAY(1000);
-        return FAILURE;
-    }
-    printf("XBEE Initialized\n");
-    uint8_t y= 0;
-    uint8_t x = 1;
 
-    #ifdef MASTER
-
-        Xbee_sendData(&x, 1);
-        Xbee_sendData(&x, 1);
-
-   while(1){
-        Xbee_sendData(&x, 1);
-        printf("Sent Packet: %d", x);
-        while(packetWasRecieved != 1){
-            Xbee_getData();
-        }
-        if(packetWasRecieved == 1){
-            packetWasRecieved = 0;
-            y = recieveArray[8];
-        }
-        printf(" Receieved Packet: %d\n", y);
-        x++;
-        x %= 256;
-        if(x == 0)
-            x++;
-    
-    }
-    #endif
-    #ifdef SLAVE
-    while(1){
-        while(packetWasRecieved != 1){
-            Xbee_runSM();
-        }
-        if(packetWasRecieved == 1){
-            packetWasRecieved = 0;
-            y = recieveArray[8];
-        }
-        printf("Recieved Packet: %d", y);
-        Xbee_sendData(&y, 1);
-        printf(" Sent Packet: %d\n", y);
-   
-    }
-    #endif
 }
 #endif

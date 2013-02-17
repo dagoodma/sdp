@@ -16,14 +16,13 @@
 #ifndef SONAR_H
 #define SONAR_H
 
-#define AD_PIN PORTY08_BIT
+#define AD_PIN AD_PORTV4
 #define SONAR_AD_PIN        AD_PIN
 
 void Sonar_init();
 
 
-
-uint32_t Xbee_runSM();
+uint32_t Sonar_runSM();
 
 
 
