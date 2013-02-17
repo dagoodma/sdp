@@ -48,18 +48,19 @@ UINT32          I2C_CLOCK_FREQ = 100000;
 UINT8           eepromData[256];
 UINT16          rawTemp;
 float           V_th, K_t1, K_t2, chipTempC, chipTempF, emissivity;
-float           V_ir_tgc_comp[TOTAL_PIXELS], finalPixelTempF[TOTAL_PIXELS];
+float           V_ir_tgc_comp[TOTAL_PIXELS], finalPixelTempF[TOTAL_PIXELS],V_off_comp[TOTAL_PIXELS];
 int             pixelData[TOTAL_PIXELS], A_cp, B_cp, Tgc, B_iscale, CPixel;
 int             A_ij[TOTAL_PIXELS], B_ij[TOTAL_PIXELS];
 
-float alpha[TOTAL_PIXELS] = {1.5935E-09, 3.22331E-09, 2.99048E-09, 1.38305E-10, 3.9218E-09, 4.91133E-09, 4.44567E-09, 2.05916E-09,
-                   4.91133E-09, 6.54115E-09, 6.07549E-09, 3.63077E-09, 5.84266E-09, 7.29785E-09, 6.30832E-09, 5.14416E-09,
-                   6.89039E-09, 8.69483E-09, 8.69483E-09, 6.30832E-09, 7.76351E-09, 9.91719E-09, 9.80078E-09, 7.76351E-09,
-                   8.92766E-09,  1.06157E-08, 8.40379E-09, 7.76351E-09, 7.87992E-09, 1.13142E-08, 1.05575E-08, 8.69483E-09,
-                   8.40379E-09, 1.13142E-08, 1.08485E-08, 7.93813E-09, 7.99634E-09, 1.13142E-08, 1.1547E-08, 8.34559E-09,
-                   8.40379E-09, 1.13142E-08, 1.10231E-08, 8.86945E-09, 5.60983E-09, 1.09649E-08, 1.10231E-08, 9.91719E-09,
-                   6.65756E-09, 9.9754E-09, 9.50974E-09, 7.23964E-09, 6.48294E-09, 8.69483E-09, 8.63662E-09, 5.95907E-09,
-                   4.50388E-09, 6.9486E-09, 6.71577E-09, 4.50388E-09, 3.22331E-09, 5.31879E-09, 5.31879E-09, 3.33973E-09};
+float alpha[TOTAL_PIXELS] = {1.79866E-8,1.96164E-8,1.93836E-8,1.65314E-8,2.03149E-8,2.13045E-8,
+                            2.08388E-8,1.84523E-8,2.13045E-8,2.29343E-8,2.24686E-8,2.00239E-8,2.22358E-8,2.3691E-8,
+                            2.27014E-8,2.15373E-8,2.32835E-8,2.5088E-8,2.5088E-8,2.27014E-8,2.41566E-8,2.63103E-8,
+                            2.61939E-8,2.41566E-8,2.53208E-8,2.70088E-8,2.47969E-8,2.41566E-8,2.4273E-8,2.77073E-8,
+                            2.69506E-8,2.5088E-8,2.47969E-8,2.77073E-8,2.72416E-8,2.43313E-8,2.43895E-8,2.77073E-8,
+                            2.79401E-8,2.47387E-8,2.47969E-8,2.77073E-8,2.74163E-8,2.52626E-8,2.2003E-8,2.73581E-8,
+                            2.74163E-8,2.63103E-8,2.30507E-8,2.63685E-8,2.59029E-8,2.36328E-8,2.28761E-8,2.5088E-8,
+                            2.50297E-8,2.23522E-8,2.0897E-8,2.33417E-8,2.31089E-8,2.0897E-8,1.96164E-8,2.17119E-8,
+                            2.17119E-8, 1.97329E-8};
 
 uint8_t count = 0;
 
@@ -180,12 +181,12 @@ void readEeprom(void){
     }
     // Stop transfer twice?
     I2C_stopTransfer(THERMAL_I2C_ID);
-  /*
+    int Index;
     for(Index = 0; Index <=255; Index++){
-        while(!IsTransmitEmpty());
-        printf("EEPROM %x / %d: %x\n", Index, Index, eepromData[Index]);
+        while(!Serial_isTransmitEmpty());
+        //printf("EEPROM %x / %d: %x\n", Index, Index, eepromData[Index]);
     }
-     */
+     
 }
 
 void readConfigReg(void){
@@ -235,7 +236,6 @@ void readConfigReg(void){
         }
     I2C_stopTransfer(THERMAL_I2C_ID);
         //while(!IsTransmitEmpty());
-        //configMSB = configMSB & 0x04;
         //printf("Config Data %x %x\n", configMSB, configLSB);
 }
 
@@ -281,6 +281,8 @@ void writeConfigReg(void){
     BOOL Success = TRUE;
     UINT8 MSByte, LSByte, MSByteCheck, LSByteCheck;
     LSByte = eepromData[245];
+    LSByte &= 0xF0;
+    LSByte |= 0x0C;
     LSByteCheck = LSByte - 0x55;
     MSByte = eepromData[246];
     MSByteCheck = MSByte - 0x55;
@@ -320,30 +322,22 @@ void configCalculationData(void){
     K_t1 = ((eepromData[221] << 8) + eepromData[220])/1024.0;
     K_t2 = ((eepromData[223] << 8) + eepromData[222])/1048576.0;
 
-    //printf("V_th: %.2f\n",V_th);
-    //printf("K_t1: %.2f\n",K_t1);
-    //printf("K_t2: %.2f\n",K_t2);
-
     A_cp = eepromData[212];
     if(A_cp > 127){
         A_cp = A_cp -256;
     }
-    //printf("A_cp: %d\n",A_cp);
 
     B_cp = eepromData[213];
     if(B_cp > 127){
         B_cp = B_cp -256;
     }
-    //printf("B_cp: %d\n",B_cp);
 
     Tgc = eepromData[216];
     if(Tgc > 127){
         Tgc = Tgc -256;
     }
-    //printf("Tgc: %d\n",Tgc);
 
     B_iscale = eepromData[217];
-    //printf("B_iscale: %d\n",B_iscale);
 
     emissivity = (((unsigned int)eepromData[229] << 8) + eepromData[228])/32768.0;
     int i;
@@ -356,14 +350,8 @@ void configCalculationData(void){
         if(B_ij[i] > 127){
             B_ij[i] = B_ij[i] - 256;
         }
-        //while(!IsTransmitEmpty());
-        //printf("A_ij[%d]: %d\n",i,A_ij[i]);
-        //while(!IsTransmitEmpty());
-        //printf("B_ij[%d]: %d\n",i,B_ij[i]);
     }
-    //while(!IsTransmitEmpty());
 }
-
 
 void readChipTemp(void){
     BOOL Success = TRUE;
@@ -413,14 +401,7 @@ void readChipTemp(void){
         while(!I2CAcknowledgeHasCompleted(THERMAL_I2C_ID));
         }
     I2C_stopTransfer(THERMAL_I2C_ID);
-        //while(!IsTransmitEmpty());
         rawTemp = (tempMSB << 8) + tempLSB;
-}
-
-void calculateChipTemp(void){
-    chipTempC = ((-K_t1+sqrt(pow(K_t1,2)-(4*K_t2*(V_th-(float)rawTemp))))/(2*K_t2))+25;
-    chipTempF = (chipTempC*9/5)+32;
-    //printf("Chip TempC: %.2f\nChip TempF: %.2f\n",chipTempC, chipTempF);
 }
 
 void readCPixelValue(void){
@@ -475,7 +456,6 @@ void readCPixelValue(void){
     if(CPixel > 32767){
         CPixel = CPixel - 65536;
     }
-    //printf("CPixel: %d\n", CPixel);
 }
 
 void readPixelValue(void){
@@ -529,24 +509,25 @@ void readPixelValue(void){
             pixelData[Index] = (pixelMSB << 8) + pixelLSB;
             if(pixelData[Index] > 32767)
                 pixelData[Index] = pixelData[Index] - 65536;
-            //while(!IsTransmitEmpty());
-           //printf("V_ir[%d]: %d\n",Index,pixelData[Index]);
         }
     }
     I2C_stopTransfer(THERMAL_I2C_ID);
 }
 
+void calculateChipTemp(void){
+    chipTempC = ((-K_t1+sqrt(pow(K_t1,2)-(4*K_t2*(V_th-(float)rawTemp))))/(2*K_t2))+25;
+    chipTempF = (chipTempC*9/5)+32;
+    //printf("Chip TempC: %.2f\nChip TempF: %.2f\n",chipTempC, chipTempF);
+}
+
 void calculateIRTemp(void){
-    float V_cp_off_comp = (float)CPixel - (A_cp + (B_cp/pow(2,B_iscale))*(chipTempC - 25));
-    //printf("V_cp_off_comp: %.2f\n",V_cp_off_comp);
-    int i;
-    for(i = 0; i < TOTAL_PIXELS; i++) {
-        V_ir_tgc_comp[i] = pixelData[i] - (A_ij[i] + (float)(B_ij[i]/pow(2,B_iscale))*
-                           (chipTempC - 25)) - (((float)Tgc/32)*V_cp_off_comp);
-        //while(!IsTransmitEmpty());
-        //printf("V_ir_tgc_comp[%d]: %.2f\n",i,V_ir_tgc_comp[i]);
-        finalPixelTempF[i] = sqrt(sqrt((V_ir_tgc_comp[i]/alpha[i]) +
+    int i = 0;
+    for(i = 0; i < TOTAL_PIXELS; ++i){
+        V_off_comp[i] = pixelData[i] - (A_ij[i] + (float)(B_ij[i]/pow(2,B_iscale))*
+                           (chipTempC - 25));
+        finalPixelTempF[i] = sqrt(sqrt((V_off_comp[i]/alpha[i]) +
                             pow((chipTempC + 273.15),4))) - 273.15;
+        finalPixelTempF[i] = finalPixelTempF[i]*9/5 + 32;
     }
 }
 
@@ -559,9 +540,6 @@ int main(void){
     Board_init();
     Timer_init();
     Serial_init();
-    //I2C_init(THERMAL_I2C_ID,I2C_CLOCK_FREQ);
-   // InitTimer(1,100);
-    //while(!IsTimerExpired(1));
     Thermal_init();
     while(1){
         if(count == 0){
@@ -573,9 +551,13 @@ int main(void){
             count = 0;
         }
         readPixelValue();
-        //readCPixelValue();
-        //calculateIRTemp();
-        //printTemp();
+        readCPixelValue();
+        calculateIRTemp();
+        int i;
+        for(i = 0; i <= 63; ++i){
+        while(!Serial_isTransmitEmpty());
+            printf("V_ir[%d]: %.2f\n",i,finalPixelTempF[i]);
+        }
     }
 }
 #endif
@@ -585,12 +567,12 @@ int main(void){
 #define THERMAL_TEST2
 #ifdef THERMAL_TEST2
 
-#define DEBUG_TEST2         1
+//#define DEBUG_TEST2         1
 
-#define END_ROW_SEQUENCE    (0xFFFFAAAA)
+#define END_COL_SEQUENCE    (0xFFFFAAAA)
 #define START_SEQUENCE      (0xFFFF1234)
 
-#define PRINT_DELAY         2000
+#define PRINT_DELAY         200
 
 void sendSerial32(uint32_t data);
 void sendSerialFloat(float data) ;
@@ -605,7 +587,6 @@ int main(void) {
 
     /*Timer_new(TIMER_TEST,100);
     while(!Timer_isExpired(TIMER_TEST);*/
-    Thermal_init();
 #ifdef DEBUG_TEST2
     printf("Initialized Thermal module.\n");
 #endif
@@ -618,14 +599,14 @@ int main(void) {
             #ifdef DEBUG_TEST2
                 printf("Sending thermal data...\n");
             #endif
-            sendSerial32(START_SEQUENCE);
+            sendSerial32(0xFFFF1234);
 
-            for(row = 0; row < TOTAL_PIXEL_ROWS; row++) {
-                for(col = 0; col < TOTAL_PIXEL_COLS; col++){
-                    uint8_t pixel = col + (row * TOTAL_PIXEL_COLS);
-                    sendSerialFloat((float)pixelData[pixel]);
+            for(col = 0; col < TOTAL_PIXEL_COLS; col++) {
+                for(row = 0; row < TOTAL_PIXEL_ROWS; row++){
+                    uint8_t pixel = row + (col * TOTAL_PIXEL_ROWS);
+                    sendSerialFloat(finalPixelTempF[pixel]);
                 }
-                sendSerial32(END_ROW_SEQUENCE);
+                sendSerial32(END_COL_SEQUENCE);
             }
 
             #ifdef DEBUG_TEST2
@@ -654,7 +635,7 @@ void sendSerialFloat(float data) {
     int i;
     for (i = 0; i < 4; i++) {
         //while (!Serial_isTransmitEmpty()) { asm("nop"); }
-            Serial_putChar((uint8_t)(data >>  (8 * i)));
+            Serial_putChar(((uint8_t)data >>  (8 * i)));
     }
     #else
     printf("_%.8f/",data);

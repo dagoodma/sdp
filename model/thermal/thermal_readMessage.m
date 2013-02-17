@@ -8,11 +8,19 @@ function [pixels] = thermal_readMessage(serial_obj,use_hex_str)
 %   serial_obj: a serial object
 %   use_hex_str: returns packet data as hex string when set
 %
+%   St St St St ....
+%   C0 C1 C2 C3 C4 C5 C6 C7 .........   C16
+% R0  
+% R1
+% R2
+% R3
+%   En En En En.... 
+%
 % Returns:
 %   a cell array containing ubx packet data
 %
 
-DEBUG = 1;
+DEBUG = 0;
 USE_HEX_STRING = 0; % default
 
 if nargin < 1
@@ -24,46 +32,48 @@ end
 
 TOTAL_PIXEL_ROWS =  4;
 TOTAL_PIXEL_COLS =  16;
-START_INT = hex2dec('FFFF1234');
-END_ROW_INT = hex2dec('FFFFAAAA');
+START_INT = hex2dec('FFFF1234'); %start sequence everytime we are ready to read next column
+END_COL_INT = hex2dec('FFFFAAAA'); %finish sending 4 pieces of information down each column
 
 
 i = 0; j = 0;
 if ~use_hex_str
-    pixels = zeros(TOTAL_PIXEL_ROWS,TOTAL_PIXEL_COLS);
+    pixels = zeros(TOTAL_PIXEL_ROWS,TOTAL_PIXEL_COLS); %pre-allocate the row by column 
 else
     pixels = {};
 end
 
-
+c = 0;
 while 1
      % Wait for the start int
-     while (fread(serial_obj,1,'uint32') ~= START_INT)
-         % Do nothing
+     c = fread(serial_obj,1,'uint32');
+     while (c ~= START_INT)
+         disp(sprintf('%X != %X',c,START_INT));
+         c = fread(serial_obj,1,'uint32');
      end
      if DEBUG
      	disp(sprintf('Saw beginning of sequence.\n'));
      end
      % Reading rows
-     for i=1:TOTAL_PIXEL_ROWS
-         for j=1:TOTAL_PIXEL_COLS
+     for i=1:TOTAL_PIXEL_COLS
+         for j=1:TOTAL_PIXEL_ROWS
              data = fread(serial_obj,1,'float');
              if ~use_hex_str
-                pixels(i,j) = data;
+                pixels(j,i) = data;
              else
-                 pixels{i,j} = sprintf('%X',data);
+                 pixels{j,i} = sprintf('%X',data);
              end
          end
          % Look for row ending after reading whole row
-         if (fread(serial_obj,1,'uint32') ~= END_ROW_INT)
+         if (fread(serial_obj,1,'uint32') ~= END_COL_INT)
              if DEBUG
-                 disp(sprintf('Never saw row ending!\n'));
+                 disp(sprintf('Never saw col ending!\n'));
              end
              break;
          end
      end
      % If we read a complete pixel matrix, then return
-     if (i == TOTAL_PIXEL_ROWS && j == TOTAL_PIXEL_COLS)
+     if (j == TOTAL_PIXEL_ROWS && i == TOTAL_PIXEL_COLS)
          return;
      end
 end

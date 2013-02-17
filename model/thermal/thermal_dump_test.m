@@ -26,18 +26,33 @@ clear ports;
 ports(uno32) = {thermal_configureDevice(names{uno32}, portnums(uno32), baudrate)};
 
 if DEBUG
-    disp(sprintf('Success!\n'));
-    disp(sprintf('Listening to the %s...',names{uno32}));
+    disp(sprintf('\nListening to the %s...',names{uno32}));
 end
 
 %% Read Thermal data
 % Dump messages
+figure();
 while 1
+    %c = 0;
+    %str = '';
+    %while(c ~= 10)
+    %    c = fread(ports{uno32},1);
+    %    str = strcat(str, c);
+    %end
+    %disp(str);
+
     pixels = thermal_readMessage(ports{uno32});    
     if DEBUG
-        disp('Thermal Pixels: ');
-        pixels
-        disp(sprintf('------------------\n'));
+        %disp('Thermal Pixels: ');
+        %pixels
+        %disp(sprintf('------------------\n'));
+        %clf;
+        %figure(1)
+            %heatmap(pixels);
+           %colormap(pixels); 
+           imagesc(pixels);
+           pause(0.05)
+
     end
 end
 

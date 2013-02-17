@@ -12,11 +12,37 @@ import ConfigParser
 import logging
 import signal
 
+DEBUG = False
+START_STRING = '--------------------- Started ------------------------'
+EXIT_STRING  = '---------------------- Exited ------------------------'
+myTerminalLogger = None
+
+# Catches Ctrl-C
 def signal_handler(signal, frame):
-    print 'You pressed Ctrl-C'
+    if DEBUG:
+        sys.stdout.write('\n\nYou pressed Ctrl-C.')
+
     cleanup()
     sys.exit(0)
 
+# Clean up for serial port and log when exiting.
+def cleanup():
+    try:
+        myTerminalLogger.__del__()
+        myTerminalLogger = None
+        #if not myTerminalLogger is None:
+        #    del myTerminalLogger
+
+    except NameError as ex:
+        # Don't handle
+        pass
+    except Exception as ex:
+        logging.exception(ex)
+        # Do nothing
+    try:
+        logging.info(EXIT_STRING)
+    except NameError as ex:
+        pass
 
 """-------------------------------------------------------------
                               Start
@@ -38,7 +64,6 @@ timeout = 5
 log_level='INFO'
 interactive = True
 
-DEBUG = True
 
 
 # ----------------------------------
@@ -117,8 +142,9 @@ elif config_obj.has_option('DEFAULT', 'timeout'):
 # --------------------------------
 # Initialize logger
 log_level = getattr(logging, str(args_obj.log_level).upper())
-logging.basicConfig(filename=log_file,level=log_level)
-logging.info('Started')
+FORMAT = "%(levelname)s %(asctime)-15s %(message)s"
+logging.basicConfig(filename=log_file,level=log_level, format=FORMAT)
+logging.info(START_STRING)
 
 if DEBUG:
     print('(DEBUG) Config Options:')
@@ -126,10 +152,13 @@ if DEBUG:
 
 # --------------------------------
 # Create and initialize SerialLogger object
-myTerminalLogger = None
-
 try:
     logging.debug('Initializing SerialLogger')
+
+    # Override Ctrl-C with definition
+    signal.signal(signal.SIGINT, signal_handler)
+
+    # Initial new terminal object
     myTerminalLogger = SerialLogger.SerialLogger(
         baud_rate = baud_rate,
         device_port = device_port,
@@ -150,11 +179,12 @@ try:
         myTerminalLogger.start_terminal()
 except Exception, ex:
     logging.exception('SerialLogger failed: {0!s}'.format(ex))
+    cleanup()
     raise
 
-cleanup()
-def cleanup():
-    if not myTerminalLogger is None:
-        del myTerminalLogger
 
-logging.info('Exiting')
+cleanup()
+
+
+#----------------------------------------------------------
+
