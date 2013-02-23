@@ -61,7 +61,7 @@ void Xbee_runSM();
  * @author John Ash
  * @date February 1st 2013
  **********************************************************************/
-void Xbee_message_data_test(mavlink_test_data_t* packet);
+void Xbee_message_data_test(mavlink_xbee_heartbeat_t* packet);
 #endif
 
 #endif

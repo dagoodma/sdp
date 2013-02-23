@@ -1,9 +1,15 @@
 <?xml version='1.0'?>
 <mavlink>
      <messages>
-          <message id="236" name="TEST_DATA">
-				<description>This message will send a single byte of data for debugging.</description>
+          <message id="236" name="XBEE_HEARTBEAT">
+				<description>This message will send a single byte that will count and check that xbee is alive.</description>
+				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
 				<field type="uint8_t" name="data">Holds raw data for use in testing</field>
+          </message>
+		  <message id="237" name="MAVLINK_ACK">
+				<description>This messages will send a sinlge byte with the mavlink message id</description>
+				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+				<field type="uint8_t" name="data">Holds a Message ID number</field>
           </message>
      </messages>
 </mavlink>

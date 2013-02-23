@@ -193,7 +193,7 @@ int main(){
 }
 
 
-void Xbee_message_data_test(mavlink_test_data_t* packet){
+void Xbee_message_data_test(mavlink_xbee_heartbeat_t* packet){
     Mavlink_send_Test_data(XBEE_UART_ID, (packet->data+1)%255);
     count_recieved++;
     Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
