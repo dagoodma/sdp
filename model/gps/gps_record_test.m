@@ -6,6 +6,7 @@ DEBUG=1; % toggle printing of debug messages
 breakkey = 'q'; % key to stop recording
 
 RECORD_DLM = 1; % Record to a DLM file for analysis
+RECORD_TIMESTAMPS = 1; % Record timestamp data in DLM file after coordinates
 RECORD_KML = 0; % Record to a KML file for viewing in google maps
 % KML plot settings
 KML_COLOR = [ 0 1 0 1];
@@ -141,7 +142,7 @@ try
                     end
                     
                     % Save coordinates
-                    disp(i);
+                    %disp(i);
                     coords{i,LON} = [coords{i,LON} lon];
                     coords{i,LAT} = [coords{i,LAT} lat];
                     coords{i,ALT} = [coords{i,ALT} hmsl];
@@ -176,7 +177,11 @@ for i=1:GPS_TOTAL
         % Record to a DLM file for analysis
         if RECORD_DLM
             clear coords_to_file;
-            coords_to_file = [ coords{i,LAT}' coords{i,LON}' coords{i,ALT}' ];
+            if RECORD_TIMESTAMP
+                coords_to_file = [ coords{i,LAT}' coords{i,LON}' coords{i,ALT}' timestamps{i}' ];
+            else
+                coords_to_file = [ coords{i,LAT}' coords{i,LON}' coords{i,ALT}' ];
+            end
             %coords = [ latArr(i)' lonArr(i)' altArr(i)' ];
             disp(sprintf('Saving %s.dlm...',files{i}));
             dlmwrite(sprintf('%s.dlm',files{i}),coords_to_file,'precision','%.7f');
