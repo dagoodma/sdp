@@ -88,7 +88,7 @@ end
 % Recorded coordindates
 clear coords;
 coords(GPS_TOTAL, 3) = {[]};
-timestamps(GPS_TOTAL, 1) = {[]};
+timestamps(GPS_TOTAL) = {[]};
 
 
 err = 0;
@@ -148,7 +148,7 @@ try
                     coords{i,ALT} = [coords{i,ALT} hmsl];
                     
                     % Record timestamps
-                    timestamps{i} = [timestamps{i} itow];
+                    timestamps{i,1} = [timestamps{i,1} itow];
                     %k{ublox2}.plot3(lon,lat,hmsl)
                 end
 
@@ -178,7 +178,7 @@ for i=1:GPS_TOTAL
         if RECORD_DLM
             clear coords_to_file;
             if RECORD_TIMESTAMP
-                coords_to_file = [ coords{i,LAT}' coords{i,LON}' coords{i,ALT}' timestamps{i}' ];
+                coords_to_file = [ coords{i,LAT}' coords{i,LON}' coords{i,ALT}' timestamps{i,1}' ];
             else
                 coords_to_file = [ coords{i,LAT}' coords{i,LON}' coords{i,ALT}' ];
             end
