@@ -187,8 +187,11 @@ for i=1:GPS_TOTAL
     else
         disp(sprintf('Skipping saving of %s data since never fixed.',names{i}));
     end
+    
+    fprintf('Finished saving data.');
 end % for
 
+fprintf('Closing serial ports...');
 closeAllSerialPorts;
 clear k;
 
