@@ -9,7 +9,7 @@ RECORD_DLM = 1; % Record to a DLM file for analysis
 RECORD_TIMESTAMP = 1; % Record timestamp data in DLM file after coordinates
 RECORD_KML = 0; % Record to a KML file for viewing in google maps
 
-RECORD_NOT_FIXED = 1; % Records when not fixed (debugging)
+RECORD_NOT_FIXED = 0; % Records when not fixed (debugging)
 % KML plot settings
 KML_COLOR = [ 0 1 0 1];
 KML_SCALE = 1;
@@ -96,6 +96,17 @@ timestamps(GPS_TOTAL, 1) = {[]};
 
 err = 0;
 want_exit = 0;
+
+% Setup figure for quit message
+figure(1); clf;
+
+uicontrol('Style', 'text',...
+       'String', sprintf('Press ''q'' in this figure to\n stop recording.'),... 
+       'Units','normalized',...
+       'FontSize',18,...
+       'BackgroundColor', 'white',...
+       'Position', [0.2 0.807 0.5 0.15]); 
+
 %% Read GPS data
 
 % Dump messages
@@ -167,6 +178,7 @@ try
         end % for
         
         if want_exit == 1
+            close 1;
             break
         end
     end % while
@@ -177,7 +189,7 @@ end
 %% Clean up
 % Save the results
 for i=1:GPS_TOTAL
-    if everfixed{i}
+    if everfixed{i} || RECORD_NOT_FIXED
         % Record to a DLM file for analysis
         if RECORD_DLM
             clear coords_to_file;
