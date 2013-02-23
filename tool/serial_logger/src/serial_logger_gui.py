@@ -91,6 +91,8 @@ class Application():#Frame):
         self.frame = Frame(master)
         self.master = master
         self.master.title(TITLE)
+        self.master.iconbitmap(default='compas.ico')
+        #self.master.wm_iconbitmap('compas.ico')
         self.frame.pack_propagate(0)
         self.frame.grid( sticky=N+S+E+W)                    
         self.updateAvailablePorts()

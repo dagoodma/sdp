@@ -14,6 +14,7 @@ function [msg] = gps_readMessage_ubx(serial_obj,use_hex_str)
 
 DEBUG = 1;
 USE_HEX_STRING = 0;
+USE_CHECKSUM = 0;
 
 if nargin < 1
     error('Missing argument ''serial_obj''')
@@ -28,6 +29,7 @@ SYNC2_POS = 2;
 LENGTH_POS = 5;
 PAYLOAD_POS = 7;
 CHECKSUM_BYTE_NUMBER = 2;
+
 
 pos = 1; % message index
 
@@ -55,6 +57,9 @@ while 1
          msg{pos} = c;
      end
 
+     if ~isnumeric(c)
+         error('Failed to read from the device.')
+     end
      % Validate message by checking position
      if pos == SYNC1_POS && c ~= START_CHAR
          continue; % keep reading until start char
@@ -76,17 +81,19 @@ while 1
                  pos = 1; % restart if not 2nd start char
                  continue;
              end
-             checksum = gps_checksum_ubx(msg);
-             if ~iscell(checksum)
-                 if (DEBUG)
-                     disp(sprintf('Checksum calculation failed!\n'));
+             if USE_CHECKSUM
+                 checksum = gps_checksum_ubx(msg);
+                 if ~iscell(checksum)
+                     if (DEBUG)
+                         disp(sprintf('Checksum calculation failed!\n'));
+                     end
+                     msg = 0;
+                 elseif (checksum{1} ~= msg{max_pos - 1} || checksum{2} ~= msg{max_pos})
+                     if (DEBUG)
+                         disp(sprintf('Failed checksum {0x%X,0x%X} != 0x%X%X\n', checksum{1}, checksum{2}, msg{max_pos - 2}, msg{max_pos - 1})); 
+                     end
+                    msg = 0;
                  end
-                 msg = 0;
-             elseif (checksum{1} ~= msg{max_pos - 1} || checksum{2} ~= msg{max_pos})
-                 if (DEBUG)
-                     disp(sprintf('Failed checksum {0x%X,0x%X} != 0x%X%X\n', checksum{1}, checksum{2}, msg{max_pos - 2}, msg{max_pos - 1})); 
-                 end
-                msg = 0;
              end
          end
          break

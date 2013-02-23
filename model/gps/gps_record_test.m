@@ -35,10 +35,10 @@ delete(instrfindall)
 
 % com ports (configure these)
 clear portnums;
-%portnums(ublox1)=1;
-%portnums(ublox2)=6;
-portnums(ublox1)={'/dev/tty.usbserial-A1012WFD'};
-portnums(ublox2)={'/dev/tty.usbserial-A1012WEE'};
+portnums(ublox1)=7;
+portnums(ublox2)=6;
+%portnums(ublox1)={'/dev/tty.usbserial-A1012WFD'};
+%portnums(ublox2)={'/dev/tty.usbserial-A1012WEE'};
 
 % connect to devices
 clear ports;
@@ -87,6 +87,7 @@ end
 % Recorded coordindates
 clear coords;
 coords(GPS_TOTAL, 3) = {[]};
+timestamps(GPS_TOTAL, 1) = {[]};
 
 
 err = 0;
@@ -132,6 +133,8 @@ try
                     lon = parsed(2)*10^(-7);
                     %hmsl = (parsed(5)*10^(-3))*3.28084; % (ft)
                     hmsl = (parsed(5)*10^(-3)); % (m)
+                    
+                    itow = parsed(1);
 
                     if DEBUG
                         disp(sprintf('%s - NAV-POSLLH (%.0f)\n\tLat: %.2f\n\tLon: %.2f\n\thMSL: %.2f\n',names{i},fixes{i},lat,lon,hmsl));
@@ -142,6 +145,9 @@ try
                     coords{i,LON} = [coords{i,LON} lon];
                     coords{i,LAT} = [coords{i,LAT} lat];
                     coords{i,ALT} = [coords{i,ALT} hmsl];
+                    
+                    % Record timestamps
+                    timestamps{i} = [timestamps{i} itow];
                     %k{ublox2}.plot3(lon,lat,hmsl)
                 end
 
@@ -184,14 +190,15 @@ for i=1:GPS_TOTAL
             k.scatter3(lonArr(i)',latArr(i)',altArr(i)','iconScale',KML_SCALE,'iconColor',KML_COLOR);
             k.save(sprintf('%s.kml',files{i}));
         end
+        
+        fprintf('Finished saving data.\n');
     else
         disp(sprintf('Skipping saving of %s data since never fixed.',names{i}));
     end
     
-    fprintf('Finished saving data.');
 end % for
 
-fprintf('Closing serial ports...');
+fprintf('Closing serial ports...\n');
 closeAllSerialPorts;
 clear k;
 

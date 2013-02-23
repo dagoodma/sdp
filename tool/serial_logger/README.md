@@ -57,6 +57,11 @@ The serial logger can be configured by setting desired parameters in *serial_log
 
     -h, --help          show this help message and exit
 
+## Compatibility ##
+
+This module was written for Python 2.7.3, and has been tested on Windows 7 (64 and 32 bit), and Mac OS X ??.
+
+TODO: Add python 3.3 support.
 
 ## Author ##
 
