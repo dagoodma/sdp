@@ -8,6 +8,8 @@ breakkey = 'q'; % key to stop recording
 RECORD_DLM = 1; % Record to a DLM file for analysis
 RECORD_TIMESTAMP = 1; % Record timestamp data in DLM file after coordinates
 RECORD_KML = 0; % Record to a KML file for viewing in google maps
+
+RECORD_NOT_FIXED = 1; % Records when not fixed (debugging)
 % KML plot settings
 KML_COLOR = [ 0 1 0 1];
 KML_SCALE = 1;
@@ -87,8 +89,9 @@ end
 
 % Recorded coordindates
 clear coords;
+clear timestamps;
 coords(GPS_TOTAL, 3) = {[]};
-timestamps(GPS_TOTAL) = {[]};
+timestamps(GPS_TOTAL, 1) = {[]};
 
 
 err = 0;
@@ -128,7 +131,7 @@ try
                     everfixed{i} = 1;
                 end
                 % NAV-POSLLH, just want lat, lon data
-                if (fixes{i} ~= NO_FIX && msg{4} == POSLLH_MSG)
+                if (((fixes{i} ~= NO_FIX) || RECORD_NOT_FIXED) && msg{4} == POSLLH_MSG)
                     parsed = gps_parseMessage_ubx(msg);
                     lat = parsed(3)*10^(-7);
                     lon = parsed(2)*10^(-7);
@@ -137,9 +140,10 @@ try
                     
                     itow = parsed(1);
 
+                    
                     if DEBUG
-                        disp(sprintf('%s - NAV-POSLLH (%.0f)\n\tLat: %.2f\n\tLon: %.2f\n\thMSL: %.2f\n',names{i},fixes{i},lat,lon,hmsl));
-                    end
+                        fprintf('%s - NAV-POSLLH (%.0f)\n\tLat: %.2f\n\tLon: %.2f\n\thMSL: %.2f\n\titow: %.0f\n',names{i},fixes{i},lat,lon,hmsl,itow);
+                    end 
                     
                     % Save coordinates
                     %disp(i);
