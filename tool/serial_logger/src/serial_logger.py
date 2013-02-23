@@ -12,7 +12,7 @@ Notes:
 """
 import sys
 import os
-sys.path.append('library')
+#sys.path.append('library')
 import SerialLogger
 import string
 import pprint

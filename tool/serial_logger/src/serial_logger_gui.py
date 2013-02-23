@@ -12,7 +12,7 @@ Notes:
 
 """
 import sys
-sys.path.append('library')
+#sys.path.append('library')
 import os
 import string
 import pprint
@@ -63,7 +63,8 @@ DEFAULT_BAUDRATE = 9600
 DEFAULT_TIMEOUT = 6
 DEFAULT_LOG_LEVEL = 'INFO'
 DEFAULT_LOG_FORMAT = "%(levelname)s %(asctime)-15s %(message)s"
-READ_DELAY = 0.01# (sec)
+READ_DELAY = 0.005 # (sec)  delay between serial read updates
+UPDATE_DELAY = 50  # (msec) delay between terminal updates
 
 terminal_lock = threading.Lock()
 
@@ -219,20 +220,25 @@ Connects to a serial device and sends and receives data.
         self.file_menu.add_command(label="Quit", command=self.quit)
 
         self.edit_menu = Menu(self.menu)
+        self.edit_opts_menu = Menu(self.edit_menu)
         self.menu.add_cascade(label="Edit", menu=self.edit_menu)
+        self.edit_menu.add_cascade(label="Options", menu=self.edit_opts_menu)
         self.edit_menu.add_command(label="Clear Terminal", command=lambda: self.terminal.delete(1.0,END))
+
+        # Options
+        self.autoscroll_value = BooleanVar()
+        self.edit_opts_menu.add_checkbutton(label="Autoscroll", onvalue=True, offvalue=False, variable=self.autoscroll_value)
 
 
         #----------------------------------------
         # Create the Device entry
 
         self.device_value = StringVar()
+        self.device_value.set(self.device)
         self.device_label = Label( self.master, text="Port:" )
         self.device_label.grid(row=0, column = 0,sticky=E)
-        #self.device_menu = Listbox(self.master, height=1, width=40)
         self.device_menu = OptionMenu( self.master,  self.device_value, *self.device_choices) 
         self.device_menu.config(width=40)
-        self.device_value.set(self.device)#self.device_choices[0])
         self.device_menu.grid(row=0, column = 1)
 
         #----------------------------------------
@@ -246,8 +252,6 @@ Connects to a serial device and sends and receives data.
         self.baudrate_menu  = OptionMenu( self.master,  self.baudrate_value, *self.baudrate_choices)
         self.baudrate_menu.config(width=10)
         self.baudrate_menu.grid(row=0, column = 3)
-        #self.baudrate_button = Button (self.master, text="<", command=self.chooseBaudrateValue)
-        #self.baurdrate_button.grid(row=0, column = 2)
 
         #----------------------------------------
         # Create the Log file entry
@@ -278,6 +282,9 @@ Connects to a serial device and sends and receives data.
         self.terminal_scroller.grid(row=2,column=4, sticky=N+S)
         self.terminal.config(yscrollcommand=self.terminal_scroller.set)
         self.terminal_scroller_lastpos = (0.0, 1.0)
+        self.autoscroll_value.set(True)
+
+
 
     def do_terminal(self):
         """\
@@ -297,6 +304,7 @@ Connects to a serial device and sends and receives data.
         """
         self.queue.put(message)
 
+
     def processIncoming(self):
         """\
         Handle all the messages in the queue by printing them in the terminal.
@@ -308,8 +316,8 @@ Connects to a serial device and sends and receives data.
                 self.terminal.insert(END,message)
 
                 # Autoscroll the terminal if set
-                #if (self.terminal_scroller.autoscroll() == True):
-                #    self.terminal.yview(END)
+                if (self.autoscroll_value.get()):
+                    self.terminal.yview(END)
 
             except Queue.Empty:
                 pass
@@ -396,7 +404,7 @@ class AutoScrollbar(Scrollbar):
         self.old_x = 0.0
         self.old_y = 1.0
         self.supa = Scrollbar.__init__(self,*args, **kw)
-        self.autoscroll = True
+        #self.autoscroll = True
 
 
     def set(self, lo, hi):
@@ -413,6 +421,7 @@ class AutoScrollbar(Scrollbar):
         Auto scroll to the bottom if desired.
         """
         return self.getY() == float(1.0)
+        #return self.autoscroll
 
 # End of Application class 
 # ---------------------------------
@@ -447,7 +456,7 @@ class ThreadedClient:
         if not self.running:
             import sys
             sys.exit(1)
-        self.master.after(100, self.periodicCall)
+        self.master.after(UPDATE_DELAY, self.periodicCall)
 
     def workerThread1(self):
         """\
