@@ -40,25 +40,3 @@ for i=1:6
         pi = pi + 2;
     end
 end
-% 
-%     subplot(3,2,2);
-%     gps_scatterPlot2D(DATA_FILE,DATA_FREQUENCY * PLOT_TIMESTEPS(2),truthCoord);
-% 
-%     subplot(3,2,3);
-%     gps_scatterPlot2D(DATA_FILE,DATA_FREQUENCY * PLOT_TIMESTEPS(3),truthCoord);
-% 
-%     subplot(3,2,4);
-%     gps_scatterPlot2D(DATA_FILE,DATA_FREQUENCY * PLOT_TIMESTEPS(4),truthCoord);
-%else
-%     subplot(2,2,1);
-%     gps_scatterPlot2D(DATA_FILE,DATA_FREQUENCY * PLOT_TIMESTEPS(1));
-% 
-%     subplot(2,2,2);
-%     gps_scatterPlot2D(DATA_FILE,DATA_FREQUENCY * PLOT_TIMESTEPS(2));
-% 
-%     subplot(2,2,3);
-%     gps_scatterPlot2D(DATA_FILE,DATA_FREQUENCY * PLOT_TIMESTEPS(3));
-% 
-%     subplot(2,2,4);
-%     gps_scatterPlot2D(DATA_FILE,DATA_FREQUENCY * PLOT_TIMESTEPS(4));
-% end
