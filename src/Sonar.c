@@ -23,9 +23,9 @@
 #include <Ports.h>
 #include "Board.h"
 #include "Uart.h"
-#include "Mavlink.h"
-#include "Timer.h"
-#include "AD.h"
+//#include "Mavlink.h"
+#include <Timer.h>
+#include <AD.h>
 #include "Sonar.h"
 
 /***********************************************************************
@@ -42,10 +42,10 @@
 /**********************************************************************
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
-/*
+
 static float getAnalog();
 static float getAnalogWindow();
-*/
+
 /**********************************************************************
  * PRIVATE VARIABLES                                                 *
  **********************************************************************/
@@ -57,7 +57,7 @@ uint8_t count = 0;
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
-/*
+
 void Sonar_init(){
     AD_init(ANALOG_WINDOW_PIN | ANALOG_PIN);
     Timer_init();
@@ -78,14 +78,13 @@ void Sonar_init(){
     return FALSE;
 }
 
-*/
+
 
 
 /**********************************************************************
  * PRIVATE FUNCTIONS                                                  *
  **********************************************************************/
 
-/*
 static float getAnalog(){
     return AD_readPin(ANALOG_PIN);
 }
@@ -94,8 +93,6 @@ static float getAnalogWindow(){
     return AD_readPin(ANALOG_WINDOW_PIN);
 }
 
-
-*/
 
 /*************************************************************
  * This test function will program two Xbees, Master & Slave.
@@ -106,7 +103,7 @@ static float getAnalogWindow(){
  * Slave will look for packets, and then return the packet data
  * field in  a packet to the Master
  */
-//#define SONAR_TEST
+#define SONAR_TEST
 #ifdef SONAR_TEST
 
 
@@ -117,7 +114,7 @@ static float getAnalogWindow(){
 int main(){
     Board_init();
     Serial_init();
-    //mJTAGPortEnable(0);
+    mJTAGPortEnable(0);
     Sonar_init();
     printf("Sonar Init");
 

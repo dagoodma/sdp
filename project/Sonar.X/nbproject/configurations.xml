@@ -5,6 +5,11 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>../../include/Sonar.h</itemPath>
+      <itemPath>../../include/AD.h</itemPath>
+      <itemPath>../../include/Timer.h</itemPath>
+      <itemPath>../../include/Board.h</itemPath>
+      <itemPath>../../include/Serial.h</itemPath>
+      <itemPath>../../include/Uart.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -14,6 +19,11 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>../../src/Sonar.c</itemPath>
+      <itemPath>../../src/AD.c</itemPath>
+      <itemPath>../../src/Timer.c</itemPath>
+      <itemPath>../../src/Board.c</itemPath>
+      <itemPath>../../src/Serial.c</itemPath>
+      <itemPath>../../src/Uart.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -61,7 +71,7 @@
         <property key="enable-unroll-loops" value="false"/>
         <property key="exclude-floating-point" value="false"/>
         <property key="extra-include-directories"
-                  value=".;C:\Users\dagoodma\Documents\SDP\include;C:\Users\Shehadeh\Documents\GitHub\sdp\include;/Users/ddeo/Documents/sdp/include;C:\Users\jash\Documents\SDP\include"/>
+                  value=".;C:\Users\dagoodma\Documents\SDP\include;C:\Users\Shehadeh\Documents\GitHub\sdp\include;/Users/ddeo/Documents/sdp/include;C:\Users\John\Documents\SDP\include;C:\Users\jash\Documents\SDP\include"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
         <property key="make-warnings-into-errors" value="false"/>
@@ -76,44 +86,8 @@
         <property key="use-indirect-calls" value="false"/>
       </C32>
       <C32-AS>
-        <property key="assembler-symbols" value=""/>
-        <property key="enable-symbols" value="true"/>
-        <property key="exclude-floating-point-library" value="false"/>
-        <property key="expand-macros" value="false"/>
-        <property key="extra-include-directories-for-assembler" value=""/>
-        <property key="extra-include-directories-for-preprocessor" value=""/>
-        <property key="false-conditionals" value="false"/>
-        <property key="keep-locals" value="false"/>
-        <property key="list-assembly" value="false"/>
-        <property key="list-source" value="false"/>
-        <property key="list-symbols" value="false"/>
-        <property key="oXC32asm-list-to-file" value="false"/>
-        <property key="omit-debug-dirs" value="false"/>
-        <property key="omit-forms" value="false"/>
-        <property key="preprocessor-macros" value=""/>
-        <property key="warning-level" value=""/>
       </C32-AS>
       <C32-LD>
-        <property key="additional-options-use-response-files" value="false"/>
-        <property key="enable-check-sections" value="false"/>
-        <property key="exclude-floating-point-library" value="false"/>
-        <property key="exclude-standard-libraries" value="false"/>
-        <property key="extra-lib-directories" value=""/>
-        <property key="generate-16-bit-code" value="false"/>
-        <property key="generate-cross-reference-file" value="false"/>
-        <property key="heap-size" value=""/>
-        <property key="input-libraries" value=""/>
-        <property key="linker-symbols" value=""/>
-        <property key="map-file" value=""/>
-        <property key="no-startup-files" value="false"/>
-        <property key="optimization-level" value=""/>
-        <property key="preprocessor-macros" value=""/>
-        <property key="remove-unused-sections" value="false"/>
-        <property key="report-memory-usage" value="false"/>
-        <property key="stack-size" value=""/>
-        <property key="symbol-stripping" value=""/>
-        <property key="trace-symbols" value=""/>
-        <property key="warn-section-align" value="false"/>
       </C32-LD>
       <C32CPP>
         <property key="additional-warnings" value="false"/>
@@ -140,7 +114,6 @@
         <property key="use-indirect-calls" value="false"/>
       </C32CPP>
       <C32Global>
-        <property key="legacy-libc" value="false"/>
       </C32Global>
       <PICkit3PlatformTool>
       </PICkit3PlatformTool>
