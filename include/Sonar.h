@@ -16,13 +16,14 @@
 #ifndef SONAR_H
 #define SONAR_H
 
-#define AD_PIN AD_PORTV4
-#define SONAR_AD_PIN        AD_PIN
+#define ANALOG_PIN AD_PORTV4
+#define ANALOG_WINDOW_PIN AD_PORTV5
 
 void Sonar_init();
 
 
-uint32_t Sonar_runSM();
+
+BOOL Sonar_runSM(float* rawAnalogWindowData, float* rawAnalogData);
 
 
 
