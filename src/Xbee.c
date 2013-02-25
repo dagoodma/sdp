@@ -46,15 +46,24 @@
 //#define XBEE_RESET_FACTORY
 
 //Leave uncommented when programming XBEE_1, comment out when programming XBEE_2
-//#define XBEE_1
+#define XBEE_1
 
-#define TIMER_TIMEOUT 2
-#define DELAY_TIMEOUT 1000 // (ms)
+#define TIMER_HEARTBEAT 2
+#ifdef XBEE_1
+#define DELAY_HEARTBEAT 4000 //time to wait for recieve
+#else
+#define DELAY_HEARTBEAT 1000 //Time to wait before send heartbeat
+#endif
 /**********************************************************************
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
 
 static uint8_t Xbee_programMode();
+
+/**********************************************************************
+ * PRIVATE VARIABLES                                                  *
+ **********************************************************************/
+
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
@@ -67,6 +76,7 @@ uint8_t Xbee_init(){
         return FAILURE;
     }
 #endif
+    Timer_new(TIMER_HEARTBEAT, DELAY_HEARTBEAT);
     return SUCCESS; 
 }
 
@@ -75,6 +85,31 @@ void Xbee_runSM(){
     if(UART_isReceiveEmpty(XBEE_UART_ID) == FALSE){
         Mavlink_recieve(XBEE_UART_ID);
     }
+
+#ifndef XBEE_1 //if Xbee 2
+    //Sends out a HEARTBEAT every 1000 ms.
+    if(Timer_isActive(TIMER_HEARTBEAT) != TRUE){
+        Mavlink_send_xbee_heartbeat(XBEE_UART_ID, 1);
+        Timer_new(TIMER_HEARTBEAT, DELAY_HEARTBEAT);
+        printf("Heart beat sent");
+    }
+
+#else
+    //we have not heard a heartbeat message for 4 s, LOST CONNECTION
+    if(Timer_isActive(TIMER_HEARTBEAT) != TRUE){
+        Timer_new(TIMER_HEARTBEAT, DELAY_HEARTBEAT);
+        printf("LOST CONNECTION");
+    }
+#endif
+
+}
+
+
+
+void Xbee_recieved_message_heartbeat(mavlink_xbee_heartbeat_t* packet){
+#ifdef XBEE_1 
+    Timer_new(TIMER_HEARTBEAT, DELAY_HEARTBEAT); //still have a connection
+#endif
 }
 
 
@@ -145,6 +180,8 @@ static uint8_t Xbee_programMode(){
 
 #include "Serial.h"
 
+#define TIMER_TIMEOUT 4
+#define DELAY_TIMEOUT 1000
 #define TIMER_STATUS 3
 #define DELAY_STATUS 4000
 
@@ -193,7 +230,7 @@ int main(){
 }
 
 
-void Xbee_message_data_test(mavlink_xbee_heartbeat_t* packet){
+void Xbee_message_data_test(mavlink_test_data_t* packet){
     Mavlink_send_Test_data(XBEE_UART_ID, (packet->data+1)%255);
     count_recieved++;
     Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
