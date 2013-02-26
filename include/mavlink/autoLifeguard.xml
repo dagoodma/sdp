@@ -1,9 +1,36 @@
 <?xml version='1.0'?>
 <mavlink>
      <messages>
-          <message id="236" name="TEST_DATA">
+	      <message id="235" name="TEST_DATA">
 				<description>This message will send a single byte of data for debugging.</description>
 				<field type="uint8_t" name="data">Holds raw data for use in testing</field>
+          </message>
+          <message id="236" name="XBEE_HEARTBEAT">
+				<description>This message will send a single byte that will count and check that xbee is alive.</description>
+				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+				<field type="uint8_t" name="data">Holds raw data for use in testing</field>
+          </message>
+		  <message id="237" name="MAVLINK_ACK">
+				<description>This messages will send a sinlge byte with the mavlink message id</description>
+				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+				<field type="uint8_t" name="data">Holds a Message ID number</field>
+          </message>
+		  <message id="240" name="GPS_ERROR">
+				<description>This messages will send a sinlge byte with the mavlink message id</description>
+				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+				<field type="uint8_t" name="data">Holds a Message ID number</field>
+          </message>
+		  <message id="241" name="START_RESCUE">
+				<description>This messages will send a sinlge byte with the mavlink message id</description>
+				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+				<field type="uint8_t" name="status">Holds status informatiom for the boat</field>
+				<field type="uint32_t" name="latitude">Latitude data for the boat to travel to</field>
+				<field type="uint32_t" name="longitude">Longitude data for the boat to travel to</field>
+          </message>
+		  <message id="242" name="STOP_RESCUE">
+				<description>This messages will send a sinlge byte with the mavlink message id</description>
+				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+				<field type="uint8_t" name="data">Holds a Message ID number</field>
           </message>
      </messages>
 </mavlink>
