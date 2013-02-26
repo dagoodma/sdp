@@ -4,12 +4,12 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>../../include/Board.h</itemPath>
-      <itemPath>../../include/Uart.h</itemPath>
-      <itemPath>../../include/Xbee.h</itemPath>
+      <itemPath>../../include/Sonar.h</itemPath>
+      <itemPath>../../include/AD.h</itemPath>
       <itemPath>../../include/Timer.h</itemPath>
-      <itemPath>../../include/Mavlink.h</itemPath>
+      <itemPath>../../include/Board.h</itemPath>
       <itemPath>../../include/Serial.h</itemPath>
+      <itemPath>../../include/Uart.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -18,12 +18,12 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../../src/Board.c</itemPath>
-      <itemPath>../../src/Uart.c</itemPath>
-      <itemPath>../../src/Xbee.c</itemPath>
+      <itemPath>../../src/Sonar.c</itemPath>
+      <itemPath>../../src/AD.c</itemPath>
       <itemPath>../../src/Timer.c</itemPath>
-      <itemPath>../../src/Mavlink.c</itemPath>
+      <itemPath>../../src/Board.c</itemPath>
       <itemPath>../../src/Serial.c</itemPath>
+      <itemPath>../../src/Uart.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
