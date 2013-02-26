@@ -1,0 +1,13 @@
+http://www.py2exe.org/index.cgi/Tutorial
+
+1. Create a setup file.
+
+    from distutils.core import setup
+    import py2exe
+
+    setup(console=['hello.py'])
+
+
+2. Run your setup script.
+
+    python setup.py py2exe

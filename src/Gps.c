@@ -49,13 +49,23 @@
 #define NAV_CLASS               0x01 // navigation message class
 #define NAV_POSLLH_ID           0x02 // geodetic postion message id+
 #define NAV_STATUS_ID           0x03 // receiver navigation status (fix/nofix)
+#define NAV_VELOCITY_ID         0x12 // velocity NED navigation message
 
 #define NOFIX_STATUS            0x00
+
+// GPS connection timeout for packet not seen
+#define DELAY_TIMEOUT           5000
 
 // unpacking functions
 #define UNPACK_LITTLE_ENDIAN_32(data, start) \
     ((uint32_t)(data[start] + ((uint32_t)data[start+1] << 8) \
     + ((uint32_t)data[start+2] << 16) + ((uint32_t)data[start+3] << 24)))
+
+#define COORDINATE_TO_DECIMAL(coord)    ((float)coord/10000000)
+#define MM_TO_M(unit)                   ((float)unit/1000)
+#define CM_TO_M(unit)                   ((float)unit/100)
+#define HEADING_TO_DEGREE(heading)      ((float)heading/100000)
+
 
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
@@ -70,8 +80,9 @@ static enum {
 uint8_t rawMessage[RAW_BUFFER_SIZE];
 uint8_t byteIndex = 0, messageLength = LENGTH2_INDEX + 1,
         messageClass = 0, messageId = 0, gpsStatus = NOFIX_STATUS;
-BOOL hasNewMessage = FALSE;
-int32_t lat, lon, alt;
+BOOL hasNewMessage = FALSE, isConnected = FALSE;
+int32_t latitude, longitude, altitude, northVelocity, eastVelocity, heading;
+
 
 /**********************************************************************
  * PRIVATE PROTOTYPES                                                 *
@@ -141,14 +152,18 @@ void GPS_runSM() {
            break;
             // Should not be here!
     } // switch
+
+    // Update connected variable
+    if (Timer_isExpired(TIMER_GPS))
+        isConnected = FALSE;
 }
 
 /**********************************************************************
- * Function: GPS_hasLock
+ * Function: GPS_hasFix
  * @return TRUE if a lock has been obtained.
  * @remark
  **********************************************************************/
-BOOL GPS_hasLock() {
+BOOL GPS_hasFix() {
     return gpsStatus != NOFIX_STATUS;
 }
 
@@ -158,7 +173,7 @@ BOOL GPS_hasLock() {
  * @remark
  **********************************************************************/
 int32_t GPS_getLatitude() {
-    return lat;
+    return latitude;
 }
 
 /**********************************************************************
@@ -167,9 +182,54 @@ int32_t GPS_getLatitude() {
  * @remark
  **********************************************************************/
 int32_t GPS_getLongitude() {
-    return lon;
+    return longitude;
 }
 
+/**********************************************************************
+ * Function: GPS_getAltitudse
+ * @return The GPS's altitude value in milimeters.
+ * @remark
+ **********************************************************************/
+int32_t GPS_getAltitude() {
+    return longitude;
+}
+/**********************************************************************
+ * Function: GPS_getNorthVelocity
+ * @return Returns the current velocity in the north direction.
+ * @remark Centimeters per second in the north direction.
+ **********************************************************************/
+int32_t GPS_getNorthVelocity() {
+    return northVelocity;
+}
+
+/**********************************************************************
+ * Function: GPS_getEsatVelocity
+ * @return Returns the current velocity in the east direction.
+ * @remark Centimeters per second in the east direction.
+ **********************************************************************/
+int32_t GPS_getEastVelocity() {
+    return eastVelocity;
+}
+
+
+/**********************************************************************
+ * Function: GPS_getHeading
+ * @return Returns the current heading in degrees scaled 1e-5.
+ * @remark In degrees scaled by 1e-5.
+ **********************************************************************/
+int32_t GPS_getHeading() {
+    return heading;
+}
+
+
+/**********************************************************************
+ * Function: GPS_isConnected
+ * @return Returns true if GPS data seen in last 5 seconds.
+ * @remark In degrees scaled by 1e-5.
+ **********************************************************************/
+int32_t GPS_isConnected() {
+    return isConnected;
+}
 
 /**********************************************************************
  * PRIVATE FUNCTIONS                                                  *
@@ -186,7 +246,7 @@ BOOL hasNewByte() {
 }
 
 /**********************************************************************
- * Function: startIdleState()
+ * Function: startIdleState
  * @return None
  * @remark Switches into the GPS idle state.
  **********************************************************************/
@@ -200,7 +260,7 @@ void startIdleState() {
 }
 
 /**********************************************************************
- * Function: startReadState()
+ * Function: startReadState
  * @return None
  * @remark Switches into the read state for the GPS.
  **********************************************************************/
@@ -217,7 +277,7 @@ void startReadState() {
 }
 
 /**********************************************************************
- * Function: startParseState()
+ * Function: startParseState
  * @return None
  * @remark Switches into the GPS parse state.
  **********************************************************************/
@@ -232,7 +292,22 @@ void startParseState() {
 }
 
 /**********************************************************************
- * Function: parseMessageByte()
+ * Function: setConnected
+ * @return None
+ * @remark Sets the GPS connected state to TRUE and starts a timeout timer.
+ **********************************************************************/
+void setConnected() {
+    isConnected = TRUE;
+    Timer_new(TIMER_GPS,DELAY_TIMEOUT);
+
+#ifdef DEBUG
+    printf("Connected to GPS.\n");
+    while (!Serial_isTransmitEmpty()) { asm("nop"); }
+#endif
+}
+
+/**********************************************************************
+ * Function: parseMessageByte
  * @return SUCCESS, FAILURE, or ERROR.
  * @remark Reads a GPS packet from the UART. This function will return
  *  SUCCESS every time a valid byte is read (interpets the sync, length,
@@ -255,6 +330,8 @@ int8_t readMessageByte() {
         case SYNC2_INDEX:
             if (rawMessage[byteIndex] != SYNC2_CHAR)
                 return FAILURE;
+            // Two sync packets mean we see the GPS
+            setConnected();
             break;
         case CLASS_INDEX:
             messageClass = rawMessage[byteIndex];
@@ -325,7 +402,7 @@ void parsePayloadField() {
                             byteIndex += sizeof(uint32_t);
                             break;
                         case 4: // lon
-                            lon = (int32_t)(rawMessage[byteIndex]
+                            longitude = (int32_t)(rawMessage[byteIndex]
                                     + ((int32_t)rawMessage[byteIndex + 1] << 8)
                                     + ((int32_t)rawMessage[byteIndex + 2] << 16)
                                     + ((int32_t)rawMessage[byteIndex + 3] << 24));
@@ -333,7 +410,7 @@ void parsePayloadField() {
                             byteIndex += sizeof(int32_t);
                             break;
                         case 8: // lat
-                            lat = (int32_t)(rawMessage[byteIndex]
+                            latitude = (int32_t)(rawMessage[byteIndex]
                                     + ((int32_t)rawMessage[byteIndex + 1] << 8)
                                     + ((int32_t)rawMessage[byteIndex + 2] << 16)
                                     + ((int32_t)rawMessage[byteIndex + 3] << 24));
@@ -343,7 +420,7 @@ void parsePayloadField() {
                             byteIndex += sizeof(int32_t);
                             break;
                         case 16: // hMSL
-                            alt = (int32_t)(rawMessage[byteIndex]
+                            altitude = (int32_t)(rawMessage[byteIndex]
                                     + ((int32_t)rawMessage[byteIndex + 1] << 8)
                                     + ((int32_t)rawMessage[byteIndex + 2] << 16)
                                     + ((int32_t)rawMessage[byteIndex + 3] << 24));
@@ -382,7 +459,48 @@ void parsePayloadField() {
                             byteIndex += sizeof(uint32_t);
                     } //  NAV_STATUS_ID byte
                     break;
-                // ------------- End of Valid NAV message IDs --------------
+                // ------------- NAV-VELNED (0x01 0x12) --------------
+                case NAV_VELOCITY_ID:
+                    switch (byteIndex - PAYLOAD_INDEX) {
+                        case 0: // iTow (not implemented)
+                            byteIndex += sizeof(uint32_t);
+                            break;
+                        case 4: // velN
+                            northVelocity = (int32_t)(rawMessage[byteIndex]
+                                    + ((int32_t)rawMessage[byteIndex + 1] << 8)
+                                    + ((int32_t)rawMessage[byteIndex + 2] << 16)
+                                    + ((int32_t)rawMessage[byteIndex + 3] << 24));
+                            byteIndex += sizeof(int32_t);
+                            break;
+                        case 8: // velE
+                            eastVelocity = (int32_t)(rawMessage[byteIndex]
+                                    + ((int32_t)rawMessage[byteIndex + 1] << 8)
+                                    + ((int32_t)rawMessage[byteIndex + 2] << 16)
+                                    + ((int32_t)rawMessage[byteIndex + 3] << 24));
+                            byteIndex += sizeof(int32_t);
+                            break;
+                        case 12: // velD
+                            byteIndex += sizeof(int32_t);
+                            break;
+                        case 16: // speed
+                            byteIndex += sizeof(uint32_t);
+                            break;
+                        case 20: // gSpeed
+                            byteIndex += sizeof(uint32_t);
+                            break;
+                        case 24: // heading
+                            heading = (int32_t)(rawMessage[byteIndex]
+                                    + ((int32_t)rawMessage[byteIndex + 1] << 8)
+                                    + ((int32_t)rawMessage[byteIndex + 2] << 16)
+                                    + ((int32_t)rawMessage[byteIndex + 3] << 24));
+                            byteIndex += sizeof(int32_t);
+                            break;
+                        case 28: // sAcc
+                            byteIndex += sizeof(uint32_t);
+                        case 32: // cAcc
+                            byteIndex += sizeof(uint32_t);
+                    } //  NAV_STATUS_ID byte
+                    break;// ------------- End of Valid NAV message IDs --------------
                 default:
                     byteIndex = messageLength; // skip rest of message
                 #ifdef DEBUG
@@ -414,12 +532,19 @@ int main() {
     Timer_new(TIMER_TEST,1000);
     while(1) {
         if (Timer_isExpired(TIMER_TEST)) {
-            if (GPS_hasLock())
-             /*printf("Lat:%ld, Lon: %ld, Alt: %ld (m)\n",lat,lon,alt);*/
-             printf("Lat:%.6f, Lon: %.6f, Alt: %.2f (m)\n",((float)lat/10000000),
-                        ((float)lon/10000000), ((float)alt/1000) );
-            else
+            if (!GPS_isConnected()) {
+                printf("GPS not connected.\n");
+            }
+            else if (GPS_hasFix()) {
+                /*printf("Lat:%ld, Lon: %ld, Alt: %ld (m)\n",lat,lon,alt);*/
+                printf("Lat:%.6f, Lon: %.6f, Alt: %.2f (m)\n",COORDINATE_TO_DECIMAL(GPS_getLatitude()),
+                        COORDINATE_TO_DECIMAL(GPS_getLongitude()), MM_TO_M(GPS_getAltitude()) );
+                printf("Velocity N:%.2f, E: %.2f (m/s), Heading: %.2f (deg)\n",CM_TO_M(GPS_getNorthVelocity()),
+                        CM_TO_M(GPS_getEastVelocity()), HEADING_TO_DEGREE(GPS_getHeading()) );
+            }
+            else {
                 printf("No fix!\n");
+            }
 
             Timer_new(TIMER_TEST,1000);
         }

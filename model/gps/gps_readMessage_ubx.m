@@ -57,6 +57,9 @@ while 1
          msg{pos} = c;
      end
 
+     if isempty(c) || ~isnumeric(c)
+         error('Failed to read from the device.')
+     end
      % Validate message by checking position
      if pos == SYNC1_POS && c ~= START_CHAR
          continue; % keep reading until start char
