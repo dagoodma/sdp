@@ -46,7 +46,8 @@
 #define TIMER_BAROMETER         1
 #define TIMER_ACCELEROMETER     2
 #define TIMER_THERMAL           3
-#define TIMER_BAROMETER2         14 // remove the blocking code!!
+#define TIMER_GPS               4
+#define TIMER_BAROMETER2        14 // remove the blocking code!!
 #define TIMER_TEST              15
 
 
