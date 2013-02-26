@@ -6,7 +6,10 @@ DEBUG=1; % toggle printing of debug messages
 breakkey = 'q'; % key to stop recording
 
 RECORD_DLM = 1; % Record to a DLM file for analysis
+RECORD_TIMESTAMP = 1; % Record timestamp data in DLM file after coordinates
 RECORD_KML = 0; % Record to a KML file for viewing in google maps
+
+RECORD_NOT_FIXED = 0; % Records when not fixed (debugging)
 % KML plot settings
 KML_COLOR = [ 0 1 0 1];
 KML_SCALE = 1;
@@ -35,10 +38,10 @@ delete(instrfindall)
 
 % com ports (configure these)
 clear portnums;
-%portnums(ublox1)=1;
-%portnums(ublox2)=6;
-portnums(ublox1)={'/dev/tty.usbserial-A1012WFD'};
-portnums(ublox2)={'/dev/tty.usbserial-A1012WEE'};
+portnums(ublox1)=7;
+portnums(ublox2)=6;
+%portnums(ublox1)={'/dev/tty.usbserial-A1012WFD'};
+%portnums(ublox2)={'/dev/tty.usbserial-A1012WEE'};
 
 % connect to devices
 clear ports;
@@ -86,11 +89,24 @@ end
 
 % Recorded coordindates
 clear coords;
+clear timestamps;
 coords(GPS_TOTAL, 3) = {[]};
+timestamps(GPS_TOTAL, 1) = {[]};
 
 
 err = 0;
 want_exit = 0;
+
+% Setup figure for quit message
+figure(1); clf;
+
+uicontrol('Style', 'text',...
+       'String', sprintf('Press ''q'' in this figure to\n stop recording.'),... 
+       'Units','normalized',...
+       'FontSize',18,...
+       'BackgroundColor', 'white',...
+       'Position', [0.2 0.807 0.5 0.15]); 
+
 %% Read GPS data
 
 % Dump messages
@@ -126,22 +142,28 @@ try
                     everfixed{i} = 1;
                 end
                 % NAV-POSLLH, just want lat, lon data
-                if (fixes{i} ~= NO_FIX && msg{4} == POSLLH_MSG)
+                if (((fixes{i} ~= NO_FIX) || RECORD_NOT_FIXED) && msg{4} == POSLLH_MSG)
                     parsed = gps_parseMessage_ubx(msg);
                     lat = parsed(3)*10^(-7);
                     lon = parsed(2)*10^(-7);
                     %hmsl = (parsed(5)*10^(-3))*3.28084; % (ft)
                     hmsl = (parsed(5)*10^(-3)); % (m)
+                    
+                    itow = parsed(1);
 
+                    
                     if DEBUG
-                        disp(sprintf('%s - NAV-POSLLH (%.0f)\n\tLat: %.2f\n\tLon: %.2f\n\thMSL: %.2f\n',names{i},fixes{i},lat,lon,hmsl));
-                    end
+                        fprintf('%s - NAV-POSLLH (%.0f)\n\tLat: %.2f\n\tLon: %.2f\n\thMSL: %.2f\n\titow: %.0f\n',names{i},fixes{i},lat,lon,hmsl,itow);
+                    end 
                     
                     % Save coordinates
-                    disp(i);
+                    %disp(i);
                     coords{i,LON} = [coords{i,LON} lon];
                     coords{i,LAT} = [coords{i,LAT} lat];
                     coords{i,ALT} = [coords{i,ALT} hmsl];
+                    
+                    % Record timestamps
+                    timestamps{i,1} = [timestamps{i,1} itow];
                     %k{ublox2}.plot3(lon,lat,hmsl)
                 end
 
@@ -156,6 +178,7 @@ try
         end % for
         
         if want_exit == 1
+            close 1;
             break
         end
     end % while
@@ -166,11 +189,15 @@ end
 %% Clean up
 % Save the results
 for i=1:GPS_TOTAL
-    if everfixed{i}
+    if everfixed{i} || RECORD_NOT_FIXED
         % Record to a DLM file for analysis
         if RECORD_DLM
             clear coords_to_file;
-            coords_to_file = [ coords{i,LAT}' coords{i,LON}' coords{i,ALT}' ];
+            if RECORD_TIMESTAMP
+                coords_to_file = [ coords{i,LAT}' coords{i,LON}' coords{i,ALT}' timestamps{i,1}' ];
+            else
+                coords_to_file = [ coords{i,LAT}' coords{i,LON}' coords{i,ALT}' ];
+            end
             %coords = [ latArr(i)' lonArr(i)' altArr(i)' ];
             disp(sprintf('Saving %s.dlm...',files{i}));
             dlmwrite(sprintf('%s.dlm',files{i}),coords_to_file,'precision','%.7f');
@@ -184,11 +211,15 @@ for i=1:GPS_TOTAL
             k.scatter3(lonArr(i)',latArr(i)',altArr(i)','iconScale',KML_SCALE,'iconColor',KML_COLOR);
             k.save(sprintf('%s.kml',files{i}));
         end
+        
+        fprintf('Finished saving data.\n');
     else
         disp(sprintf('Skipping saving of %s data since never fixed.',names{i}));
     end
+    
 end % for
 
+fprintf('Closing serial ports...\n');
 closeAllSerialPorts;
 clear k;
 
