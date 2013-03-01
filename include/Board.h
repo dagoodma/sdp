@@ -34,12 +34,24 @@
 #define FALSE ((int8_t) 0)
 #define TRUE ((int8_t) 1)
 #endif
+
 #ifndef ERROR
 #define ERROR ((int8_t) -1)
 #endif
+
 #ifndef SUCCESS
 #define SUCCESS ((int8_t) 0)
 #define FAILURE ((int8_t) 1)
+#endif
+
+#ifndef OUTPUT
+#define OUTPUT  (0)
+#define INPUT   (1)
+#endif
+
+#ifndef ON
+#define ON      (1)
+#define OFF     (0)
 #endif
 
 // Timer allocation
