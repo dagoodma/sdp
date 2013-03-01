@@ -1,6 +1,6 @@
 // MESSAGE TEST_DATA PACKING
 
-#define MAVLINK_MSG_ID_TEST_DATA 236
+#define MAVLINK_MSG_ID_TEST_DATA 235
 
 typedef struct __mavlink_test_data_t
 {
@@ -8,7 +8,7 @@ typedef struct __mavlink_test_data_t
 } mavlink_test_data_t;
 
 #define MAVLINK_MSG_ID_TEST_DATA_LEN 1
-#define MAVLINK_MSG_ID_236_LEN 1
+#define MAVLINK_MSG_ID_235_LEN 1
 
 
 
