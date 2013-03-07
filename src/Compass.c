@@ -24,6 +24,7 @@
 #include "Mavlink.h"
 #include "Timer.h"
 #include "Xbee.h"
+#include "Compass.h"
 
 
 /***********************************************************************
@@ -41,7 +42,9 @@
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
-
+void Compass_message_recieve_start_resuce(mavlink_start_rescue_t* packet){
+    printf("Lat: %d Long: %d",packet->latitude,packet->longitude);
+}
 /**********************************************************************
  * PRIVATE FUNCTIONS                                                  *
  **********************************************************************/

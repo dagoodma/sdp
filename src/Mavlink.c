@@ -3,6 +3,8 @@
 #include "Uart.h"
 #include "Board.h"
 #include "Xbee.h"
+#include "Compass.h"
+
 static int packet_drops = 0;
 static mavlink_message_t msg;
 static mavlink_status_t status;
@@ -38,14 +40,16 @@ void Mavlink_recieve(uint8_t uart_id){
                 {
                     mavlink_start_rescue_t data;
                     mavlink_msg_start_rescue_decode(&msg, &data);
-                    //commandStation_message_start_resuce(&data);
+                    Compass_message_recieve_start_resuce(&data);
                 }break;
             }
         }
     }
     packet_drops += status.packet_rx_drop_count;
 }
-
+/*************************************************************************
+ * SEND FUNCTIONS                                                        *
+ *************************************************************************/
 
 void Mavlink_send_xbee_heartbeat(uint8_t uart_id, uint8_t data){
     mavlink_message_t msg;
@@ -72,3 +76,11 @@ void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data){
     UART_putString(uart_id, buf, length);
 }
 #endif
+
+
+/*************************************************************************
+ * RECIEVE FUNCTIONS                                                     *
+ *************************************************************************/
+void Compass_message_recieve_start_resuce(mavlink_start_rescue_t* packet){
+    printf("Lat: %d Long: %d",packet->latitude,packet->longitude);
+}

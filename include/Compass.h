@@ -23,6 +23,7 @@
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
+void Compass_message_recieve_start_resuce(mavlink_start_rescue_t* packet);
 
 
 
