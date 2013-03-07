@@ -23,7 +23,8 @@
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
-void commandStation_message_start_resuce(mavlink_xbee_heartbeat_t* packet);
+void Compass_message_recieve_start_resuce(mavlink_start_rescue_t* packet);
+
 
 
 #endif

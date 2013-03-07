@@ -40,7 +40,7 @@ void Mavlink_recieve(uint8_t uart_id){
                 {
                     mavlink_start_rescue_t data;
                     mavlink_msg_start_rescue_decode(&msg, &data);
-                    commandStation_message_start_resuce(&data);
+                    Compass_message_recieve_start_resuce(&data);
                 }break;
             }
         }
@@ -76,3 +76,11 @@ void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data){
     UART_putString(uart_id, buf, length);
 }
 #endif
+
+
+/*************************************************************************
+ * RECIEVE FUNCTIONS                                                     *
+ *************************************************************************/
+void Compass_message_recieve_start_resuce(mavlink_start_rescue_t* packet){
+    printf("Lat: %d Long: %d",packet->latitude,packet->longitude);
+}
