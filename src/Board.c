@@ -24,7 +24,7 @@
 ***********************************************************************/
 #define Board_H_PRIVATE_INCLUDE
 #include "Board.h"
-//#include "Serial.h"
+#include "Serial.h"
 #include "Uart.h"
 //#include <plib.h>
 
