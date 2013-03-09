@@ -39,8 +39,8 @@
 #define DEBUG
 
 #define USE_ACCUMULATOR         // simple low-pass filter. comment line out to disable
-#define ACCUMULATOR_LENGTH      4 // use a power of 2 and update shift too
-#define ACCUMULATOR_SHIFT       2 // 2^shift = length
+#define ACCUMULATOR_LENGTH      2 // use a power of 2 and update shift too
+#define ACCUMULATOR_SHIFT       1 // 2^shift = length
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -78,10 +78,10 @@ void resetAccumulator();
 
 char Accelerometer_init() {
     int16_t c = readRegister(WHO_AM_I_ADDRESS);  // Read WHO_AM_I register
-    if (c == ERROR || c == WHO_AM_I_VALUE)
+    if (c == WHO_AM_I_VALUE) //c != ERROR ||
     {
 #ifdef DEBUG
-        printf("Accelerometer is online...");
+        printf("Accelerometer is online...\n");
 #endif
     }
     else

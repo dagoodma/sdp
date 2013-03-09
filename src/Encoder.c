@@ -31,6 +31,8 @@
 #define LOCK_BUTTON_TRIS    PORTY05_TRIS
 #define LOCK_BUTTON         PORTY05_BIT
 
+#define BUTTON_DELAY   600 // (ms)
+
 //Zero Button
 #define ZERO_BUTTON_TRIS    PORTY06_TRIS
 #define ZERO_BUTTON         PORTY06_BIT
@@ -52,8 +54,8 @@ float verticalAngle = 0; // (degrees) calculated angle
 float horizontalAngle = 0; // (degrees) calculated angle
 float zeroVerticalAngle = 0; // (degrees)
 float zeroHorizontalAngle = 0; // (degrees)
-BOOL lockFlag = FALSE;
-BOOL zeroFlag = FALSE;
+BOOL lockFlag = FALSE, lockTimerStarted = FALSE;
+BOOL zeroFlag = FALSE, zeroTimerStarted = FALSE;
 
 // Printing debug messages over serial
 #define DEBUG
@@ -65,6 +67,8 @@ BOOL zeroFlag = FALSE;
 void accumulateAngle(int READ_ADDRESS,int WRITE_ADDRESS);
 float calculateAngle(float zeroAngle,int READ_ADDRESS,int WRITE_ADDRESS);
 uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS);
+BOOL readLockButton();
+BOOL readZeroButton();
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -107,18 +111,52 @@ float Encoder_getHorizontalDistance(float verticalDistance) {
 }
 
  BOOL Encoder_isLockPressed(){
-     if(LOCK_BUTTON == 0)
-         lockFlag = TRUE;
-     else
+     // Start lock press timer if pressed
+     if (!readLockButton()) {
+         if (lockTimerStarted)
+             lockTimerStarted = FALSE;
+
+         //printf("Lock released.\n");
          lockFlag = FALSE;
+     }
+     else if (!lockTimerStarted && readLockButton()) {
+         Timer_new(TIMER_ENCODER, BUTTON_DELAY);
+         lockTimerStarted = TRUE;
+         lockFlag = FALSE;
+
+         //printf("Lock timer started.\n");
+     }
+     else if (Timer_isExpired(TIMER_ENCODER)) {
+         lockFlag = TRUE;
+
+         printf("Lock on.\n");
+     }
+
      return lockFlag;
  }
 
  BOOL Encoder_isZeroPressed(){
-     if(ZERO_BUTTON == 0)
-         zeroFlag = TRUE;
-     else
+     // Start lock press timer if pressed
+     if (!readZeroButton()) {
+         if (zeroTimerStarted)
+             zeroTimerStarted = FALSE;
+
+         //printf("Zero released.\n");
          zeroFlag = FALSE;
+     }
+     else if (!zeroTimerStarted && readZeroButton()) {
+         Timer_new(TIMER_ENCODER, BUTTON_DELAY);
+         zeroTimerStarted = TRUE;
+         zeroFlag = FALSE;
+
+         //printf("Zero timer started.\n");
+     }
+     else if (Timer_isExpired(TIMER_ENCODER)) {
+         zeroFlag = TRUE;
+
+         printf("Zero on.\n");
+     }
+
      return zeroFlag;
  }
 
@@ -208,6 +246,14 @@ uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
         return FALSE;
     }
     return data;
+}
+
+BOOL readLockButton() {
+    return !LOCK_BUTTON;
+}
+
+BOOL readZeroButton() {
+    return !ZERO_BUTTON;
 }
 
 //#define ENCODER_TEST

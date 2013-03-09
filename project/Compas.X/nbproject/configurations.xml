@@ -17,6 +17,7 @@
       <itemPath>../../include/PWM.h</itemPath>
       <itemPath>../../include/Compas.h</itemPath>
       <itemPath>../../include/Accelerometer.h</itemPath>
+      <itemPath>../../include/Ports.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"

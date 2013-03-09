@@ -23,17 +23,31 @@
 #include "Serial.h"
 #include "Board.h"
 #include "Encoder.h"
+#include "Ports.h"
 
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
+#define DEBUG
+
+#ifdef DEBUG
+# define DEBUG_PRINT(x) printf x
+#else
+# define DEBUG_PRINT(x) do {} while (0)
+#endif
+
+
 I2C_MODULE      I2C_BUS_ID = I2C1;
 
 
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  80000 // (Hz)
+
 //----------------------------- Accelerometer --------------------------
-//#define USE_ACCELEROMETER
+
+#define USE_ACCELEROMETER
 
 #define LED_DELAY     1 // (ms)
 
@@ -69,12 +83,9 @@ void updateAccelerometerLEDs();
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 
-// Set Desired Operation Frequency
-#define I2C_CLOCK_FREQ  100000 // (Hz)
 float height = 20.4;
 // Printing debug messages over serial
-#define DEBUG
-
+BOOL useLevel = FALSE;
 
 /******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
@@ -98,11 +109,11 @@ void initMasterSM() {
 
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
 
-
     #ifdef USE_ACCELEROMETER
+    printf("Initializing accelerometer...\n");
     if (Accelerometer_init() != SUCCESS) {
         printf("Failed to initialize the accelerometer.\n");
-        return FAILURE;
+        //return;
     }
     printf("Initialized the accelerometer.\n");
 
@@ -112,7 +123,7 @@ void initMasterSM() {
     LED_E_TRIS = OUTPUT;
     LED_W_TRIS = OUTPUT;
 
-    Timer_new(TIMER_TEST, LED_DELAY );
+    Timer_new(TIMER_ACCELEROMETER, LED_DELAY );
     #endif
 }
 
@@ -123,9 +134,9 @@ void runMasterSM() {
     //  if they will be pressed after runSM
     BOOL lockPressed = Encoder_isLockPressed();
     BOOL zeroPressed = Encoder_isZeroPressed();
-
     if(lockPressed || zeroPressed){
         Encoder_runSM();
+       
         if(lockPressed) {
             float verticalDistance = Encoder_getVerticalDistance(height);
             float horizontalDistance = Encoder_getHorizontalDistance(verticalDistance);
@@ -135,19 +146,33 @@ void runMasterSM() {
         else {
             // Zero was pressed
             Encoder_setZeroAngle();
-
-            #ifdef USE_ACCELEROMETER
-            Accelerometer_runSM();
-            updateAccelerometerLEDs();
-            #endif
+            useLevel = TRUE;
+            //printf("Zeroing...\n");
         }
     }
+    if (!zeroPressed) {
+        if (useLevel)
+            printf("Done zeroing.\n");
+        
+        useLevel = FALSE;
+    }
+
+     Accelerometer_runSM();
+     updateAccelerometerLEDs();
 }
 
 
 #ifdef USE_ACCELEROMETER
 void updateAccelerometerLEDs() {
-    if (Timer_isExpired(TIMER_ACCELEROMETER)) {
+    if (!useLevel) {
+        LED_N = OFF;
+        LED_S = OFF;
+        LED_E = OFF;
+        LED_W = OFF;
+        return;
+    }
+    //printf("Updating LEDS!\n");
+    //if (Timer_isExpired(TIMER_ACCELEROMETER)) {
         // X-Axis
         if (Accelerometer_getX() <= (G_X_DESIRED - G_DELTA)) {
             LED_N = ON;
@@ -176,7 +201,7 @@ void updateAccelerometerLEDs() {
             LED_W = OFF;
         }
 
-        Timer_new(TIMER_ACCELEROMETER, LED_DELAY );
-    }
+        //Timer_new(TIMER_ACCELEROMETER, LED_DELAY );
+    //}
 }
 #endif
