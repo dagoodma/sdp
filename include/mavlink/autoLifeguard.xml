@@ -12,8 +12,7 @@
           </message>
 		  <message id="237" name="MAVLINK_ACK">
 				<description>This messages will send a sinlge byte with the mavlink message id</description>
-				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
-				<field type="uint8_t" name="data">Holds a Message ID number</field>
+				<field type="uint8_t" name="Message_Name"> Returns the name of message recieved</field>
           </message>
 		  <message id="240" name="GPS_ERROR">
 				<description>This messages will send a sinlge byte with the mavlink message id</description>

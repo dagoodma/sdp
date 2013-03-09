@@ -34,9 +34,6 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-#define XBEE_UART_ID             UART2_ID
-#define NUMBER_DATA_BYTES   1
-#define OVERHEAD_BYTES      8
 #define API_DELAY           1000
 // note, need to reprogram Xbee for different Baud Rates.
 //  factory settings are 9600 baud rate
@@ -234,6 +231,24 @@ void Xbee_message_data_test(mavlink_test_data_t* packet){
     Mavlink_send_Test_data(XBEE_UART_ID, (packet->data+1)%255);
     count_recieved++;
     Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
+}
+
+#endif
+
+
+//define XBEE_TEST_2
+#ifdef XBEE_TEST_2
+int main(){
+    Board_init();
+    Serial_init();
+    printf("Xbee Test 2\n");
+    while(1){
+        Xbee_runSM();
+        if(!UART_isReceiveEmpty(UART2_ID)){
+            Serial_getChar();
+            Mavlink_send_start_rescue(UART1_ID, TRUE, 0xFF, 0x34FD, 0xAB54);
+        }
+    }
 }
 
 #endif

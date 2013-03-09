@@ -38,6 +38,9 @@ void Mavlink_recieve(uint8_t uart_id){
                 {
                     mavlink_start_rescue_t data;
                     mavlink_msg_start_rescue_decode(&msg, &data);
+                    if(data.ack == TRUE){
+                        Mavlink_send_ACK(XBEE_UART_ID, MessageName_Start_rescue);
+                    }
                     //commandStation_message_start_resuce(&data);
                 }break;
             }
@@ -47,6 +50,13 @@ void Mavlink_recieve(uint8_t uart_id){
 }
 
 
+void Mavlink_send_ACK(uint8_t uart_id, uint8_t Message_Name){
+    mavlink_message_t msg;
+    uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+    mavlink_msg_mavlink_ack_pack(MAV_NUMBER, COMP_ID, &msg, Message_Name);
+    uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
+    UART_putString(uart_id, buf, length);
+}
 void Mavlink_send_xbee_heartbeat(uint8_t uart_id, uint8_t data){
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
@@ -61,6 +71,9 @@ void Mavlink_send_start_rescue(uint8_t uart_id, uint8_t ack, uint8_t status, uin
     mavlink_msg_start_rescue_pack(MAV_NUMBER, COMP_ID, &msg, ack, status, latitude, longitude);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
     UART_putString(uart_id, buf, length);
+    if(ack == TRUE){
+
+    }
 }
 
 #ifdef XBEE_TEST
@@ -72,3 +85,7 @@ void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data){
     UART_putString(uart_id, buf, length);
 }
 #endif
+
+void Mavlink_recieve_ACK(){
+    //remove message from list
+}

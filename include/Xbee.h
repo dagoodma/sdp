@@ -20,6 +20,7 @@
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
 #define XBEE_TEST //used for testing Xbee
+#define XBEE_UART_ID             UART2_ID
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
