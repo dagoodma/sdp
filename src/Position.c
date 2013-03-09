@@ -11,7 +11,7 @@
 #include "I2C.h"
 #include "Serial.h"
 #include "Board.h"
-#include "Encoder_I2C.h"
+#include "Encoder.h"
 
 
 /***********************************************************************
@@ -51,18 +51,28 @@ int main(void) {
     Board_init();
     Serial_init();
     Encoder_init();
+    
     while(1){
         //Magnetometer_runSM();
-        if(Is_lockOnButtonPressed() || Is_zeroOnButtonPressed()){
-            Encoder_angleAverage();
-            if(lockFlag){
-                Encoder_getCoordinates(height);
-            }
-            else
-                Encoder_setZeroAngle();
 
-            lockFlag = FALSE;
-            zeroFlag = FALSE;
+        // Record these button presses since we don't know
+        //  if they will be pressed after runSM
+        BOOL lockPressed = Encoder_isLockPressed();
+        BOOL zeroPressed = Encoder_isZeroPressed();
+        
+        if(lockPressed || zeroPressed){
+            Encoder_runSM();
+            if(lockPressed) {
+                float verticalDistance = Encoder_getVerticalDistance(height);
+                float horizontalDistance = Encoder_getHorizontalDistance(verticalDistance);
+                printf("Vertical Distance: %.2f\n",verticalDistance);
+                printf("Horizontal Distance: %.2f\n\n",horizontalDistance);
+            }
+            else {
+                // Zero was pressed
+                Encoder_setZeroAngle();
+            }
+
         }
     }
 

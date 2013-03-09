@@ -6,7 +6,7 @@
 void Mavlink_recieve(uint8_t uart_id);
 
 #include "Xbee.h"
-#include "Compass.h"
+#include "Compas.h"
 
 void Mavlink_send_xbee_heartbeat(uint8_t uart_id, uint8_t data);
 #ifdef XBEE_TEST

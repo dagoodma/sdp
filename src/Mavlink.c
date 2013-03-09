@@ -3,7 +3,7 @@
 #include "Uart.h"
 #include "Board.h"
 #include "Xbee.h"
-#include "Compass.h"
+#include "Compas.h"
 
 static int packet_drops = 0;
 static mavlink_message_t msg;

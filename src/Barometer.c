@@ -93,10 +93,10 @@ int32_t pressure; // (Pascal)
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
 
-int16_t readTwoDataBytes( uint8_t address, int BAROMETER_I2C_ID) ;
-int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID);
-int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID);
-void updateReadings(int BAROMETER_I2C_ID);
+static int16_t readTwoDataBytes( uint8_t address, int BAROMETER_I2C_ID) ;
+static int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID);
+static int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID);
+static void updateReadings(int BAROMETER_I2C_ID);
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -158,7 +158,7 @@ float Barometer_getAltitude() {
  *      and finally a restart bit before reading the incoming data.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-int16_t readTwoDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
+static int16_t readTwoDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
     int8_t success = FALSE;
     int16_t data = 0;
 
@@ -221,7 +221,7 @@ int16_t readTwoDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
  *      and finally a restart bit before reading the incoming data.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
+static int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
     int8_t success = FALSE;
     int32_t data = 0;
 
@@ -293,7 +293,7 @@ int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
  *      data.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID) {
+static int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID) {
     BOOL success = FALSE;
     int32_t data = 0;
 
@@ -359,7 +359,7 @@ int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID) {
  * temperature and pressure variables for future access.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-void updateReadings(int BAROMETER_I2C_ID) {
+static void updateReadings(int BAROMETER_I2C_ID) {
     int32_t ut;
     int32_t up;
     int32_t x1, x2, b5, b6, x3, b3, p;
@@ -400,7 +400,7 @@ void updateReadings(int BAROMETER_I2C_ID) {
 
 }
 
-#define BAROMETER_TEST
+//#define BAROMETER_TEST
 #ifdef BAROMETER_TEST
 
 #define PRINT_DELAY     1 // (ms)

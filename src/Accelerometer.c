@@ -428,7 +428,7 @@ int main(void) {
 
 #endif
 
-#define CC_CALIBRATION_TEST
+//#define CC_CALIBRATION_TEST
 #ifdef CC_CALIBRATION_TEST
 
 #include "Ports.h"

@@ -583,6 +583,7 @@ void parsePayloadField() {
 
 /****************************** TESTS ************************************/
 // Test harness that spits out GPS packets over the serial port
+#ifdef GPS_TEST
 int main() {
     uint8_t options = 0x0;
     Board_init(); // initalize interrupts
@@ -614,3 +615,5 @@ int main() {
 
     }
 }
+
+#endif

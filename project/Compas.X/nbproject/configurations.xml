@@ -15,7 +15,8 @@
       <itemPath>../../include/Gps.h</itemPath>
       <itemPath>../../include/I2C.h</itemPath>
       <itemPath>../../include/PWM.h</itemPath>
-      <itemPath>../../include/Compass.h</itemPath>
+      <itemPath>../../include/Compas.h</itemPath>
+      <itemPath>../../include/Accelerometer.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -33,10 +34,9 @@
       <itemPath>../../src/I2C.c</itemPath>
       <itemPath>../../src/Encoder.c</itemPath>
       <itemPath>../../src/Barometer.c</itemPath>
-      <itemPath>../../src/Ports.c</itemPath>
-      <itemPath>../../src/PWM.c</itemPath>
       <itemPath>../../src/Gps.c</itemPath>
-      <itemPath>../../src/Compass.c</itemPath>
+      <itemPath>../../src/Compas.c</itemPath>
+      <itemPath>../../src/Accelerometer.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -84,7 +84,7 @@
         <property key="enable-unroll-loops" value="false"/>
         <property key="exclude-floating-point" value="false"/>
         <property key="extra-include-directories"
-                  value=".;C:\Users\dagoodma\Documents\SDP\include;C:\Users\Shehadeh\Documents\GitHub\sdp\include;/Users/ddeo/Documents/sdp/include;C:\Users\John\Documents\SDP\include;C:\Users\jash\Documents\SDP\include;C:\Users\jash\Documents\SDP\include\mavlink\autoLifeguard;C:\Users\jash\Documents\SDP\include\mavlink\autoLifeguard"/>
+                  value="..\..\include;..\..\include\mavlink\autoLifeguard"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
         <property key="make-warnings-into-errors" value="false"/>
