@@ -119,12 +119,10 @@ static void mavlink_test_mavlink_ack(uint8_t system_id, uint8_t component_id, ma
         uint16_t i;
 	mavlink_mavlink_ack_t packet_in = {
 		5,
-	72,
 	};
 	mavlink_mavlink_ack_t packet1, packet2;
         memset(&packet1, 0, sizeof(packet1));
-        	packet1.ack = packet_in.ack;
-        	packet1.data = packet_in.data;
+        	packet1.Message_Name = packet_in.Message_Name;
         
         
 
@@ -134,12 +132,12 @@ static void mavlink_test_mavlink_ack(uint8_t system_id, uint8_t component_id, ma
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_mavlink_ack_pack(system_id, component_id, &msg , packet1.ack , packet1.data );
+	mavlink_msg_mavlink_ack_pack(system_id, component_id, &msg , packet1.Message_Name );
 	mavlink_msg_mavlink_ack_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_mavlink_ack_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.ack , packet1.data );
+	mavlink_msg_mavlink_ack_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.Message_Name );
 	mavlink_msg_mavlink_ack_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
@@ -152,7 +150,7 @@ static void mavlink_test_mavlink_ack(uint8_t system_id, uint8_t component_id, ma
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
         
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_mavlink_ack_send(MAVLINK_COMM_1 , packet1.ack , packet1.data );
+	mavlink_msg_mavlink_ack_send(MAVLINK_COMM_1 , packet1.Message_Name );
 	mavlink_msg_mavlink_ack_decode(last_msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 }

@@ -4,20 +4,18 @@
 
 typedef struct __mavlink_mavlink_ack_t
 {
- uint8_t ack; ///<  TRUE if we want an ACK return FALSE else
- uint8_t data; ///< Holds a Message ID number
+ uint8_t Message_Name; ///<  Returns the name of message recieved
 } mavlink_mavlink_ack_t;
 
-#define MAVLINK_MSG_ID_MAVLINK_ACK_LEN 2
-#define MAVLINK_MSG_ID_237_LEN 2
+#define MAVLINK_MSG_ID_MAVLINK_ACK_LEN 1
+#define MAVLINK_MSG_ID_237_LEN 1
 
 
 
 #define MAVLINK_MESSAGE_INFO_MAVLINK_ACK { \
 	"MAVLINK_ACK", \
-	2, \
-	{  { "ack", NULL, MAVLINK_TYPE_UINT8_T, 0, 0, offsetof(mavlink_mavlink_ack_t, ack) }, \
-         { "data", NULL, MAVLINK_TYPE_UINT8_T, 0, 1, offsetof(mavlink_mavlink_ack_t, data) }, \
+	1, \
+	{  { "Message_Name", NULL, MAVLINK_TYPE_UINT8_T, 0, 0, offsetof(mavlink_mavlink_ack_t, Message_Name) }, \
          } \
 }
 
@@ -28,29 +26,26 @@ typedef struct __mavlink_mavlink_ack_t
  * @param component_id ID of this component (e.g. 200 for IMU)
  * @param msg The MAVLink message to compress the data into
  *
- * @param ack  TRUE if we want an ACK return FALSE else
- * @param data Holds a Message ID number
+ * @param Message_Name  Returns the name of message recieved
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_mavlink_ack_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
-						       uint8_t ack, uint8_t data)
+						       uint8_t Message_Name)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
-	char buf[2];
-	_mav_put_uint8_t(buf, 0, ack);
-	_mav_put_uint8_t(buf, 1, data);
+	char buf[1];
+	_mav_put_uint8_t(buf, 0, Message_Name);
 
-        memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, 2);
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, 1);
 #else
 	mavlink_mavlink_ack_t packet;
-	packet.ack = ack;
-	packet.data = data;
+	packet.Message_Name = Message_Name;
 
-        memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, 2);
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, 1);
 #endif
 
 	msg->msgid = MAVLINK_MSG_ID_MAVLINK_ACK;
-	return mavlink_finalize_message(msg, system_id, component_id, 2, 161);
+	return mavlink_finalize_message(msg, system_id, component_id, 1, 203);
 }
 
 /**
@@ -59,30 +54,27 @@ static inline uint16_t mavlink_msg_mavlink_ack_pack(uint8_t system_id, uint8_t c
  * @param component_id ID of this component (e.g. 200 for IMU)
  * @param chan The MAVLink channel this message was sent over
  * @param msg The MAVLink message to compress the data into
- * @param ack  TRUE if we want an ACK return FALSE else
- * @param data Holds a Message ID number
+ * @param Message_Name  Returns the name of message recieved
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_mavlink_ack_pack_chan(uint8_t system_id, uint8_t component_id, uint8_t chan,
 							   mavlink_message_t* msg,
-						           uint8_t ack,uint8_t data)
+						           uint8_t Message_Name)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
-	char buf[2];
-	_mav_put_uint8_t(buf, 0, ack);
-	_mav_put_uint8_t(buf, 1, data);
+	char buf[1];
+	_mav_put_uint8_t(buf, 0, Message_Name);
 
-        memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, 2);
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, 1);
 #else
 	mavlink_mavlink_ack_t packet;
-	packet.ack = ack;
-	packet.data = data;
+	packet.Message_Name = Message_Name;
 
-        memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, 2);
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, 1);
 #endif
 
 	msg->msgid = MAVLINK_MSG_ID_MAVLINK_ACK;
-	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, 2, 161);
+	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, 1, 203);
 }
 
 /**
@@ -95,32 +87,29 @@ static inline uint16_t mavlink_msg_mavlink_ack_pack_chan(uint8_t system_id, uint
  */
 static inline uint16_t mavlink_msg_mavlink_ack_encode(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg, const mavlink_mavlink_ack_t* mavlink_ack)
 {
-	return mavlink_msg_mavlink_ack_pack(system_id, component_id, msg, mavlink_ack->ack, mavlink_ack->data);
+	return mavlink_msg_mavlink_ack_pack(system_id, component_id, msg, mavlink_ack->Message_Name);
 }
 
 /**
  * @brief Send a mavlink_ack message
  * @param chan MAVLink channel to send the message
  *
- * @param ack  TRUE if we want an ACK return FALSE else
- * @param data Holds a Message ID number
+ * @param Message_Name  Returns the name of message recieved
  */
 #ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
-static inline void mavlink_msg_mavlink_ack_send(mavlink_channel_t chan, uint8_t ack, uint8_t data)
+static inline void mavlink_msg_mavlink_ack_send(mavlink_channel_t chan, uint8_t Message_Name)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
-	char buf[2];
-	_mav_put_uint8_t(buf, 0, ack);
-	_mav_put_uint8_t(buf, 1, data);
+	char buf[1];
+	_mav_put_uint8_t(buf, 0, Message_Name);
 
-	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_MAVLINK_ACK, buf, 2, 161);
+	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_MAVLINK_ACK, buf, 1, 203);
 #else
 	mavlink_mavlink_ack_t packet;
-	packet.ack = ack;
-	packet.data = data;
+	packet.Message_Name = Message_Name;
 
-	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_MAVLINK_ACK, (const char *)&packet, 2, 161);
+	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_MAVLINK_ACK, (const char *)&packet, 1, 203);
 #endif
 }
 
@@ -130,23 +119,13 @@ static inline void mavlink_msg_mavlink_ack_send(mavlink_channel_t chan, uint8_t 
 
 
 /**
- * @brief Get field ack from mavlink_ack message
+ * @brief Get field Message_Name from mavlink_ack message
  *
- * @return  TRUE if we want an ACK return FALSE else
+ * @return  Returns the name of message recieved
  */
-static inline uint8_t mavlink_msg_mavlink_ack_get_ack(const mavlink_message_t* msg)
+static inline uint8_t mavlink_msg_mavlink_ack_get_Message_Name(const mavlink_message_t* msg)
 {
 	return _MAV_RETURN_uint8_t(msg,  0);
-}
-
-/**
- * @brief Get field data from mavlink_ack message
- *
- * @return Holds a Message ID number
- */
-static inline uint8_t mavlink_msg_mavlink_ack_get_data(const mavlink_message_t* msg)
-{
-	return _MAV_RETURN_uint8_t(msg,  1);
 }
 
 /**
@@ -158,9 +137,8 @@ static inline uint8_t mavlink_msg_mavlink_ack_get_data(const mavlink_message_t* 
 static inline void mavlink_msg_mavlink_ack_decode(const mavlink_message_t* msg, mavlink_mavlink_ack_t* mavlink_ack)
 {
 #if MAVLINK_NEED_BYTE_SWAP
-	mavlink_ack->ack = mavlink_msg_mavlink_ack_get_ack(msg);
-	mavlink_ack->data = mavlink_msg_mavlink_ack_get_data(msg);
+	mavlink_ack->Message_Name = mavlink_msg_mavlink_ack_get_Message_Name(msg);
 #else
-	memcpy(mavlink_ack, _MAV_PAYLOAD(msg), 2);
+	memcpy(mavlink_ack, _MAV_PAYLOAD(msg), 1);
 #endif
 }
