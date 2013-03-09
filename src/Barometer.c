@@ -36,7 +36,7 @@
 //  temp: 4.5 ms, pressure: 4.5, 7.5, 13.5 or 25.5 ms
 //  (pressure delay depends on OSS see page 18 in datasheet)
 #define UPDATE_DELAY    	100 // (ms)
-#define READ_SENSOR_DELAY	50 // (ms) pause for sampling of sensor
+#define READ_SENSOR_DELAY	25 // (ms) pause for sampling of sensor
 
 // Calibration variable addresses
 #define AC1_ADDRESS     0xAA
@@ -66,7 +66,8 @@
  ***********************************************************************/
 
 // Pick the I2C_MODULE to initialize
-I2C_MODULE      BAROMETER_I2C_ID = I2C1;
+I2C_MODULE      BAROMETER_COMPAS_I2C_ID = I2C1;
+I2C_MODULE      BAROMETER_ATLAS_I2C_ID = I2C2;
 
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  100000 // (Hz)
@@ -92,32 +93,30 @@ int32_t pressure; // (Pascal)
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
 
-int16_t readTwoDataBytes( uint8_t address) ;
-int32_t readThreeDataBytes( uint8_t address);
-int32_t readSensor(uint8_t sensorSelectAddress);
-void updateReadings();
+int16_t readTwoDataBytes( uint8_t address, int BAROMETER_I2C_ID) ;
+int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID);
+int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID);
+void updateReadings(int BAROMETER_I2C_ID);
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 
-void Barometer_init() {
+void Barometer_init(int BAROMETER_I2C_ID) {
 
-    I2C_init(BAROMETER_I2C_ID, I2C_CLOCK_FREQ);
+    ac1 = readTwoDataBytes(AC1_ADDRESS, BAROMETER_I2C_ID);
+    ac2 = readTwoDataBytes(AC2_ADDRESS, BAROMETER_I2C_ID);
+    ac3 = readTwoDataBytes(AC3_ADDRESS, BAROMETER_I2C_ID);
+    ac4 = readTwoDataBytes(AC4_ADDRESS, BAROMETER_I2C_ID);
+    ac5 = readTwoDataBytes(AC5_ADDRESS, BAROMETER_I2C_ID);
+    ac6 = readTwoDataBytes(AC6_ADDRESS, BAROMETER_I2C_ID);
+    b1 = readTwoDataBytes(B1_ADDRESS, BAROMETER_I2C_ID);
+    b2 = readTwoDataBytes(B2_ADDRESS, BAROMETER_I2C_ID);
+    mb = readTwoDataBytes(MB_ADDRESS, BAROMETER_I2C_ID);
+    mc = readTwoDataBytes(MC_ADDRESS, BAROMETER_I2C_ID);
+    md = readTwoDataBytes(MD_ADDRESS, BAROMETER_I2C_ID);
 
-    ac1 = readTwoDataBytes(AC1_ADDRESS);
-    ac2 = readTwoDataBytes(AC2_ADDRESS);
-    ac3 = readTwoDataBytes(AC3_ADDRESS);
-    ac4 = readTwoDataBytes(AC4_ADDRESS);
-    ac5 = readTwoDataBytes(AC5_ADDRESS);
-    ac6 = readTwoDataBytes(AC6_ADDRESS);
-    b1 = readTwoDataBytes(B1_ADDRESS);
-    b2 = readTwoDataBytes(B2_ADDRESS);
-    mb = readTwoDataBytes(MB_ADDRESS);
-    mc = readTwoDataBytes(MC_ADDRESS);
-    md = readTwoDataBytes(MD_ADDRESS);
-
-    updateReadings();
+    updateReadings(BAROMETER_I2C_ID);
     Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
 
 }
@@ -134,9 +133,9 @@ int32_t Barometer_getPressure(){
     return pressure;
 }
 
-void Barometer_runSM() {
+void Barometer_runSM(int BAROMETER_I2C_ID) {
     if (Timer_isExpired(TIMER_BAROMETER)) {
-        updateReadings();
+        updateReadings(BAROMETER_I2C_ID);
         Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
     }
 }
@@ -159,7 +158,7 @@ float Barometer_getAltitude() {
  *      and finally a restart bit before reading the incoming data.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-int16_t readTwoDataBytes( uint8_t address) {
+int16_t readTwoDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
     int8_t success = FALSE;
     int16_t data = 0;
 
@@ -222,7 +221,7 @@ int16_t readTwoDataBytes( uint8_t address) {
  *      and finally a restart bit before reading the incoming data.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-int32_t readThreeDataBytes( uint8_t address) {
+int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
     int8_t success = FALSE;
     int32_t data = 0;
 
@@ -294,7 +293,7 @@ int32_t readThreeDataBytes( uint8_t address) {
  *      data.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-int32_t readSensor(uint8_t sensorSelectAddress) {
+int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID) {
     BOOL success = FALSE;
     int32_t data = 0;
 
@@ -335,9 +334,9 @@ int32_t readSensor(uint8_t sensorSelectAddress) {
 
         // Read the address that has the desired data: temperature or pressure
         if(sensorSelectAddress == PRESSURE_DATA_ADDRESS)
-            data = readThreeDataBytes(SENSOR_DATA_ADDRESS);
+            data = readThreeDataBytes(SENSOR_DATA_ADDRESS, BAROMETER_I2C_ID);
         else
-            data = readTwoDataBytes(SENSOR_DATA_ADDRESS);
+            data = readTwoDataBytes(SENSOR_DATA_ADDRESS, BAROMETER_I2C_ID);
 
         success = TRUE;
     } while(0);
@@ -360,16 +359,16 @@ int32_t readSensor(uint8_t sensorSelectAddress) {
  * temperature and pressure variables for future access.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-void updateReadings() {
+void updateReadings(int BAROMETER_I2C_ID) {
     int32_t ut;
     int32_t up;
     int32_t x1, x2, b5, b6, x3, b3, p;
     uint32_t b4, b7;
 
     // Read the pressure and temperature values from the sensor.
-    up = readSensor(PRESSURE_DATA_ADDRESS);
+    up = readSensor(PRESSURE_DATA_ADDRESS,BAROMETER_I2C_ID);
     //up &= 0x0000FFFF;
-    ut = readSensor(TEMPERATURE_DATA_ADDRESS);
+    ut = readSensor(TEMPERATURE_DATA_ADDRESS,BAROMETER_I2C_ID);
 
 	// Temperature conversion
     x1 = (((long)ut - ac6) * ac5) >> 15;
@@ -404,26 +403,40 @@ void updateReadings() {
 #define BAROMETER_TEST
 #ifdef BAROMETER_TEST
 
-#define PRINT_DELAY     1000 // (ms)
+#define PRINT_DELAY     1 // (ms)
 
 int main(void) {
 // Initialize the UART,Timers, and I2C1
     Board_init();
     Timer_init();
+    float accumulator = 0;
     Serial_init();
-    Barometer_init();
+    I2C_init(BAROMETER_COMPAS_I2C_ID, I2C_CLOCK_FREQ);
+    I2C_init(BAROMETER_ATLAS_I2C_ID, I2C_CLOCK_FREQ);
+    //Barometer_init();
     Timer_new(TIMER_TEST, PRINT_DELAY );
 
     while(1){
-        // Convert the raw data to real values
-        if (Timer_isExpired(TIMER_TEST)) {
-            printf("Temperature: %.1f (deg F)\n", Barometer_getTemperatureFahrenheit());
-            printf("Pressure: %ld (Pa)\n", Barometer_getPressure());
-            printf("Altitude: %.1f (ft)\n\n", Barometer_getAltitude());
-            Timer_new(TIMER_TEST, PRINT_DELAY );
-        }
+        int i;
+        for (i = 0; i < 100; ++i){
+            Barometer_init(BAROMETER_COMPAS_I2C_ID);
+            // Convert the raw data to real values
+            while (!Timer_isExpired(TIMER_TEST));
+                //printf("Altitude1: %.1f (ft)\n\n", Barometer_getAltitude());
+            float baro1 = Barometer_getAltitude();
+                Timer_new(TIMER_TEST, PRINT_DELAY );
 
-        Barometer_runSM();
+            Barometer_init(BAROMETER_ATLAS_I2C_ID);
+            // Convert the raw data to real values
+            while (!Timer_isExpired(TIMER_TEST));
+                //printf("Altitude2: %.1f (ft)\n\n", Barometer_getAltitude());
+            float baro2 = Barometer_getAltitude();
+                Timer_new(TIMER_TEST, PRINT_DELAY );
+            accumulator += (baro2 - baro1);
+            //Barometer_runSM();
+        }
+        printf("%.1f\n",7 - (accumulator/100));
+        accumulator = 0;
     }
 
     return (SUCCESS);
