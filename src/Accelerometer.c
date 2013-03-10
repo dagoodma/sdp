@@ -38,7 +38,7 @@
 // Printing debug messages over serial
 #define DEBUG
 
-#define USE_ACCUMULATOR         // simple low-pass filter. comment line out to disable
+//#define USE_ACCUMULATOR         // simple low-pass filter. comment line out to disable
 #define ACCUMULATOR_LENGTH      2 // use a power of 2 and update shift too
 #define ACCUMULATOR_SHIFT       1 // 2^shift = length
 
@@ -81,7 +81,7 @@ char Accelerometer_init() {
     if (c == WHO_AM_I_VALUE) //c != ERROR ||
     {
 #ifdef DEBUG
-        printf("Accelerometer is online...\n");
+        //printf("Accelerometer is online...\n");
 #endif
     }
     else
