@@ -10,6 +10,7 @@
       <itemPath>../../include/Timer.h</itemPath>
       <itemPath>../../include/Mavlink.h</itemPath>
       <itemPath>../../include/Serial.h</itemPath>
+      <itemPath>../../include/mavlink/protocol.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
