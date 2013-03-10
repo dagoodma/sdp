@@ -68,7 +68,11 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 #define LED_E_TRIS      PORTY12_TRIS // RD1
 #define LED_W_TRIS      PORTY10_TRIS // RD2
 
+//------------------------------- XBEE --------------------------------
 
+#define USE_XBEE
+
+#define Xbee_1
 
 
 /***********************************************************************
@@ -129,7 +133,9 @@ void initMasterSM() {
 
 void runMasterSM() {
     //Magnetometer_runSM();
-
+#ifdef USE_XBEE
+    Xbee_runSM();
+#endif
     // Record these button presses since we don't know
     //  if they will be pressed after runSM
     BOOL lockPressed = Encoder_isLockPressed();
