@@ -236,18 +236,41 @@ void Xbee_message_data_test(mavlink_test_data_t* packet){
 #endif
 
 
-//define XBEE_TEST_2
+#define XBEE_TEST_2
 #ifdef XBEE_TEST_2
+
+#define TIMER_TIMEOUT 4
+#define DELAY_TIMEOUT 4000
+
 int main(){
     Board_init();
     Serial_init();
+    Timer_init();
+    Xbee_init();
     printf("Xbee Test 2\n");
     while(1){
         Xbee_runSM();
-        if(!UART_isReceiveEmpty(UART2_ID)){
+        //if(!UART_isTransmitEmpty(UART1_ID));
+        //printf("%d\t",Mavlink_returnACKStatus(messageName_start_rescue));
+        if(!UART_isReceiveEmpty(UART1_ID)){
             Serial_getChar();
-            Mavlink_send_start_rescue(UART1_ID, TRUE, 0xFF, 0x34FD, 0xAB54);
+            Mavlink_send_start_rescue(UART2_ID, TRUE, 0xFF, 0x34FD, 0xAB54);
+            Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
+            printf("\nSENT\n");
         }
+        else if(Timer_isActive(TIMER_TIMEOUT) != TRUE && Mavlink_returnACKStatus(messageName_start_rescue) == ACK_STATUS_WAIT){
+        //else if(Timer_isActive(TIMER_TIMEOUT) != TRUE){
+            Mavlink_editACKStatus(messageName_start_rescue, ACK_STATUS_DEAD);
+            printf("ACK DEAD\n");
+        }
+        else if(Mavlink_returnACKStatus(messageName_start_rescue) == ACK_STATUS_DEAD){
+            Mavlink_send_start_rescue(UART2_ID, TRUE, 0xFF, 0x34FD, 0xAB54);
+            Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
+        }
+        else if(Mavlink_returnACKStatus(messageName_start_rescue) == ACK_STATUS_RECIEVED){
+            Mavlink_editACKStatus(messageName_start_rescue, ACK_STATUS_NO_ACK);
+            printf("GPS SENT AND ACKOWLEGED\n");
+        } 
     }
 }
 

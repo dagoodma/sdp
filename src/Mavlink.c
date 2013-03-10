@@ -12,7 +12,7 @@ static mavlink_status_t status;
 #define MAV_NUMBER 15 // defines the MAV number, arbitrary
 #define COMP_ID 15
 
-
+uint8_t start_rescue_ack_status = ACK_STATUS_NO_ACK;
 
 void Mavlink_recieve(uint8_t uart_id){
     while(UART_isReceiveEmpty(uart_id) == FALSE){
@@ -41,9 +41,15 @@ void Mavlink_recieve(uint8_t uart_id){
                     mavlink_start_rescue_t data;
                     mavlink_msg_start_rescue_decode(&msg, &data);
                     if(data.ack == TRUE){
-                        Mavlink_send_ACK(XBEE_UART_ID, MessageName_Start_rescue);
+                        Mavlink_send_ACK(XBEE_UART_ID, messageName_start_rescue);
                     }
-                    //commandStation_message_start_resuce(&data);
+                    Compass_message_recieve_start_rescue(&data);
+                }break;
+                case MAVLINK_MSG_ID_MAVLINK_ACK:
+                {
+                    mavlink_mavlink_ack_t data;
+                    mavlink_msg_mavlink_ack_decode(&msg, &data);
+                    Mavlink_recieve_ACK(&data);
                 }break;
             }
         }
@@ -76,7 +82,7 @@ void Mavlink_send_start_rescue(uint8_t uart_id, uint8_t ack, uint8_t status, uin
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
     UART_putString(uart_id, buf, length);
     if(ack == TRUE){
-
+        start_rescue_ack_status = ACK_STATUS_WAIT;
     }
 }
 
@@ -94,10 +100,43 @@ void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data){
 /*************************************************************************
  * RECIEVE FUNCTIONS                                                     *
  *************************************************************************/
-void Compass_message_recieve_start_resuce(mavlink_start_rescue_t* packet){
+void Compass_message_recieve_start_rescue(mavlink_start_rescue_t* packet){
     printf("Lat: %d Long: %d",packet->latitude,packet->longitude);
-}#endif
-
-void Mavlink_recieve_ACK(){
-    //remove message from list
 }
+
+void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet){
+    switch(packet->Message_Name){
+        case messageName_start_rescue:
+        {
+            start_rescue_ack_status = ACK_STATUS_RECIEVED;
+        }break;
+    }
+}
+
+
+
+/*************************************************************************
+ * PUBLIC FUNCTIONS                                                      *
+ *************************************************************************/
+
+uint8_t Mavlink_returnACKStatus(uint8_t message_name){
+    switch(message_name){
+        case messageName_start_rescue:
+        {
+            return start_rescue_ack_status;
+        }break;
+    }
+}
+
+void Mavlink_editACKStatus(uint8_t message_name, uint8_t new_status){
+    switch(message_name){
+        case messageName_start_rescue:
+        {
+            start_rescue_ack_status = new_status;
+        }break;
+    }
+}
+
+
+
+

@@ -14,7 +14,7 @@
  --------------         ---         --------
 2/25/2013   11:10PM     jash        Initial Creation
 ***********************************************************************/
-
+/*
 #include <xc.h>
 #include <peripheral/uart.h>
 #include <stdint.h>
@@ -25,7 +25,7 @@
 #include "Timer.h"
 #include "Xbee.h"
 #include "Compass.h"
-
+*/
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
@@ -42,9 +42,7 @@
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
-void Compass_message_recieve_start_resuce(mavlink_start_rescue_t* packet){
-    printf("Lat: %d Long: %d",packet->latitude,packet->longitude);
-}
+
 /**********************************************************************
  * PRIVATE FUNCTIONS                                                  *
  **********************************************************************/
