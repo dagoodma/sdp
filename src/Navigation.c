@@ -7,6 +7,7 @@
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
+//#define __XC32
 #include <math.h>
 #include "Serial.h"
 #include "Timer.h"
@@ -19,6 +20,7 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
+#define DEBUG
 
 // Ellipsoid (olbate) constants for coordinate conversions
 #define ECC     0.0818191908426f // eccentricity
@@ -47,12 +49,11 @@ void convertEuler2NED(Coordinate var, float yaw, float pitch, float height);
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 BOOL Navigation_init() {
-    if (!GPS_init() || !GPS_isInitialized()) {
+    uint8_t options = 0x0;
+    if (GPS_init(options) != SUCCESS || !GPS_isInitialized()) {
         printf("Failed to initialize Navigation system.\n");
         return FAILURE;
     }
-
-
     return SUCCESS;
 }
 
@@ -278,17 +279,20 @@ void getCurrentPosition(Position pos) {
 #define NAVIGATION_TEST
 #ifdef NAVIGATION_TEST
 
-int main(void) {
+int main() {
     Board_init();
-    Timer_init();
     Serial_init();
+    Timer_init();
     if (Navigation_init() != SUCCESS) {
+        printf("Navigation system failed to initialize.\n");
         return FAILURE;
     }
 
+    printf("Navigation system initialized.\n");
     while (!Navigation_isReady()) {
-        asm("nop");
+        Navigation_runSM();
     }
+    Navigation_runSM();
 
     printf("Navigation system is ready.\n");
 

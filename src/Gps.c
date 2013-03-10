@@ -6,7 +6,6 @@
  */
 
 #include <xc.h>
-#include <xc.h>
 #include <stdio.h>
 #include <plib.h>
 #include "Serial.h"
@@ -20,7 +19,7 @@
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
-//#define DEBUG
+#define DEBUG
 //#define DEBUG_STATE
 
 
@@ -125,10 +124,12 @@ BOOL GPS_init(uint8_t options) {
 #ifdef DEBUG
     printf("Intializing the GPS on uart %d.\n", GPS_UART_ID);
 #endif
+
     UART_init(GPS_UART_ID,GPS_UART_BAUDRATE);
+
     startIdleState();
     gpsInitialized = TRUE;
-    return TRUE;
+    return SUCCESS;
 }
 
 /**********************************************************************
@@ -601,6 +602,7 @@ void parsePayloadField() {
 
 /****************************** TESTS ************************************/
 // Test harness that spits out GPS packets over the serial port
+//#define GPS_TEST
 #ifdef GPS_TEST
 int main() {
     uint8_t options = 0x0;

@@ -13,6 +13,8 @@
 * @date January 23, 2013 -- Created
 */
 
+#ifndef UART_H
+#define UART_H
 
 #define UART1_ID 1
 #define UART2_ID 2
@@ -88,3 +90,5 @@ char UART_isTransmitEmpty(uint8_t id);
 * @author John Ash
 * @date February 1st, 2013 */
 char UART_isReceiveEmpty(uint8_t id);
+
+#endif

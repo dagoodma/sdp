@@ -52,7 +52,6 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 
 //----------------------------- Accelerometer --------------------------
 
-#define USE_MAGNETOMETER
 #define USE_ACCELEROMETER
 
 #define LED_DELAY     1 // (ms)
@@ -75,6 +74,10 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 #define LED_E_TRIS      PORTY12_TRIS // RD1
 #define LED_W_TRIS      PORTY10_TRIS // RD2
 
+
+//----------------------------- Other Modules ---------------------------
+#define USE_MAGNETOMETER
+#define USE_GPS
 
 
 
@@ -126,10 +129,15 @@ void initMasterSM() {
     Board_init();
     Timer_init();
     Serial_init();
-    Encoder_init();
-    Navigation_init();
-
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
+
+    Encoder_init();
+
+
+    #ifdef USE_GPS
+    Navigation_init();
+    #endif
+
 
     #ifdef USE_ACCELEROMETER
     //printf("Initializing accelerometer...\n");
@@ -166,6 +174,7 @@ void runMasterSM() {
         Encoder_runSM();
        
         if(lockPressed && Navigation_isReady()) {
+            #ifdef USE_GPS
             Coordinate geo = Coordinate_new(geo, 0, 0 ,0);
             if (Navigation_getProjectedCoordinate(geo, Encoder_getYaw(),
                 Encoder_getPitch(), height)) {
@@ -175,6 +184,9 @@ void runMasterSM() {
             else {
                 printf("Failed to obtain desired geodetic coordinate.\n");
             }
+#           #else
+            printf("Navigation module is disabled.\n");
+#           #endif
             /*
             float verticalDistance = Encoder_getVerticalDistance(height);
             float horizontalDistance = Encoder_getHorizontalDistance(verticalDistance);
@@ -202,6 +214,10 @@ void runMasterSM() {
     #ifdef USE_ACCELEROMETER
     Accelerometer_runSM();
     updateAccelerometerLEDs();
+    #endif
+
+    #ifdef USE_GPS
+    Navigation_runSM();
     #endif
 }
 
