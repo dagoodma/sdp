@@ -157,8 +157,10 @@ void runMasterSM() {
         useLevel = FALSE;
     }
 
-     Accelerometer_runSM();
-     updateAccelerometerLEDs();
+    #ifdef USE_ACCELEROMETER
+    Accelerometer_runSM();
+    updateAccelerometerLEDs();
+    #endif
 }
 
 
