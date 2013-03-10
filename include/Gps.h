@@ -49,24 +49,24 @@ BOOL GPS_hasFix();
 
 /**********************************************************************
  * Function: GPS_getLatitude
- * @return The GPS's latitude value in degrees (N/S) scaled 1e-7.
+ * @return The GPS's latitude value in decimal degrees (N/S).
  * @remark
  **********************************************************************/
-int32_t GPS_getLatitude();
+float GPS_getLatitude();
 
 /**********************************************************************
  * Function: GPS_getLongitude
- * @return The GPS's longitude value in degrees (E/W) scaled 1e-7.
+ * @return The GPS's longitude value in decimal degrees (E/W).
  * @remark
  **********************************************************************/
-int32_t GPS_getLongitude();
+float GPS_getLongitude();
 
 /**********************************************************************
  * Function: GPS_getAltitude
- * @return The GPS's altitude value in milimeters.
+ * @return The GPS's altitude value in meters.
  * @remark
  **********************************************************************/
-int32_t GPS_getAltitude();
+float GPS_getAltitude();
 
 /**********************************************************************
  * Function: GPS_getNorthVelocity

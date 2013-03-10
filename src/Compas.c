@@ -13,8 +13,10 @@
  When                   Who         What/Why
  --------------         ---         --------
 3/08/2013   6:41PM      dagoodma    Copied initial code from Shah's Position module.
-2/25/2013   11:10PM     jash        Creation
+3/08/2013   12:00PM     shehadeh    Wrote initial code.
+2/25/2013   11:10PM     jash        Created project.
 ***********************************************************************/
+#define IS_COMPAS
 
 #include <xc.h>
 #include <stdio.h>
@@ -25,6 +27,8 @@
 #include "Encoder.h"
 #include "Ports.h"
 #include "Magnetometer.h"
+#include "Gps.h"
+#include "Navigation.h"
 
 
 /***********************************************************************
@@ -87,7 +91,7 @@ void updateHeading();
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 
-float height = 4.5;
+float height = 1.3716; // (m)
 float heading = 0;
 // Printing debug messages over serial
 BOOL useLevel = FALSE;
@@ -96,6 +100,12 @@ BOOL useLevel = FALSE;
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
+/**
+ * Function: main
+ * @return SUCCESS or FAILURE.
+ * @remark Entry point for command center (COMPAS).
+ * @author David Goodman
+ * @date 2013.03.10  */
 int main(void) {
     initMasterSM();
     printf("Command Center Ready for Use. \n\n\n\n\n");
@@ -106,11 +116,18 @@ int main(void) {
 }
 
 
+/**
+ * Function: initMasterSM
+ * @return None.
+ * @remark Initializes the master state machine for the command canter.
+ * @author David Goodman
+ * @date 2013.03.10  */
 void initMasterSM() {
     Board_init();
     Timer_init();
     Serial_init();
     Encoder_init();
+    Navigation_init();
 
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
 
@@ -132,6 +149,12 @@ void initMasterSM() {
     #endif
 }
 
+/**
+ * Function: runMasterSM
+ * @return None.
+ * @remark Executes one cycle of the command center's state machine.
+ * @author David Goodman
+ * @date 2013.03.09  */
 void runMasterSM() {
     //Magnetometer_runSM();
 
@@ -142,11 +165,22 @@ void runMasterSM() {
     if(lockPressed || zeroPressed){
         Encoder_runSM();
        
-        if(lockPressed) {
+        if(lockPressed && Navigation_isReady()) {
+            Coordinate geo = Coordinate_new(geo, 0, 0 ,0);
+            if (Navigation_getProjectedCoordinate(geo, Encoder_getYaw(),
+                Encoder_getPitch(), height)) {
+                printf("Desired coordinate -- lat:%.6f, lon: %.6f, alt: %.2f (m)\n",
+                    geo->x, geo->y, geo->z);
+            }
+            else {
+                printf("Failed to obtain desired geodetic coordinate.\n");
+            }
+            /*
             float verticalDistance = Encoder_getVerticalDistance(height);
             float horizontalDistance = Encoder_getHorizontalDistance(verticalDistance);
             printf("Vertical Distance: %.2f (ft)\n",verticalDistance);
             printf("Horizontal Distance: %.2f (ft)\n\n",horizontalDistance);
+            */
         }
         else {
             // Zero was pressed
@@ -171,6 +205,13 @@ void runMasterSM() {
     #endif
 }
 
+
+/**
+ * Function: updateHeading
+ * @return None.
+ * @remark Prints the heading value if the magnetometer is enabled.
+ * @author Shehadeh Dajani
+ * @date 2013.03.09  */
 #ifdef USE_MAGNETOMETER
 void updateHeading(){
     if(heading < 40 || heading > 320)
@@ -181,6 +222,13 @@ void updateHeading(){
 
 #endif
 
+
+/**
+ * Function: updateHeading
+ * @return None.
+ * @remark Shines the accelerometer level lights if zeroing.
+ * @author David Goodman
+ * @date 2013.03.09  */
 #ifdef USE_ACCELEROMETER
 void updateAccelerometerLEDs() {
     if (!useLevel) {

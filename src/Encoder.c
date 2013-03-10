@@ -50,10 +50,10 @@ I2C_MODULE      ENCODER_I2C_ID = I2C1;
 #define I2C_CLOCK_FREQ  100000 // (Hz)
 
 float angleAccumulator = 0; // (degrees) accumlated angles
-float verticalAngle = 0; // (degrees) calculated angle
-float horizontalAngle = 0; // (degrees) calculated angle
-float zeroVerticalAngle = 0; // (degrees)
-float zeroHorizontalAngle = 0; // (degrees)
+float pitchAngle = 0; // (degrees) calculated angle
+float yawAngle = 0; // (degrees) calculated angle
+float zeroPitchAngle = 0; // (degrees)
+float zeroYawAngle = 0; // (degrees)
 BOOL lockFlag = FALSE, lockTimerStarted = FALSE;
 BOOL zeroFlag = FALSE, zeroTimerStarted = FALSE;
 
@@ -77,9 +77,9 @@ BOOL readZeroButton();
 
  void Encoder_runSM(){
 
-     verticalAngle = calculateAngle(zeroVerticalAngle,SLAVE_VERTICAL_READ_ADDRESS,
+     pitchAngle = calculateAngle(zeroPitchAngle,SLAVE_VERTICAL_READ_ADDRESS,
                                    SLAVE_VERTICAL_WRITE_ADDRESS);
-     horizontalAngle = calculateAngle(zeroHorizontalAngle,SLAVE_HORIZONTAL_READ_ADDRESS,
+     yawAngle = calculateAngle(zeroYawAngle,SLAVE_HORIZONTAL_READ_ADDRESS,
                                      SLAVE_HORIZONTAL_WRITE_ADDRESS);
  }
 
@@ -89,26 +89,38 @@ void Encoder_init() {
 }
 
 void Encoder_setZeroAngle(){
-    zeroVerticalAngle = verticalAngle;
-    zeroHorizontalAngle = horizontalAngle;
+    zeroPitchAngle = pitchAngle;
+    zeroYawAngle = yawAngle;
 }
 
 
-float Encoder_getVerticalDistance(float height) {
-    float theta = (90 - verticalAngle);
+float Encoder_getPitch() {
+    return pitchAngle;
+}
+
+float Encoder_getYaw() {
+    return yawAngle;
+}
+
+/*
+float Encoder_getNorthDistance(float height) {
+
+
+    float theta = (90 - pitchAngle);
     return height*tan(theta*PI/180);
     //printf("Vertical Distance: %.2f\n",verticalDistance);
 }
 
 float Encoder_getHorizontalDistance(float verticalDistance) {
     float theta;
-    if(horizontalAngle <= 90)
+    if(yawAngle <= 90)
         theta = horizontalAngle;
     else
         theta = 360  - horizontalAngle;
     return verticalDistance*sin(theta*PI/180);
     //printf("Horizontal Distance: %.2f\n\n",horizontalDistance);
 }
+*/
 
  BOOL Encoder_isLockPressed(){
      // Start lock press timer if pressed

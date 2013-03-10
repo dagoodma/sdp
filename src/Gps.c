@@ -61,9 +61,10 @@
     ((uint32_t)(data[start] + ((uint32_t)data[start+1] << 8) \
     + ((uint32_t)data[start+2] << 16) + ((uint32_t)data[start+3] << 24)))
 
-#define COORDINATE_TO_DECIMAL(coord)    ((float)coord/10000000)
 #define MM_TO_M(unit)                   ((float)unit/1000)
 #define CM_TO_M(unit)                   ((float)unit/100)
+#define COORDINATE_TO_DECIMAL(coord)    ((float)coord/10000000)
+#define ALTITUDE_TO_DECIMAL(alt)        (MM_TO_M(alt))
 #define HEADING_TO_DEGREE(heading)      ((float)heading/100000)
 
 
@@ -82,14 +83,15 @@ uint8_t byteIndex = 0, messageLength = LENGTH2_INDEX + 1,
         messageClass = 0, messageId = 0, gpsStatus = NOFIX_STATUS;
 
 
-BOOL hasNewMessage = FALSE, isConnected = FALSE, isUsingError = FALSE;
+BOOL hasNewMessage = FALSE, isConnected = FALSE, isUsingError = FALSE,
+    hasPosition = FALSE;
 
 // Variables read from the GPS
 int32_t heading;
 
 struct {
-    int32_t latitude, longitude ,altitude;
-} coordinate;
+    int32_t latitude, longitude, altitude;
+} geodetic;
 
 struct {
     int32_t north, east;
@@ -126,6 +128,7 @@ BOOL GPS_init(uint8_t options) {
     UART_init(GPS_UART_ID,GPS_UART_BAUDRATE);
     startIdleState();
     gpsInitialized = TRUE;
+    return TRUE;
 }
 
 /**********************************************************************
@@ -187,15 +190,27 @@ BOOL GPS_hasFix() {
 }
 
 /**********************************************************************
+ * Function: GPS_hasPosition
+ * @return TRUE if a position has been obtained.
+ * @remark
+ **********************************************************************/
+BOOL GPS_hasPosition() {
+    return hasPosition;
+}
+
+
+/**********************************************************************
  * Function: GPS_getLatitude
  * @return The GPS's latitude value (N/S) scaled 1e7.
  * @remark
  **********************************************************************/
-int32_t GPS_getLatitude() {
-    return (isUsingError)?
-        coordinate.latitude - error.latitude
+float GPS_getLatitude() {
+    float lat =  (isUsingError)?
+        geodetic.latitude - error.latitude
         :
-        coordinate.latitude;
+        geodetic.latitude;
+
+    return COORDINATE_TO_DECIMAL(lat);
 }
 
 /**********************************************************************
@@ -203,11 +218,13 @@ int32_t GPS_getLatitude() {
  * @return The GPS's longitude value (E/W) scaled 1e7.
  * @remark
  **********************************************************************/
-int32_t GPS_getLongitude() {
-    return  (isUsingError)?
-        coordinate.longitude - error.longitude
+float GPS_getLongitude() {
+    float lon =  (isUsingError)?
+        (geodetic.longitude - error.longitude)
         :
-        coordinate.longitude;
+        geodetic.longitude;
+
+    return COORDINATE_TO_DECIMAL(lon);
 }
 
 /**********************************************************************
@@ -215,8 +232,8 @@ int32_t GPS_getLongitude() {
  * @return The GPS's altitude value in milimeters.
  * @remark
  **********************************************************************/
-int32_t GPS_getAltitude() {
-    return coordinate.altitude;
+float GPS_getAltitude() {
+    return ALTITUDE_TO_DECIMAL(geodetic.altitude);
 }
 
 /**********************************************************************
@@ -464,7 +481,7 @@ void parsePayloadField() {
                             byteIndex += sizeof(uint32_t);
                             break;
                         case 4: // lon
-                            coordinate.longitude = (int32_t)(rawMessage[byteIndex]
+                            geodetic.longitude = (int32_t)(rawMessage[byteIndex]
                                     + ((int32_t)rawMessage[byteIndex + 1] << 8)
                                     + ((int32_t)rawMessage[byteIndex + 2] << 16)
                                     + ((int32_t)rawMessage[byteIndex + 3] << 24));
@@ -472,7 +489,7 @@ void parsePayloadField() {
                             byteIndex += sizeof(int32_t);
                             break;
                         case 8: // lat
-                            coordinate.latitude = (int32_t)(rawMessage[byteIndex]
+                            geodetic.latitude = (int32_t)(rawMessage[byteIndex]
                                     + ((int32_t)rawMessage[byteIndex + 1] << 8)
                                     + ((int32_t)rawMessage[byteIndex + 2] << 16)
                                     + ((int32_t)rawMessage[byteIndex + 3] << 24));
@@ -482,10 +499,11 @@ void parsePayloadField() {
                             byteIndex += sizeof(int32_t);
                             break;
                         case 16: // hMSL
-                            coordinate.altitude = (int32_t)(rawMessage[byteIndex]
+                            geodetic.altitude = (int32_t)(rawMessage[byteIndex]
                                     + ((int32_t)rawMessage[byteIndex + 1] << 8)
                                     + ((int32_t)rawMessage[byteIndex + 2] << 16)
                                     + ((int32_t)rawMessage[byteIndex + 3] << 24));
+                            hasPosition = TRUE;
                             byteIndex += sizeof(int32_t);
                             break;
                         case 20: // hAcc (not implemented)
@@ -600,8 +618,8 @@ int main() {
             }
             else if (GPS_hasFix()) {
                 /*printf("Lat:%ld, Lon: %ld, Alt: %ld (m)\n",lat,lon,alt);*/
-                printf("Lat:%.6f, Lon: %.6f, Alt: %.2f (m)\n",COORDINATE_TO_DECIMAL(GPS_getLatitude()),
-                        COORDINATE_TO_DECIMAL(GPS_getLongitude()), MM_TO_M(GPS_getAltitude()) );
+                printf("Lat:%.6f, Lon: %.6f, Alt: %.2f (m)\n",GPS_getLatitude(),
+                        GPS_getLongitude(), GPS_getAltitude() );
                 printf("Velocity N:%.2f, E: %.2f (m/s), Heading: %.2f (deg)\n",CM_TO_M(GPS_getNorthVelocity()),
                         CM_TO_M(GPS_getEastVelocity()), HEADING_TO_DEGREE(GPS_getHeading()) );
             }

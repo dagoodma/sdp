@@ -19,6 +19,7 @@
       <itemPath>../../include/Accelerometer.h</itemPath>
       <itemPath>../../include/Ports.h</itemPath>
       <itemPath>../../include/Magnetometer.h</itemPath>
+      <itemPath>../../include/Navigation.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -40,6 +41,7 @@
       <itemPath>../../src/Compas.c</itemPath>
       <itemPath>../../src/Accelerometer.c</itemPath>
       <itemPath>../../src/Magnetometer.c</itemPath>
+      <itemPath>../../src/Navigation.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
