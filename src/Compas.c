@@ -95,7 +95,7 @@ BOOL useLevel = FALSE;
 /******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
-
+/*
 int main(void) {
     initMasterSM();
     printf("Command Center Ready for Use. \n\n\n\n\n");
@@ -104,7 +104,7 @@ int main(void) {
     }
     return (SUCCESS);
 }
-
+*/
 
 void initMasterSM() {
     Board_init();
@@ -224,3 +224,8 @@ void updateAccelerometerLEDs() {
     //}
 }
 #endif
+
+
+void Compas_recieve_start_rescue(mavlink_start_rescue_t* packet){
+    printf("Lat: %d Long: %d",packet->latitude,packet->longitude);
+}
