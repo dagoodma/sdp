@@ -4,12 +4,19 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>../../include/Accelerometer.h</itemPath>
       <itemPath>../../include/Board.h</itemPath>
-      <itemPath>../../include/I2C.h</itemPath>
-      <itemPath>../../include/Serial.h</itemPath>
-      <itemPath>../../include/Timer.h</itemPath>
       <itemPath>../../include/Uart.h</itemPath>
+      <itemPath>../../include/Xbee.h</itemPath>
+      <itemPath>../../include/Timer.h</itemPath>
+      <itemPath>../../include/Mavlink.h</itemPath>
+      <itemPath>../../include/Serial.h</itemPath>
+      <itemPath>../../include/Barometer.h</itemPath>
+      <itemPath>../../include/Encoder.h</itemPath>
+      <itemPath>../../include/Gps.h</itemPath>
+      <itemPath>../../include/I2C.h</itemPath>
+      <itemPath>../../include/PWM.h</itemPath>
+      <itemPath>../../include/Compas.h</itemPath>
+      <itemPath>../../include/Accelerometer.h</itemPath>
       <itemPath>../../include/Ports.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
@@ -19,12 +26,18 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../../src/Accelerometer.c</itemPath>
       <itemPath>../../src/Board.c</itemPath>
-      <itemPath>../../src/I2C.c</itemPath>
-      <itemPath>../../src/Serial.c</itemPath>
-      <itemPath>../../src/Timer.c</itemPath>
       <itemPath>../../src/Uart.c</itemPath>
+      <itemPath>../../src/Xbee.c</itemPath>
+      <itemPath>../../src/Timer.c</itemPath>
+      <itemPath>../../src/Mavlink.c</itemPath>
+      <itemPath>../../src/Serial.c</itemPath>
+      <itemPath>../../src/I2C.c</itemPath>
+      <itemPath>../../src/Encoder.c</itemPath>
+      <itemPath>../../src/Barometer.c</itemPath>
+      <itemPath>../../src/Gps.c</itemPath>
+      <itemPath>../../src/Compas.c</itemPath>
+      <itemPath>../../src/Accelerometer.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -72,7 +85,7 @@
         <property key="enable-unroll-loops" value="false"/>
         <property key="exclude-floating-point" value="false"/>
         <property key="extra-include-directories"
-                  value="C:\Users\dagoodma\Documents\SDP\include"/>
+                  value="..\..\include;..\..\include\mavlink\autoLifeguard"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
         <property key="make-warnings-into-errors" value="false"/>
@@ -87,10 +100,48 @@
         <property key="use-indirect-calls" value="false"/>
       </C32>
       <C32-AS>
+        <property key="assembler-symbols" value=""/>
+        <property key="enable-symbols" value="true"/>
+        <property key="exclude-floating-point-library" value="false"/>
+        <property key="expand-macros" value="false"/>
+        <property key="extra-include-directories-for-assembler" value=""/>
+        <property key="extra-include-directories-for-preprocessor" value=""/>
+        <property key="false-conditionals" value="false"/>
+        <property key="keep-locals" value="false"/>
+        <property key="list-assembly" value="false"/>
+        <property key="list-source" value="false"/>
+        <property key="list-symbols" value="false"/>
+        <property key="oXC32asm-list-to-file" value="false"/>
+        <property key="omit-debug-dirs" value="false"/>
+        <property key="omit-forms" value="false"/>
+        <property key="preprocessor-macros" value=""/>
+        <property key="warning-level" value=""/>
       </C32-AS>
       <C32-LD>
       </C32-LD>
       <C32CPP>
+        <property key="additional-warnings" value="false"/>
+        <property key="check-new" value="false"/>
+        <property key="eh-specs" value="true"/>
+        <property key="enable-app-io" value="false"/>
+        <property key="enable-omit-frame-pointer" value="false"/>
+        <property key="enable-symbols" value="true"/>
+        <property key="enable-unroll-loops" value="false"/>
+        <property key="exceptions" value="true"/>
+        <property key="exclude-floating-point" value="false"/>
+        <property key="extra-include-directories" value=""/>
+        <property key="generate-16-bit-code" value="false"/>
+        <property key="isolate-each-function" value="false"/>
+        <property key="make-warnings-into-errors" value="false"/>
+        <property key="optimization-level" value=""/>
+        <property key="place-data-into-section" value="false"/>
+        <property key="post-instruction-scheduling" value="default"/>
+        <property key="pre-instruction-scheduling" value="default"/>
+        <property key="preprocessor-macros" value=""/>
+        <property key="rtti" value="true"/>
+        <property key="strict-ansi" value="false"/>
+        <property key="use-cci" value="false"/>
+        <property key="use-indirect-calls" value="false"/>
       </C32CPP>
       <C32Global>
       </C32Global>
