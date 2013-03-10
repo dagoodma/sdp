@@ -60,10 +60,11 @@
 
 static uint8_t Xbee_programMode();
 
+void check_ACK(ACK *message);
+
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
  **********************************************************************/
-uint32_t start_rescue_ACK_time = 0;
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
@@ -92,19 +93,19 @@ void Xbee_runSM(){
     if(Timer_isActive(TIMER_HEARTBEAT) != TRUE){
         Mavlink_send_xbee_heartbeat(XBEE_UART_ID, 1);
         Timer_new(TIMER_HEARTBEAT, DELAY_HEARTBEAT);
-        printf("Heart beat sent");
+        //printf("Heart beat sent");
     }
 
 #else
     //we have not heard a heartbeat message for 4 s, LOST CONNECTION
     if(Timer_isActive(TIMER_HEARTBEAT) != TRUE){
         Timer_new(TIMER_HEARTBEAT, DELAY_HEARTBEAT);
-        printf("LOST CONNECTION");
+        printf("XBEE LOST CONNECTION\n");
     }
 #endif
     
     //check ACKS
-    check_ACK(start_rescue);
+    check_ACK(&start_rescue);
 
 
 }
@@ -171,18 +172,20 @@ static uint8_t Xbee_programMode(){
 }
 
 
-void check_ACK(ACK message){
-    if(message.ACK_status == ACK_STATUS_WAIT){
-        if(message.ACK_time == 0) message.ACK_time = get_time();
+void check_ACK(ACK *message){
+    if(message->ACK_status == ACK_STATUS_WAIT){
+        if(message->ACK_time == 0) {
+            message->ACK_time = get_time();
 
-        else if(get_time() - start_rescue_ACK_time <= ACK_WAIT_TIME){
+        }
+        else if((get_time() - message->ACK_time) >= ACK_WAIT_TIME){
             Mavlink_resend_message(message);
-            message.ACK_time = 0;
+            message->ACK_time = 0;
         }
 
-    }else if(message.ACK_status == ACK_STATUS_RECIEVED){
-            message.ACK_status = ACK_STATUS_NO_ACK;
-            message.ACK_time = 0;
+    }else if(message->ACK_status == ACK_STATUS_RECIEVED){
+            message->ACK_status = ACK_STATUS_NO_ACK;
+            message->ACK_time = 0;
     }
 }
 

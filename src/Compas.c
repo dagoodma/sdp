@@ -25,7 +25,8 @@
 #include "Encoder.h"
 #include "Ports.h"
 #include "Magnetometer.h"
-
+#include "Xbee.h"
+#include "UART.h"
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
@@ -75,7 +76,7 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 
 #define USE_XBEE
 
-#define Xbee_1
+#define XBEE_UART_ID UART2_ID
 
 
 /***********************************************************************
@@ -153,6 +154,9 @@ void runMasterSM() {
             float horizontalDistance = Encoder_getHorizontalDistance(verticalDistance);
             printf("Vertical Distance: %.2f (ft)\n",verticalDistance);
             printf("Horizontal Distance: %.2f (ft)\n\n",horizontalDistance);
+#ifdef USE_XBEE
+            Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0, verticalDistance, horizontalDistance);
+#endif
         }
         else {
             // Zero was pressed
@@ -232,6 +236,3 @@ void updateAccelerometerLEDs() {
 #endif
 
 
-void Compas_recieve_start_rescue(mavlink_start_rescue_t* packet){
-    printf("Lat: %d Long: %d",packet->latitude,packet->longitude);
-}

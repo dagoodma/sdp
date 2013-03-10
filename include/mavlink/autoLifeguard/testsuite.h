@@ -206,8 +206,8 @@ static void mavlink_test_start_rescue(uint8_t system_id, uint8_t component_id, m
         uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
         uint16_t i;
 	mavlink_start_rescue_t packet_in = {
-		963497464,
-	963497672,
+		17.0,
+	45.0,
 	29,
 	96,
 	};
