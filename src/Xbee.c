@@ -236,7 +236,7 @@ void Xbee_message_data_test(mavlink_test_data_t* packet){
 #endif
 
 
-#define XBEE_TEST_2
+//#define XBEE_TEST_2
 #ifdef XBEE_TEST_2
 
 #define TIMER_TIMEOUT 4

@@ -7,6 +7,7 @@
 
 #include <xc.h>
 #include <stdio.h>
+#include <math.h>
 #include <plib.h>
 #include "I2C.h"
 #include "Serial.h"
@@ -20,14 +21,13 @@
 #define SLAVE_READ_ADDRESS          0x43
 #define SLAVE_WRITE_ADDRESS         0x42
 #define SLAVE_DEGREE_ADDRESS        0x41
-
+#define ACCUMULATOR_LENGTH          50
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 // Pick the I2C_MODULE to initialize
 I2C_MODULE      MAGNETOMETER_I2C_ID = I2C1;
-
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  100000 // (Hz)
 
@@ -55,21 +55,27 @@ float Magnetometer_getDegree(){
     return finalDegree;
 }
 
+void Magnetometer_runSM(){
+     int count;
+     float accumulator = 0;
+     for(count = 0; count < ACCUMULATOR_LENGTH; count++){
+        Degree = Magnetometer_readSensor();
+        if(Degree < 0020)
+            Degree += 3600;
+        accumulator += Degree;
+    }
+    finalDegree = (float)(accumulator/(ACCUMULATOR_LENGTH*10));
+    if(finalDegree > 360)
+        finalDegree -= 360;
+    if(finalDegree < 0.5 || finalDegree > 359.5)
+        finalDegree = 0;
+ }
+
 /******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
- void Magnetometer_runSM(){
-     int count;
-     float accumulator = 0;
-     for(count = 0; count < 150; count++){
-        Degree = Magnetometer_readSensor();
-        if(Degree > 3595 || Degree < 05)
-            Degree = 0;
-        accumulator += Degree;
-    }
-    finalDegree = (float)(accumulator/1500);
- }
+ 
 
 uint16_t Magnetometer_readSensor() {
     int8_t success = FALSE;

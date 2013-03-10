@@ -38,7 +38,7 @@
 #define ZERO_BUTTON         PORTY06_BIT
 #define PI 3.14159265358979323846
 
-#define ACCUMULATOR_LENGTH  300
+#define ACCUMULATOR_LENGTH  150
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -154,7 +154,7 @@ float Encoder_getHorizontalDistance(float verticalDistance) {
      else if (Timer_isExpired(TIMER_ENCODER)) {
          zeroFlag = TRUE;
 
-         printf("Zero on.\n");
+         //printf("Zero on.\n");
      }
 
      return zeroFlag;
