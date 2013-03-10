@@ -1,6 +1,6 @@
 /* 
  * File:   Encoder.h
- * Author: ddeo
+ * Author: sdajani
  *
  * Created on January 28, 2013, 8:50 PM
  */
@@ -17,7 +17,7 @@
  * Function: Encoder_init
  * @return None.
  * @remark Initializes the Encoder interface and configures interrupts for input capture/compare1. DOES NOT ENABLE INTERRUPT.
- * @author Darrel R. Deo
+ * @author Shehadeh H. Dajani
  * @date 2013.02.10  */
 void Encoder_init();
 
@@ -45,7 +45,7 @@ void Encoder_setZeroAngle();
  * @return TRUE or FALSE of whether the lock button was pressed or not.
  * @remark Lock button is pressed to acquire a target and send the bot a
  *  goto coordinate message.
- * @author Darrel R. Deo
+ * @author Shehadeh H. Dajani
  * @date 2013.02.10  */
  BOOL Encoder_isLockPressed();
 
@@ -53,7 +53,7 @@ void Encoder_setZeroAngle();
  * Function: Is_zeroOnButtonPressed
  * @return TRUE or FALSE of whether the button was pressed or not
  * @remark Event Checker Routine that checks state of pushbutton for Lock on
- * @author Darrel R. Deo
+ * @author Shehadeh H. Dajani
  * @date 2013.02.10  */
  BOOL Encoder_isZeroPressed();
 
@@ -62,7 +62,6 @@ void Encoder_setZeroAngle();
  * @return Vertical distance in feet to current target.
  * @remark Given height, does a tangent calculation of vertical distance.
  * @author Shehadeh Dajani
- * @author Darrel R. Deo
  * @date 2013.02.10  */
  float Encoder_getVerticalDistance(float height);
 

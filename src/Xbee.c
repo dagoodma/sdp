@@ -51,6 +51,9 @@
 #else
 #define DELAY_HEARTBEAT 1000 //Time to wait before send heartbeat
 #endif
+
+
+#define ACK_WAIT_TIME 3000
 /**********************************************************************
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
@@ -60,7 +63,7 @@ static uint8_t Xbee_programMode();
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
  **********************************************************************/
-
+uint32_t start_rescue_ACK_time = 0;
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
@@ -79,10 +82,11 @@ uint8_t Xbee_init(){
 
 
 void Xbee_runSM(){
+    //Recieve bytes if they are available
     if(UART_isReceiveEmpty(XBEE_UART_ID) == FALSE){
         Mavlink_recieve(XBEE_UART_ID);
     }
-
+    //send and recieve heart beat message
 #ifndef XBEE_1 //if Xbee 2
     //Sends out a HEARTBEAT every 1000 ms.
     if(Timer_isActive(TIMER_HEARTBEAT) != TRUE){
@@ -98,6 +102,10 @@ void Xbee_runSM(){
         printf("LOST CONNECTION");
     }
 #endif
+    
+    //check ACKS
+    check_ACK(start_rescue);
+
 
 }
 
@@ -162,6 +170,21 @@ static uint8_t Xbee_programMode(){
     return SUCCESS;
 }
 
+
+void check_ACK(ACK message){
+    if(message.ACK_status == ACK_STATUS_WAIT){
+        if(message.ACK_time == 0) message.ACK_time = get_time();
+
+        else if(get_time() - start_rescue_ACK_time <= ACK_WAIT_TIME){
+            Mavlink_resend_message(message);
+            message.ACK_time = 0;
+        }
+
+    }else if(message.ACK_status == ACK_STATUS_RECIEVED){
+            message.ACK_status = ACK_STATUS_NO_ACK;
+            message.ACK_time = 0;
+    }
+}
 
 
 /*************************************************************
@@ -236,7 +259,7 @@ void Xbee_message_data_test(mavlink_test_data_t* packet){
 #endif
 
 
-#define XBEE_TEST_2
+//#define XBEE_TEST_2
 #ifdef XBEE_TEST_2
 
 #define TIMER_TIMEOUT 4
@@ -274,4 +297,26 @@ int main(){
     }
 }
 
+#endif
+
+#define XBEE_TEST_3
+#ifdef XBEE_TEST_3
+int main(){
+    Board_init();
+    Serial_init();
+    Timer_init();
+    Xbee_init();
+    printf("Xbee Test 2\n");
+    while(1){
+        Xbee_runSM();
+        //if(!UART_isTransmitEmpty(UART1_ID));
+        //printf("%d\t",Mavlink_returnACKStatus(messageName_start_rescue));
+        if(!UART_isReceiveEmpty(UART1_ID)){
+            Serial_getChar();
+            Mavlink_send_start_rescue(UART2_ID, TRUE, 0xFF, 0x34FD, 0xAB54);
+            printf("\nSENT\n");
+        }
+    }
+
+}
 #endif
