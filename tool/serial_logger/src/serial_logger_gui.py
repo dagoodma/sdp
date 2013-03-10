@@ -63,8 +63,8 @@ DEFAULT_BAUDRATE = 9600
 DEFAULT_TIMEOUT = 6
 DEFAULT_LOG_LEVEL = 'INFO'
 DEFAULT_LOG_FORMAT = "%(levelname)s %(asctime)-15s %(message)s"
-READ_DELAY = 0.005 # (sec)  delay between serial read updates
-UPDATE_DELAY = 50  # (msec) delay between terminal updates
+READ_DELAY = 0.0002 # (sec)  delay between serial read updates
+UPDATE_DELAY = 5  # (msec) delay between terminal updates
 
 terminal_lock = threading.Lock()
 

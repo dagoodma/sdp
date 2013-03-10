@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=Encoder.X
+PROJECTNAME=Sonar.X
 
 # Active Configuration
 DEFAULTCONF=default

@@ -80,8 +80,27 @@ static enum {
 uint8_t rawMessage[RAW_BUFFER_SIZE];
 uint8_t byteIndex = 0, messageLength = LENGTH2_INDEX + 1,
         messageClass = 0, messageId = 0, gpsStatus = NOFIX_STATUS;
-BOOL hasNewMessage = FALSE, isConnected = FALSE;
-int32_t latitude, longitude, altitude, northVelocity, eastVelocity, heading;
+
+
+BOOL hasNewMessage = FALSE, isConnected = FALSE, isUsingError = FALSE;
+
+// Variables read from the GPS
+int32_t heading;
+
+struct {
+    int32_t latitude, longitude ,altitude;
+} coordinate;
+
+struct {
+    int32_t north, east;
+} velocity;
+
+// TODO shrink these variables if possible
+struct {
+    int32_t latitude, longitude;
+} error;
+
+
 
 
 /**********************************************************************
@@ -173,7 +192,10 @@ BOOL GPS_hasFix() {
  * @remark
  **********************************************************************/
 int32_t GPS_getLatitude() {
-    return latitude;
+    return (isUsingError)?
+        coordinate.latitude - error.latitude
+        :
+        coordinate.latitude;
 }
 
 /**********************************************************************
@@ -182,7 +204,10 @@ int32_t GPS_getLatitude() {
  * @remark
  **********************************************************************/
 int32_t GPS_getLongitude() {
-    return longitude;
+    return  (isUsingError)?
+        coordinate.longitude - error.longitude
+        :
+        coordinate.longitude;
 }
 
 /**********************************************************************
@@ -191,15 +216,52 @@ int32_t GPS_getLongitude() {
  * @remark
  **********************************************************************/
 int32_t GPS_getAltitude() {
-    return longitude;
+    return coordinate.altitude;
 }
+
+/**********************************************************************
+ * Function: GPS_setLongitudeError
+ * @return None
+ * @remark Sets the longitudal error for error corrections.
+ **********************************************************************/
+void GPS_setLongitudeError(int32_t lonError) {
+    error.longitude = lonError;
+}
+
+/**********************************************************************
+ * Function: GPS_setLatitudeError
+ * @return None
+ * @remark Sets the latitudal error for error corrections.
+ **********************************************************************/
+void GPS_setLatitudeError(int32_t latError) {
+    error.latitude = latError;
+}
+
+/**********************************************************************
+ * Function: GPS_enableErrorCorrection
+ * @return None
+ * @remark Enables error correction for retreived coordinates.
+ **********************************************************************/
+void GPS_enableErrorCorrection() {
+    isUsingError = TRUE;
+}
+
+/**********************************************************************
+ * Function: GPS_disableErrorCorrection
+ * @return None
+ * @remark Disables error correction for retreived coordinates.
+ **********************************************************************/
+void GPS_disableErrorCorrection() {
+    isUsingError = FALSE;
+}
+
 /**********************************************************************
  * Function: GPS_getNorthVelocity
  * @return Returns the current velocity in the north direction.
  * @remark Centimeters per second in the north direction.
  **********************************************************************/
 int32_t GPS_getNorthVelocity() {
-    return northVelocity;
+    return velocity.north;
 }
 
 /**********************************************************************
@@ -208,7 +270,7 @@ int32_t GPS_getNorthVelocity() {
  * @remark Centimeters per second in the east direction.
  **********************************************************************/
 int32_t GPS_getEastVelocity() {
-    return eastVelocity;
+    return velocity.east;
 }
 
 
@@ -402,7 +464,7 @@ void parsePayloadField() {
                             byteIndex += sizeof(uint32_t);
                             break;
                         case 4: // lon
-                            longitude = (int32_t)(rawMessage[byteIndex]
+                            coordinate.longitude = (int32_t)(rawMessage[byteIndex]
                                     + ((int32_t)rawMessage[byteIndex + 1] << 8)
                                     + ((int32_t)rawMessage[byteIndex + 2] << 16)
                                     + ((int32_t)rawMessage[byteIndex + 3] << 24));
@@ -410,7 +472,7 @@ void parsePayloadField() {
                             byteIndex += sizeof(int32_t);
                             break;
                         case 8: // lat
-                            latitude = (int32_t)(rawMessage[byteIndex]
+                            coordinate.latitude = (int32_t)(rawMessage[byteIndex]
                                     + ((int32_t)rawMessage[byteIndex + 1] << 8)
                                     + ((int32_t)rawMessage[byteIndex + 2] << 16)
                                     + ((int32_t)rawMessage[byteIndex + 3] << 24));
@@ -420,7 +482,7 @@ void parsePayloadField() {
                             byteIndex += sizeof(int32_t);
                             break;
                         case 16: // hMSL
-                            altitude = (int32_t)(rawMessage[byteIndex]
+                            coordinate.altitude = (int32_t)(rawMessage[byteIndex]
                                     + ((int32_t)rawMessage[byteIndex + 1] << 8)
                                     + ((int32_t)rawMessage[byteIndex + 2] << 16)
                                     + ((int32_t)rawMessage[byteIndex + 3] << 24));
@@ -466,14 +528,14 @@ void parsePayloadField() {
                             byteIndex += sizeof(uint32_t);
                             break;
                         case 4: // velN
-                            northVelocity = (int32_t)(rawMessage[byteIndex]
+                            velocity.north = (int32_t)(rawMessage[byteIndex]
                                     + ((int32_t)rawMessage[byteIndex + 1] << 8)
                                     + ((int32_t)rawMessage[byteIndex + 2] << 16)
                                     + ((int32_t)rawMessage[byteIndex + 3] << 24));
                             byteIndex += sizeof(int32_t);
                             break;
                         case 8: // velE
-                            eastVelocity = (int32_t)(rawMessage[byteIndex]
+                            velocity.east = (int32_t)(rawMessage[byteIndex]
                                     + ((int32_t)rawMessage[byteIndex + 1] << 8)
                                     + ((int32_t)rawMessage[byteIndex + 2] << 16)
                                     + ((int32_t)rawMessage[byteIndex + 3] << 24));
@@ -521,6 +583,7 @@ void parsePayloadField() {
 
 /****************************** TESTS ************************************/
 // Test harness that spits out GPS packets over the serial port
+#ifdef GPS_TEST
 int main() {
     uint8_t options = 0x0;
     Board_init(); // initalize interrupts
@@ -552,3 +615,5 @@ int main() {
 
     }
 }
+
+#endif

@@ -20,6 +20,6 @@ DATA_FREQUENCY = 1.99; % (Hz | points/sec)
 DATA_FILES = { 'data\2013.02.23-141040_ublox1_geodetic.dlm', 'data\2013.02.23-141040_ublox2_geodetic.dlm'};
 PLOT_TIMESTEPS = [MIN(15) HOUR(2) HOUR(6)]; % (seconds)
 
-figure(5)
+figure(5); clf;
 
 gps_errorCorrelationTimePlot(DATA_FILES{1}, DATA_FILES{2},truthCoord);

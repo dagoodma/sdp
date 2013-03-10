@@ -20,7 +20,7 @@ enum Message_names{
 void Mavlink_recieve(uint8_t uart_id);
 
 #include "Xbee.h"
-#include "Compass.h"
+#include "Compas.h"
 
 
 void Mavlink_send_ACK(uint8_t uart_id, uint8_t Message_Name);

@@ -38,18 +38,27 @@
 // Printing debug messages over serial
 #define DEBUG
 
+#define USE_ACCUMULATOR         // simple low-pass filter. comment line out to disable
+#define ACCUMULATOR_LENGTH      2 // use a power of 2 and update shift too
+#define ACCUMULATOR_SHIFT       1 // 2^shift = length
+
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 // Pick the I2C_MODULE to initialize
 I2C_MODULE      I2C_ID = I2C1;
 
-// Acceleration data
-int32_t accelerationX, accelerationY, accelerationZ; // (m/s^2)
+struct {
+    uint16_t x, y , z;
+} gCount;
 
 struct {
-    uint16_t x, y ,z;
-} gCount;
+    uint32_t x , y, z;
+} gAccumulator;
+
+uint8_t accumulatorIndex = 0;
+
+
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -61,7 +70,7 @@ void setStandbyMode();
 int16_t readRegister( uint8_t address);
 int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest );
 int16_t writeRegister( uint8_t address, uint8_t data );
-
+void resetAccumulator();
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -69,10 +78,10 @@ int16_t writeRegister( uint8_t address, uint8_t data );
 
 char Accelerometer_init() {
     int16_t c = readRegister(WHO_AM_I_ADDRESS);  // Read WHO_AM_I register
-    if (c == ERROR || c == WHO_AM_I_VALUE)
+    if (c == WHO_AM_I_VALUE) //c != ERROR ||
     {
 #ifdef DEBUG
-        printf("Accelerometer is online...");
+        printf("Accelerometer is online...\n");
 #endif
     }
     else
@@ -93,6 +102,10 @@ char Accelerometer_init() {
 
     setActiveMode();
     Timer_new(TIMER_ACCELEROMETER, UPDATE_DELAY);
+
+#ifdef USE_ACCUMULATOR
+    resetAccumulator();
+#endif
 
     return SUCCESS;
 }
@@ -123,6 +136,13 @@ void Accelerometer_runSM() {
  ******************************************************************************/
 
 
+/**
+ * Function: updateReadings
+ * @return None
+ * @remark Records the current G-values from the sensor. Accumulation (low-pass)
+ *  filtering will occur if USE_ACCUMULATOR is defined.
+ * @author David Goodman
+ * @date 2013.01.23  */
 void updateReadings() {
     uint8_t rawData[6];  // x/y/z accel register data stored here
 
@@ -144,6 +164,7 @@ void updateReadings() {
 
         //Record this gCount into the struct or short ints
         switch (i) {
+            #ifndef USE_ACCUMULATOR
             case 0:
                 gCount.x = gCountI;
                 break;
@@ -153,8 +174,45 @@ void updateReadings() {
             case 2:
                 gCount.z = gCountI;
                 break;
+            #else
+            case 0:
+                gAccumulator.x += gCountI;
+                break;
+            case 1:
+                gAccumulator.y += gCountI;
+                break;
+            case 2:
+                gAccumulator.z += gCountI;
+                break;
+            #endif
         }
     }
+    // Update gCounts if accumulating
+    #ifdef USE_ACCUMULATOR
+    accumulatorIndex++;
+    if (accumulatorIndex >= ACCUMULATOR_LENGTH) {
+        gCount.x = (uint16_t)(gAccumulator.x >> ACCUMULATOR_SHIFT);
+        gCount.y = (uint16_t)(gAccumulator.y >> ACCUMULATOR_SHIFT);
+        gCount.z = (uint16_t)(gAccumulator.z >> ACCUMULATOR_SHIFT);
+
+        resetAccumulator();
+    }
+    #endif
+}
+
+
+
+/**
+ * Function: resetAccumulator
+ * @return None
+ * @remark Resets the accumulator.
+ * @author David Goodman
+ * @date 2013.01.23  */
+void resetAccumulator() {
+    gAccumulator.x = 0;
+    gAccumulator.y = 0;
+    gAccumulator.z = 0;
+    accumulatorIndex = 0;
 }
 
 /**
@@ -327,18 +385,19 @@ int16_t writeRegister( uint8_t address, uint8_t data ) {
 
 
 
-#define BAROMETER_TEST
-#ifdef BAROMETER_TEST
+//#define ACCELEROMETER_TEST
+#ifdef ACCELEROMETER_TEST
 
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  80000 // (Hz)
-#define PRINT_DELAY     100 // (ms)
+#define PRINT_DELAY     250 // (ms)
 
 int main(void) {
 
     // Initialize the modules
     Board_init();
     Timer_init();
+    Serial_init();
     I2C_init(I2C_ID, I2C_CLOCK_FREQ);
 
     //printf("Who am I: 0x%X\n", readRegister(WHO_AM_I_ADDRESS));
@@ -353,7 +412,7 @@ int main(void) {
     while(1){
     // Convert the raw data to real values
         if (Timer_isExpired(TIMER_TEST)) {
-            printf("G-Counts: x=%.1f, y=%.1f, z=%.1f\n\n",
+            printf("**G-Counts: x=%.2f, y=%.2f, z=%.2f\n\n",
                 (float)Accelerometer_getX()/1000,
                 (float)Accelerometer_getY()/1000,
                 (float)Accelerometer_getZ()/1000);
@@ -368,3 +427,95 @@ int main(void) {
 }
 
 #endif
+
+//#define CC_CALIBRATION_TEST
+#ifdef CC_CALIBRATION_TEST
+
+#include "Ports.h"
+
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  80000 // (Hz)
+#define LED_DELAY     1 // (ms)
+
+#define G_DELTA         20 // (0.001 G) scaled by 1e-3 == 0.02 G
+#define G_X_DESIRED     0
+#define G_Y_DESIRED     0
+#define G_Z_DESIRED     1000 // (0.001 G) scaled by 1e-3 == 1 G
+
+#define LED_N           PORTZ06_LAT // RD0
+#define LED_S           PORTZ04_LAT // RF1
+#define LED_E           PORTY12_LAT // RD1
+#define LED_W           PORTY10_LAT // RD2
+
+#define LED_N_TRIS      PORTZ06_TRIS // RD0
+#define LED_S_TRIS      PORTZ04_TRIS // RF1
+#define LED_E_TRIS      PORTY12_TRIS // RD1
+#define LED_W_TRIS      PORTY10_TRIS // RD2
+
+int main(void) {
+
+    // Initialize the modules
+    Board_init();
+    Timer_init();
+    Serial_init();
+    I2C_init(I2C_ID, I2C_CLOCK_FREQ);
+
+    //printf("Who am I: 0x%X\n", readRegister(WHO_AM_I_ADDRESS));
+
+    if (Accelerometer_init() != SUCCESS) {
+        printf("Failed to initialize the accelerometer.\n");
+        return FAILURE;
+    }
+    printf("Initialized the accelerometer.\n");
+
+    // Configure ports as outputs
+    LED_N_TRIS = OUTPUT;
+    LED_S_TRIS = OUTPUT;
+    LED_E_TRIS = OUTPUT;
+    LED_W_TRIS = OUTPUT;
+    
+    Timer_new(TIMER_TEST, LED_DELAY );
+
+    while(1){
+    // Convert the raw data to real values
+        if (Timer_isExpired(TIMER_TEST)) {
+            // X-Axis
+            if (Accelerometer_getX() <= (G_X_DESIRED - G_DELTA)) {
+                LED_N = ON;
+                LED_S = OFF;
+            }
+            else if (Accelerometer_getX() >= (G_X_DESIRED + G_DELTA)) {
+                LED_N = OFF;
+                LED_S = ON;
+            }
+            else {
+                LED_N = OFF;
+                LED_S = OFF;
+            }
+
+            // Y-Axis
+            if (Accelerometer_getY() <= (G_Y_DESIRED - G_DELTA)) {
+                LED_E = OFF;
+                LED_W = ON;
+            }
+            else if (Accelerometer_getY() >= (G_Y_DESIRED + G_DELTA)) {
+                LED_E = ON;
+                LED_W = OFF;
+            }
+            else {
+                LED_E = OFF;
+                LED_W = OFF;
+            }
+            
+            Timer_new(TIMER_TEST, LED_DELAY );
+        }
+
+        Accelerometer_runSM();
+    }
+
+    return (SUCCESS);
+
+}
+
+#endif
+
