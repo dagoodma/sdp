@@ -33,9 +33,9 @@
  ***********************************************************************/
 
 // Geodetic (lat, lon, alt) or NED coordinate for GPS
-typedef struct {
+typedef struct oCoordinate {
     float x, y ,z;
-} oCoordinate, *Coordinate;
+} Coordinate;
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -78,7 +78,7 @@ BOOL Navigation_isReady();
  *  them to the current ECEF location, and convert to geodetic (LLA).
  * @author David Goodman
  * @date 2013.03.10  */
-BOOL Navigation_getProjectedCoordinate(Coordinate geo, float yaw, float pitch, float height);
+BOOL Navigation_getProjectedCoordinate(Coordinate *coord, float yaw, float pitch, float height);
 #endif
 
 /**
@@ -91,7 +91,7 @@ BOOL Navigation_getProjectedCoordinate(Coordinate geo, float yaw, float pitch, f
  * @remark Constructor for a geodetic, NED, or ECEF coordinate.
  * @author David Goodman
  * @date 2013.03.10  */
-Coordinate Coordinate_new(Coordinate coord, float x, float y, float z);
+//Coordinate Coordinate_new(Coordinate coord, float x, float y, float z);
 
 #endif // Navigation_H
 

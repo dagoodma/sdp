@@ -39,11 +39,11 @@
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
-void convertENU2ECEF(Coordinate var, float east, float north, float up, float lat_ref,
+void convertENU2ECEF(Coordinate *var, float east, float north, float up, float lat_ref,
     float lon_ref, float alt_ref);
-void convertGeodetic2ECEF(Coordinate var, float lat, float lon, float alt);
-void convertECEF2Geodetic(Coordinate var, float ecef_x, float ecef_y, float ecef_z);
-void convertEuler2NED(Coordinate var, float yaw, float pitch, float height);
+void convertGeodetic2ECEF(Coordinate *var, float lat, float lon, float alt);
+void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ecef_z);
+void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height);
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -68,19 +68,24 @@ BOOL Navigation_isReady() {
 
 
 //#ifdef IS_COMPAS
-BOOL Navigation_getProjectedCoordinate(Coordinate geo, float yaw, float pitch, float height) {
-    if ( ! Navigation_isReady() || !geo)
+BOOL Navigation_getProjectedCoordinate(Coordinate *coord, float yaw, float pitch, float height) {
+    #ifdef USE_GEODETIC
+    if ( ! Navigation_isReady())
         return FALSE;
 
+    float alt = GPS_getAltitude();
+    #endif
+    float alt = 0.0;
+    
+    // Convert params to NED vector (x=north, y=east, z=down)
+    Coordinate ned;
+    convertEuler2NED(&ned, yaw, pitch, height + alt);
+
+    #ifdef USE_GEODETIC
     // Get refence geodetic coordinate
     float lat = GPS_getLatitude();
     float lon = GPS_getLongitude();
-    float alt = GPS_getAltitude();
-    
-    // Convert params to NED vector (x=north, y=east, z=down)
-    Coordinate ned = Coordinate_new(ned, 0, 0 ,0);
-    convertEuler2NED(ned, yaw, pitch, height + alt);
-    
+
     // Convert NED to ENU and obtain projected ECEF
     Coordinate ecef = Coordinate_new(ecef, 0, 0 ,0);
     convertENU2ECEF(ecef, ned->y, ned->x, -(ned->z), lat, lon, alt);
@@ -88,30 +93,43 @@ BOOL Navigation_getProjectedCoordinate(Coordinate geo, float yaw, float pitch, f
     // Convert projected ECEF into projected Geodetic (LLA)
     convertECEF2Geodetic(geo, ecef->x, ecef->y, ecef->z);
 
+    #else
+    coord->x = ned.x;
+    coord->y = ned.y;
+    coord->z = ned.z;
+    /*
+    printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
+        coord->x, coord->y, coord->z);
+    printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
+        ned.x, ned.y, ned.z);
+    */
+    #endif
+
     return TRUE;
 }
 //#endif
 
 // -------------------------- Functions for Types ----------------------
+/*
 Coordinate Coordinate_new(Coordinate coord, float x, float y, float z) {
-    if (coord) {
-        coord->x = x;
-        coord->y = y;
-        coord->z = z;
-    }
+    //if (coord) {
+        coord.x = x;
+        coord.y = y;
+        coord.z = z;
+    //}
 
     return coord;
 }
-
+*/
 /*******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
-void convertENU2ECEF(Coordinate var, float east, float north, float up, float lat_ref,
+void convertENU2ECEF(Coordinate *var, float east, float north, float up, float lat_ref,
     float lon_ref, float alt_ref) {
     // Convert geodetic lla  reference to ecef
-    Coordinate ecef_ref = Coordinate_new(ecef_ref, 0, 0, 0);
-    convertGeodetic2ECEF(ecef_ref, lat_ref, lon_ref, alt_ref);
+    Coordinate ecef_ref; //= Coordinate_new(ecef_ref, 0, 0, 0);
+    convertGeodetic2ECEF(&ecef_ref, lat_ref, lon_ref, alt_ref);
 
     float coslat = cos(DEGREE_TO_RADIAN(lat_ref));
     float sinlat = sin(DEGREE_TO_RADIAN(lat_ref));
@@ -124,9 +142,9 @@ void convertENU2ECEF(Coordinate var, float east, float north, float up, float la
     float dx = coslon * t - sinlon * east;
     float dy = sinlon * t + coslon * east;
 
-    var->x = ecef_ref->x + dx;
-    var->y = ecef_ref->y + dy;
-    var->z = ecef_ref->z + dz;
+    var->x = ecef_ref.x + dx;
+    var->y = ecef_ref.y + dy;
+    var->z = ecef_ref.z + dz;
 }
 
 
@@ -142,7 +160,7 @@ void convertENU2ECEF(Coordinate var, float east, float north, float up, float la
  * @author David Goodman
  * @author MATLAB
  * @date 2013.03.10  */
-void convertGeodetic2ECEF(Coordinate var, float lat, float lon, float alt) {
+void convertGeodetic2ECEF(Coordinate *var, float lat, float lon, float alt) {
     float sinlat = sin(DEGREE_TO_RADIAN(lat));
     float coslat = cos(DEGREE_TO_RADIAN(lat));
 
@@ -165,7 +183,7 @@ void convertGeodetic2ECEF(Coordinate var, float lat, float lon, float alt) {
  * @author David Goodman
  * @author MATLAB
  * @date 2013.03.10  */
-void convertECEF2Geodetic(Coordinate var, float ecef_x, float ecef_y, float ecef_z) {
+void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ecef_z) {
     float lat = 0, lon = 0, alt = 0;
 
     lon = atan2(ecef_y, ecef_x);
@@ -210,12 +228,12 @@ void convertECEF2Geodetic(Coordinate var, float ecef_x, float ecef_y, float ecef
  *  that x,y, and z are North, East, and Down respectively in coordinate variable.
  * @author David Goodman
  * @date 2013.03.10  */
-void convertEuler2NED(Coordinate var, float yaw, float pitch, float height) {
-    if (!var)
-        return;
+void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height) {
+    //if (!var)
+    //    return;
 
     float mag = height * tan(DEGREE_TO_RADIAN(pitch));
-
+    //printf("%.5f\n",mag);
     if (yaw <= 90.0) {
         //First quadrant
         var->x = mag * cos(DEGREE_TO_RADIAN(yaw));
@@ -240,7 +258,10 @@ void convertEuler2NED(Coordinate var, float yaw, float pitch, float height) {
         var->y = -mag * cos(DEGREE_TO_RADIAN(yaw));
     }
 
-    var->z = -height;
+
+    var->z = height;
+    //printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
+    //    var->x, var->y, var->z);
 }
 
 /**
@@ -276,7 +297,7 @@ void getCurrentPosition(Position pos) {
 } */
 
 
-#define NAVIGATION_TEST
+//#define NAVIGATION_TEST
 #ifdef NAVIGATION_TEST
 
 int main() {
@@ -289,23 +310,36 @@ int main() {
     }
 
     printf("Navigation system initialized.\n");
-    while (!Navigation_isReady()) {
+    /*while (!Navigation_isReady()) {
         Navigation_runSM();
     }
+    */
     Navigation_runSM();
 
+    
     printf("Navigation system is ready.\n");
 
-    Coordinate geo = Coordinate_new(geo, 0, 0 ,0);
-    float yaw = 15.4; // (deg)
+    Coordinate coord;
+
+    float yaw = 150.4; // (deg)
     float pitch = 45.0; // (deg)
     float height = 4.572; // (m)
-    if (Navigation_getProjectedCoordinate(geo, yaw, pitch, height)) {
+    if (Navigation_getProjectedCoordinate(&coord, yaw, pitch, height)) {
+        #ifdef USE_GEODETIC
         printf("Desired coordinate -- lat:%.6f, lon: %.6f, alt: %.2f (m)\n",
-            geo->x, geo->y, geo->z);
+            coord.x, coord.y, coord.z);
+        #else
+        printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
+            coord.x, coord.y, coord.z);
+        #endif
     }
     else {
-        printf("Failed to obtain desired geodetic coordinate.\n");
+        #ifdef USE_GEODETIC
+        char s[10] = "geodetic";
+        #else
+        char s[10] = "NED";
+        #endif
+        printf("Failed to obtain desired %s coordinate.\n",s);
     }
 
 
