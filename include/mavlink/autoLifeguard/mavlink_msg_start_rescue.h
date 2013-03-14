@@ -4,8 +4,8 @@
 
 typedef struct __mavlink_start_rescue_t
 {
- uint32_t latitude; ///< Latitude data for the boat to travel to
- uint32_t longitude; ///< Longitude data for the boat to travel to
+ float latitude; ///< Latitude data for the boat to travel to
+ float longitude; ///< Longitude data for the boat to travel to
  uint8_t ack; ///<  TRUE if we want an ACK return FALSE else
  uint8_t status; ///< Holds status informatiom for the boat
 } mavlink_start_rescue_t;
@@ -18,8 +18,8 @@ typedef struct __mavlink_start_rescue_t
 #define MAVLINK_MESSAGE_INFO_START_RESCUE { \
 	"START_RESCUE", \
 	4, \
-	{  { "latitude", NULL, MAVLINK_TYPE_UINT32_T, 0, 0, offsetof(mavlink_start_rescue_t, latitude) }, \
-         { "longitude", NULL, MAVLINK_TYPE_UINT32_T, 0, 4, offsetof(mavlink_start_rescue_t, longitude) }, \
+	{  { "latitude", NULL, MAVLINK_TYPE_FLOAT, 0, 0, offsetof(mavlink_start_rescue_t, latitude) }, \
+         { "longitude", NULL, MAVLINK_TYPE_FLOAT, 0, 4, offsetof(mavlink_start_rescue_t, longitude) }, \
          { "ack", NULL, MAVLINK_TYPE_UINT8_T, 0, 8, offsetof(mavlink_start_rescue_t, ack) }, \
          { "status", NULL, MAVLINK_TYPE_UINT8_T, 0, 9, offsetof(mavlink_start_rescue_t, status) }, \
          } \
@@ -39,12 +39,12 @@ typedef struct __mavlink_start_rescue_t
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_start_rescue_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
-						       uint8_t ack, uint8_t status, uint32_t latitude, uint32_t longitude)
+						       uint8_t ack, uint8_t status, float latitude, float longitude)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
 	char buf[10];
-	_mav_put_uint32_t(buf, 0, latitude);
-	_mav_put_uint32_t(buf, 4, longitude);
+	_mav_put_float(buf, 0, latitude);
+	_mav_put_float(buf, 4, longitude);
 	_mav_put_uint8_t(buf, 8, ack);
 	_mav_put_uint8_t(buf, 9, status);
 
@@ -60,7 +60,7 @@ static inline uint16_t mavlink_msg_start_rescue_pack(uint8_t system_id, uint8_t 
 #endif
 
 	msg->msgid = MAVLINK_MSG_ID_START_RESCUE;
-	return mavlink_finalize_message(msg, system_id, component_id, 10, 50);
+	return mavlink_finalize_message(msg, system_id, component_id, 10, 155);
 }
 
 /**
@@ -77,12 +77,12 @@ static inline uint16_t mavlink_msg_start_rescue_pack(uint8_t system_id, uint8_t 
  */
 static inline uint16_t mavlink_msg_start_rescue_pack_chan(uint8_t system_id, uint8_t component_id, uint8_t chan,
 							   mavlink_message_t* msg,
-						           uint8_t ack,uint8_t status,uint32_t latitude,uint32_t longitude)
+						           uint8_t ack,uint8_t status,float latitude,float longitude)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
 	char buf[10];
-	_mav_put_uint32_t(buf, 0, latitude);
-	_mav_put_uint32_t(buf, 4, longitude);
+	_mav_put_float(buf, 0, latitude);
+	_mav_put_float(buf, 4, longitude);
 	_mav_put_uint8_t(buf, 8, ack);
 	_mav_put_uint8_t(buf, 9, status);
 
@@ -98,7 +98,7 @@ static inline uint16_t mavlink_msg_start_rescue_pack_chan(uint8_t system_id, uin
 #endif
 
 	msg->msgid = MAVLINK_MSG_ID_START_RESCUE;
-	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, 10, 50);
+	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, 10, 155);
 }
 
 /**
@@ -125,16 +125,16 @@ static inline uint16_t mavlink_msg_start_rescue_encode(uint8_t system_id, uint8_
  */
 #ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
-static inline void mavlink_msg_start_rescue_send(mavlink_channel_t chan, uint8_t ack, uint8_t status, uint32_t latitude, uint32_t longitude)
+static inline void mavlink_msg_start_rescue_send(mavlink_channel_t chan, uint8_t ack, uint8_t status, float latitude, float longitude)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
 	char buf[10];
-	_mav_put_uint32_t(buf, 0, latitude);
-	_mav_put_uint32_t(buf, 4, longitude);
+	_mav_put_float(buf, 0, latitude);
+	_mav_put_float(buf, 4, longitude);
 	_mav_put_uint8_t(buf, 8, ack);
 	_mav_put_uint8_t(buf, 9, status);
 
-	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_START_RESCUE, buf, 10, 50);
+	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_START_RESCUE, buf, 10, 155);
 #else
 	mavlink_start_rescue_t packet;
 	packet.latitude = latitude;
@@ -142,7 +142,7 @@ static inline void mavlink_msg_start_rescue_send(mavlink_channel_t chan, uint8_t
 	packet.ack = ack;
 	packet.status = status;
 
-	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_START_RESCUE, (const char *)&packet, 10, 50);
+	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_START_RESCUE, (const char *)&packet, 10, 155);
 #endif
 }
 
@@ -176,9 +176,9 @@ static inline uint8_t mavlink_msg_start_rescue_get_status(const mavlink_message_
  *
  * @return Latitude data for the boat to travel to
  */
-static inline uint32_t mavlink_msg_start_rescue_get_latitude(const mavlink_message_t* msg)
+static inline float mavlink_msg_start_rescue_get_latitude(const mavlink_message_t* msg)
 {
-	return _MAV_RETURN_uint32_t(msg,  0);
+	return _MAV_RETURN_float(msg,  0);
 }
 
 /**
@@ -186,9 +186,9 @@ static inline uint32_t mavlink_msg_start_rescue_get_latitude(const mavlink_messa
  *
  * @return Longitude data for the boat to travel to
  */
-static inline uint32_t mavlink_msg_start_rescue_get_longitude(const mavlink_message_t* msg)
+static inline float mavlink_msg_start_rescue_get_longitude(const mavlink_message_t* msg)
 {
-	return _MAV_RETURN_uint32_t(msg,  4);
+	return _MAV_RETURN_float(msg,  4);
 }
 
 /**
