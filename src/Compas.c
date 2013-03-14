@@ -121,7 +121,7 @@ int main(void) {
     }
     return (SUCCESS);
 }
-*/
+
 
 /**
  * Function: initMasterSM
@@ -200,7 +200,7 @@ void runMasterSM() {
             printf("Horizontal Distance: %.2f (ft)\n\n",horizontalDistance);
             */
 #ifdef USE_XBEE
-            Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0, verticalDistance, horizontalDistance);
+            Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0, geo.x, geo.y);
 #endif
         }
         else {

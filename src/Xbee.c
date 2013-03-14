@@ -302,7 +302,7 @@ int main(){
 
 #endif
 
-#define XBEE_TEST_3
+//#define XBEE_TEST_3
 #ifdef XBEE_TEST_3
 int main(){
     Board_init();
