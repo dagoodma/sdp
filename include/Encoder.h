@@ -16,7 +16,8 @@
 /**
  * Function: Encoder_init
  * @return None.
- * @remark Initializes the Encoder interface and configures interrupts for input capture/compare1. DOES NOT ENABLE INTERRUPT.
+ * @remark Initializes the Encoder interface over I2C. Note that the I2C module
+ *  should have already been initialized.
  * @author Shehadeh H. Dajani
  * @date 2013.02.10  */
 void Encoder_init();
@@ -30,7 +31,7 @@ void Encoder_init();
  *  TODO: Absorb button presses into this function and make true state machine.
  * @author David Goodman
  * @date 2013.02.10  */
- void Encoder_runSM();
+void Encoder_runSM();
 
 /**
  * Function: Encoder_setZeroAngle
@@ -40,41 +41,37 @@ void Encoder_init();
  * @date 2013.02.10  */
 void Encoder_setZeroAngle();
 
- /**
- * Function: Is_lockOnButtonPressed
+/**
+ * Function: Encoder_isZeroPressed
  * @return TRUE or FALSE of whether the lock button was pressed or not.
  * @remark Lock button is pressed to acquire a target and send the bot a
  *  goto coordinate message.
  * @author Shehadeh H. Dajani
  * @date 2013.02.10  */
- BOOL Encoder_isLockPressed();
+BOOL Encoder_isLockPressed();
 
- /**
- * Function: Is_zeroOnButtonPressed
+/**
+ * Function: Encoder_isZeroPressed
  * @return TRUE or FALSE of whether the button was pressed or not
  * @remark Event Checker Routine that checks state of pushbutton for Lock on
  * @author Shehadeh H. Dajani
  * @date 2013.02.10  */
- BOOL Encoder_isZeroPressed();
+BOOL Encoder_isZeroPressed();
 
-  /**
- * Function: Encoder_getVerticalDistance
- * @return Vertical distance in feet to current target.
- * @remark Given height, does a tangent calculation of vertical distance.
- * @author Shehadeh Dajani
- * @date 2013.02.10  */
- float Encoder_getVerticalDistance(float height);
-
- /**
- * Function: Encoder_getHorizontalDistance
- * @param Vertical distance to target in feet (obtained with
- *  Encoder_getVerticalDistance()).
- * @return Horizontal distance in feet to the target.
- * @remark Calculates the horizontal distance to the target using the
- *  given vertical distance.
- * @author Shehadeh Dajani
+/**
+ * Function: Encoder_getPitch
+ * @return Current angle of pitch encoder in decimal degrees.
+ * @remark 
  * @author David Goodman
- * @date 2013.02.10  */
-float Encoder_getHorizontalDistance(float verticalDistance);
+ * @date 2013.03.10  */
+float Encoder_getPitch();
+
+/**
+ * Function: Encoder_getYaw
+ * @return Current angle of yaw encoder in decimal degrees.
+ * @remark 
+ * @author David Goodman
+ * @date 2013.03.10  */
+float Encoder_getYaw();
 
 #endif

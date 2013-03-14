@@ -3,8 +3,8 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>GPS</name>
-            <creation-uuid>299cd887-26d1-4d79-b939-9efe711e91b1</creation-uuid>
+            <name>Navigation</name>
+            <creation-uuid>bb457b5a-9fb6-4589-a0cc-dd207869f015</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>
