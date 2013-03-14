@@ -77,7 +77,7 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 
 //------------------------------- XBEE --------------------------------
 #define USE_XBEE
-#define XBEE_UART_ID UART2_ID
+
 //----------------------------- Other Modules ---------------------------
 #define USE_MAGNETOMETER
 #define USE_GPS
@@ -169,9 +169,6 @@ void initMasterSM() {
  * @date 2013.03.09  */
 void runMasterSM() {
     //Magnetometer_runSM();
-#ifdef USE_XBEE
-    Xbee_runSM();
-#endif
     // Record these button presses since we don't know
     //  if they will be pressed after runSM
     BOOL lockPressed = Encoder_isLockPressed();
@@ -190,18 +187,18 @@ void runMasterSM() {
             else {
                 printf("Failed to obtain desired geodetic coordinate.\n");
             }
-           #else
+            #ifdef USE_XBEE
+            Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0, geo.x, geo.y);
+            #endif
+            #else
             printf("Navigation module is disabled.\n");
-           #endif
+            #endif
             /*
             float verticalDistance = Encoder_getVerticalDistance(height);
             float horizontalDistance = Encoder_getHorizontalDistance(verticalDistance);
             printf("Vertical Distance: %.2f (ft)\n",verticalDistance);
             printf("Horizontal Distance: %.2f (ft)\n\n",horizontalDistance);
             */
-#ifdef USE_XBEE
-            Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0, geo.x, geo.y);
-#endif
         }
         else {
             // Zero was pressed
@@ -227,6 +224,10 @@ void runMasterSM() {
 
     #ifdef USE_GPS
     Navigation_runSM();
+    #endif
+
+    #ifdef USE_XBEE
+    Xbee_runSM();
     #endif
 }
 
