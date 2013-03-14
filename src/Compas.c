@@ -36,6 +36,7 @@
  ***********************************************************************/
 
 #define DEBUG
+#define USE_MAIN
 
 #ifdef DEBUG
 # define DEBUG_PRINT(x) printf x
@@ -109,6 +110,7 @@ BOOL useLevel = FALSE;
  * @remark Entry point for command center (COMPAS).
  * @author David Goodman
  * @date 2013.03.10  */
+#ifdef USE_MAIN
 int main(void) {
     initMasterSM();
     printf("Command Center Ready for Use. \n\n\n\n\n");
@@ -117,6 +119,7 @@ int main(void) {
     }
     return (SUCCESS);
 }
+#endif
 
 
 /**
@@ -172,7 +175,7 @@ void runMasterSM() {
     BOOL zeroPressed = Encoder_isZeroPressed();
     if(lockPressed || zeroPressed){
         Encoder_runSM();
-       
+
         if(lockPressed && Navigation_isReady()) {
             #ifdef USE_GPS
             Coordinate geo; // = Coordinate_new(geo, 0, 0 ,0);
@@ -194,7 +197,7 @@ void runMasterSM() {
             printf("Horizontal Distance: %.2f (ft)\n\n",horizontalDistance);
             */
         }
-        else {
+        else if (zeroPressed) {
             // Zero was pressed
             Encoder_setZeroAngle();
             useLevel = TRUE;
@@ -202,6 +205,9 @@ void runMasterSM() {
             heading = Magnetometer_getDegree();
             updateHeading();
             //printf("Zeroing...\n");
+        }
+        else {
+
         }
     }
     if (!zeroPressed) {

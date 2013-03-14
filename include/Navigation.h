@@ -28,6 +28,12 @@
 #define DEGREE_TO_RADIAN(deg)   ((float)deg*PI/180)
 #define RADIAN_TO_DEGREE(rad)   ((float)rad*180/PI)
 
+#define DEGREE_TO_NEDFRAME(deg) (-(deg + 180.0))
+
+// Angle limits 
+#define YAW_LIMIT       360.0f // (non-inclusive)
+#define PITCH_LIMIT     90.0f  // (inclusive)
+
 /***********************************************************************
  * PUBLIC TYPEDEFS
  ***********************************************************************/

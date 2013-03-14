@@ -69,6 +69,11 @@ BOOL Navigation_isReady() {
 
 //#ifdef IS_COMPAS
 BOOL Navigation_getProjectedCoordinate(Coordinate *coord, float yaw, float pitch, float height) {
+    if (yaw >= YAW_LIMIT)
+        return FALSE;
+    else if (pitch > PITCH_LIMIT)
+        return FALSE;
+
     #ifdef USE_GEODETIC
     if ( ! Navigation_isReady())
         return FALSE;
@@ -231,8 +236,10 @@ void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ece
 void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height) {
     //if (!var)
     //    return;
+    // Convert yaw angle to NED cartesian frame
+    yaw = DEGREE_TO_NEDFRAME(yaw);
 
-    float mag = height * tan(DEGREE_TO_RADIAN(pitch));
+    float mag = height * tan(DEGREE_TO_RADIAN(90.0-pitch));
     //printf("%.5f\n",mag);
     if (yaw <= 90.0) {
         //First quadrant
@@ -321,8 +328,8 @@ int main() {
 
     Coordinate coord;
 
-    float yaw = 150.4; // (deg)
-    float pitch = 45.0; // (deg)
+    float yaw = 0.0; // (deg)
+    float pitch = 85.0; // (deg)
     float height = 4.572; // (m)
     if (Navigation_getProjectedCoordinate(&coord, yaw, pitch, height)) {
         #ifdef USE_GEODETIC
