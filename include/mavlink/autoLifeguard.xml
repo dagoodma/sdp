@@ -23,8 +23,8 @@
 				<description>This messages will send a sinlge byte with the mavlink message id</description>
 				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
 				<field type="uint8_t" name="status">Holds status informatiom for the boat</field>
-				<field type="uint32_t" name="latitude">Latitude data for the boat to travel to</field>
-				<field type="uint32_t" name="longitude">Longitude data for the boat to travel to</field>
+				<field type="float" name="latitude">Latitude data for the boat to travel to</field>
+				<field type="float" name="longitude">Longitude data for the boat to travel to</field>
           </message>
 		  <message id="242" name="STOP_RESCUE">
 				<description>This messages will send a sinlge byte with the mavlink message id</description>
