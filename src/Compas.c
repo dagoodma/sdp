@@ -37,7 +37,7 @@
  ***********************************************************************/
 
 #define DEBUG
-//#define USE_MAIN
+#define USE_MAIN
 
 #ifdef DEBUG
 # define DBPRINT(x) printf x
