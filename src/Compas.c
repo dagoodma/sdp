@@ -37,12 +37,12 @@
  ***********************************************************************/
 
 #define DEBUG
-#define USE_MAIN
+//#define USE_MAIN
 
 #ifdef DEBUG
-# define DEBUG_PRINT(x) printf x
+# define DBPRINT(x) printf x
 #else
-# define DEBUG_PRINT(x) do {} while (0)
+# define DBPRINT(x) do {} while (0)
 #endif
 
 
@@ -179,19 +179,19 @@ void runMasterSM() {
     if(lockPressed || zeroPressed){
         Encoder_runSM();
 
-        if(lockPressed && Navigation_isReady()) {
+        if(lockPressed) {
             #ifdef USE_GPS
-            Coordinate geo; // = Coordinate_new(geo, 0, 0 ,0);
-            if (Navigation_getProjectedCoordinate(&geo, Encoder_getYaw(),
+            Coordinate ned; // = Coordinate_new(ned, 0, 0 ,0);
+            if (Navigation_getProjectedCoordinate(&ned, Encoder_getYaw(),
                 Encoder_getPitch(), height)) {
                 printf("Desired coordinate -- N: %.6f, E: %.6f, D: %.2f (m)\n",
-                    geo.x, geo.y, geo.z);
+                    ned.x, ned.y, ned.z);
             }
             else {
-                printf("Failed to obtain desired geodetic coordinate.\n");
+                printf("Failed to obtain desired NED coordinate.\n");
             }
             #ifdef USE_XBEE
-            Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0, geo.x, geo.y);
+            Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0, ned.x, ned.y);
             #endif
             #else
             printf("Navigation module is disabled.\n");

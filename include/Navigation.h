@@ -24,11 +24,11 @@
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
 
-#define PI                      3.14159265359
-#define DEGREE_TO_RADIAN(deg)   ((float)deg*PI/180)
-#define RADIAN_TO_DEGREE(rad)   ((float)rad*180/PI)
+#define PI                      3.14159265359f
+#define DEGREE_TO_RADIAN        ((float)PI/180.0)
+#define RADIAN_TO_DEGREE        ((float)180.0/PI)
 
-#define DEGREE_TO_NEDFRAME(deg) (-(deg + 180.0))
+#define DEGREE_TO_NEDFRAME(deg) (-deg + 90.0)
 
 // Angle limits 
 #define YAW_LIMIT       360.0f // (non-inclusive)

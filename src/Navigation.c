@@ -32,6 +32,8 @@
 #define R_EN    6378137.0f     // (m) prime vertical radius (semi-major axis)
 #define R_EM    (R_EN * (1 - FLATR)) // meridian radius (semi-minor axis)
 
+
+
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
@@ -136,10 +138,10 @@ void convertENU2ECEF(Coordinate *var, float east, float north, float up, float l
     Coordinate ecef_ref; //= Coordinate_new(ecef_ref, 0, 0, 0);
     convertGeodetic2ECEF(&ecef_ref, lat_ref, lon_ref, alt_ref);
 
-    float coslat = cos(DEGREE_TO_RADIAN(lat_ref));
-    float sinlat = sin(DEGREE_TO_RADIAN(lat_ref));
-    float coslon = cos(DEGREE_TO_RADIAN(lon_ref));
-    float sinlon = sin(DEGREE_TO_RADIAN(lon_ref));
+    float coslat = cos(DEGREE_TO_RADIAN*lat_ref);
+    float sinlat = sin(DEGREE_TO_RADIAN*lat_ref);
+    float coslon = cos(DEGREE_TO_RADIAN*lon_ref);
+    float sinlon = sin(DEGREE_TO_RADIAN*lon_ref);
 
     float t = coslat * up - sinlat * north;
     float dz = sinlat * up + coslat * north;
@@ -166,12 +168,12 @@ void convertENU2ECEF(Coordinate *var, float east, float north, float up, float l
  * @author MATLAB
  * @date 2013.03.10  */
 void convertGeodetic2ECEF(Coordinate *var, float lat, float lon, float alt) {
-    float sinlat = sin(DEGREE_TO_RADIAN(lat));
-    float coslat = cos(DEGREE_TO_RADIAN(lat));
+    float sinlat = sin(DEGREE_TO_RADIAN*lat);
+    float coslat = cos(DEGREE_TO_RADIAN*lat);
 
     float rad_ne = R_EN / sqrt(1.0 - (ECC2 * sinlat * sinlat));
-    var->x = (rad_ne + alt) * coslat * cos(DEGREE_TO_RADIAN(lon));
-    var->y = (rad_ne + alt) * coslat * sin(DEGREE_TO_RADIAN(lon));
+    var->x = (rad_ne + alt) * coslat * cos(lon*DEGREE_TO_RADIAN);
+    var->y = (rad_ne + alt) * coslat * sin(lon*DEGREE_TO_RADIAN);
     var->z = (rad_ne*(1.0 - ECC2) + alt) * sinlat;
 }
 
@@ -216,8 +218,8 @@ void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ece
     alt = rho * cos(lat) + (ecef_z + ECC2 * rad_ne * sinlat) * sinlat - rad_ne;
 
     // Convert radian geodetic to degrees
-    var->x = RADIAN_TO_DEGREE(lat);
-    var->y = RADIAN_TO_DEGREE(lon);
+    var->x = RADIAN_TO_DEGREE*lat;
+    var->y = RADIAN_TO_DEGREE*lon;
     var->z = alt;
 }
 
@@ -234,35 +236,34 @@ void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ece
  * @author David Goodman
  * @date 2013.03.10  */
 void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height) {
-    //if (!var)
-    //    return;
-    // Convert yaw angle to NED cartesian frame
-    yaw = DEGREE_TO_NEDFRAME(yaw);
+    //printf("At angle: %.3f and pitch: %.3f\n",yaw,pitch);
 
-    float mag = height * tan(DEGREE_TO_RADIAN(90.0-pitch));
-    //printf("%.5f\n",mag);
+    float mag = height * tan((90.0-pitch)*DEGREE_TO_RADIAN);
+
+    //printf("At mag: %.3f\n",mag);
+    
     if (yaw <= 90.0) {
         //First quadrant
-        var->x = mag * cos(DEGREE_TO_RADIAN(yaw));
-        var->y = mag * sin(DEGREE_TO_RADIAN(yaw));
+        var->x = mag * cos(yaw*DEGREE_TO_RADIAN);
+        var->y = mag * sin(yaw*DEGREE_TO_RADIAN);
     }
     else if (yaw > 90.0 && yaw <= 180.0) {
-        // Fourth quadrant
-        yaw = yaw - 90.0;
-        var->x = -mag * sin(DEGREE_TO_RADIAN(yaw));
-        var->y = mag * cos(DEGREE_TO_RADIAN(yaw));
+        // Second quadrant
+        yaw = yaw - 270.0;
+        var->x = mag * sin(yaw*DEGREE_TO_RADIAN);
+        var->y = -mag * cos(yaw*DEGREE_TO_RADIAN);
     }
     else if (yaw > 180.0 && yaw <= 270.0) {
         // Third quadrant
         yaw = yaw - 180.0;
-        var->x = -mag * cos(DEGREE_TO_RADIAN(yaw));
-        var->y = -mag * sin(DEGREE_TO_RADIAN(yaw));
+        var->x = -mag * cos(yaw*DEGREE_TO_RADIAN);
+        var->y = -mag * sin(yaw*DEGREE_TO_RADIAN);
     }
     else if (yaw > 270 < 360.0) {
-        // Second quadrant
-        yaw = yaw - 270.0;
-        var->x = mag * sin(DEGREE_TO_RADIAN(yaw));
-        var->y = -mag * cos(DEGREE_TO_RADIAN(yaw));
+        // Fourth quadrant
+        yaw = yaw - 90.0;
+        var->x = -mag * sin(yaw*DEGREE_TO_RADIAN);
+        var->y = mag * cos(yaw*DEGREE_TO_RADIAN);
     }
 
 
@@ -304,7 +305,7 @@ void getCurrentPosition(Position pos) {
 } */
 
 
-//#define NAVIGATION_TEST
+#define NAVIGATION_TEST
 #ifdef NAVIGATION_TEST
 
 int main() {
@@ -328,8 +329,8 @@ int main() {
 
     Coordinate coord;
 
-    float yaw = 0.0; // (deg)
-    float pitch = 85.0; // (deg)
+    float yaw = 150.0; // (deg)
+    float pitch = 45.0; // (deg)
     float height = 4.572; // (m)
     if (Navigation_getProjectedCoordinate(&coord, yaw, pitch, height)) {
         #ifdef USE_GEODETIC
