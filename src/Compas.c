@@ -27,9 +27,10 @@
 #include "Encoder.h"
 #include "Ports.h"
 #include "Magnetometer.h"
+#include "Xbee.h"
+#include "UART.h"
 #include "Gps.h"
 #include "Navigation.h"
-
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
@@ -74,10 +75,13 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 #define LED_E_TRIS      PORTY12_TRIS // RD1
 #define LED_W_TRIS      PORTY10_TRIS // RD2
 
+//------------------------------- XBEE --------------------------------
+#define USE_XBEE
 
 //----------------------------- Other Modules ---------------------------
 #define USE_MAGNETOMETER
 #define USE_GPS
+
 
 
 
@@ -102,7 +106,7 @@ BOOL useLevel = FALSE;
 /******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
-
+/*
 /**
  * Function: main
  * @return SUCCESS or FAILURE.
@@ -165,7 +169,6 @@ void initMasterSM() {
  * @date 2013.03.09  */
 void runMasterSM() {
     //Magnetometer_runSM();
-
     // Record these button presses since we don't know
     //  if they will be pressed after runSM
     BOOL lockPressed = Encoder_isLockPressed();
@@ -184,9 +187,12 @@ void runMasterSM() {
             else {
                 printf("Failed to obtain desired geodetic coordinate.\n");
             }
-           #else
+            #ifdef USE_XBEE
+            Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0, geo.x, geo.y);
+            #endif
+            #else
             printf("Navigation module is disabled.\n");
-           #endif
+            #endif
             /*
             float verticalDistance = Encoder_getVerticalDistance(height);
             float horizontalDistance = Encoder_getHorizontalDistance(verticalDistance);
@@ -218,6 +224,10 @@ void runMasterSM() {
 
     #ifdef USE_GPS
     Navigation_runSM();
+    #endif
+
+    #ifdef USE_XBEE
+    Xbee_runSM();
     #endif
 }
 
@@ -288,3 +298,5 @@ void updateAccelerometerLEDs() {
     //}
 }
 #endif
+
+
