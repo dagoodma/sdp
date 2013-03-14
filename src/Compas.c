@@ -175,18 +175,18 @@ void runMasterSM() {
        
         if(lockPressed && Navigation_isReady()) {
             #ifdef USE_GPS
-            Coordinate geo = Coordinate_new(geo, 0, 0 ,0);
-            if (Navigation_getProjectedCoordinate(geo, Encoder_getYaw(),
+            Coordinate geo; // = Coordinate_new(geo, 0, 0 ,0);
+            if (Navigation_getProjectedCoordinate(&geo, Encoder_getYaw(),
                 Encoder_getPitch(), height)) {
-                printf("Desired coordinate -- lat:%.6f, lon: %.6f, alt: %.2f (m)\n",
-                    geo->x, geo->y, geo->z);
+                printf("Desired coordinate -- N: %.6f, E: %.6f, D: %.2f (m)\n",
+                    geo.x, geo.y, geo.z);
             }
             else {
                 printf("Failed to obtain desired geodetic coordinate.\n");
             }
-#           #else
+           #else
             printf("Navigation module is disabled.\n");
-#           #endif
+           #endif
             /*
             float verticalDistance = Encoder_getVerticalDistance(height);
             float horizontalDistance = Encoder_getHorizontalDistance(verticalDistance);

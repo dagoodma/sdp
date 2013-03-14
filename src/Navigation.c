@@ -297,7 +297,7 @@ void getCurrentPosition(Position pos) {
 } */
 
 
-#define NAVIGATION_TEST
+//#define NAVIGATION_TEST
 #ifdef NAVIGATION_TEST
 
 int main() {

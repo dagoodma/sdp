@@ -78,7 +78,7 @@ BOOL Navigation_isReady();
  *  them to the current ECEF location, and convert to geodetic (LLA).
  * @author David Goodman
  * @date 2013.03.10  */
-BOOL Navigation_getProjectedCoordinate(Coordinate geo, float yaw, float pitch, float height);
+BOOL Navigation_getProjectedCoordinate(Coordinate *coord, float yaw, float pitch, float height);
 #endif
 
 /**
