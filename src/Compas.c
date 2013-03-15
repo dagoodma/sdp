@@ -140,6 +140,9 @@ void initMasterSM() {
 
     Encoder_init();
 
+#ifdef USE_XBEE
+    Xbee_init();
+#endif
 
     #ifdef USE_GPS
     Navigation_init();
@@ -186,16 +189,18 @@ void runMasterSM() {
                 Encoder_getPitch(), height)) {
                 printf("Desired coordinate -- N: %.6f, E: %.6f, D: %.2f (m)\n",
                     ned.x, ned.y, ned.z);
+                
             }
             else {
                 printf("Failed to obtain desired NED coordinate.\n");
             }
-            #ifdef USE_XBEE
-            Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0, ned.x, ned.y);
-            #endif
+           
             #else
             printf("Navigation module is disabled.\n");
             #endif
+            #ifdef USE_XBEE
+                Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0,55, 55);
+                #endif
             /*
             float verticalDistance = Encoder_getVerticalDistance(height);
             float horizontalDistance = Encoder_getHorizontalDistance(verticalDistance);

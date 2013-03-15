@@ -43,7 +43,7 @@
 //#define XBEE_RESET_FACTORY
 
 //Leave uncommented when programming XBEE_1, comment out when programming XBEE_2
-//#define XBEE_1
+#define XBEE_1
 
 #define TIMER_HEARTBEAT 2
 #ifdef XBEE_1
