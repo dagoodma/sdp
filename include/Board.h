@@ -61,6 +61,7 @@
 #define TIMER_GPS               4
 #define TIMER_ENCODER           5
 #define TIMER_BUTTONS           6
+#define TIMER_HEARTBEAT         7
 #define TIMER_BAROMETER2        14 // remove the blocking code!!
 #define TIMER_TEST              15
 

@@ -209,27 +209,31 @@ void runMasterSM() {
         #endif
 
         if(lockPressed) {
+            printf("Lock was pressed.\n");
             #ifdef USE_NAVIGATION
             #ifdef USE_ENCODERS
+            Encoder_enableZeroAngle();
+            Encoder_runSM();
             Coordinate ned; // = Coordinate_new(ned, 0, 0 ,0);
             if (Navigation_getProjectedCoordinate(&ned, Encoder_getYaw(),
                 Encoder_getPitch(), height)) {
                 printf("Desired coordinate -- N: %.6f, E: %.6f, D: %.2f (m)\n",
                     ned.x, ned.y, ned.z);
-                
+
+
+                #ifdef USE_XBEE
+                Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0,ned.x, ned.y);
+                #endif
             }
             else {
                 printf("Failed to obtain desired NED coordinate.\n");
             }
-           
+            Encoder_disableZeroAngle();
             #else
             printf("Navigation module is disabled.\n");
             #endif
             #endif
 
-            #ifdef USE_XBEE
-                Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0,55, 55);
-            #endif
         }
         else if (zeroPressed) {
             // Zero was pressed
@@ -267,6 +271,7 @@ void runMasterSM() {
     #ifdef USE_XBEE
     Xbee_runSM();
     #endif
+
 }
 
 
@@ -364,10 +369,10 @@ BOOL readZeroButton() {
 
          //printf("Lock timer started.\n");
      }
-     else if (Timer_isExpired(TIMER_ENCODER)) {
+     else if (Timer_isExpired(TIMER_BUTTONS)) {
          lockPressed = TRUE;
 
-         printf("Lock on.\n");
+         //printf("Lock on.\n");
      }
 
      return lockPressed;
