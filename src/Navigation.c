@@ -132,6 +132,17 @@ Coordinate Coordinate_new(Coordinate coord, float x, float y, float z) {
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
+/**
+ * Function: convertENU2ECEF
+ * @param A pointer to a new ECEF coordinate variable to save result into.
+ * @param East component in meters.
+ * @param North component in meters.
+ * @param Up component in meters.
+ * @return None.
+ * @remark Converts the given ENU vector into a ECEF coordinate.
+ * @author David Goodman
+ * @author MATLAB
+ * @date 2013.03.10  */
 void convertENU2ECEF(Coordinate *var, float east, float north, float up, float lat_ref,
     float lon_ref, float alt_ref) {
     // Convert geodetic lla  reference to ecef
@@ -330,7 +341,7 @@ int main() {
     Coordinate coord;
 
     float yaw = 150.0; // (deg)
-    float pitch = 45.0; // (deg)
+    float pitch = 85.0; // (deg)
     float height = 4.572; // (m)
     if (Navigation_getProjectedCoordinate(&coord, yaw, pitch, height)) {
         #ifdef USE_GEODETIC
