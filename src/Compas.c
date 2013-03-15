@@ -86,7 +86,7 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 #define LED_W_TRIS      PORTY10_TRIS // RD2
 
 //------------------------------- XBEE --------------------------------
-//#define USE_XBEE
+#define USE_XBEE
 
 //----------------------------- Other Modules ---------------------------
 #define USE_MAGNETOMETER
