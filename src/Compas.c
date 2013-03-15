@@ -68,8 +68,8 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 #define LED_DELAY     1 // (ms)
 
 // Leveling constants
-#define G_DELTA_VERTICAL         10 // (0.001 G) scaled by 1e-3 == 0.02 G
-#define G_DELTA_HORIZONTAL       25 // (0.001 G) scaled by 1e-3 == 0.02 G
+#define G_DELTA_HORIZONTAL         10 // (0.001 G) scaled by 1e-3 == 0.02 G
+#define G_DELTA_VERTICAL           25 // (0.001 G) scaled by 1e-3 == 0.02 G
 #define G_X_DESIRED     0
 #define G_Y_DESIRED     0
 #define G_Z_DESIRED     1000 // (0.001 G) scaled by 1e-3 == 1 G
@@ -112,7 +112,7 @@ BOOL isZeroPressed();
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 
-float height = 1.3716; // (m)
+float height = 5.44; // (m)
 float heading = 0;
 // Printing debug messages over serial
 BOOL useLevel = FALSE;
@@ -209,27 +209,31 @@ void runMasterSM() {
         #endif
 
         if(lockPressed) {
+            printf("Lock was pressed.\n");
             #ifdef USE_NAVIGATION
             #ifdef USE_ENCODERS
+            Encoder_enableZeroAngle();
+            Encoder_runSM();
             Coordinate ned; // = Coordinate_new(ned, 0, 0 ,0);
             if (Navigation_getProjectedCoordinate(&ned, Encoder_getYaw(),
                 Encoder_getPitch(), height)) {
                 printf("Desired coordinate -- N: %.6f, E: %.6f, D: %.2f (m)\n",
                     ned.x, ned.y, ned.z);
-                
+
+
+                #ifdef USE_XBEE
+                Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0,ned.x, ned.y);
+                #endif
             }
             else {
                 printf("Failed to obtain desired NED coordinate.\n");
             }
-           
+            Encoder_disableZeroAngle();
             #else
             printf("Navigation module is disabled.\n");
             #endif
             #endif
 
-            #ifdef USE_XBEE
-                Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0,55, 55);
-            #endif
         }
         else if (zeroPressed) {
             // Zero was pressed
@@ -267,6 +271,7 @@ void runMasterSM() {
     #ifdef USE_XBEE
     Xbee_runSM();
     #endif
+
 }
 
 
@@ -364,10 +369,10 @@ BOOL readZeroButton() {
 
          //printf("Lock timer started.\n");
      }
-     else if (Timer_isExpired(TIMER_ENCODER)) {
+     else if (Timer_isExpired(TIMER_BUTTONS)) {
          lockPressed = TRUE;
 
-         printf("Lock on.\n");
+         //printf("Lock on.\n");
      }
 
      return lockPressed;
