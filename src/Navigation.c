@@ -51,21 +51,29 @@ void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height);
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 BOOL Navigation_init() {
+    #ifdef USE_GPS
     uint8_t options = 0x0;
     if (GPS_init(options) != SUCCESS || !GPS_isInitialized()) {
         printf("Failed to initialize Navigation system.\n");
         return FAILURE;
     }
+    #endif
     return SUCCESS;
 }
 
 void Navigation_runSM() {
+    #ifdef USE_GPS
     GPS_runSM();
+    #endif
 }
 
 BOOL Navigation_isReady() {
+    #ifdef USE_GPS
     return GPS_isInitialized() && GPS_isConnected() && GPS_hasFix()
         && GPS_hasPosition();
+    #else
+    return TRUE;
+    #endif
 }
 
 

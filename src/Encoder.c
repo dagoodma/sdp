@@ -26,16 +26,6 @@
 #define SLAVE_HORIZONTAL_WRITE_ADDRESS       0x86
 #define SLAVE_ANGLE_ADDRESS                  0xFE
 
-/*DEFINE IO BUTTONS*/
-//Lock Button
-#define LOCK_BUTTON_TRIS    PORTY05_TRIS
-#define LOCK_BUTTON         PORTY05_BIT
-
-#define BUTTON_DELAY   600 // (ms)
-
-//Zero Button
-#define ZERO_BUTTON_TRIS    PORTY06_TRIS
-#define ZERO_BUTTON         PORTY06_BIT
 #define PI 3.14159265358979323846
 
 #define ACCUMULATOR_LENGTH  150
@@ -47,15 +37,15 @@
 I2C_MODULE      ENCODER_I2C_ID = I2C1;
 
 // Set Desired Operation Frequency
-#define I2C_CLOCK_FREQ  100000 // (Hz)
+//#define I2C_CLOCK_FREQ  100000 // (Hz)
 
 float angleAccumulator = 0; // (degrees) accumlated angles
 float pitchAngle = 0; // (degrees) calculated angle
 float yawAngle = 0; // (degrees) calculated angle
 float zeroPitchAngle = 0; // (degrees)
 float zeroYawAngle = 0; // (degrees)
-BOOL lockFlag = FALSE, lockTimerStarted = FALSE;
-BOOL zeroFlag = FALSE, zeroTimerStarted = FALSE;
+
+BOOL useZeroAngle = FALSE;
 
 // Printing debug messages over serial
 #define DEBUG
@@ -67,8 +57,6 @@ BOOL zeroFlag = FALSE, zeroTimerStarted = FALSE;
 void accumulateAngle(int READ_ADDRESS,int WRITE_ADDRESS);
 float calculateAngle(float zeroAngle,int READ_ADDRESS,int WRITE_ADDRESS);
 uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS);
-BOOL readLockButton();
-BOOL readZeroButton();
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -84,8 +72,7 @@ BOOL readZeroButton();
  }
 
 void Encoder_init() {
-    LOCK_BUTTON_TRIS = 1;
-    ZERO_BUTTON_TRIS = 1;
+    // Do nothing
 }
 
 void Encoder_setZeroAngle(){
@@ -102,75 +89,13 @@ float Encoder_getYaw() {
     return yawAngle;
 }
 
-/*
-float Encoder_getNorthDistance(float height) {
-
-
-    float theta = (90 - pitchAngle);
-    return height*tan(theta*PI/180);
-    //printf("Vertical Distance: %.2f\n",verticalDistance);
+void Encoder_enableZeroAngle() {
+    useZeroAngle = TRUE;
 }
 
-float Encoder_getHorizontalDistance(float verticalDistance) {
-    float theta;
-    if(yawAngle <= 90)
-        theta = horizontalAngle;
-    else
-        theta = 360  - horizontalAngle;
-    return verticalDistance*sin(theta*PI/180);
-    //printf("Horizontal Distance: %.2f\n\n",horizontalDistance);
+void Encoder_disableZeroAngle() {
+    useZeroAngle = FALSE;
 }
-*/
-
- BOOL Encoder_isLockPressed(){
-     // Start lock press timer if pressed
-     if (!readLockButton()) {
-         if (lockTimerStarted)
-             lockTimerStarted = FALSE;
-
-         //printf("Lock released.\n");
-         lockFlag = FALSE;
-     }
-     else if (!lockTimerStarted && readLockButton()) {
-         Timer_new(TIMER_ENCODER, BUTTON_DELAY);
-         lockTimerStarted = TRUE;
-         lockFlag = FALSE;
-
-         //printf("Lock timer started.\n");
-     }
-     else if (Timer_isExpired(TIMER_ENCODER)) {
-         lockFlag = TRUE;
-
-         printf("Lock on.\n");
-     }
-
-     return lockFlag;
- }
-
- BOOL Encoder_isZeroPressed(){
-     // Start lock press timer if pressed
-     if (!readZeroButton()) {
-         if (zeroTimerStarted)
-             zeroTimerStarted = FALSE;
-
-         //printf("Zero released.\n");
-         zeroFlag = FALSE;
-     }
-     else if (!zeroTimerStarted && readZeroButton()) {
-         Timer_new(TIMER_ENCODER, BUTTON_DELAY);
-         zeroTimerStarted = TRUE;
-         zeroFlag = FALSE;
-
-         //printf("Zero timer started.\n");
-     }
-     else if (Timer_isExpired(TIMER_ENCODER)) {
-         zeroFlag = TRUE;
-
-         //printf("Zero on.\n");
-     }
-
-     return zeroFlag;
- }
 
 
 /******************************************************************************
@@ -193,7 +118,7 @@ float calculateAngle(float zeroAngle,int READ_ADDRESS,int WRITE_ADDRESS){
 
     float finalAngle = angleAccumulator/ACCUMULATOR_LENGTH;
     // TODO remove magick numbers
-    if(lockFlag){
+    if(useZeroAngle){
         if(finalAngle >= zeroAngle)
             finalAngle = finalAngle - zeroAngle;
         else
@@ -260,14 +185,6 @@ uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
     return data;
 }
 
-BOOL readLockButton() {
-    return !LOCK_BUTTON;
-}
-
-BOOL readZeroButton() {
-    return !ZERO_BUTTON;
-}
-
 //#define ENCODER_TEST
 #ifdef ENCODER_TEST
 
@@ -280,7 +197,7 @@ int main(void) {
     while(1){
         if(Encoder_isLockPressed() || Encoder_isZeroPressed()){
             Encoder_runSM();
-//            if(lockFlag){
+//            if(useZeroAngle){
 //                angle = Encoder_getAverageAngle();
 //                while(!Serial_isTransmitEmpty());
 //                printf("Angle: %.2f\n", angle);
@@ -288,7 +205,7 @@ int main(void) {
 //            else
 //                zeroAngle = Encoder_getZeroAngle();
 //
-//            lockFlag = FALSE;
+//            useZeroAngle = FALSE;
 //            zeroFlag = FALSE;
         }
         

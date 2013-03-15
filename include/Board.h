@@ -60,6 +60,7 @@
 #define TIMER_THERMAL           3
 #define TIMER_GPS               4
 #define TIMER_ENCODER           5
+#define TIMER_BUTTONS           6
 #define TIMER_BAROMETER2        14 // remove the blocking code!!
 #define TIMER_TEST              15
 
@@ -81,6 +82,13 @@
 #define BOARD_LED4_LAT
 #define BOARD_LED5_LAT
 
+#endif
+
+
+#ifdef DEBUG_VERBOSE
+    #define dbprintf(...) printf(__VA_ARGS__)
+#else
+    #define dbprintf(...)
 #endif
 
 /*******************************************************************************

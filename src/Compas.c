@@ -17,6 +17,8 @@
 2/25/2013   11:10PM     jash        Created project.
 ***********************************************************************/
 #define IS_COMPAS
+#define DEBUG
+//#define DEBUG_VERBOSE
 
 #include <xc.h>
 #include <stdio.h>
@@ -36,14 +38,8 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-#define DEBUG
 #define USE_MAIN
 
-#ifdef DEBUG
-# define DBPRINT(x) printf x
-#else
-# define DBPRINT(x) do {} while (0)
-#endif
 
 
 I2C_MODULE      I2C_BUS_ID = I2C1;
@@ -51,6 +47,19 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  80000 // (Hz)
+
+
+/*DEFINE IO BUTTONS*/
+//Lock Button
+#define LOCK_BUTTON_TRIS    PORTY05_TRIS
+#define LOCK_BUTTON         PORTY05_BIT
+
+//Zero Button
+#define ZERO_BUTTON_TRIS    PORTY06_TRIS
+#define ZERO_BUTTON         PORTY06_BIT
+
+// Hold time before buttons trigger
+#define BUTTON_DELAY   600 // (ms)
 
 //----------------------------- Accelerometer --------------------------
 
@@ -81,9 +90,8 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 
 //----------------------------- Other Modules ---------------------------
 #define USE_MAGNETOMETER
-#define USE_GPS
-
-
+#define USE_NAVIGATION
+#define USE_ENCODERS
 
 
 /***********************************************************************
@@ -95,6 +103,11 @@ void runMasterSM();
 void updateAccelerometerLEDs();
 void updateHeading();
 
+BOOL readLockButton();
+BOOL readZeroButton();
+BOOL isLockPressed();
+BOOL isZeroPressed();
+
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
@@ -103,6 +116,9 @@ float height = 1.3716; // (m)
 float heading = 0;
 // Printing debug messages over serial
 BOOL useLevel = FALSE;
+
+BOOL lockPressed = FALSE, lockTimerStarted = FALSE;
+BOOL zeroPressed = FALSE, zeroTimerStarted = FALSE;
 
 /******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
@@ -134,18 +150,25 @@ int main(void) {
  * @date 2013.03.10  */
 void initMasterSM() {
     Board_init();
-    Timer_init();
     Serial_init();
-    I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
+    Timer_init();
+
+    // CC buttons
+    LOCK_BUTTON_TRIS = 1;
+    ZERO_BUTTON_TRIS = 1;
 
     Encoder_init();
 
-#ifdef USE_XBEE
+    #ifdef USE_XBEE
     Xbee_init();
-#endif
+    #endif
 
-    #ifdef USE_GPS
+    #ifdef USE_NAVIGATION
     Navigation_init();
+    #endif
+
+    #ifdef USE_ENCODERS
+    I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
     #endif
 
 
@@ -163,6 +186,7 @@ void initMasterSM() {
     LED_E_TRIS = OUTPUT;
     LED_W_TRIS = OUTPUT;
 
+
     Timer_new(TIMER_ACCELEROMETER, LED_DELAY );
     #endif
 }
@@ -177,13 +201,16 @@ void runMasterSM() {
     //Magnetometer_runSM();
     // Record these button presses since we don't know
     //  if they will be pressed after runSM
-    BOOL lockPressed = Encoder_isLockPressed();
-    BOOL zeroPressed = Encoder_isZeroPressed();
+    lockPressed = isLockPressed();
+    zeroPressed = isZeroPressed();
     if(lockPressed || zeroPressed){
+        #ifdef USE_ENCODERS
         Encoder_runSM();
+        #endif
 
         if(lockPressed) {
-            #ifdef USE_GPS
+            #ifdef USE_NAVIGATION
+            #ifdef USE_ENCODERS
             Coordinate ned; // = Coordinate_new(ned, 0, 0 ,0);
             if (Navigation_getProjectedCoordinate(&ned, Encoder_getYaw(),
                 Encoder_getPitch(), height)) {
@@ -198,23 +225,23 @@ void runMasterSM() {
             #else
             printf("Navigation module is disabled.\n");
             #endif
+            #endif
+
             #ifdef USE_XBEE
                 Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0,55, 55);
-                #endif
-            /*
-            float verticalDistance = Encoder_getVerticalDistance(height);
-            float horizontalDistance = Encoder_getHorizontalDistance(verticalDistance);
-            printf("Vertical Distance: %.2f (ft)\n",verticalDistance);
-            printf("Horizontal Distance: %.2f (ft)\n\n",horizontalDistance);
-            */
+            #endif
         }
         else if (zeroPressed) {
             // Zero was pressed
+            #ifdef USE_ENCODERS
             Encoder_setZeroAngle();
+            #endif
             useLevel = TRUE;
+            #ifdef  USE_MAGNETOMETER
             Magnetometer_runSM();
             heading = Magnetometer_getDegree();
             updateHeading();
+            #endif
             //printf("Zeroing...\n");
         }
         else {
@@ -233,7 +260,7 @@ void runMasterSM() {
     updateAccelerometerLEDs();
     #endif
 
-    #ifdef USE_GPS
+    #ifdef USE_NAVIGATION
     Navigation_runSM();
     #endif
 
@@ -309,5 +336,66 @@ void updateAccelerometerLEDs() {
     //}
 }
 #endif
+
+
+
+BOOL readLockButton() {
+    return !LOCK_BUTTON;
+}
+
+BOOL readZeroButton() {
+    return !ZERO_BUTTON;
+}
+
+
+ BOOL isLockPressed() {
+     // Start lock press timer if pressed
+     if (!readLockButton()) {
+         if (lockTimerStarted)
+             lockTimerStarted = FALSE;
+
+         //printf("Lock released.\n");
+         lockPressed = FALSE;
+     }
+     else if (!lockTimerStarted && readLockButton()) {
+         Timer_new(TIMER_BUTTONS, BUTTON_DELAY);
+         lockTimerStarted = TRUE;
+         lockPressed = FALSE;
+
+         //printf("Lock timer started.\n");
+     }
+     else if (Timer_isExpired(TIMER_ENCODER)) {
+         lockPressed = TRUE;
+
+         printf("Lock on.\n");
+     }
+
+     return lockPressed;
+ }
+
+ BOOL isZeroPressed() {
+     // Start lock press timer if pressed
+     if (!readZeroButton()) {
+         if (zeroTimerStarted)
+             zeroTimerStarted = FALSE;
+
+         //printf("Zero released.\n");
+         zeroPressed = FALSE;
+     }
+     else if (!zeroTimerStarted && readZeroButton()) {
+         Timer_new(TIMER_BUTTONS, BUTTON_DELAY);
+         zeroTimerStarted = TRUE;
+         zeroPressed = FALSE;
+
+         //printf("Zero timer started.\n");
+     }
+     else if (Timer_isExpired(TIMER_BUTTONS)) {
+         zeroPressed = TRUE;
+
+         //printf("Zero on.\n");
+     }
+
+     return zeroPressed;
+ }
 
 
