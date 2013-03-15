@@ -68,8 +68,8 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 #define LED_DELAY     1 // (ms)
 
 // Leveling constants
-#define G_DELTA_VERTICAL         10 // (0.001 G) scaled by 1e-3 == 0.02 G
-#define G_DELTA_HORIZONTAL       25 // (0.001 G) scaled by 1e-3 == 0.02 G
+#define G_DELTA_HORIZONTAL         10 // (0.001 G) scaled by 1e-3 == 0.02 G
+#define G_DELTA_VERTICAL           25 // (0.001 G) scaled by 1e-3 == 0.02 G
 #define G_X_DESIRED     0
 #define G_Y_DESIRED     0
 #define G_Z_DESIRED     1000 // (0.001 G) scaled by 1e-3 == 1 G
@@ -86,7 +86,7 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 #define LED_W_TRIS      PORTY10_TRIS // RD2
 
 //------------------------------- XBEE --------------------------------
-#define USE_XBEE
+//#define USE_XBEE
 
 //----------------------------- Other Modules ---------------------------
 #define USE_MAGNETOMETER
@@ -112,7 +112,7 @@ BOOL isZeroPressed();
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 
-float height = 1.3716; // (m)
+float height = 5.44; // (m)
 float heading = 0;
 // Printing debug messages over serial
 BOOL useLevel = FALSE;
