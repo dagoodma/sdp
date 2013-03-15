@@ -67,7 +67,7 @@
 
 // Pick the I2C_MODULE to initialize
 I2C_MODULE      BAROMETER_COMPAS_I2C_ID = I2C1;
-I2C_MODULE      BAROMETER_ATLAS_I2C_ID = I2C2;
+//I2C_MODULE      BAROMETER_ATLAS_I2C_ID = I2C2;
 
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  100000 // (Hz)
