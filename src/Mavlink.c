@@ -115,7 +115,7 @@ void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet){
 }
 
 void Compas_recieve_start_rescue(mavlink_start_rescue_t* packet){
-    printf("Lat: %d Long: %d\n",packet->latitude,packet->longitude);
+    printf("North: %f East: %f\n",packet->latitude,packet->longitude);
 }
 
 /*************************************************************************
