@@ -51,21 +51,29 @@ void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height);
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 BOOL Navigation_init() {
+    #ifdef USE_GPS
     uint8_t options = 0x0;
     if (GPS_init(options) != SUCCESS || !GPS_isInitialized()) {
         printf("Failed to initialize Navigation system.\n");
         return FAILURE;
     }
+    #endif
     return SUCCESS;
 }
 
 void Navigation_runSM() {
+    #ifdef USE_GPS
     GPS_runSM();
+    #endif
 }
 
 BOOL Navigation_isReady() {
+    #ifdef USE_GPS
     return GPS_isInitialized() && GPS_isConnected() && GPS_hasFix()
         && GPS_hasPosition();
+    #else
+    return TRUE;
+    #endif
 }
 
 
@@ -132,6 +140,17 @@ Coordinate Coordinate_new(Coordinate coord, float x, float y, float z) {
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
+/**
+ * Function: convertENU2ECEF
+ * @param A pointer to a new ECEF coordinate variable to save result into.
+ * @param East component in meters.
+ * @param North component in meters.
+ * @param Up component in meters.
+ * @return None.
+ * @remark Converts the given ENU vector into a ECEF coordinate.
+ * @author David Goodman
+ * @author MATLAB
+ * @date 2013.03.10  */
 void convertENU2ECEF(Coordinate *var, float east, float north, float up, float lat_ref,
     float lon_ref, float alt_ref) {
     // Convert geodetic lla  reference to ecef
@@ -330,7 +349,7 @@ int main() {
     Coordinate coord;
 
     float yaw = 150.0; // (deg)
-    float pitch = 45.0; // (deg)
+    float pitch = 85.0; // (deg)
     float height = 4.572; // (m)
     if (Navigation_getProjectedCoordinate(&coord, yaw, pitch, height)) {
         #ifdef USE_GEODETIC

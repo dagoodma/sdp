@@ -41,22 +41,22 @@ void Encoder_runSM();
  * @date 2013.02.10  */
 void Encoder_setZeroAngle();
 
-/**
- * Function: Encoder_isZeroPressed
- * @return TRUE or FALSE of whether the lock button was pressed or not.
- * @remark Lock button is pressed to acquire a target and send the bot a
- *  goto coordinate message.
- * @author Shehadeh H. Dajani
- * @date 2013.02.10  */
-BOOL Encoder_isLockPressed();
 
 /**
- * Function: Encoder_isZeroPressed
- * @return TRUE or FALSE of whether the button was pressed or not
- * @remark Event Checker Routine that checks state of pushbutton for Lock on
- * @author Shehadeh H. Dajani
- * @date 2013.02.10  */
-BOOL Encoder_isZeroPressed();
+ * Function: Encoder_enableZeroAngle
+ * @return 
+ * @remark Uses zero angle when calculating encoder angles.
+ * @author David Goodman
+ * @date 2013.03.14  */
+void Encoder_enableZeroAngle();
+
+/**
+ * Function: Encoder_disableZeroAngle
+ * @return 
+ * @remark Disables zero angle when calculating encoder angles.
+ * @author David Goodman
+ * @date 2013.03.14  */
+void Encoder_disableZeroAngle();
 
 /**
  * Function: Encoder_getPitch
