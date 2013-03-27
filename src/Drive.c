@@ -30,6 +30,10 @@
 
 #define HEADING_UPDATE_DELAY    250 // (ms)
 
+//PD Controller Parameter Settings
+#define KP 1.0f
+#define KD 1.0f
+#define velocity 5
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
@@ -48,9 +52,9 @@ uint16_t desiredHeading = 0; // (degrees) from North
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
-
 void updateHeading();
-
+void setLeftMotor(uint16_t speed);
+void setRightMotor(uint16_t speed);
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
@@ -107,6 +111,15 @@ void Drive_setHeading(uint16_t angle) {
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
+void setLeftMotor(uint16_t speed) {
+    //motorPWM.left = speed * 10;
+    PWM_setDutyCycle(motorPWM.left,speed*10);
+}
+
+void setRightMotor(uint16_t speed) {
+    PWM_setDutyCycle(motorPWM.right,speed*10);
+}
+
 /**
  * Function: updateHeading
  * @return None
@@ -116,6 +129,27 @@ void Drive_setHeading(uint16_t angle) {
  * @author Darrel Deo
  * @date 2013.03.27  */
 void updateHeading() {
+//Get error and change PWM Signal based on values
+
+    //Obtain the current Heading and error, previous heading and error, and derivative term
+    uint16_t currHeading = Magnetometer_getDegree();
+    uint16_t thetaError = desiredHeading - currHeading;
+    static uint16_t thetaErrorLast = thetaError;
+    uint16_t thetaErrorDerivative = (thetaError - thetaErrorLast)/HEADING_UPDATE_DELAY;
+
+    //Calculate Compensator's Ucommand
+    uint16_t Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
+
+    //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
+    if(thetaError < 180){ //Turning Left
+        setRightMotor(Ucmd*velocity);
+        setLeftMotor(((1/3)*Ucmd)*velocity);
+    }else if(thetaError > 180){
+        setLeftMotor(Ucmd*velocity);
+        setRightMotor(((1/3)*Ucmd)*velocity);
+    }
+
+    thetaErrorLast = thetaError;
 
 }
 
