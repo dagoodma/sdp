@@ -258,6 +258,9 @@ void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height) {
     //printf("At angle: %.3f and pitch: %.3f\n",yaw,pitch);
 
     float mag = height * tan((90.0-pitch)*DEGREE_TO_RADIAN);
+    #ifdef DEBUG
+    printf("\tMagnitude: %.3f\n",mag);
+    #endif
 
     //printf("At mag: %.3f\n",mag);
     
