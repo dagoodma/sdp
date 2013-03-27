@@ -1,0 +1,133 @@
+http://rcvehicles.about.com/od/frequency/p/US-RC-Frequencies.htm
+
+In radio controlled vehicles, frequency is the specific radio signal sent from the transmitter to the receiver to control the vehicle. Hertz (Hz) or megahertz (MHz) or gigahertz (GHz) is the measurement used to describe frequency. In toy-grade RCs, the frequency is normally a set channel within the 27MHz or 49MHz frequency range. There is a greater variety of channels and additional frequencies available in hobby-grade vehicles. These are the most common frequencies used in both toy and hobby RC vehicles in the United States.
+27MHz:
+
+Used in both toy-grade and hobby-grade RC vehicles, there are 6 color-coded channels. Channel 4 (yellow) is the most commonly used frequency for toy RCs.
+26.995 MHz - Ch 1 (Brown)
+27.045 MHz - Ch 2 (Red)
+27.095 MHz - Ch 3 (Orange)
+27.145 MHz - Ch 4 (Yellow)
+27.195 MHz - Ch 5 (Green)
+27.255 MHz - Ch 6 (Blue)
+Learn more about 27MHz for RC vehicles.
+
+49MHz:
+
+49MHz is sometimes used for toy-grade RCs.
+49.830 MHz - Ch 1
+49.845 MHz - Ch 2
+49.860 MHz - Ch 3
+49.875 MHz - Ch 4
+49.890 MHz - Ch 5
+Learn more about 49MHz as used in radio controlled toys.
+
+50MHz:
+
+Although 50MHz can be used for RC models, it requires an amateur (ham) radio license to use these frequency channels.
+50.800 MHz - Ch RC00
+50.820 MHz - Ch RC01
+50.840 MHz - Ch RC02
+50.860 MHz - Ch RC03
+50.880 MHz - Ch RC04
+50.900 MHz - Ch RC05
+50.920 MHz - Ch RC06
+50.940 MHz - Ch RC07
+50.960 MHz - Ch RC08
+50.980 MHz - Ch RC09
+Learn more about 50MHz as used in radio controlled vehicles.
+
+72MHz:
+
+In the US there are 50 channels in the 72MHz range that can be used for radio controlled aircraft.
+72.010 MHz - Ch 11
+72.030 MHz - Ch 12
+72.050 MHz - Ch 13
+72.070 MHz - Ch 14
+72.090 MHz - Ch 15
+72.110 MHz - Ch 16
+72.130 MHz - Ch 17
+72.150 MHz - Ch 18
+72.170 MHz - Ch 19
+72.190 MHz - Ch 20
+72.210 MHz - Ch 21
+72.230 MHz - Ch 22
+72.250 MHz - Ch 23
+72.270 MHz - Ch 24
+72.290 MHz - Ch 25
+72.310 MHz - Ch 26
+72.330 MHz - Ch 27
+72.350 MHz - Ch 28
+72.370 MHz - Ch 29
+72.390 MHz - Ch 30
+72.410 MHz - Ch 31
+72.430 MHz - Ch 32
+72.450 MHz - Ch 33
+72.470 MHz - Ch 34
+72.490 MHz - Ch 35
+72.510 MHz - Ch 36
+72.530 MHz - Ch 37
+72.550 MHz - Ch 38
+72.570 MHz - Ch 39
+72.590 MHz - Ch 40
+72.610 MHz - Ch 41
+72.630 MHz - Ch 42
+72.650 MHz - Ch 43
+72.670 MHz - Ch 44
+72.690 MHz - Ch 45
+72.710 MHz - Ch 46
+72.730 MHz - Ch 47
+72.750 MHz - Ch 48
+72.770 MHz - Ch 49
+72.790 MHz - Ch 50
+72.810 MHz - Ch 51
+72.830 MHz - Ch 52
+72.850 MHz - Ch 53
+72.870 MHz - Ch 54
+72.890 MHz - Ch 55
+72.910 MHz - Ch 56
+72.930 MHz - Ch 57
+72.950 MHz - Ch 58
+72.970 MHz - Ch 59
+72.990 MHz - Ch 60
+Learn more about 72MHz as used in RC airplanes.
+
+75MHz:
+
+For surface RCs only (cars, trucks, boats). It is not legal to use this frequency for RC aircraft.
+75.410 MHz - Ch 61
+75.430 MHz - Ch 62
+75.450 MHz - Ch 63
+75.470 MHz - Ch 64
+75.490 MHz - Ch 65
+75.510 MHz - Ch 66
+75.530 MHz - Ch 67
+75.550 MHz - Ch 68
+75.570 MHz - Ch 69
+75.590 MHz - Ch 70
+75.610 MHz - Ch 71
+75.630 MHz - Ch 72
+75.650 MHz - Ch 73
+75.670 MHz - Ch 74
+75.690 MHz - Ch 75
+75.710 MHz - Ch 76
+75.730 MHz - Ch 77
+75.750 MHz - Ch 78
+75.770 MHz - Ch 79
+75.790 MHz - Ch 80
+75.810 MHz - Ch 81
+75.830 MHz - Ch 82
+75.850 MHz - Ch 83
+75.870 MHz - Ch 84
+75.890 MHz - Ch 85
+75.910 MHz - Ch 86
+75.930 MHz - Ch 87
+75.950 MHz - Ch 88
+75.970 MHz - Ch 89
+75.990 MHz - Ch 90
+Learn more about 75MHz as used with radio controlled vehicles.
+
+2.4GHz:
+
+Being used in more and more RC vehicles, this frequency eliminates problems of radio interference. Special software within the receiver and transmitter work to set the specific frequency channel within the very wide 2.4GHz range, locking out interference from other systems operating within the 2.4GHz range in your operating area. There is no need to change out crystals or select specific channels yourself. The transmitter/receiver do it for you.
+Learn more about 2.4GHz Digital Spectrum Modulation (DSM) as used in radio controlled vehicles.

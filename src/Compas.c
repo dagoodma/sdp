@@ -2,7 +2,10 @@
  Module
    Compas.c
 
- Author: John Ash
+ Author: 
+	John Ash
+	David Goodman
+	Shehadeh Dajani
 
  Description
 	Code to initialzie and control the Xbee modules in API mode
