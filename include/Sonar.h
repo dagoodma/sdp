@@ -24,7 +24,7 @@ void Sonar_init();
 
 
 
-BOOL Sonar_runSM(uint32_t* rawAnalogWindowData, uint32_t* rawAnalogData);
+void Sonar_runSM(void);
 
 
 
