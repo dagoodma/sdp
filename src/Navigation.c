@@ -250,8 +250,8 @@ void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ece
  * @param Pitch in degrees from level.
  * @param Height in meters from target.
  * @return None.
- * @remark Converts the given yaw, pitch, and height into a NED vector. Note
- *  that x,y, and z are North, East, and Down respectively in coordinate variable.
+ * @remark Projects a ray with the given height from the given yaw and
+ *  pitch, and returns a NED for the intersection location.
  * @author David Goodman
  * @date 2013.03.10  */
 void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height) {
