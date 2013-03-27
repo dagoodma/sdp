@@ -41,25 +41,33 @@ ACK start_rescue;
  **********************************************************************/
 void Mavlink_recieve(uint8_t uart_id);
 
+void Mavlink_resend_message(ACK *message);
+
+/**********************************************************************
+ * SEND FUNCTIONS                                                     *
+ **********************************************************************/
 void Mavlink_send_ACK(uint8_t uart_id, uint8_t Message_Name);
 
 void Mavlink_send_xbee_heartbeat(uint8_t uart_id, uint8_t data);
 
 void Mavlink_send_start_rescue(uint8_t uart_id, uint8_t ack, uint8_t status, float latitude, float longitude);
 
-void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet);
+void Mavlink_send_gps_ned_error(uint8_t uart_id, float north, float east);
 
-void Mavlink_resend_message(ACK *message);
-/*
-uint8_t Mavlink_returnACKStatus(uint8_t message_name);
-
-void Mavlink_editACKStatus(uint8_t message_name, uint8_t new_status);
-*/
+void Mavlink_send_gps_geo_origin(uint8_t uart_id, float latitude, float longitude);
 
 #ifdef XBEE_TEST
 void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data);
 #endif
 
-
+/**********************************************************************
+ * RECIEVE FUNCTIONS                                                  *
+ **********************************************************************/
 void Compas_recieve_start_rescue(mavlink_start_rescue_t* packet);
+
+void Mavlink_recieve_GPS_geo_origin(mavlink_gps_geo_origin_t* packet);
+
+void Mavlink_recieve_GPS_ned_error(mavlink_gps_ned_error_t* packet);
+
+void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet);
 #endif
