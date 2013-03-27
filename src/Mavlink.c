@@ -49,6 +49,18 @@ void Mavlink_recieve(uint8_t uart_id){
                     mavlink_msg_mavlink_ack_decode(&msg, &data);
                     Mavlink_recieve_ACK(&data);
                 }break;
+                case MAVLINK_MSG_ID_GPS_GEO_ORIGIN:
+                {
+                    mavlink_gps_geo_origin_t data;
+                    mavlink_msg_gps_geo_origin_decode(&msg,&data);
+                    Mavlink_recieve_GPS_geo_origin(&data);
+                }break;
+                case MAVLINK_MSG_ID_GPS_NED_ERROR:
+                {
+                    mavlink_gps_ned_error_t data;
+                    mavlink_msg_gps_ned_error_decode(&msg,&data);
+                    Mavlink_recieve_GPS_ned_error(&data);
+                }break;
             }
         }
     }
@@ -90,6 +102,23 @@ void Mavlink_send_start_rescue(uint8_t uart_id, uint8_t ack, uint8_t status, flo
     }
 }
 
+void Mavlink_send_gps_geo_origin(uint8_t uart_id, float latitude, float longitude){
+    mavlink_message_t msg;
+    uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+    mavlink_msg_gps_geo_origin_pack(MAV_NUMBER, COMP_ID, &msg, FALSE, latitude, longitude);
+    uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
+    UART_putString(uart_id, buf, length);
+}
+
+void Mavlink_send_gps_ned_error(uint8_t uart_id, float north, float east){
+    mavlink_message_t msg;
+    uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+    mavlink_msg_gps_ned_error_pack(MAV_NUMBER, COMP_ID, &msg, FALSE, north, east);
+    uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
+    UART_putString(uart_id, buf, length);
+}
+
+
 #ifdef XBEE_TEST
 void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data){
     mavlink_message_t msg;
@@ -115,8 +144,25 @@ void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet){
 }
 
 void Compas_recieve_start_rescue(mavlink_start_rescue_t* packet){
-    printf("Lat: %d Long: %d\n",packet->latitude,packet->longitude);
+    printf("North: %f East: %f\n",packet->North,packet->East);
 }
+
+void Mavlink_recieve_GPS_geo_origin(mavlink_gps_geo_origin_t* packet){
+    //What would you like this function to do?
+    //most likely store these values to a global variable and set a flag to read them. etc....
+    float lat, longi;
+    lat = packet->latitiude;
+    longi = packet->longitude;
+}
+
+void Mavlink_recieve_GPS_ned_error(mavlink_gps_ned_error_t* packet){
+    //What would you like this function to do?
+    //most likely store these values to a global variable and set a flag to read them. etc....
+    float North, East;
+    North = packet->North;
+    East = packet->East;//sorry they are caps. :( I'll fix them in my next iteration
+}
+
 
 /*************************************************************************
  * PUBLIC FUNCTIONS                                                      *

@@ -14,22 +14,29 @@
 				<description>This messages will send a sinlge byte with the mavlink message id</description>
 				<field type="uint8_t" name="Message_Name"> Returns the name of message recieved</field>
           </message>
-		  <message id="240" name="GPS_ERROR">
-				<description>This messages will send a sinlge byte with the mavlink message id</description>
+		  <message id="240" name="GPS_NED_ERROR">
+				<description>This messages will send the correction for the local GPS area</description>
 				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
-				<field type="uint8_t" name="data">Holds a Message ID number</field>
+				<field type="float" name="North">North Error amount</field>
+                <field type="float" name="East">East Error amount</field>
           </message>
 		  <message id="241" name="START_RESCUE">
-				<description>This messages will send a sinlge byte with the mavlink message id</description>
+				<description>This messages will send a GPS location to the boat</description>
 				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
 				<field type="uint8_t" name="status">Holds status informatiom for the boat</field>
-				<field type="float" name="latitude">Latitude data for the boat to travel to</field>
-				<field type="float" name="longitude">Longitude data for the boat to travel to</field>
+				<field type="float" name="North">Latitude data for the boat to travel to</field>
+				<field type="float" name="East">Longitude data for the boat to travel to</field>
           </message>
 		  <message id="242" name="STOP_RESCUE">
 				<description>This messages will send a sinlge byte with the mavlink message id</description>
 				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
 				<field type="uint8_t" name="data">Holds a Message ID number</field>
+          </message>
+		  <message id="243" name="GPS_GEO_ORIGIN">
+				<description>This message will contain the LAT/LONG GPS DATA</description>
+				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+				<field type="float" name="latitiude">Holds a Message ID number</field>
+                <field type="float" name="longitude">Longitude data for the boat to travel to</field>
           </message>
      </messages>
 </mavlink>
