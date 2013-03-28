@@ -34,6 +34,7 @@
 \usepackage{charter} 				% Charter font for main content
 \usepackage{blindtext}				% dummy text
 \usepackage{datetime}				% custom date
+\usepackage{caption}
 	\newdateformat{mydate}{\monthname[\THEMONTH] \THEYEAR}
 \usepackage[pdfpagemode=FullScreen,
 			colorlinks=false]{hyperref}	% links and pdf behaviour
@@ -105,11 +106,12 @@
 \vspace{0.5cm}
 \begin{center}
 \begin{minipage}[h]{0.80\linewidth}
-	\begin{wrapfigure}{l}{0.35\textwidth}
+	\begin{wrapfigure}{l}{0.378\textwidth}
 		{%
 		\setlength{\fboxsep}{0pt}%
 		\setlength{\fboxrule}{1pt}%
 		\fbox{\includegraphics[width=0.39\textwidth]{al-group.jpg}}%
+		\caption*{Left to right: J. Ash, S. Dajani, D. Goodman, D. Deo}
 		}%
 		%\\	% this spacer is needed to make the text on the right fit OK
 	\end{wrapfigure}
@@ -134,7 +136,7 @@
 \begin{center}
 			\includegraphics[width=0.63\linewidth]{cc.png}
 		\end{center}
-The months of February and March have brought our team closer to reach our goals. The completion of our boat is the next major milestone. We plan to accomplish this during April and May, so that by June we will have a working prototype. 
+The months of February and March have brought our team closer to reaching our goals. The completion of our boat is the next major milestone. We plan to accomplish this during April and May, so that by June we will have a working prototype. 
 		
 % -----
 
