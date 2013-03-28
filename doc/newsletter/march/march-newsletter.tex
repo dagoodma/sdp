@@ -67,16 +67,14 @@
 % Define Title en News input
 \newcommand{\JournalName}[1]{%
 		\begin{center}	
-			%\Huge \usefont{T1}{augie}{m}{n}
 			\Huge \usefont{T1}{cmr}{m}{n}
-			%\huge \bfseries 
 			#1%
 		\end{center}	
 		\par \normalsize \normalfont}
 		
 \newcommand{\JournalIssue}[1]{%
-		\hfill \textsc{\mydate \today, No #2}
-		\par \normalsize \normalfont}
+        \hfill \textsc{\mydate \today, No #1}
+        \par \normalsize \normalfont}
 
 \newcommand{\NewsItem}[1]{%
 		\usefont{T1}{augie}{m}{n} 	
@@ -94,7 +92,7 @@
 \begin{document}
 % Title	
 % -----
-\JournalIssue{1}
+\JournalIssue{2}
 \JournalName{The Autonomous Lifeguard Project}
 \noindent\HorRule{3pt} \\[-0.75\baselineskip]
 \HorRule{1pt}
@@ -105,14 +103,13 @@
 \vspace{0.5cm}
 	\SepRule
 \vspace{0.5cm}
-
 \begin{center}
 \begin{minipage}[h]{0.80\linewidth}
-	\begin{wrapfigure}{l}{0.415\textwidth}
+	\begin{wrapfigure}{l}{0.35\textwidth}
 		{%
 		\setlength{\fboxsep}{0pt}%
 		\setlength{\fboxrule}{1pt}%
-		\fbox{\includegraphics[width=0.42\textwidth]{al-group.jpg}}%
+		\fbox{\includegraphics[width=0.39\textwidth]{al-group.jpg}}%
 		}%
 		%\\	% this spacer is needed to make the text on the right fit OK
 	\end{wrapfigure}
@@ -130,28 +127,25 @@
 	\SepRule
 \vspace{0.5cm}
 \begin{multicols}{3}
-	\NewsItem{Progress}
+	\NewsItem{Milestones}
 	\NewsAuthor{D. Goodman}
     
-    We are all very pleased to announce that our command center is nearing completion. As our school quarter comes to an end, our project continues to grow and progress. During March, many hours of our time was dedicated to implementing and integrating sensors, running GPS testing to 
-
-    
-
-	January has been a very productive month for our team. We are making substantial progress on the project. Throughout January, we have been hard at work writing, researching, coding, and soldering. Administratively, we have completed a Gantt chart, a website, and have entered into the Texas Instruments Analog Design Contest. In the hardware portion, we have purchased a boat and begun to modify it with new motors, electronic speed controllers, and batteries.  The command center---an encoded tripod assembly that the lifeguard will use to designate a drowning person---is coming together as well. We have acquired a tripod and absolute rotary encoders for triangulation. The encoder housing has been created, and a software interface is now in the works to take angular measurements and translate them into distance. Great care has been taken to ensure that the encoders are very precise so that we can triangulate the position of a drowning person accurately with minimal error. Many of our other sensors are nearly complete as well. We have an accelerometer up and running, our thermal imagining nearly complete, our altimeter is working, our GPSs running and we are analyzing their data in MATLAB, and we have been planning our approach to implementing the microwave radar and sonar sensors after inspecting their analog waveforms with an oscilloscope. 
+    We are all very pleased to announce that our command center is nearing completion. As March comes to an end, our project continues to grow and progress. Throughout this month, many hours were dedicated to implementing and integrating sensors, performing testing, and debugging the command center. Last week, we met our desired basic functionality for the command center, and created a video demonstrating its usage. A technical presentation was given before an audience of our peers that discussed our progress, challenges, and future plans.
 \begin{center}
-			\includegraphics[width=0.78\linewidth]{old_motors.jpg}
+			\includegraphics[width=0.63\linewidth]{cc.png}
 		\end{center}
-Overall, this past month has been productive on all fronts and the team is anxious to continue with work in February.
+The months of February and March have brought our team closer to reach our goals. The completion of our boat is the next major milestone. We plan to accomplish this during April and May, so that by June we will have a working prototype. 
 		
 % -----
 
 \vspace{1cm}
 % Other news (2)
 % -----
-\NewsItem{Direction}
-\NewsAuthor{D. Deo}
-	Every week, the team specifies a minimum set of personal goals that they wish to complete.
- This week the group will focus on modeling accurate data from the encoders, XBee, GPS, and thermal sensor. The goal is to get the encoders to read accurate angles and have the ability to be calibrated to a zero degree point within software. Data from the GPS and XBee need to be obtained over a duration of time to analyze and correct for any error that may be present. The thermal sensor data is to be mapped to an RGB array so that heat signatures may be seen in real time. These sensors and modules are the last that need be implemented before the integration phase where the various components will be mounted on their respective subsystem. Comprehensive testing will occur after each sensor is up and running. We will also begin designing hierarchical finite state machines for the boat and the command center. These will provide our systems with the intelligence to act autonomously and make decisions on its own. So far, we are ahead of schedule for February.
+\NewsItem{Future Work}
+\NewsAuthor{D. Goodman}
+	Although the engineering buildings are very quiet during spring break, we are currently working hard to get the boat into the water. Shehadeh is working diligently to equip the boat with the new motors and emergency RC receiver. These modifications will allow us to reach a drowning victim quickly, and safely. Darrel, David, and John are busy implementing autonomous features into the boat, via a navigation and drive system. Our goal is to have the boat navigating on its own in the water by this coming weekend.
+
+Following this weekend's testing, we will continue to work on the navigation system, and to get the command center talking to the boat from the shore. Once the boat is able to navigate to waypoints, we will begin the integration of our human detection sensor array, which includes sonar and thermal imaging. We are eager to continue making progress in every direction, and spring is proving to be very productive so far.
 
 % -----
 %\columnbreak
