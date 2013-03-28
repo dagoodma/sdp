@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=Atlas.X
+PROJECTNAME=atlas.X
 
 # Active Configuration
 DEFAULTCONF=default
