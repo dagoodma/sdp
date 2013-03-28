@@ -130,26 +130,55 @@ void setRightMotor(uint16_t speed) {
  * @date 2013.03.27  */
 void updateHeading() {
 //Get error and change PWM Signal based on values
+enum {
+    pivot_Left  = 0x0,   // Pivot to the left --> Motor Arrangement
+    pivot_Right = 0x1, // Pivot to the Right --> Motor Arrangement
+} pivotState;
 
     //Obtain the current Heading and error, previous heading and error, and derivative term
     uint16_t currHeading = Magnetometer_getDegree();
     uint16_t thetaError = desiredHeading - currHeading;
+
+    //In the event that our current heading exceeds desired resulting in negative number
+    
+    if ((thetaError > 0) && (thetaError < 180)){            //Desired leads heading and within heading's right hemisphere --> Turn right, theta stays the same
+        pivotState = pivot_Right;
+    }else if((thetaError < 0) && (thetaError > -180)){      //Heading leads desired and within desired's right hemisphere --> Turn left, theta gets inverted
+        pivotState = pivot_Left;
+        thetaError = thetaError*-1;
+    }else if((thetaError > 0)&&(thetaError >= 180)){        //Desired leads heading and within heading's left hemisphere--> Turn left, theta is complement
+        pivotState = pivot_Left;
+        thetaError = 360 - thetaError;
+    }else if((thetaError < 0)&&(thetaError <= -180)){       //Heading leads desired and within desired's left hemisphere --> Turn right, theta is inverted and complement
+        pivotState = pivot_Right;
+        thetaError = 360 - (-1*thetaError);
+    }
+    static uint16_t lastPivotState = pivotState;
     static uint16_t thetaErrorLast = thetaError;
+
+    if(lastPivotState != pivotState){
+        thetaErrorLast = 0;
+    }
     uint16_t thetaErrorDerivative = (thetaError - thetaErrorLast)/HEADING_UPDATE_DELAY;
+    if (thetaErrorDerivative < 0){
+        thetaErrorDerivative = -1*thetaErrorDerivative;
+    }
 
     //Calculate Compensator's Ucommand
     uint16_t Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
 
+    uint16_t pwmSpeed = Ucmd*velocity;
     //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
-    if(thetaError < 180){ //Turning Left
-        setRightMotor(Ucmd*velocity);
-        setLeftMotor(((1/3)*Ucmd)*velocity);
-    }else if(thetaError > 180){
-        setLeftMotor(Ucmd*velocity);
-        setRightMotor(((1/3)*Ucmd)*velocity);
+    if(pivotState == pivot_Right ){ //Turning Right
+        setRightMotor(0);//Give negative duty --> Same scaled range for pwm duty
+        setLeftMotor(pwmSpeed);
+    }else if(pivotState ==  pivot_Left){ //Turning Left
+        setRightMotor(pwmSpeed);
+        setLeftMotor(0);
     }
 
     thetaErrorLast = thetaError;
+    lastPivotState = pivotState;
 
 }
 
