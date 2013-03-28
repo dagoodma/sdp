@@ -282,7 +282,7 @@ void writeConfigReg(void){
     UINT8 MSByte, LSByte, MSByteCheck, LSByteCheck;
     LSByte = eepromData[245];
     LSByte &= 0xF0;
-    LSByte |= 0x0C;
+    LSByte |= 0x0D;
     LSByteCheck = LSByte - 0x55;
     MSByte = eepromData[246];
     MSByteCheck = MSByte - 0x55;
