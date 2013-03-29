@@ -144,7 +144,7 @@ void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet){
 }
 
 void Compas_recieve_start_rescue(mavlink_start_rescue_t* packet){
-    printf("North: %f East: %f\n",packet->North,packet->East);
+    printf("North: %f East: %f\n",packet->north,packet->east);
 }
 
 void Mavlink_recieve_GPS_geo_origin(mavlink_gps_geo_origin_t* packet){
@@ -159,8 +159,8 @@ void Mavlink_recieve_GPS_ned_error(mavlink_gps_ned_error_t* packet){
     //What would you like this function to do?
     //most likely store these values to a global variable and set a flag to read them. etc....
     float North, East;
-    North = packet->North;
-    East = packet->East;//sorry they are caps. :( I'll fix them in my next iteration
+    North = packet->north;
+    East = packet->east;
 }
 
 
