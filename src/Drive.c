@@ -35,6 +35,11 @@
 #define KP 1.0f
 #define KD 1.0f
 #define velocity 5
+#define FORWARD_RANGE (11 - 8.18)
+#define BACKWARD_RANGE (8.18 - 5.5)
+#define FULL_FORWARD 11
+#define FULL_BACKWARD 5.5
+#define FULL_STOP 8.18
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
@@ -135,7 +140,7 @@ enum {
     pivot_Left  = 0x0,   // Pivot to the left --> Motor Arrangement
     pivot_Right = 0x1, // Pivot to the Right --> Motor Arrangement
 } pivotState;
-
+    static uint16_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     //Obtain the current Heading and error, previous heading and error, and derivative term
     uint16_t currHeading = Magnetometer_getDegree();
     uint16_t thetaError = desiredHeading - currHeading;
@@ -167,15 +172,19 @@ enum {
 
     //Calculate Compensator's Ucommand
     uint16_t Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
+    uint16_t Unormalized = Ucmd/Umax;
+    uint16_t forwardScaled = FULL_STOP + Unormalized*FORWARD_RANGE;
+    uint16_t backwardScaled = FULL_STOP - Unormalized*BACKWARD_RANGE;
 
-    uint16_t pwmSpeed = Ucmd*velocity;
+
+    //uint16_t pwmSpeed = Ucmd*velocity;
     //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
     if(pivotState == pivot_Right ){ //Turning Right
-        setRightMotor(0);//Give negative duty --> Same scaled range for pwm duty
-        setLeftMotor(pwmSpeed);
+        setRightMotor(backwardScaled);//Give negative duty --> Same scaled range for pwm duty
+        setLeftMotor(forwardScaled);
     }else if(pivotState ==  pivot_Left){ //Turning Left
-        setRightMotor(pwmSpeed);
-        setLeftMotor(0);
+        setRightMotor(forwardScaled);
+        setLeftMotor(backwardScaled);
     }
 
     thetaErrorLast = thetaError;
