@@ -24,9 +24,10 @@
 
 #define DEBUG
 
-#define MOTOR_LEFT              PWM_PORTZ06
-#define MOTOR_RIGHT             PWM_PORTY12
-//#define RUDDER                  PWM_PORTY10
+#define MOTOR_LEFT              RC_PORTW08 // RB14 -- J7-11
+#define MOTOR_RIGHT             RC_PORTW07 // RB15 -- J7-12
+// #define RUDDER_TRIS          RC_TRISY06 // RD10 -- J5-01
+// #define RUDDER                  RC_LATY06 // RD10
 
 #define HEADING_UPDATE_DELAY    250 // (ms)
 
