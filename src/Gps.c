@@ -108,13 +108,13 @@ struct {
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
 
-BOOL hasNewByte();
-void startReadState();
-void startIdleState();
-void startParseState();
-int8_t readMessageByte();
-int8_t parseMessage();
-void parsePayloadField();
+static BOOL hasNewByte();
+static void startReadState();
+static void startIdleState();
+static void startParseState();
+static int8_t readMessageByte();
+static int8_t parseMessage();
+static void parsePayloadField();
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
@@ -321,7 +321,7 @@ int32_t GPS_isConnected() {
  * @return Returns true if a new message is ready to be read
  * @remark 
  **********************************************************************/
-BOOL hasNewByte() {
+static BOOL hasNewByte() {
     return !UART_isReceiveEmpty(GPS_UART_ID);
 }
 
@@ -330,7 +330,7 @@ BOOL hasNewByte() {
  * @return None
  * @remark Switches into the GPS idle state.
  **********************************************************************/
-void startIdleState() {
+static void startIdleState() {
     state = STATE_IDLE;
 #ifdef DEBUG_STATE
     printf("Entered idle state.\n");
@@ -344,7 +344,7 @@ void startIdleState() {
  * @return None
  * @remark Switches into the read state for the GPS.
  **********************************************************************/
-void startReadState() {
+static void startReadState() {
     state = STATE_READ;
     byteIndex = 0;
     messageLength = PAYLOAD_INDEX;
@@ -361,7 +361,7 @@ void startReadState() {
  * @return None
  * @remark Switches into the GPS parse state.
  **********************************************************************/
-void startParseState() {
+static void startParseState() {
     state = STATE_PARSE;
     byteIndex = PAYLOAD_INDEX;
     
@@ -376,7 +376,7 @@ void startParseState() {
  * @return None
  * @remark Sets the GPS connected state to TRUE and starts a timeout timer.
  **********************************************************************/
-void setConnected() {
+static void setConnected() {
     isConnected = TRUE;
     Timer_new(TIMER_GPS,DELAY_TIMEOUT);
 
@@ -394,7 +394,7 @@ void setConnected() {
  *  and checksum fields). The hasNewMessage field will be set to TRUE
  *  when a new message is received and ready for parsing.
  **********************************************************************/
-int8_t readMessageByte() {
+static int8_t readMessageByte() {
     // Read a new byte from the UART or return FAILURE
     if (hasNewByte() && !hasNewMessage)
         rawMessage[byteIndex] = UART_getChar(GPS_UART_ID);
@@ -443,7 +443,7 @@ int8_t readMessageByte() {
  * @return SUCCESS, FAILURE, or ERROR.
  * @remark Parses the payload fields of a newly received GPS message.
  **********************************************************************/
-int8_t parseMessage() {
+static int8_t parseMessage() {
     //for (byteIndex = 0; byteIndex < RAW_BUFFER_SIZE; byteIndex++) {
 
     // interpret message by parsing payload fields
@@ -470,7 +470,7 @@ int8_t parseMessage() {
  * @return None
  * @remark Parses one field of the payload for the new GPS message.
  **********************************************************************/
-void parsePayloadField() {
+static void parsePayloadField() {
     switch (messageClass) {
         // #################### Navigation Message #######################
         case NAV_CLASS:

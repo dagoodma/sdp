@@ -7,11 +7,13 @@
       <itemPath>../../include/Board.h</itemPath>
       <itemPath>../../include/Drive.h</itemPath>
       <itemPath>../../include/Gps.h</itemPath>
-      <itemPath>../../include/Magnetometer.h</itemPath>
       <itemPath>../../include/PWM.h</itemPath>
       <itemPath>../../include/Serial.h</itemPath>
       <itemPath>../../include/Timer.h</itemPath>
       <itemPath>../../include/Uart.h</itemPath>
+      <itemPath>../../include/RCServo.h</itemPath>
+      <itemPath>../../include/Magnetometer.h</itemPath>
+      <itemPath>../../include/I2C.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -24,11 +26,13 @@
       <itemPath>../../src/Board.c</itemPath>
       <itemPath>../../src/Drive.c</itemPath>
       <itemPath>../../src/Gps.c</itemPath>
-      <itemPath>../../src/Magnetometer.c</itemPath>
       <itemPath>../../src/PWM.c</itemPath>
       <itemPath>../../src/Serial.c</itemPath>
       <itemPath>../../src/Timer.c</itemPath>
       <itemPath>../../src/Uart.c</itemPath>
+      <itemPath>../../src/RCServo.c</itemPath>
+      <itemPath>../../src/Magnetometer.c</itemPath>
+      <itemPath>../../src/I2C.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

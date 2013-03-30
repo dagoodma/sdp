@@ -4,17 +4,10 @@
 
  Author: David Goodman
 
- Description
-	Code to initialzie and control the Xbee modules in API mode
-
- Notes
-
  History
  When                   Who         What/Why
  --------------         ---         --------
-3/08/2013   6:41PM      dagoodma    Copied initial code from Shah's Position module.
-3/08/2013   12:00PM     shehadeh    Wrote initial code.
-2/25/2013   11:10PM     jash        Created project.
+3/27/2013   11:10PM     dagoodma    Created project.
 ***********************************************************************/
 #define IS_ATLAS
 #define DEBUG
@@ -23,25 +16,57 @@
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
-/*
-#include "I2C.h"
-#include "Encoder.h"
-#include "Xbee.h"
-#include "UART.h"
-#include "Gps.h"
-#include "Navigation.h"
- * */
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "Board.h"
 #include "Serial.h"
 #include "Ports.h"
 #include "Magnetometer.h"
 #include "Drive.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
+/**
+ * Function: main
+ * @return SUCCESS or FAILURE.
+ * @remark Entry point for command center (COMPAS).
+ * @author David Goodman
+ * @date 2013.03.10  */
+#ifdef USE_MAIN
 int main(void) {
+    initMasterSM();
+    printf("Command Center Ready for Use. \n\n\n\n\n");
+    while(1){
+        runMasterSM();
+    }
+    return (SUCCESS);
+}
+#endif
 
-    return (EXIT_SUCCESS);
+
+/**
+ * Function: initMasterSM
+ * @return None.
+ * @remark Initializes the master state machine for the boat.
+ * @author David Goodman
+ * @date 2013.03.28  */
+void initMasterSM() {
+    Board_init();
+    Serial_init();
+    Timer_init();
+    Drive_init();
+}
+
+/**
+ * Function: runMasterSM
+ * @return None.
+ * @remark Executes one cycle of the boat's state machine.
+ * @author David Goodman
+ * @date 2013.03.28  */
+void runMasterSM() {
+    //Serial_runSM(); // for non-blocking state machine
+    Magnetometer_runSM();
+    
+    Drive_runSM();
+
 }
 
