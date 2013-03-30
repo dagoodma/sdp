@@ -134,17 +134,19 @@ void setRightMotor(uint16_t speed) {
  * @author Darrel Deo
  * @date 2013.03.27  */
 void updateHeading() {
-//Get error and change PWM Signal based on values
+
+//State declaration
 enum {
     pivot_Left  = 0x0,   // Pivot to the left --> Motor Arrangement
     pivot_Right = 0x1, // Pivot to the Right --> Motor Arrangement
 } pivotState;
+
+    //Calculate Umax for normalizing
     static uint16_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
+
     //Obtain the current Heading and error, previous heading and error, and derivative term
     uint16_t currHeading = Magnetometer_getDegree();
     uint16_t thetaError = desiredHeading - currHeading;
-
-    //In the event that our current heading exceeds desired resulting in negative number
     
     if ((thetaError > 0) && (thetaError < 180)){            //Desired leads heading and within heading's right hemisphere --> Turn right, theta stays the same
         pivotState = pivot_Right;
