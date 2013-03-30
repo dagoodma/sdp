@@ -48,7 +48,7 @@ uint16_t Magnetometer_readSensor();
  ***********************************************************************/
 
 void Magnetometer_init() {
-    I2C_init(MAGNETOMETER_I2C_ID, I2C_CLOCK_FREQ);
+    // Do Nothing
 }
 
 float Magnetometer_getDegree(){
@@ -138,6 +138,7 @@ int main(void) {
 // Initialize the UART,Timers, and I2C1v
     Board_init();
     Serial_init();
+    I2C_init(MAGNETOMETER_I2C_ID, I2C_CLOCK_FREQ);
     Magnetometer_init();
     while(1){
         Magnetometer_runSM();

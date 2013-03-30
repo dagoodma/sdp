@@ -68,7 +68,5 @@ void runMasterSM() {
     
     Drive_runSM();
 
-
-    return (EXIT_SUCCESS);
 }
 

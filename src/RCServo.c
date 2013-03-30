@@ -8,10 +8,10 @@
 
 #include <xc.h>
 #include <plib.h>
-#include <RCServo.h>
 #include <stdio.h>
-#include <serial.h>
-#include <BOARD.h>
+#include "RCServo.h"
+#include "Serial.h"
+#include "Board.h"
 
 /*******************************************************************************
  * PRIVATE #DEFINES                                                            *
@@ -58,7 +58,7 @@
  * the processor board that you are using. In order to calculate the minimal
  * prescalar: Prescalar = (2000*F_PB/(1000000*0xFFFF))+1, round down */
    
-#define F_PB        (BOARD_GetPBClock())
+#define F_PB        (Board_GetPBClock())
 #define F_PB_IN_KHZ (F_PB/1000)
 #define PRESCALE    2
 #define uSEC        (F_PB_IN_KHZ / (PRESCALE * 1000))
