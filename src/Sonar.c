@@ -34,10 +34,9 @@
 //Cannot be greater than 100
 #define NUMBER_OF_SAMPLES 100
 
-#define TIMER_NUMBER 4
+#define TIMER_NUMBER 8
 #define TIMER_TIME 100/NUMBER_OF_SAMPLES
-
-#define INIT_THRESHOLD 498
+#define INIT_THRESHOLD 1022
 
 
 
@@ -55,44 +54,63 @@ static uint32_t getAnalogWindow();
 //uint32_t rawAnalogData[100] = 0;
 //uint32_t averagedAnalogData[100]=0;
 uint8_t count = 0;
-uint8_t print_count = 0xFF;
+uint8_t print_count = 0;
 uint32_t oldWindowValue=0, windowValue=0;
+
+uint32_t incoming[NUMBER_OF_SAMPLES],completed[NUMBER_OF_SAMPLES],deleting[NUMBER_OF_SAMPLES];
+
+uint32_t *incoming_sonar_data = (incoming);
+uint32_t *completed_sonar_data = (completed);
+uint32_t *deleting_sonar_data = (deleting);
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
 
 void Sonar_init(){
-    AD_init(ANALOG_WINDOW_PIN | ANALOG_PIN);
+    AD_init(ANALOG_WINDOW_PIN);
     Timer_init();
     Timer_new(TIMER_NUMBER, TIMER_TIME);
 }
 
-BOOL Sonar_runSM(uint32_t* rawAnalogWindowData, uint32_t* rawAnalogData){
-    windowValue = getAnalogWindow();
-    if(windowValue > INIT_THRESHOLD && windowValue < oldWindowValue){
-        Timer_new(TIMER_NUMBER, TIMER_TIME);
-        count = 0;
-        rawAnalogWindowData[count++%NUMBER_OF_SAMPLES] = windowValue;
-        //printf("\nNEW DATA print_count = %d\n", print_count);
-        print_count = 0;
-        return TRUE;
+void Sonar_runSM(void){
 
-    }else if(Timer_isExpired(TIMER_NUMBER) && count < NUMBER_OF_SAMPLES){
+    //Filling incoming array with data
+    windowValue = getAnalogWindow();
+    //if we have hit the peak value(every 100 ms)
+    if(windowValue > INIT_THRESHOLD && count > 5){
+        //make sure everything was deleted
+        while(count < NUMBER_OF_SAMPLES)
+            deleting_sonar_data[count++] = 0;
+        count = 0;
+        
+        //Switch the pointers
+        //printf("\n%d Compared to ",incoming_sonar_data[7]);
+        uint32_t *temp;
+        temp = completed_sonar_data;
+        completed_sonar_data = incoming_sonar_data;
+        incoming_sonar_data = deleting_sonar_data;
+        deleting_sonar_data = temp;
+        //printf("%d\n",completed_sonar_data[7]);
+
+        //delete first value
+        deleting_sonar_data[count] = 0;
+        //fill in first value
+        incoming_sonar_data[count++] = windowValue;
+        //begin timer
         Timer_new(TIMER_NUMBER, TIMER_TIME);
-        *rawAnalogData = getAnalog();
-        rawAnalogWindowData[count++%NUMBER_OF_SAMPLES] = windowValue;
+    }else if(Timer_isExpired(TIMER_NUMBER) && count < NUMBER_OF_SAMPLES){
+        deleting_sonar_data[count] = 0;
+        incoming_sonar_data[count++] = windowValue;
+        Timer_new(TIMER_NUMBER, TIMER_TIME);
     }
-   /*
-    }else if(print_count < NUMBER_OF_SAMPLES){
-        printf("%d \t",rawAnalogWindowData[print_count++]);
-    }
-    */
-    oldWindowValue = windowValue;
-    return FALSE;
 }
 
-
-
+void Sonar_getRawData(uint32_t *output){
+    int x;
+    for(x = 0; x < NUMBER_OF_SAMPLES; x++){
+        output[x] = completed_sonar_data[x];
+    }
+}
 
 /**********************************************************************
  * PRIVATE FUNCTIONS                                                  *
@@ -129,21 +147,23 @@ int main(){
     Serial_init();
     //mJTAGPortEnable(0);
     Sonar_init();
-    printf("Sonar Init");
+    Timer_new(4, 1000);
+    printf("Sonar Init\n");
 
-    uint8_t count = 0;
     uint32_t rawAnalogWindow[NUMBER_OF_SAMPLES] = {0};
-    uint32_t analog;
     while(1){
-        if(Sonar_runSM(rawAnalogWindow, &analog) == TRUE){
-            printf("\n");
-            printf("\nAnalog: %d\n", analog);
-            printf("Raw Data:");
-            count = 0;
-        }else if(count < NUMBER_OF_SAMPLES){
-            printf("%d\t",rawAnalogWindow[count]);
-            rawAnalogWindow[count++] = 0;
+        Sonar_runSM();
+        if(Timer_isExpired(4)){
+            Sonar_getRawData(rawAnalogWindow);
+            printf("\nDATA\n");
+            int x;
+            for(x = 0; x < NUMBER_OF_SAMPLES; x++){
+                printf("%d\t",rawAnalogWindow[x]);
+                rawAnalogWindow[x] = 0;
+            }
+            Timer_new(4, 1000);
         }
+
     }
 }
 #endif
