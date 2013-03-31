@@ -66,6 +66,16 @@ void Drive_runSM();
 void Drive_forward(uint8_t speed);
 
 /**
+ * Function: Drive_forward
+ * @return None
+ * @param Speed to drive both motors backward in percent pwm (% PWM).
+ * @remark Drives both motors at the given speed in reverse.
+ * @author David Goodman
+ * @author Darrel Deo
+ * @date 2013.03.27  */
+void Drive_backward(uint8_t speed);
+
+/**
  * Function: Drive_reverse
  * @return None
  * @param Speed to drive both motors in reverse in percent pwm (% PWM).
