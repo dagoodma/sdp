@@ -36,6 +36,16 @@ typedef struct{
 }ACK;
 
 ACK start_rescue;
+/*
+typedef struct{
+    int32_t temp_C;
+    float temp_F;
+    int32_t pressure;
+    float altitude;
+}barometer_data;
+
+barometer_data their_barometer;
+ * */
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/

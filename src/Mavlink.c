@@ -4,6 +4,7 @@
 #include "Board.h"
 #include "Xbee.h"
 #include "Compas.h"
+#include "mavlink_msg_barometer_data.h"
 
 static int packet_drops = 0;
 static mavlink_message_t msg;
@@ -60,6 +61,12 @@ void Mavlink_recieve(uint8_t uart_id){
                     mavlink_gps_ned_error_t data;
                     mavlink_msg_gps_ned_error_decode(&msg,&data);
                     Mavlink_recieve_GPS_ned_error(&data);
+                }break;
+                case MAVLINK_MSG_ID_BAROMETER_DATA:
+                {
+                    mavlink_barometer_data_t data;
+                    mavlink_msg_barometer_data_decode(&msg, &data);
+                    Mavlink_recieve_barometer_data(&data);
                 }break;
             }
         }
@@ -161,6 +168,10 @@ void Mavlink_recieve_GPS_ned_error(mavlink_gps_ned_error_t* packet){
     float North, East;
     North = packet->north;
     East = packet->east;
+}
+
+void Mavlink_recieve_barometer_data(mavlink_barometer_data_t* packet){
+    
 }
 
 
