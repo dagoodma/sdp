@@ -40,16 +40,18 @@
 #define SPEED_TO_RCTIME_BACKWARD(s)      (RC_FULL_STOP - 5*s) // PWM 0-100 to 1500-2000
 
 #define HEADING_UPDATE_DELAY    250 // (ms)
+#define COURSE_UPDATE_DELAY    350 // (ms)
 
-//PD Controller Parameter Settings
-#define KP 1.0f
-#define KD 1.0f
-#define velocity 5
-#define FORWARD_RANGE (11 - 8.18)
-#define BACKWARD_RANGE (8.18 - 5.5)
-#define FULL_FORWARD 11
-#define FULL_BACKWARD 5.5
-#define FULL_STOP 8.18
+// PD Controller Parameter Settings 
+#define KP              1.0f
+#define KD              1.0f
+#define velocity        5   // TODO replace with GPS
+#define FORWARD_RANGE   (11 - 8.18) // (ms) RC servo on times
+#define BACKWARD_RANGE  (8.18 - 5.5)
+#define FULL_FORWARD    11
+#define FULL_BACKWARD   5.5
+#define FULL_STOP       8.18
+
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
@@ -57,16 +59,23 @@ static enum {
     STATE_IDLE  = 0x0,   // Motors are stopped
     STATE_DRIVE = 0x1, // Driving forward.
     STATE_PIVOT = 0x2, // Pivoting in place.
+    STATE_TRACK = 0x3, // Track a heading and velocity
 } state;
 
+
+// Pivot variables
 static enum {
     PIVOT_LEFT  = 0x1,   // Pivot to the left --> Motor Arrangement
     PIVOT_RIGHT = 0x2, // Pivot to the Right --> Motor Arrangement
-} pivotState;
+} pivotDirection;
 
-uint16_t lastPivotState, lastPivotError;
+uint16_t lastPivotDirection, lastPivotError;
 
-uint16_t desiredHeading = 0; // (degrees) from North
+// Track variables
+struct {
+    uint16_t heading; // (degrees) from North
+    uint16_t velocity; // (m/s)
+} desiredCourse;
  
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -105,6 +114,12 @@ void Drive_runSM() {
                 Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
             }
             break;
+        case STATE_TRACK:
+            if (Timer_isExpired(TIMER_DRIVE)) {
+                updateCourse();
+                Timer_new(TIMER_DRIVE, COURSE_UPDATE_DELAY);
+            }
+            break;
     } // switch
 }
 
@@ -127,6 +142,13 @@ void Drive_stop() {
     startIdleState();
 }
 
+void Drive_forwardHeading(uint8_t speed, uint16_t angle)  {
+    startTrackState();
+
+    desiredCourse.speed = speed;
+    desiredCourse.heading = angle;
+}
+
 void Drive_setHeading(uint16_t angle) {
     startPivotState();
     
@@ -134,34 +156,70 @@ void Drive_setHeading(uint16_t angle) {
     Drive_stop();
 
     Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
-    desiredHeading = angle;
+    desiredCourse.heading = angle;
 }
 
 /*******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
+/**
+ * Function: startPivotState
+ * @return None
+ * @remark Starts the pivot state, turning the boat to face a desired
+ *  heading using only 1 motor.
+ * @author David Goodman
+ * @date 2013.03.30  */
 static void startPivotState() {
     state = STATE_PIVOT;
 
-    lastPivotState = 0;
+    lastPivotDirection = 0;
     lastPivotError = 0;
 }
 
+/**
+ * Function: startIdleState
+ * @return None
+ * @remark Starts the idle state, which turns off both motors.
+ * @author David Goodman
+ * @author Darrel Deo
+ * @date 2013.03.27  */
 static void startIdleState() {
     state = STATE_IDLE;
     setLeftMotor(RC_FULL_STOP);
     setRightMotor(RC_FULL_STOP);
 }
 
+/**
+ * Function: startDriveState
+ * @return None
+ * @remark Initializes the drive state, which drives forward at some speed.
+ * @author David Goodman
+ * @author Darrel Deo
+ * @date 2013.03.27  */
 static void startDriveState() {
     state = STATE_DRIVE;
 }
 
+/**
+ * Function: setLeftMotor
+ * @return None
+ * @remark Drives the left motor. TODO: move rc_time conversion into here
+ * @author David Goodman
+ * @author Darrel Deo
+ * @date 2013.03.27  */
 static void setLeftMotor(uint16_t rc_time) {
     RC_setPulseTime(MOTOR_LEFT, rc_time);
 }
 
+/**
+ * Function: setRightMotor
+ * @return None
+ * @param Rc time from 8000 to 1500.
+ * @remark Drives the right motor. TODO: move rc_time conversion into here
+ * @author David Goodman
+ * @author Darrel Deo
+ * @date 2013.03.27  */
 static void setRightMotor(uint16_t rc_time) {
     RC_setPulseTime(MOTOR_RIGHT, rc_time);
 }
@@ -180,28 +238,28 @@ static void updateHeading() {
     static uint16_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     //Obtain the current Heading and error, previous heading and error, and derivative term
     uint16_t currHeading = Magnetometer_getDegree();
-    uint16_t thetaError = desiredHeading - currHeading;
+    uint16_t thetaError = desiredCourse.heading - currHeading;
 
     //In the event that our current heading exceeds desired resulting in negative number
     
     if ((thetaError > 0) && (thetaError < 180)){            //Desired leads heading and within heading's right hemisphere --> Turn right, theta stays the same
-        pivotState = PIVOT_RIGHT;
+        pivotDirection = PIVOT_RIGHT;
     }else if((thetaError < 0) && (thetaError > -180)){      //Heading leads desired and within desired's right hemisphere --> Turn left, theta gets inverted
-        pivotState = PIVOT_LEFT;
+        pivotDirection = PIVOT_LEFT;
         thetaError = thetaError*-1;
     }else if((thetaError > 0)&&(thetaError >= 180)){        //Desired leads heading and within heading's left hemisphere--> Turn left, theta is complement
-        pivotState = PIVOT_LEFT;
+        pivotDirection = PIVOT_LEFT;
         thetaError = 360 - thetaError;
     }else if((thetaError < 0)&&(thetaError <= -180)){       //Heading leads desired and within desired's left hemisphere --> Turn right, theta is inverted and complement
-        pivotState = PIVOT_RIGHT;
+        pivotDirection = PIVOT_RIGHT;
         thetaError = 360 - (-1*thetaError);
     }
-    if (lastPivotState == 0) {
-        lastPivotState = pivotState;
+    if (lastPivotDirection == 0) {
+        lastPivotDirection = pivotDirection;
         lastPivotError = thetaError;
     }
 
-    if(lastPivotState != pivotState){
+    if(lastPivotDirection != pivotDirection){
         lastPivotError = 0;
     }
     uint16_t thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
@@ -218,16 +276,16 @@ static void updateHeading() {
 
     //uint16_t pwmSpeed = Ucmd*velocity;
     //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
-    if(pivotState == PIVOT_RIGHT ){ //Turning Right
+    if(pivotDirection == PIVOT_RIGHT ){ //Turning Right
         setRightMotor(backwardScaled);//Give negative duty --> Same scaled range for pwm duty
         setLeftMotor(forwardScaled);
-    }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
+    }else if(pivotDirection ==  PIVOT_LEFT){ //Turning Left
         setRightMotor(forwardScaled);
         setLeftMotor(backwardScaled);
     }
 
     lastPivotError = thetaError;
-    lastPivotState = pivotState;
+    lastPivotDirection = pivotDirection;
 
 }
 

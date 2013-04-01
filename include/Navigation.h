@@ -29,11 +29,6 @@
 #define RADIAN_TO_DEGREE        ((float)180.0/PI)
 
 #define DEGREE_TO_NEDFRAME(deg) (-deg + 90.0)
-
-// Angle limits 
-#define YAW_LIMIT       360.0f // (non-inclusive)
-#define PITCH_LIMIT     90.0f  // (inclusive)
-
 /***********************************************************************
  * PUBLIC TYPEDEFS
  ***********************************************************************/
@@ -72,32 +67,62 @@ void Navigation_runSM();
  * @date 2013.03.10  */
 BOOL Navigation_isReady();
 
-#ifdef IS_COMPAS
+
+// -------------------- Library Functions ---------------------------
 /**
- * Function: Navigation_getProjectedCoordinate
- * @param A new geodetic coordinate to save the result into.
- * @param Yaw angle to projected position in degrees.
- * @param Pitch angle to projected position in degrees.
- * @param Height from projected position in degrees
- * @return SUCCESS or FAILURE.
- * @remark Converts the given euler angles to NED, then to ECEF, then adds
- *  them to the current ECEF location, and convert to geodetic (LLA).
+ * Function: convertENU2ECEF
+ * @param A pointer to a new ECEF coordinate variable to save result into.
+ * @param East component in meters.
+ * @param North component in meters.
+ * @param Up component in meters.
+ * @return None.
+ * @remark Converts the given ENU vector into a ECEF coordinate.
  * @author David Goodman
+ * @author MATLAB
  * @date 2013.03.10  */
-BOOL Navigation_getProjectedCoordinate(Coordinate *coord, float yaw, float pitch, float height);
-#endif
+void convertENU2ECEF(Coordinate *var, float east, float north, float up, float lat_ref,
+    float lon_ref, float alt_ref);
 
 /**
- * Function: Coordinate_new
- * @param New Coordinate.
- * @param X position (either latitude, ecef_x, or north).
- * @param Y position (either longitude, ecef_y, or east).
- * @param Z position (either altitude, ecef_z, or down).
- * @return The Coordinate object pointer.
- * @remark Constructor for a geodetic, NED, or ECEF coordinate.
+ * Function: convertGeodetic2ECEF
+ * @param A pointer to a new ECEF coordinate variable to save result into.
+ * @param Latitude in degrees.
+ * @param Longitude in degrees.
+ * @param Altitude in meters.
+ * @return None.
+ * @remark Converts the given ECEF coordinates into a geodetic coordinate in degrees.
+ *  Note that x=lat, y=lon, z=alt.
+ * @author David Goodman
+ * @author MATLAB
+ * @date 2013.03.10  */
+void convertGeodetic2ECEF(Coordinate *var, float lat, float lon, float alt);
+
+/**
+ * Function: convertECEF2Geodetic
+ * @param A pointer to a new geodetic (LLA) coordinate variable to save result into.
+ * @param ECEF X position.
+ * @param ECEF Y position.
+ * @param ECEF Z position.
+ * @return None.
+ * @remark Converts the given ECEF coordinates into a geodetic coordinate in degrees.
+ *  Note that x=lat, y=lon, z=alt.
+ * @author David Goodman
+ * @author MATLAB
+ * @date 2013.03.10  */
+void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ecef_z);
+
+/**
+ * Function: convertEuler2NED
+ * @param A pointer to a new NED coordinate variable to save result into.
+ * @param Yaw in degrees from north.
+ * @param Pitch in degrees from level.
+ * @param Height in meters from target.
+ * @return None.
+ * @remark Projects a ray with the given height from the given yaw and
+ *  pitch, and returns a NED for the intersection location.
  * @author David Goodman
  * @date 2013.03.10  */
-//Coordinate Coordinate_new(Coordinate coord, float x, float y, float z);
+void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height);
 
 #endif // Navigation_H
 

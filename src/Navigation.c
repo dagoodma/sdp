@@ -41,11 +41,6 @@
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
-void convertENU2ECEF(Coordinate *var, float east, float north, float up, float lat_ref,
-    float lon_ref, float alt_ref);
-void convertGeodetic2ECEF(Coordinate *var, float lat, float lon, float alt);
-void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ecef_z);
-void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height);
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -77,67 +72,8 @@ BOOL Navigation_isReady() {
 }
 
 
-//#ifdef IS_COMPAS
-BOOL Navigation_getProjectedCoordinate(Coordinate *coord, float yaw, float pitch, float height) {
-    if (yaw >= YAW_LIMIT)
-        return FALSE;
-    else if (pitch > PITCH_LIMIT)
-        return FALSE;
-
-    #ifdef USE_GEODETIC
-    if ( ! Navigation_isReady())
-        return FALSE;
-
-    float alt = GPS_getAltitude();
-    #endif
-    float alt = 0.0;
-    
-    // Convert params to NED vector (x=north, y=east, z=down)
-    Coordinate ned;
-    convertEuler2NED(&ned, yaw, pitch, height + alt);
-
-    #ifdef USE_GEODETIC
-    // Get refence geodetic coordinate
-    float lat = GPS_getLatitude();
-    float lon = GPS_getLongitude();
-
-    // Convert NED to ENU and obtain projected ECEF
-    Coordinate ecef = Coordinate_new(ecef, 0, 0 ,0);
-    convertENU2ECEF(ecef, ned->y, ned->x, -(ned->z), lat, lon, alt);
-
-    // Convert projected ECEF into projected Geodetic (LLA)
-    convertECEF2Geodetic(geo, ecef->x, ecef->y, ecef->z);
-
-    #else
-    coord->x = ned.x;
-    coord->y = ned.y;
-    coord->z = ned.z;
-    /*
-    printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-        coord->x, coord->y, coord->z);
-    printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-        ned.x, ned.y, ned.z);
-    */
-    #endif
-
-    return TRUE;
-}
-//#endif
-
-// -------------------------- Functions for Types ----------------------
-/*
-Coordinate Coordinate_new(Coordinate coord, float x, float y, float z) {
-    //if (coord) {
-        coord.x = x;
-        coord.y = y;
-        coord.z = z;
-    //}
-
-    return coord;
-}
-*/
 /*******************************************************************************
- * PRIVATE FUNCTIONS                                                          *
+ * LIBRARY FUNCTIONS                                                           *
  ******************************************************************************/
 
 /**

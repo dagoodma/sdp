@@ -25,6 +25,27 @@
 #include "Magnetometer.h"
 #include "Drive.h"
 
+/***********************************************************************
+ * PRIVATE VARIABLES                                                   *
+ ***********************************************************************/
+
+static enum {
+    STATE_INITIALIZE  = 0x0, // Initializing and obtaining instructions
+    STATE_STATIONKEEP = 0x1, // Maintaining station coordinates
+    STATE_OVERRIDE = 0x2,   // Overriden with remote control
+    STATE_RESCUE = 0x3, // Rescuing a drowing person
+} state;
+
+ 
+/***********************************************************************
+ * PRIVATE PROTOTYPES                                                  *
+ ***********************************************************************/
+
+/***********************************************************************
+ * PRIVATE FUNCTIONS                                                   *
+ ***********************************************************************/
+
+
 /**
  * Function: main
  * @return SUCCESS or FAILURE.
@@ -34,7 +55,7 @@
 #ifdef USE_MAIN
 int main(void) {
     initMasterSM();
-    printf("Command Center Ready for Use. \n\n\n\n\n");
+    printf("Atlas ready for use. \n\n");
     while(1){
         runMasterSM();
     }
@@ -53,7 +74,23 @@ void initMasterSM() {
     Board_init();
     Serial_init();
     Timer_init();
+
+    #ifdef USE_MOTORS
     Drive_init();
+    #endif
+
+    I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
+
+    #ifdef USE_MAGNETOMETER
+    Magnetometer_init();
+    #endif
+
+    #ifdef USE_NAVIGATION
+    GPS_init();
+    Navigation_init();
+    #endif
+    
+    startInitializeState();
 }
 
 /**
@@ -65,8 +102,11 @@ void initMasterSM() {
 void runMasterSM() {
     //Serial_runSM(); // for non-blocking state machine
     Magnetometer_runSM();
-    
     Drive_runSM();
 
+}
+
+
+void startInitializeState() {
 }
 
