@@ -61,6 +61,12 @@ void Mavlink_recieve(uint8_t uart_id){
                     mavlink_msg_gps_ned_error_decode(&msg,&data);
                     Mavlink_recieve_GPS_ned_error(&data);
                 }break;
+                case MAVLINK_MSG_ID_BAROMETER_DATA:
+                {
+                    mavlink_barometer_data_t data;
+                    mavlink_msg_barometer_data_decode(&msg, &data);
+                    Mavlink_recieve_barometer_data(&data);
+                }break;
             }
         }
     }
@@ -118,6 +124,14 @@ void Mavlink_send_gps_ned_error(uint8_t uart_id, float north, float east){
     UART_putString(uart_id, buf, length);
 }
 
+void Mavlink_send_barometer_data(uint8_t uart_id, int32_t temp_C, float temp_F, int32_t pressure, float altitude){
+    mavlink_message_t msg;
+    uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+    mavlink_msg_barometer_data_pack(MAV_NUMBER, COMP_ID, &msg, FALSE, temp_C, temp_F, pressure, altitude);
+    uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
+    UART_putString(uart_id, buf, length);
+}
+
 
 #ifdef XBEE_TEST
 void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data){
@@ -144,7 +158,7 @@ void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet){
 }
 
 void Compas_recieve_start_rescue(mavlink_start_rescue_t* packet){
-    printf("North: %f East: %f\n",packet->North,packet->East);
+    printf("North: %f East: %f\n",packet->north,packet->east);
 }
 
 void Mavlink_recieve_GPS_geo_origin(mavlink_gps_geo_origin_t* packet){
@@ -159,8 +173,15 @@ void Mavlink_recieve_GPS_ned_error(mavlink_gps_ned_error_t* packet){
     //What would you like this function to do?
     //most likely store these values to a global variable and set a flag to read them. etc....
     float North, East;
-    North = packet->North;
-    East = packet->East;//sorry they are caps. :( I'll fix them in my next iteration
+    North = packet->north;
+    East = packet->east;
+}
+
+void Mavlink_recieve_barometer_data(mavlink_barometer_data_t* packet){
+    their_barometer.altitude = packet->altitude;
+    their_barometer.pressure = packet->pressure;
+    their_barometer.temp_C = packet->temperature_celcius;
+    their_barometer.temp_F = packet->temperature_fahrenheit;
 }
 
 
