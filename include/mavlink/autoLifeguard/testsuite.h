@@ -167,8 +167,8 @@ static void mavlink_test_gps_ned_error(uint8_t system_id, uint8_t component_id, 
 	};
 	mavlink_gps_ned_error_t packet1, packet2;
         memset(&packet1, 0, sizeof(packet1));
-        	packet1.North = packet_in.North;
-        	packet1.East = packet_in.East;
+        	packet1.north = packet_in.north;
+        	packet1.east = packet_in.east;
         	packet1.ack = packet_in.ack;
         
         
@@ -179,12 +179,12 @@ static void mavlink_test_gps_ned_error(uint8_t system_id, uint8_t component_id, 
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_gps_ned_error_pack(system_id, component_id, &msg , packet1.ack , packet1.North , packet1.East );
+	mavlink_msg_gps_ned_error_pack(system_id, component_id, &msg , packet1.ack , packet1.north , packet1.east );
 	mavlink_msg_gps_ned_error_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_gps_ned_error_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.ack , packet1.North , packet1.East );
+	mavlink_msg_gps_ned_error_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.ack , packet1.north , packet1.east );
 	mavlink_msg_gps_ned_error_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
@@ -197,7 +197,7 @@ static void mavlink_test_gps_ned_error(uint8_t system_id, uint8_t component_id, 
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
         
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_gps_ned_error_send(MAVLINK_COMM_1 , packet1.ack , packet1.North , packet1.East );
+	mavlink_msg_gps_ned_error_send(MAVLINK_COMM_1 , packet1.ack , packet1.north , packet1.east );
 	mavlink_msg_gps_ned_error_decode(last_msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 }
@@ -215,8 +215,8 @@ static void mavlink_test_start_rescue(uint8_t system_id, uint8_t component_id, m
 	};
 	mavlink_start_rescue_t packet1, packet2;
         memset(&packet1, 0, sizeof(packet1));
-        	packet1.North = packet_in.North;
-        	packet1.East = packet_in.East;
+        	packet1.north = packet_in.north;
+        	packet1.east = packet_in.east;
         	packet1.ack = packet_in.ack;
         	packet1.status = packet_in.status;
         
@@ -228,12 +228,12 @@ static void mavlink_test_start_rescue(uint8_t system_id, uint8_t component_id, m
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_start_rescue_pack(system_id, component_id, &msg , packet1.ack , packet1.status , packet1.North , packet1.East );
+	mavlink_msg_start_rescue_pack(system_id, component_id, &msg , packet1.ack , packet1.status , packet1.north , packet1.east );
 	mavlink_msg_start_rescue_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_start_rescue_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.ack , packet1.status , packet1.North , packet1.East );
+	mavlink_msg_start_rescue_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.ack , packet1.status , packet1.north , packet1.east );
 	mavlink_msg_start_rescue_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
@@ -246,7 +246,7 @@ static void mavlink_test_start_rescue(uint8_t system_id, uint8_t component_id, m
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
         
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_start_rescue_send(MAVLINK_COMM_1 , packet1.ack , packet1.status , packet1.North , packet1.East );
+	mavlink_msg_start_rescue_send(MAVLINK_COMM_1 , packet1.ack , packet1.status , packet1.north , packet1.east );
 	mavlink_msg_start_rescue_decode(last_msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 }
@@ -343,6 +343,57 @@ static void mavlink_test_gps_geo_origin(uint8_t system_id, uint8_t component_id,
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 }
 
+static void mavlink_test_barometer_data(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
+{
+	mavlink_message_t msg;
+        uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+        uint16_t i;
+	mavlink_barometer_data_t packet_in = {
+		963497464,
+	45.0,
+	963497880,
+	101.0,
+	53,
+	};
+	mavlink_barometer_data_t packet1, packet2;
+        memset(&packet1, 0, sizeof(packet1));
+        	packet1.temperature_celcius = packet_in.temperature_celcius;
+        	packet1.temperature_fahrenheit = packet_in.temperature_fahrenheit;
+        	packet1.pressure = packet_in.pressure;
+        	packet1.altitude = packet_in.altitude;
+        	packet1.ack = packet_in.ack;
+        
+        
+
+        memset(&packet2, 0, sizeof(packet2));
+	mavlink_msg_barometer_data_encode(system_id, component_id, &msg, &packet1);
+	mavlink_msg_barometer_data_decode(&msg, &packet2);
+        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
+
+        memset(&packet2, 0, sizeof(packet2));
+	mavlink_msg_barometer_data_pack(system_id, component_id, &msg , packet1.ack , packet1.temperature_celcius , packet1.temperature_fahrenheit , packet1.pressure , packet1.altitude );
+	mavlink_msg_barometer_data_decode(&msg, &packet2);
+        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
+
+        memset(&packet2, 0, sizeof(packet2));
+	mavlink_msg_barometer_data_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.ack , packet1.temperature_celcius , packet1.temperature_fahrenheit , packet1.pressure , packet1.altitude );
+	mavlink_msg_barometer_data_decode(&msg, &packet2);
+        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
+
+        memset(&packet2, 0, sizeof(packet2));
+        mavlink_msg_to_send_buffer(buffer, &msg);
+        for (i=0; i<mavlink_msg_get_send_buffer_length(&msg); i++) {
+        	comm_send_ch(MAVLINK_COMM_0, buffer[i]);
+        }
+	mavlink_msg_barometer_data_decode(last_msg, &packet2);
+        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
+        
+        memset(&packet2, 0, sizeof(packet2));
+	mavlink_msg_barometer_data_send(MAVLINK_COMM_1 , packet1.ack , packet1.temperature_celcius , packet1.temperature_fahrenheit , packet1.pressure , packet1.altitude );
+	mavlink_msg_barometer_data_decode(last_msg, &packet2);
+        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
+}
+
 static void mavlink_test_autoLifeguard(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
 {
 	mavlink_test_test_data(system_id, component_id, last_msg);
@@ -352,6 +403,7 @@ static void mavlink_test_autoLifeguard(uint8_t system_id, uint8_t component_id, 
 	mavlink_test_start_rescue(system_id, component_id, last_msg);
 	mavlink_test_stop_rescue(system_id, component_id, last_msg);
 	mavlink_test_gps_geo_origin(system_id, component_id, last_msg);
+	mavlink_test_barometer_data(system_id, component_id, last_msg);
 }
 
 #ifdef __cplusplus
