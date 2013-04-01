@@ -39,7 +39,7 @@
 #define SPEED_TO_RCTIME(s)      (5*s + RC_FULL_STOP) // PWM 0-100 to 1500-2000
 #define SPEED_TO_RCTIME_BACKWARD(s)      (RC_FULL_STOP - 5*s) // PWM 0-100 to 1500-2000
 
-#define HEADING_UPDATE_DELAY    250 // (ms)
+#define HEADING_UPDATE_DELAY    100 // (ms)
 
 //PD Controller Parameter Settings
 #define KP 1.0f
@@ -66,7 +66,7 @@ static enum {
 
 uint16_t lastPivotState, lastPivotError;
 
-uint16_t desiredHeading = 0; // (degrees) from North
+unsigned int desiredHeading = 0; // (degrees) from North
  
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -131,7 +131,7 @@ void Drive_setHeading(uint16_t angle) {
     startPivotState();
     
     // For now, just stop and pivot in place.
-    Drive_stop();
+    //Drive_stop();
 
     Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
     desiredHeading = angle;
@@ -177,10 +177,10 @@ static void setRightMotor(uint16_t rc_time) {
 static void updateHeading() {
 //Get error and change PWM Signal based on values
 
-    static uint16_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
+    static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     //Obtain the current Heading and error, previous heading and error, and derivative term
-    uint16_t currHeading = Magnetometer_getDegree();
-    uint16_t thetaError = desiredHeading - currHeading;
+    int16_t currHeading = (int)Magnetometer_getDegree();
+    int16_t thetaError = desiredHeading - currHeading;
 
     //In the event that our current heading exceeds desired resulting in negative number
     
@@ -204,14 +204,14 @@ static void updateHeading() {
     if(lastPivotState != pivotState){
         lastPivotError = 0;
     }
-    uint16_t thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
+    float thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
     if (thetaErrorDerivative < 0){
         thetaErrorDerivative = -1*thetaErrorDerivative;
     }
 
     //Calculate Compensator's Ucommand
-    uint16_t Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
-    uint16_t Unormalized = Ucmd/Umax;
+    float Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
+    float Unormalized = Ucmd/Umax;
     uint16_t forwardScaled = RC_FULL_STOP + Unormalized*RC_FORWARD_RANGE;
     uint16_t backwardScaled = RC_FULL_STOP - Unormalized*RC_REVERSE_RANGE;
 
@@ -225,7 +225,7 @@ static void updateHeading() {
         setRightMotor(forwardScaled);
         setLeftMotor(backwardScaled);
     }
-
+    printf("FORWARD SCALED:  %d\nBACKWARD SCALED: %d\n\n",forwardScaled, backwardScaled);
     lastPivotError = thetaError;
     lastPivotState = pivotState;
 
