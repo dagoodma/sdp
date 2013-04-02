@@ -67,7 +67,7 @@ uint32_t *deleting_sonar_data = (deleting);
  **********************************************************************/
 
 void Sonar_init(){
-    AD_init(ANALOG_WINDOW_PIN);
+    AD_init(ANALOG_WINDOW_PIN|ANALOG_PIN);
     Timer_init();
     Timer_new(TIMER_NUMBER, TIMER_TIME);
 }
@@ -78,6 +78,7 @@ void Sonar_runSM(void){
     windowValue = getAnalogWindow();
     //if we have hit the peak value(every 100 ms)
     if(windowValue > INIT_THRESHOLD && count > 5){
+        printf("Anaglog: %d\n", getAnalog());
         //make sure everything was deleted
         while(count < NUMBER_OF_SAMPLES)
             deleting_sonar_data[count++] = 0;
@@ -156,10 +157,27 @@ int main(){
         if(Timer_isExpired(4)){
             Sonar_getRawData(rawAnalogWindow);
             printf("\nDATA\n");
+            //find average:
+            float average = 0;
             int x;
+            for(x = 10; x< NUMBER_OF_SAMPLES -4; x++){
+                average += rawAnalogWindow[x];
+            }
+            average = average/(NUMBER_OF_SAMPLES -14);
+            printf("AVERAGE: %f\n", average);
             for(x = 0; x < NUMBER_OF_SAMPLES; x++){
-                printf("%d\t",rawAnalogWindow[x]);
+                if(rawAnalogWindow[x]+10-((int)average) > 30                   && x > 14){
+                    printf("HIT\t");
+                }
+                else{
+                    printf("0\t");
+                }
+               /* printf("%d\t",rawAnalogWindow[x]+10-((int)average));
+                if(x > 10 && rawAnalogWindow[x]+10-((int)average) > 20)
+                    printf("<--hit\t");
+                * */
                 rawAnalogWindow[x] = 0;
+               
             }
             Timer_new(4, 1000);
         }
