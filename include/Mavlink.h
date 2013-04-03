@@ -36,6 +36,16 @@ typedef struct{
 }ACK;
 
 ACK start_rescue;
+
+typedef struct{
+    int32_t temp_C;
+    float temp_F;
+    int32_t pressure;
+    float altitude;
+}barometer_data;
+
+barometer_data their_barometer;
+
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
@@ -56,6 +66,8 @@ void Mavlink_send_gps_ned_error(uint8_t uart_id, float north, float east);
 
 void Mavlink_send_gps_geo_origin(uint8_t uart_id, float latitude, float longitude);
 
+void Mavlink_send_barometer_data(uint8_t uart_id, int32_t temp_C, float temp_F, int32_t pressure, float altitude);
+
 #ifdef XBEE_TEST
 void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data);
 #endif
@@ -70,4 +82,6 @@ void Mavlink_recieve_GPS_geo_origin(mavlink_gps_geo_origin_t* packet);
 void Mavlink_recieve_GPS_ned_error(mavlink_gps_ned_error_t* packet);
 
 void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet);
+
+void Mavlink_recieve_barometer_data(mavlink_barometer_data_t* packet);
 #endif

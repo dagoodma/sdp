@@ -36,6 +36,7 @@
 #include "UART.h"
 #include "Gps.h"
 #include "Navigation.h"
+#include "Barometer.h"
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
@@ -63,10 +64,6 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 
 // Hold time before buttons trigger
 #define BUTTON_DELAY   600 // (ms)
-
-// Angle limits 
-#define YAW_LIMIT       360.0f // (non-inclusive)
-#define PITCH_LIMIT     90.0f  // (inclusive)
 
 //----------------------------- Accelerometer --------------------------
 
@@ -97,7 +94,9 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 
 //----------------------------- Other Modules ---------------------------
 #define USE_MAGNETOMETER
+#define USE_NAVIGATION
 #define USE_ENCODERS
+#define USE_BAROMETER
 
 
 /***********************************************************************
@@ -114,13 +113,12 @@ BOOL readZeroButton();
 BOOL isLockPressed();
 BOOL isZeroPressed();
 
-BOOL getProjectedCoordinate(Coordinate *coord, float yaw, float pitch, float height);
-
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
-
+#ifndef USE_BAROMETER
 float height = 5.44; // (m)
+#endif
 float heading = 0;
 // Printing debug messages over serial
 BOOL useLevel = FALSE;
@@ -171,10 +169,17 @@ void initMasterSM() {
     Xbee_init();
     #endif
 
+    #ifdef USE_NAVIGATION
+    Navigation_init();
+    #endif
+
     #ifdef USE_ENCODERS
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
     #endif
 
+    #ifdef USE_BAROMETER
+    Barometer_init();
+    #endif
 
     #ifdef USE_ACCELEROMETER
     //printf("Initializing accelerometer...\n");
@@ -219,8 +224,10 @@ void runMasterSM() {
             Encoder_enableZeroAngle();
             Encoder_runSM();
             Coordinate ned; // = Coordinate_new(ned, 0, 0 ,0);
-            // Make yaw go CW instead of CCW
-            if (getProjectedCoordinate(&ned, 360.0 - Encoder_getYaw(),
+            #ifdef USE_BAROMETER
+            float height = Barometer_getAltitude() - their_barometer.altitude;
+            #endif
+            if (Navigation_getProjectedCoordinate(&ned, Encoder_getYaw(),
                 Encoder_getPitch(), height)) {
                 printf("Desired coordinate -- N: %.6f, E: %.6f, D: %.2f (m)\n",
                     ned.x, ned.y, ned.z);
@@ -275,6 +282,10 @@ void runMasterSM() {
 
     #ifdef USE_XBEE
     Xbee_runSM();
+    #endif
+
+    #ifdef USE_BAROMETER
+    Barometer_runSM();
     #endif
 
 }
@@ -358,118 +369,54 @@ BOOL readZeroButton() {
 }
 
 
-BOOL isLockPressed() {
-    // Start lock press timer if pressed
-    if (!readLockButton()) {
-     if (lockTimerStarted)
-         lockTimerStarted = FALSE;
+ BOOL isLockPressed() {
+     // Start lock press timer if pressed
+     if (!readLockButton()) {
+         if (lockTimerStarted)
+             lockTimerStarted = FALSE;
 
-     //printf("Lock released.\n");
-     lockPressed = FALSE;
-    }
-    else if (!lockTimerStarted && readLockButton()) {
-     Timer_new(TIMER_BUTTONS, BUTTON_DELAY);
-     lockTimerStarted = TRUE;
-     lockPressed = FALSE;
+         //printf("Lock released.\n");
+         lockPressed = FALSE;
+     }
+     else if (!lockTimerStarted && readLockButton()) {
+         Timer_new(TIMER_BUTTONS, BUTTON_DELAY);
+         lockTimerStarted = TRUE;
+         lockPressed = FALSE;
 
-     //printf("Lock timer started.\n");
-    }
-    else if (Timer_isExpired(TIMER_BUTTONS)) {
-     lockPressed = TRUE;
+         //printf("Lock timer started.\n");
+     }
+     else if (Timer_isExpired(TIMER_BUTTONS)) {
+         lockPressed = TRUE;
 
-     //printf("Lock on.\n");
-}
+         //printf("Lock on.\n");
+     }
 
- return lockPressed;
-}
+     return lockPressed;
+ }
 
-BOOL isZeroPressed() {
-    // Start lock press timer if pressed
-    if (!readZeroButton()) {
-        if (zeroTimerStarted)
-            zeroTimerStarted = FALSE;
+ BOOL isZeroPressed() {
+     // Start lock press timer if pressed
+     if (!readZeroButton()) {
+         if (zeroTimerStarted)
+             zeroTimerStarted = FALSE;
 
-        //printf("Zero released.\n");
-        zeroPressed = FALSE;
-    }
-    else if (!zeroTimerStarted && readZeroButton()) {
-        Timer_new(TIMER_BUTTONS, BUTTON_DELAY);
-        zeroTimerStarted = TRUE;
-        zeroPressed = FALSE;
+         //printf("Zero released.\n");
+         zeroPressed = FALSE;
+     }
+     else if (!zeroTimerStarted && readZeroButton()) {
+         Timer_new(TIMER_BUTTONS, BUTTON_DELAY);
+         zeroTimerStarted = TRUE;
+         zeroPressed = FALSE;
 
-        //printf("Zero timer started.\n");
-    }
-    else if (Timer_isExpired(TIMER_BUTTONS)) {
-        zeroPressed = TRUE;
+         //printf("Zero timer started.\n");
+     }
+     else if (Timer_isExpired(TIMER_BUTTONS)) {
+         zeroPressed = TRUE;
 
-        //printf("Zero on.\n");
-    }
+         //printf("Zero on.\n");
+     }
 
-    return zeroPressed;
-}
+     return zeroPressed;
+ }
 
-/**
- * Function: getProjectedCoordinate
- * @param A new NED coordinate to save the result into.
- * @param Yaw angle to projected position in degrees.
- * @param Pitch angle to projected position in degrees.
- * @param Height from projected position in degrees
- * @return SUCCESS or FAILURE.
- * @remark Converts the given euler angles and command station height into NED
- *  coordinates.
- * @author David Goodman
- * @date 2013.03.10  */
-BOOL getProjectedCoordinate(Coordinate *coord, float yaw, float pitch, float height) {
-    if (yaw >= YAW_LIMIT)
-        return FALSE;
-    else if (pitch > PITCH_LIMIT)
-        return FALSE;
-
-    float alt = 0.0;
-    
-    // Convert params to NED vector (x=north, y=east, z=down)
-    Coordinate ned;
-    convertEuler2NED(&ned, yaw, pitch, height + alt);
-
-    coord->x = ned.x;
-    coord->y = ned.y;
-    coord->z = ned.z;
-
-    /*
-    printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-        coord->x, coord->y, coord->z);
-    printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-        ned.x, ned.y, ned.z);
-    */
-
-    return TRUE;
-}
-
-
-//--------------------- TEST HARNESS --------------------------
-
-//#define RAY_TEST
-#ifdef RAY_TEST
-
-int main() {
-    Board_init();
-    Serial_init();
-    Timer_init();
-    
-    Coordinate coord;
-
-    float yaw = 50.0; // (deg)
-    float pitch = 65.0; // (deg)
-    float height = 4.572; // (m)
-    if (getProjectedCoordinate(&coord, yaw, pitch, height))
-        printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-            coord.x, coord.y, coord.z);
-    else 
-        printf("Failed to obtain desired coordinate.\n",s);
-
-
-    return SUCCESS;
-}
-
-#endif
 

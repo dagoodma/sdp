@@ -28,6 +28,9 @@
 
 #define DEGREE_TO_NEDFRAME(deg) (-deg + 90.0)
 
+//For Override feature
+#define Override_INT            INT_CN
+
 // Limits
 #define SPEED_LIMIT		100 // (% PWM)
 
@@ -106,6 +109,14 @@ void Drive_stop();
  * @author Darrel Deo
  * @date 2013.03.27  */
 void Drive_setHeading(uint16_t angle);
+
+/**
+ * Function: Override_init
+ * @return Void.
+ * @remark Initializes the interrupt for the Override feature.
+ * @author Darrel R. Deo
+ * @date 2013.04.01  */
+void Override_init();
 
 #endif // Drive_H
 

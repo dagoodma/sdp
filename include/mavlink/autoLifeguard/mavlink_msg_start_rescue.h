@@ -4,8 +4,8 @@
 
 typedef struct __mavlink_start_rescue_t
 {
- float North; ///< Latitude data for the boat to travel to
- float East; ///< Longitude data for the boat to travel to
+ float north; ///< Latitude data for the boat to travel to
+ float east; ///< Longitude data for the boat to travel to
  uint8_t ack; ///<  TRUE if we want an ACK return FALSE else
  uint8_t status; ///< Holds status informatiom for the boat
 } mavlink_start_rescue_t;
@@ -18,8 +18,8 @@ typedef struct __mavlink_start_rescue_t
 #define MAVLINK_MESSAGE_INFO_START_RESCUE { \
 	"START_RESCUE", \
 	4, \
-	{  { "North", NULL, MAVLINK_TYPE_FLOAT, 0, 0, offsetof(mavlink_start_rescue_t, North) }, \
-         { "East", NULL, MAVLINK_TYPE_FLOAT, 0, 4, offsetof(mavlink_start_rescue_t, East) }, \
+	{  { "north", NULL, MAVLINK_TYPE_FLOAT, 0, 0, offsetof(mavlink_start_rescue_t, north) }, \
+         { "east", NULL, MAVLINK_TYPE_FLOAT, 0, 4, offsetof(mavlink_start_rescue_t, east) }, \
          { "ack", NULL, MAVLINK_TYPE_UINT8_T, 0, 8, offsetof(mavlink_start_rescue_t, ack) }, \
          { "status", NULL, MAVLINK_TYPE_UINT8_T, 0, 9, offsetof(mavlink_start_rescue_t, status) }, \
          } \
@@ -34,25 +34,25 @@ typedef struct __mavlink_start_rescue_t
  *
  * @param ack  TRUE if we want an ACK return FALSE else
  * @param status Holds status informatiom for the boat
- * @param North Latitude data for the boat to travel to
- * @param East Longitude data for the boat to travel to
+ * @param north Latitude data for the boat to travel to
+ * @param east Longitude data for the boat to travel to
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_start_rescue_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
-						       uint8_t ack, uint8_t status, float North, float East)
+						       uint8_t ack, uint8_t status, float north, float east)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
 	char buf[10];
-	_mav_put_float(buf, 0, North);
-	_mav_put_float(buf, 4, East);
+	_mav_put_float(buf, 0, north);
+	_mav_put_float(buf, 4, east);
 	_mav_put_uint8_t(buf, 8, ack);
 	_mav_put_uint8_t(buf, 9, status);
 
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, 10);
 #else
 	mavlink_start_rescue_t packet;
-	packet.North = North;
-	packet.East = East;
+	packet.north = north;
+	packet.east = east;
 	packet.ack = ack;
 	packet.status = status;
 
@@ -60,7 +60,7 @@ static inline uint16_t mavlink_msg_start_rescue_pack(uint8_t system_id, uint8_t 
 #endif
 
 	msg->msgid = MAVLINK_MSG_ID_START_RESCUE;
-	return mavlink_finalize_message(msg, system_id, component_id, 10, 36);
+	return mavlink_finalize_message(msg, system_id, component_id, 10, 111);
 }
 
 /**
@@ -71,26 +71,26 @@ static inline uint16_t mavlink_msg_start_rescue_pack(uint8_t system_id, uint8_t 
  * @param msg The MAVLink message to compress the data into
  * @param ack  TRUE if we want an ACK return FALSE else
  * @param status Holds status informatiom for the boat
- * @param North Latitude data for the boat to travel to
- * @param East Longitude data for the boat to travel to
+ * @param north Latitude data for the boat to travel to
+ * @param east Longitude data for the boat to travel to
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_start_rescue_pack_chan(uint8_t system_id, uint8_t component_id, uint8_t chan,
 							   mavlink_message_t* msg,
-						           uint8_t ack,uint8_t status,float North,float East)
+						           uint8_t ack,uint8_t status,float north,float east)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
 	char buf[10];
-	_mav_put_float(buf, 0, North);
-	_mav_put_float(buf, 4, East);
+	_mav_put_float(buf, 0, north);
+	_mav_put_float(buf, 4, east);
 	_mav_put_uint8_t(buf, 8, ack);
 	_mav_put_uint8_t(buf, 9, status);
 
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, 10);
 #else
 	mavlink_start_rescue_t packet;
-	packet.North = North;
-	packet.East = East;
+	packet.north = north;
+	packet.east = east;
 	packet.ack = ack;
 	packet.status = status;
 
@@ -98,7 +98,7 @@ static inline uint16_t mavlink_msg_start_rescue_pack_chan(uint8_t system_id, uin
 #endif
 
 	msg->msgid = MAVLINK_MSG_ID_START_RESCUE;
-	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, 10, 36);
+	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, 10, 111);
 }
 
 /**
@@ -111,7 +111,7 @@ static inline uint16_t mavlink_msg_start_rescue_pack_chan(uint8_t system_id, uin
  */
 static inline uint16_t mavlink_msg_start_rescue_encode(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg, const mavlink_start_rescue_t* start_rescue)
 {
-	return mavlink_msg_start_rescue_pack(system_id, component_id, msg, start_rescue->ack, start_rescue->status, start_rescue->North, start_rescue->East);
+	return mavlink_msg_start_rescue_pack(system_id, component_id, msg, start_rescue->ack, start_rescue->status, start_rescue->north, start_rescue->east);
 }
 
 /**
@@ -120,29 +120,29 @@ static inline uint16_t mavlink_msg_start_rescue_encode(uint8_t system_id, uint8_
  *
  * @param ack  TRUE if we want an ACK return FALSE else
  * @param status Holds status informatiom for the boat
- * @param North Latitude data for the boat to travel to
- * @param East Longitude data for the boat to travel to
+ * @param north Latitude data for the boat to travel to
+ * @param east Longitude data for the boat to travel to
  */
 #ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
-static inline void mavlink_msg_start_rescue_send(mavlink_channel_t chan, uint8_t ack, uint8_t status, float North, float East)
+static inline void mavlink_msg_start_rescue_send(mavlink_channel_t chan, uint8_t ack, uint8_t status, float north, float east)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
 	char buf[10];
-	_mav_put_float(buf, 0, North);
-	_mav_put_float(buf, 4, East);
+	_mav_put_float(buf, 0, north);
+	_mav_put_float(buf, 4, east);
 	_mav_put_uint8_t(buf, 8, ack);
 	_mav_put_uint8_t(buf, 9, status);
 
-	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_START_RESCUE, buf, 10, 36);
+	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_START_RESCUE, buf, 10, 111);
 #else
 	mavlink_start_rescue_t packet;
-	packet.North = North;
-	packet.East = East;
+	packet.north = north;
+	packet.east = east;
 	packet.ack = ack;
 	packet.status = status;
 
-	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_START_RESCUE, (const char *)&packet, 10, 36);
+	_mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_START_RESCUE, (const char *)&packet, 10, 111);
 #endif
 }
 
@@ -172,21 +172,21 @@ static inline uint8_t mavlink_msg_start_rescue_get_status(const mavlink_message_
 }
 
 /**
- * @brief Get field North from start_rescue message
+ * @brief Get field north from start_rescue message
  *
  * @return Latitude data for the boat to travel to
  */
-static inline float mavlink_msg_start_rescue_get_North(const mavlink_message_t* msg)
+static inline float mavlink_msg_start_rescue_get_north(const mavlink_message_t* msg)
 {
 	return _MAV_RETURN_float(msg,  0);
 }
 
 /**
- * @brief Get field East from start_rescue message
+ * @brief Get field east from start_rescue message
  *
  * @return Longitude data for the boat to travel to
  */
-static inline float mavlink_msg_start_rescue_get_East(const mavlink_message_t* msg)
+static inline float mavlink_msg_start_rescue_get_east(const mavlink_message_t* msg)
 {
 	return _MAV_RETURN_float(msg,  4);
 }
@@ -200,8 +200,8 @@ static inline float mavlink_msg_start_rescue_get_East(const mavlink_message_t* m
 static inline void mavlink_msg_start_rescue_decode(const mavlink_message_t* msg, mavlink_start_rescue_t* start_rescue)
 {
 #if MAVLINK_NEED_BYTE_SWAP
-	start_rescue->North = mavlink_msg_start_rescue_get_North(msg);
-	start_rescue->East = mavlink_msg_start_rescue_get_East(msg);
+	start_rescue->north = mavlink_msg_start_rescue_get_north(msg);
+	start_rescue->east = mavlink_msg_start_rescue_get_east(msg);
 	start_rescue->ack = mavlink_msg_start_rescue_get_ack(msg);
 	start_rescue->status = mavlink_msg_start_rescue_get_status(msg);
 #else
