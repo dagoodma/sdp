@@ -36,6 +36,7 @@
 #include "UART.h"
 #include "Gps.h"
 #include "Navigation.h"
+#include "Barometer.h"
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
@@ -95,6 +96,7 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 #define USE_MAGNETOMETER
 #define USE_NAVIGATION
 #define USE_ENCODERS
+#define USE_BAROMETER
 
 
 /***********************************************************************
@@ -114,8 +116,9 @@ BOOL isZeroPressed();
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
-
+#ifndef USE_BAROMETER
 float height = 5.44; // (m)
+#endif
 float heading = 0;
 // Printing debug messages over serial
 BOOL useLevel = FALSE;
@@ -174,6 +177,9 @@ void initMasterSM() {
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
     #endif
 
+    #ifdef USE_BAROMETER
+    Barometer_init();
+    #endif
 
     #ifdef USE_ACCELEROMETER
     //printf("Initializing accelerometer...\n");
@@ -218,6 +224,9 @@ void runMasterSM() {
             Encoder_enableZeroAngle();
             Encoder_runSM();
             Coordinate ned; // = Coordinate_new(ned, 0, 0 ,0);
+            #ifdef USE_BAROMETER
+            float height = Barometer_getAltitude() - their_barometer.altitude;
+            #endif
             if (Navigation_getProjectedCoordinate(&ned, Encoder_getYaw(),
                 Encoder_getPitch(), height)) {
                 printf("Desired coordinate -- N: %.6f, E: %.6f, D: %.2f (m)\n",
@@ -273,6 +282,10 @@ void runMasterSM() {
 
     #ifdef USE_XBEE
     Xbee_runSM();
+    #endif
+
+    #ifdef USE_BAROMETER
+    Barometer_runSM();
     #endif
 
 }
