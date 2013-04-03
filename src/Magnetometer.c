@@ -21,7 +21,7 @@
 #define SLAVE_READ_ADDRESS          0x43
 #define SLAVE_WRITE_ADDRESS         0x42
 #define SLAVE_DEGREE_ADDRESS        0x41
-#define ACCUMULATOR_LENGTH          50
+#define ACCUMULATOR_LENGTH          1
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *

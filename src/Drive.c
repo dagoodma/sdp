@@ -39,7 +39,7 @@
 #define SPEED_TO_RCTIME(s)      (5*s + RC_FULL_STOP) // PWM 0-100 to 1500-2000
 #define SPEED_TO_RCTIME_BACKWARD(s)      (RC_FULL_STOP - 5*s) // PWM 0-100 to 1500-2000
 
-#define HEADING_UPDATE_DELAY    250 // (ms)
+#define HEADING_UPDATE_DELAY    100 // (ms)
 
 //PD Controller Parameter Settings
 #define KP 1.0f
@@ -50,13 +50,21 @@
 #define FULL_FORWARD 11
 #define FULL_BACKWARD 5.5
 #define FULL_STOP 8.18
+
+//defines for Override feature
+#define MICRO_CONTROL            0
+#define RECIEVER_CONTROL         1
+
+//Override test variables
+static uint16_t OVERRIDE_TRIGGERED = FALSE;
+static uint16_t CONTROL_MASTER = MICRO_CONTROL;
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 static enum {
-    STATE_IDLE  = 0x0,   // Motors are stopped
-    STATE_DRIVE = 0x1, // Driving forward.
-    STATE_PIVOT = 0x2, // Pivoting in place.
+    STATE_IDLE  = 0x0,      // Motors are stopped
+    STATE_DRIVE = 0x1,      // Driving forward.
+    STATE_PIVOT = 0x2,      // Pivoting in place.
 } state;
 
 static enum {
@@ -66,8 +74,9 @@ static enum {
 
 uint16_t lastPivotState, lastPivotError;
 
-uint16_t desiredHeading = 0; // (degrees) from North
- 
+unsigned int desiredHeading = 0; // (degrees) from North
+
+
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
@@ -105,6 +114,7 @@ void Drive_runSM() {
                 Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
             }
             break;
+
     } // switch
 }
 
@@ -131,7 +141,7 @@ void Drive_setHeading(uint16_t angle) {
     startPivotState();
     
     // For now, just stop and pivot in place.
-    Drive_stop();
+    //Drive_stop();
 
     Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
     desiredHeading = angle;
@@ -177,10 +187,10 @@ static void setRightMotor(uint16_t rc_time) {
 static void updateHeading() {
 //Get error and change PWM Signal based on values
 
-    static uint16_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
+    static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     //Obtain the current Heading and error, previous heading and error, and derivative term
-    uint16_t currHeading = Magnetometer_getDegree();
-    uint16_t thetaError = desiredHeading - currHeading;
+    int16_t currHeading = (int)Magnetometer_getDegree();
+    int16_t thetaError = desiredHeading - currHeading;
 
     //In the event that our current heading exceeds desired resulting in negative number
     
@@ -204,14 +214,14 @@ static void updateHeading() {
     if(lastPivotState != pivotState){
         lastPivotError = 0;
     }
-    uint16_t thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
+    float thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
     if (thetaErrorDerivative < 0){
         thetaErrorDerivative = -1*thetaErrorDerivative;
     }
 
     //Calculate Compensator's Ucommand
-    uint16_t Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
-    uint16_t Unormalized = Ucmd/Umax;
+    float Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
+    float Unormalized = Ucmd/Umax;
     uint16_t forwardScaled = RC_FULL_STOP + Unormalized*RC_FORWARD_RANGE;
     uint16_t backwardScaled = RC_FULL_STOP - Unormalized*RC_REVERSE_RANGE;
 
@@ -225,11 +235,58 @@ static void updateHeading() {
         setRightMotor(forwardScaled);
         setLeftMotor(backwardScaled);
     }
-
+    printf("FORWARD SCALED:  %d\nBACKWARD SCALED: %d\n\n",forwardScaled, backwardScaled);
     lastPivotError = thetaError;
     lastPivotState = pivotState;
 
 }
+
+
+/**
+ * Function: Override_init()
+ * @return None
+ * @remark Initializes interrupt for Override functionality
+ * @author Darrel Deo
+ * @date 2013.04.01  */
+void Override_init(){
+    //Enable the interrupt for the override feature
+
+    mPORTBSetPinsDigitalIn(BIT_0); // CN2
+
+    mCNOpen(CN_ON | CN_IDLE_CON , CN2_ENABLE , CN_PULLUP_DISABLE_ALL);
+    uint16_t value = mPORTDRead();
+    ConfigIntCN(CHANGE_INT_ON | CHANGE_INT_PRI_2);
+    //CN2 J5-15
+    INTEnableSystemMultiVectoredInt();
+    printf("Override Function has been Initialized\n\n");
+    //INTEnableInterrupts();
+    INTEnable(INT_CN,1);
+}
+
+
+
+/**
+ * Function: Interrupt Service Routine
+ * @return None
+ * @remark ISR that is called when CH3 pings external interrupt
+ * @author Darrel Deo
+ * @date 2013.04.01  */
+void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
+    mPORTDRead();
+    Serial_putChar('Y');
+
+    //Change top-level state machine so it is in state Reciever
+    CONTROL_MASTER = RECIEVER_CONTROL;
+    OVERRIDE_TRIGGERED = TRUE;
+    //Clear the interrupt flag that was risen for the external interrupt
+    //might want to set a timer in here
+
+    mCNClearIntFlag();
+    INTEnable(INT_CN,0);
+}
+
+
+
 
 
 //#define DRIVE_TEST
@@ -349,7 +406,7 @@ int main() {
 
 
 
-#define RECIEVER_OVERRIDE_TEST
+//#define RECIEVER_OVERRIDE_TEST
 #ifdef RECIEVER_OVERRIDE_TEST
 
 //Define the Enable input pin which should  be interrupt driven in the future.
@@ -362,8 +419,7 @@ int main() {
 #define RECIEVER_DELAY      3000 // (ms)
 #define MICRO 0
 #define RECIEVER 1
-#define OUTPUT 0
-#define INPUT 1
+
 
 int main(){
     //Initializations
@@ -439,6 +495,111 @@ int main(){
                 ;
                 break;
 
+        }
+
+    }
+
+
+}
+
+#endif
+
+
+
+
+
+
+
+#define RECIEVER_OVERRIDE_INTERRUPT_TEST
+#ifdef RECIEVER_OVERRIDE_INTERRUPT_TEST
+
+
+#define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
+
+#define RECIEVER_DELAY      3000 // (ms)
+#define MICRO 0
+#define RECIEVER 1
+
+
+
+
+int main(){
+    //Initializations
+    Board_init();
+    Serial_init();
+    Timer_init();
+    Drive_init();
+    int spd = 10;
+
+
+    ENABLE_OUT_TRIS = OUTPUT;            //Set Enable output pin to be an output, fed to the AND gates
+    ENABLE_OUT_LAT = MICRO;             //Initialize control to that of Microcontroller
+
+    enum{
+        MICRO_FORWARD = 0x01,         //State where Microcontroller is driving forward
+        MICRO_STOP = 0x02,        //State where Micro is driving backwards
+        MICRO_LIMBO = 0x03,
+        RECIEVER_STATE = 0x04,        //Reciever has taken over state
+    }test_state;
+
+    printf("Boat is Initialized\n");
+
+    //Initialize the state to begin at forward
+    test_state = MICRO_FORWARD;
+    Drive_stop();
+    Timer_new(TIMER_TEST,RECIEVER_DELAY);
+    int state_flag = 0;
+    Override_init();
+
+
+    while(1){
+
+        switch(test_state){
+            case MICRO_FORWARD:
+                printf("STATE: MICRO_FORWARD\n\n\n");
+                Drive_forward(spd); //The input param is a pwm duty cycle percentage that gets translated to a RC Servo time pulse
+                Timer_new(TIMER_TEST2,RECIEVER_DELAY);
+                test_state = MICRO_STOP;
+
+                break;
+            case MICRO_STOP:
+                if(Timer_isExpired(TIMER_TEST2)){
+                    printf("STATE: MICRO_STOP\n\n\n:");
+                    Drive_stop();
+                    Timer_new(TIMER_TEST2,RECIEVER_DELAY);
+                    test_state = MICRO_LIMBO;
+                }
+
+                break;
+            case MICRO_LIMBO:
+                if(Timer_isExpired(TIMER_TEST2)){
+                    printf("STATE: MICRO_LIMBO\n\n\n");
+                    test_state = MICRO_FORWARD;
+                }
+                Drive_stop();
+                break;
+            case RECIEVER_STATE:
+                ;
+                break;
+
+        }
+        //If we got a pulse, control to reciever.
+        if (OVERRIDE_TRIGGERED == TRUE){
+            printf("Reciever Control\n\n");
+            Timer_new(TIMER_TEST, 1000);    //Set timer that is greater than the pulsewidth of the CH3 signal(54Hz)
+            OVERRIDE_TRIGGERED = FALSE;     //Re-init to zero so that we know when our pulse is triggered again.
+            test_state = RECIEVER_STATE;    //Set state equal to reciever where we do nothing autonomous
+            ENABLE_OUT_LAT = RECIEVER;      //Give control over to Reciever using the enable line
+            INTEnable(INT_CN,1);
+        }
+        if (Timer_isExpired(TIMER_TEST)){   //Reciever gave up control
+            printf("Micro Has Control\n\n");
+            Timer_clear(TIMER_TEST);        //Clear timer so that it doesn't keep registering an expired signal
+            test_state = MICRO_LIMBO;     //Set state equal to forward for regular function
+            OVERRIDE_TRIGGERED = FALSE;     //Set Override to false to be sure that we don't trigger falsely
+            ENABLE_OUT_LAT = MICRO;         //Give Control back to microcontroller using enable line
+            Timer_new(TIMER_TEST2, RECIEVER_DELAY);
         }
 
     }
