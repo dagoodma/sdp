@@ -23,6 +23,8 @@
 #include "Serial.h"
 #include "Ports.h"
 #include "Magnetometer.h"
+#include "Gps.h"
+#include "Navigation.h"
 #include "Drive.h"
 #include "Mavlink.h"
 
@@ -48,7 +50,8 @@ struct event_flags {
     unsigned int haveSetStationMessage :1;
     unsigned int haveStartRescueMessage :1;
     unsigned int haveBarometerMessage :1;
-    //
+    // Navigation events
+    unsigned int navigationDone :1;
 };
 
 struct event_flags event;
@@ -62,19 +65,39 @@ struct event_flags event;
  ***********************************************************************/
 
 void checkEvents() {
-    if (Mavlink_hasNewMessage())
-        switch (Mavlink_getNewMessageID())
-                case MAVLINK_MSG_ID_RESET:
-                    if (newMessage.resetData->status == MAVLINK_RESET_RETURN_STATION)
-                        event.haveReturnStationMessage = TRUE;
-                    else if (newMessage.resetData->status == MAVLINK_RESET_BOAT)
-                        event.haveReinitializeMessage = TRUE;
-                    else if (newMessage.resetData->status == MAVLINK_RESET_OVERRIDE)
-                        event.haveOverrideMessage = TRUE;
-
-
-
-
+    // Did we get a new message from the command center?
+    if (Mavlink_hasNewMessage()) {
+        switch (Mavlink_getNewMessageID()) {
+            case MAVLINK_MSG_ID_RESET:
+                if (newMessage.resetData->status == MAVLINK_RESET_RETURN_STATION)
+                    event.haveReturnStationMessage = TRUE;
+                else if (newMessage.resetData->status == MAVLINK_RESET_BOAT)
+                    event.haveReinitializeMessage = TRUE;
+                else if (newMessage.resetData->status == MAVLINK_RESET_OVERRIDE)
+                    event.haveOverrideMessage = TRUE;
+                break;
+            case MAVLINK_MSG_ID_GPS_GEO:
+                event.haveGeodeticOriginMessage = TRUE;
+                break;
+            case MAVLINK_MSG_ID_GPS_ECEF:
+                if (newMessage.gpsGeocentricData.status == MAVLINK_GEOCENTRIC_ORIGIN)
+                    event.haveGeocentricOriginMessage = TRUE;
+                else if (newMessage.gpsGeocentricData.status == MAVLINK_GEOCENTRIC_ERROR)
+                    event.haveGeocentricErrorMessage = TRUE;
+                break;
+            case MAVLINK_MSG_ID_GPS_NED:
+                if (newMessage.gpsLocalData.status == MAVLINK_LOCAL_SET_STATION)
+                    event.haveSetStationMessage = TRUE;
+                else if (newMessage.gpsLocalData.status == MAVLINK_LOCAL_START_RESCUE)
+                    event.haveStartRescueMessage = TRUE;
+                break;
+            default:
+                // We got an unhandled message
+                // Record an error?
+                break;
+        }
+    }
+} //  checkEvents()
 /*
 
                     desiredLocation.x = startRescueData->North;
@@ -90,7 +113,7 @@ void checkEvents() {
 /**
  * Function: main
  * @return SUCCESS or FAILURE.
- * @remark Entry point for command center (COMPAS).
+ * @remark Entry point for the boat (AtLAs).
  * @author David Goodman
  * @date 2013.03.10  */
 #ifdef USE_MAIN
@@ -126,8 +149,11 @@ void initMasterSM() {
     Magnetometer_init();
     #endif
 
-    #ifdef USE_NAVIGATION
+    #ifdef USE_GPS
     GPS_init();
+    #endif
+
+    #ifdef USE_NAVIGATION
     Navigation_init();
     #endif
     

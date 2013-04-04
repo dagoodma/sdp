@@ -60,6 +60,8 @@ union message {
 #define MAVLINK_LOCAL_START_RESCUE      0x2
 #define MAVLINK_LOCAL_BOAT              0x3
 
+#define WANT_ACK    TRUE
+#define NO_ACK      FALSE
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
