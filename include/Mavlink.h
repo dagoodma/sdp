@@ -37,14 +37,29 @@ typedef struct{
 
 ACK start_rescue;
 
-typedef struct{
-    int32_t temp_C;
-    float temp_F;
-    int32_t pressure;
-    float altitude;
-}barometer_data;
+union message {
+    mavlink_reset_t resetData;
+    mavlink_gps_geo_t gpsGeodeticData;
+    mavlink_gps_ecef_t gpsGeocentricData;
+    mavlink_gps_ned_t gpsLocalData;
+    mavlink_barometer_t barometerData;
+} newMessage;
 
-barometer_data their_barometer;
+// Reset message status flags
+#define MAVLINK_RESET_INITIALIZE        0x1
+#define MAVLINK_RESET_RETURN_STATION    0x2
+#define MAVLINK_RESET_BOAT              0x3
+#define MAVLINK_RESET_OVERRIDE          0x4
+
+// GPS ECEF message status flags
+#define MAVLINK_GEOCENTRIC_ORIGIN       0x1
+#define MAVLINK_GEOCENTRIC_ERROR        0x2
+
+// GPS Local message status flags
+#define MAVLINK_LOCAL_SET_STATION       0x1
+#define MAVLINK_LOCAL_START_RESCUE      0x2
+#define MAVLINK_LOCAL_BOAT              0x3
+
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *

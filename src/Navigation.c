@@ -22,21 +22,16 @@
 
 #define DEBUG
 
-// Ellipsoid (olbate) constants for coordinate conversions
-#define ECC     0.0818191908426f // eccentricity
-#define ECC2    (ECC*ECC)
-#define ECCP2   (ECC2 / (1.0 - ECC2)) // square of second eccentricity
-#define FLATR   (ECC2 / (1.0 + sqrt(1.0 - ECC2))) // flattening ratio
-
-// Radius of earth's curviture on semi-major and minor axes respectively
-#define R_EN    6378137.0f     // (m) prime vertical radius (semi-major axis)
-#define R_EM    (R_EN * (1 - FLATR)) // meridian radius (semi-minor axis)
-
-
-
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
+
+
+
+GeocentricCoordinate ecefError;
+BOOL isUsingError = FALSE;
+
+
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -72,163 +67,35 @@ BOOL Navigation_isReady() {
 }
 
 
-/*******************************************************************************
- * LIBRARY FUNCTIONS                                                           *
- ******************************************************************************/
 
-/**
- * Function: convertENU2ECEF
- * @param A pointer to a new ECEF coordinate variable to save result into.
- * @param East component in meters.
- * @param North component in meters.
- * @param Up component in meters.
- * @return None.
- * @remark Converts the given ENU vector into a ECEF coordinate.
- * @author David Goodman
- * @author MATLAB
- * @date 2013.03.10  */
-void convertENU2ECEF(Coordinate *var, float east, float north, float up, float lat_ref,
-    float lon_ref, float alt_ref) {
-    // Convert geodetic lla  reference to ecef
-    Coordinate ecef_ref; //= Coordinate_new(ecef_ref, 0, 0, 0);
-    convertGeodetic2ECEF(&ecef_ref, lat_ref, lon_ref, alt_ref);
-
-    float coslat = cos(DEGREE_TO_RADIAN*lat_ref);
-    float sinlat = sin(DEGREE_TO_RADIAN*lat_ref);
-    float coslon = cos(DEGREE_TO_RADIAN*lon_ref);
-    float sinlon = sin(DEGREE_TO_RADIAN*lon_ref);
-
-    float t = coslat * up - sinlat * north;
-    float dz = sinlat * up + coslat * north;
-
-    float dx = coslon * t - sinlon * east;
-    float dy = sinlon * t + coslon * east;
-
-    var->x = ecef_ref.x + dx;
-    var->y = ecef_ref.y + dy;
-    var->z = ecef_ref.z + dz;
+/**********************************************************************
+ * Function: GPS_setLongitudeError
+ * @return None
+ * @remark Sets the longitudal error for error corrections.
+ **********************************************************************/
+void Navigation_setGeocentricError(GeocentricCoordinate error) {
+    ecefError = error;
 }
 
 
-/**
- * Function: convertGeodetic2ECEF
- * @param A pointer to a new ECEF coordinate variable to save result into.
- * @param Latitude in degrees.
- * @param Longitude in degrees.
- * @param Altitude in meters.
- * @return None.
- * @remark Converts the given ECEF coordinates into a geodetic coordinate in degrees.
- *  Note that x=lat, y=lon, z=alt.
- * @author David Goodman
- * @author MATLAB
- * @date 2013.03.10  */
-void convertGeodetic2ECEF(Coordinate *var, float lat, float lon, float alt) {
-    float sinlat = sin(DEGREE_TO_RADIAN*lat);
-    float coslat = cos(DEGREE_TO_RADIAN*lat);
-
-    float rad_ne = R_EN / sqrt(1.0 - (ECC2 * sinlat * sinlat));
-    var->x = (rad_ne + alt) * coslat * cos(lon*DEGREE_TO_RADIAN);
-    var->y = (rad_ne + alt) * coslat * sin(lon*DEGREE_TO_RADIAN);
-    var->z = (rad_ne*(1.0 - ECC2) + alt) * sinlat;
+/**********************************************************************
+ * Function: GPS_enableErrorCorrection
+ * @return None
+ * @remark Enables error correction for retreived coordinates.
+ **********************************************************************/
+void GPS_enableErrorCorrection() {
+    isUsingError = TRUE;
 }
 
-
-/**
- * Function: convertECEF2Geodetic
- * @param A pointer to a new geodetic (LLA) coordinate variable to save result into.
- * @param ECEF X position.
- * @param ECEF Y position.
- * @param ECEF Z position.
- * @return None.
- * @remark Converts the given ECEF coordinates into a geodetic coordinate in degrees.
- *  Note that x=lat, y=lon, z=alt.
- * @author David Goodman
- * @author MATLAB
- * @date 2013.03.10  */
-void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ecef_z) {
-    float lat = 0, lon = 0, alt = 0;
-
-    lon = atan2(ecef_y, ecef_x);
-
-    float rho = hypotf(ecef_x,ecef_y); // distance from z-axis
-    float beta = atan2(ecef_z, (1 - FLATR) * rho);
-
-    lat = atan2(ecef_z + R_EM * ECCP2 * sin(beta)*sin(beta)*sin(beta),
-        rho - R_EN * ECC2 * cos(beta)*cos(beta)*cos(beta));
-
-    float betaNew = atan2((1 - FLATR)*sin(lat), cos(lat));
-    int count = 0;
-    while (beta != betaNew && count < 5) {
-        beta = betaNew;
-        var->x = atan2(ecef_z  + R_EM * ECCP2 * sin(beta)*sin(beta)*sin(beta),
-            rho - R_EN * ECC2 * cos(beta)*cos(beta)*cos(beta));
-
-        betaNew = atan2((1 - FLATR)*sin(lat), cos(lat));
-        count = count + 1;
-    }
-
-    float sinlat = sin(lat);
-    float rad_ne = R_EN / sqrt(1.0 - (ECC2 * sinlat * sinlat));
-
-    alt = rho * cos(lat) + (ecef_z + ECC2 * rad_ne * sinlat) * sinlat - rad_ne;
-
-    // Convert radian geodetic to degrees
-    var->x = RADIAN_TO_DEGREE*lat;
-    var->y = RADIAN_TO_DEGREE*lon;
-    var->z = alt;
+/**********************************************************************
+ * Function: GPS_disableErrorCorrection
+ * @return None
+ * @remark Disables error correction for retreived coordinates.
+ **********************************************************************/
+void GPS_disableErrorCorrection() {
+    isUsingError = FALSE;
 }
 
-
-/**
- * Function: convertEuler2NED
- * @param A pointer to a new NED coordinate variable to save result into.
- * @param Yaw in degrees from north.
- * @param Pitch in degrees from level.
- * @param Height in meters from target.
- * @return None.
- * @remark Projects a ray with the given height from the given yaw and
- *  pitch, and returns a NED for the intersection location.
- * @author David Goodman
- * @date 2013.03.10  */
-void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height) {
-    //printf("At angle: %.3f and pitch: %.3f\n",yaw,pitch);
-
-    float mag = height * tan((90.0-pitch)*DEGREE_TO_RADIAN);
-    #ifdef DEBUG
-    printf("\tMagnitude: %.3f\n",mag);
-    #endif
-
-    //printf("At mag: %.3f\n",mag);
-    
-    if (yaw <= 90.0) {
-        //First quadrant
-        var->x = mag * cos(yaw*DEGREE_TO_RADIAN);
-        var->y = mag * sin(yaw*DEGREE_TO_RADIAN);
-    }
-    else if (yaw > 90.0 && yaw <= 180.0) {
-        // Second quadrant
-        yaw = yaw - 270.0;
-        var->x = mag * sin(yaw*DEGREE_TO_RADIAN);
-        var->y = -mag * cos(yaw*DEGREE_TO_RADIAN);
-    }
-    else if (yaw > 180.0 && yaw <= 270.0) {
-        // Third quadrant
-        yaw = yaw - 180.0;
-        var->x = -mag * cos(yaw*DEGREE_TO_RADIAN);
-        var->y = -mag * sin(yaw*DEGREE_TO_RADIAN);
-    }
-    else if (yaw > 270 < 360.0) {
-        // Fourth quadrant
-        yaw = yaw - 90.0;
-        var->x = -mag * sin(yaw*DEGREE_TO_RADIAN);
-        var->y = mag * cos(yaw*DEGREE_TO_RADIAN);
-    }
-
-
-    var->z = height;
-    //printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-    //    var->x, var->y, var->z);
-}
 
 /**
  * Function: getCurrentPosition

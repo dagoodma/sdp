@@ -9,6 +9,10 @@ static int packet_drops = 0;
 static mavlink_message_t msg;
 static mavlink_status_t status;
 
+
+static uint8_t newMsgID = 0;
+static BOOL hasNewMsg = FALSE;
+
 #define MAV_NUMBER 15 // defines the MAV number, arbitrary
 #define COMP_ID 15
 
@@ -36,12 +40,20 @@ void Mavlink_recieve(uint8_t uart_id){
 #endif
                 case MAVLINK_MSG_ID_START_RESCUE:
                 {
-                    mavlink_start_rescue_t data;
-                    mavlink_msg_start_rescue_decode(&msg, &data);
-                    if(data.ack == TRUE){
+                    mavlink_start_rescue_t newMessage.startRescueData;
+                    mavlink_msg_start_rescue_decode(&msg, &(newMessage.startRescueData);
+                    if(newMessage.startRescueData.ack == TRUE){
                         Mavlink_send_ACK(XBEE_UART_ID, messageName_start_rescue);
                     }
-                    Compas_recieve_start_rescue(&data);
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
+                }break;
+                case MAVLINK_MSG_ID_STOP_RESCUE:
+                {
+                    mavlink_stop_rescue_t newMessage.stopRescueData;
+                    mavlink_msg_start_rescue_decode(&msg, &(newMessage.stopRescueData);
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
                 }break;
                 case MAVLINK_MSG_ID_MAVLINK_ACK:
                 {
@@ -49,23 +61,33 @@ void Mavlink_recieve(uint8_t uart_id){
                     mavlink_msg_mavlink_ack_decode(&msg, &data);
                     Mavlink_recieve_ACK(&data);
                 }break;
-                case MAVLINK_MSG_ID_GPS_GEO_ORIGIN:
+                case MAVLINK_MSG_ID_GPS_ECEF_ERROR:
                 {
-                    mavlink_gps_geo_origin_t data;
-                    mavlink_msg_gps_geo_origin_decode(&msg,&data);
-                    Mavlink_recieve_GPS_geo_origin(&data);
+                    mavlink_gps_ecef_error_t newMessage.gpsErrorData;
+                    mavlink_msg_gps_ecef_error_decode(&msg,&(newMessage.gpsErrorData));
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
                 }break;
-                case MAVLINK_MSG_ID_GPS_NED_ERROR:
+                case MAVLINK_MSG_ID_GPS_GEO:
                 {
-                    mavlink_gps_ned_error_t data;
-                    mavlink_msg_gps_ned_error_decode(&msg,&data);
-                    Mavlink_recieve_GPS_ned_error(&data);
+                    mavlink_gps_geo_t newMessage.gpsGeoData;
+                    mavlink_msg_gps_geo_decode(&msg,&(newMessage.gpsGeoData));
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
                 }break;
-                case MAVLINK_MSG_ID_BAROMETER_DATA:
+                case MAVLINK_MSG_ID_GPS_ECEF:
                 {
-                    mavlink_barometer_data_t data;
-                    mavlink_msg_barometer_data_decode(&msg, &data);
-                    Mavlink_recieve_barometer_data(&data);
+                    mavlink_gps_ecef_t newMessage.gpsECEFData;
+                    mavlink_msg_gps_ecef_decode(&msg,&(newMessage.gpsECEFData));
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
+                }break;
+                case MAVLINK_MSG_ID_BAROMETER:
+                {
+                    mavlink_barometer_t newMessage.barometerData;
+                    mavlink_msg_barometer_decode(&msg, &(newMessage.barometerData));
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
                 }break;
             }
         }
@@ -182,6 +204,16 @@ void Mavlink_recieve_barometer_data(mavlink_barometer_data_t* packet){
     their_barometer.pressure = packet->pressure;
     their_barometer.temp_C = packet->temperature_celcius;
     their_barometer.temp_F = packet->temperature_fahrenheit;
+}
+
+BOOL Mavlink_hasNewMessage() {
+    uint8_t result = hasNewMsg;
+    hasNewMsg = FALSE;
+    return result;
+}
+
+int Mavlink_getNewMessageID() {
+    return newMsgID;
 }
 
 

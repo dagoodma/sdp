@@ -8,6 +8,8 @@
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
+//#define __XC32
+#include <math.h>
 #include "Serial.h"
 #include "Timer.h"
 #include "Board.h"
@@ -66,6 +68,19 @@
 #define ALTITUDE_TO_DECIMAL(alt)        (MM_TO_M(alt))
 #define HEADING_TO_DEGREE(heading)      ((float)heading/100000)
 
+// Cooordinate conversion constants
+
+// Ellipsoid (olbate) constants for coordinate conversions
+#define ECC     0.0818191908426f // eccentricity
+#define ECC2    (ECC*ECC)
+#define ECCP2   (ECC2 / (1.0 - ECC2)) // square of second eccentricity
+#define FLATR   (ECC2 / (1.0 + sqrt(1.0 - ECC2))) // flattening ratio
+
+// Radius of earth's curviture on semi-major and minor axes respectively
+#define R_EN    6378137.0f     // (m) prime vertical radius (semi-major axis)
+#define R_EM    (R_EN * (1 - FLATR)) // meridian radius (semi-minor axis)
+
+
 
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
@@ -86,20 +101,18 @@ BOOL hasNewMessage = FALSE, isConnected = FALSE, isUsingError = FALSE,
     hasPosition = FALSE;
 
 // Variables read from the GPS
-int32_t heading;
+
+
+union position {
+    GeodeticCoordinate lla;
+    GeocentricCoordinate ecef;
+} myPosition;
 
 struct {
-    int32_t latitude, longitude, altitude;
-} geodetic;
+    int32_t northVelocity, eastVelocity, heading;
+} myCourse;
 
-struct {
-    int32_t north, east;
-} velocity;
 
-// TODO shrink these variables if possible
-struct {
-    int32_t latitude, longitude;
-} error;
 
 
 
@@ -120,7 +133,7 @@ static void parsePayloadField();
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
 
-BOOL GPS_init(uint8_t options) {
+BOOL GPS_init() {
 #ifdef DEBUG
     printf("Intializing the GPS on uart %d.\n", GPS_UART_ID);
 #endif
@@ -132,20 +145,12 @@ BOOL GPS_init(uint8_t options) {
     return SUCCESS;
 }
 
-/**********************************************************************
- * Function: GPS_isInitialized()
- * @return Whether the GPS was initialized.
- * @remark none
- **********************************************************************/
 BOOL GPS_isInitialized() {
     return gpsInitialized;
 }
 
-/**********************************************************************
- * Function: GPS_runSM()
- * @return None
- * @remark Executes the GPS's currently running state.
- **********************************************************************/
+
+
 void GPS_runSM() {
     switch (state) {
         // Waiting for data
@@ -181,97 +186,33 @@ void GPS_runSM() {
         isConnected = FALSE;
 }
 
-/**********************************************************************
- * Function: GPS_hasFix
- * @return TRUE if a lock has been obtained.
- * @remark
- **********************************************************************/
 BOOL GPS_hasFix() {
     return gpsStatus != NOFIX_STATUS;
 }
 
-/**********************************************************************
- * Function: GPS_hasPosition
- * @return TRUE if a position has been obtained.
- * @remark
- **********************************************************************/
 BOOL GPS_hasPosition() {
     return hasPosition;
 }
 
+#ifdef USE_GEOCENTRIC_COORDINATES
+GeocentricCoordinate GPS_getPosition() {
+    GeocentricCoordinate ecefCopy;
+    ecefCopy.x = myPosition.ecef.x;
+    ecefCopy.y = myPosition.ecef.y;
+    ecefCopy.z = myPosition.ecef.z;
 
-/**********************************************************************
- * Function: GPS_getLatitude
- * @return The GPS's latitude value (N/S) scaled 1e7.
- * @remark
- **********************************************************************/
-float GPS_getLatitude() {
-    float lat =  (isUsingError)?
-        geodetic.latitude - error.latitude
-        :
-        geodetic.latitude;
-
-    return COORDINATE_TO_DECIMAL(lat);
+    return ecefCopy;
 }
+#else
+GeodeticCoordinate GPS_getPosition() {
+    GeodeticCoordinate llaCopy;
+    llaCopy.lat = myPosition.lla.lat;
+    llaCopy.lon = myPosition.lla.lon;
+    llaCopy.alt = myPosition.lla.alt;
 
-/**********************************************************************
- * Function: GPS_getLongitude
- * @return The GPS's longitude value (E/W) scaled 1e7.
- * @remark
- **********************************************************************/
-float GPS_getLongitude() {
-    float lon =  (isUsingError)?
-        (geodetic.longitude - error.longitude)
-        :
-        geodetic.longitude;
-
-    return COORDINATE_TO_DECIMAL(lon);
+    return llaCopy;
 }
-
-/**********************************************************************
- * Function: GPS_getAltitudse
- * @return The GPS's altitude value in milimeters.
- * @remark
- **********************************************************************/
-float GPS_getAltitude() {
-    return ALTITUDE_TO_DECIMAL(geodetic.altitude);
-}
-
-/**********************************************************************
- * Function: GPS_setLongitudeError
- * @return None
- * @remark Sets the longitudal error for error corrections.
- **********************************************************************/
-void GPS_setLongitudeError(int32_t lonError) {
-    error.longitude = lonError;
-}
-
-/**********************************************************************
- * Function: GPS_setLatitudeError
- * @return None
- * @remark Sets the latitudal error for error corrections.
- **********************************************************************/
-void GPS_setLatitudeError(int32_t latError) {
-    error.latitude = latError;
-}
-
-/**********************************************************************
- * Function: GPS_enableErrorCorrection
- * @return None
- * @remark Enables error correction for retreived coordinates.
- **********************************************************************/
-void GPS_enableErrorCorrection() {
-    isUsingError = TRUE;
-}
-
-/**********************************************************************
- * Function: GPS_disableErrorCorrection
- * @return None
- * @remark Disables error correction for retreived coordinates.
- **********************************************************************/
-void GPS_disableErrorCorrection() {
-    isUsingError = FALSE;
-}
+#endif
 
 /**********************************************************************
  * Function: GPS_getNorthVelocity
@@ -279,7 +220,7 @@ void GPS_disableErrorCorrection() {
  * @remark Centimeters per second in the north direction.
  **********************************************************************/
 int32_t GPS_getNorthVelocity() {
-    return velocity.north;
+    return myCourse.northVelocity;
 }
 
 /**********************************************************************
@@ -288,7 +229,7 @@ int32_t GPS_getNorthVelocity() {
  * @remark Centimeters per second in the east direction.
  **********************************************************************/
 int32_t GPS_getEastVelocity() {
-    return velocity.east;
+    return myCourse.eastVelocity;
 }
 
 
@@ -298,7 +239,7 @@ int32_t GPS_getEastVelocity() {
  * @remark In degrees scaled by 1e-5.
  **********************************************************************/
 int32_t GPS_getHeading() {
-    return heading;
+    return myCourse.heading;
 }
 
 
@@ -599,6 +540,175 @@ static void parsePayloadField() {
         #endif
     } // switch messageClass
 }
+
+
+
+
+/*******************************************************************************
+ * LIBRARY FUNCTIONS                                                           *
+ ******************************************************************************/
+
+/*
+void convertENU2ECEF(Coordinate *var, float east, float north, float up, float lat_ref,
+    float lon_ref, float alt_ref) {
+    // Convert geodetic lla  reference to ecef
+    Coordinate ecef_ref; //= Coordinate_new(ecef_ref, 0, 0, 0);
+    convertGeodetic2ECEF(&ecef_ref, lat_ref, lon_ref, alt_ref);
+
+    float coslat = cosf(DEGREE_TO_RADIAN*lat_ref);
+    float sinlat = sinf(DEGREE_TO_RADIAN*lat_ref);
+    float coslon = cosf(DEGREE_TO_RADIAN*lon_ref);
+    float sinlon = sinf(DEGREE_TO_RADIAN*lon_ref);
+
+    float t = coslat * up - sinlat * north;
+    float dz = sinlat * up + coslat * north;
+
+    float dx = coslon * t - sinlon * east;
+    float dy = sinlon * t + coslon * east;
+
+    var->x = ecef_ref.x + dx;
+    var->y = ecef_ref.y + dy;
+    var->z = ecef_ref.z + dz;
+} */
+
+
+void convertGeodetic2ECEF(GeocentricCoordinate *ecef, GeodeticCoordinate *lla) {
+    float sinlat = sinf(DEGREE_TO_RADIAN*lla->lat);
+    float coslat = cosf(DEGREE_TO_RADIAN*lla->lat);
+
+    float rad_ne = R_EN / sqrt(1.0 - (ECC2 * sinlat * sinlat));
+    ecef->x = (rad_ne + lla->alt) * coslat * cosf(lla->lon*DEGREE_TO_RADIAN);
+    ecef->y = (rad_ne + lla->alt) * coslat * sinf(lla->lon*DEGREE_TO_RADIAN);
+    ecef->z = (rad_ne*(1.0 - ECC2) + lla->alt) * sinlat;
+}
+
+
+/*
+void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ecef_z) {
+    float lat = 0, lon = 0, alt = 0;
+
+    lon = atan2(ecef_y, ecef_x);
+
+    float rho = hypotf(ecef_x,ecef_y); // distance from z-axis
+    float beta = atan2(ecef_z, (1 - FLATR) * rho);
+
+    lat = atan2(ecef_z + R_EM * ECCP2 * sinf(beta)*sinf(beta)*sinf(beta),
+        rho - R_EN * ECC2 * cosf(beta)*cosf(beta)*cosf(beta));
+
+    float betaNew = atan2((1 - FLATR)*sinf(lat), cosf(lat));
+    int count = 0;
+    while (beta != betaNew && count < 5) {
+        beta = betaNew;
+        var->x = atan2(ecef_z  + R_EM * ECCP2 * sinf(beta)*sinf(beta)*sinf(beta),
+            rho - R_EN * ECC2 * cosf(beta)*cosf(beta)*cosf(beta));
+
+        betaNew = atan2((1 - FLATR)*sinf(lat), cosf(lat));
+        count = count + 1;
+    }
+
+    float sinlat = sinf(lat);
+    float rad_ne = R_EN / sqrt(1.0 - (ECC2 * sinlat * sinlat));
+
+    alt = rho * cosf(lat) + (ecef_z + ECC2 * rad_ne * sinlat) * sinlat - rad_ne;
+
+    // Convert radian geodetic to degrees
+    var->x = RADIAN_TO_DEGREE*lat;
+    var->y = RADIAN_TO_DEGREE*lon;
+    var->z = alt;
+}
+*/
+
+
+
+void convertECEF2NED(LocalCoordinate *ned, GeocentricCoordinate *ecef_cur,
+    GeocentricCoordinate *ecef_ref, GeodeticCoordinate *geo_ref) {
+    GeocentricCoordinate ecef_path;
+    ecef_path.x = ecef_ref->x - ecef_cur->x;
+    ecef_path.y = ecef_ref->y - ecef_cur->y;
+    //ecef_path.z = ecef_ref->z - ecef_cur->z;
+
+    //float cosLat = cosf(geo_ref->lon);
+    float sinLat = sinf(geo_ref->lat);
+    float cosLon = cosf(geo_ref->lon);
+    float sinLon = sinf(geo_ref->lon);
+
+    // Offset vector from reference and rotate
+    float t =  cosLon .* ecef_path.x + sinLon .* ecef_path.y;
+
+    ned->n = -sinLat * t + sinLat * ecef_path.z;
+    ned->e = -sinLon * ecef_path.x + cosLon * ecef_path.y;
+    //var->d = -(cosLat * t + sinLat * ecef_ref.x);
+    ned->d = 0;
+}
+
+
+void projectEulerToNED(LocalCoordinate *ned, float yaw, float pitch, float height) {
+    //printf("At angle: %.3f and pitch: %.3f\n",yaw,pitch);
+
+    float mag = height * tan((90.0-pitch)*DEGREE_TO_RADIAN);
+    #ifdef DEBUG
+    printf("\tMagnitude: %.3f\n",mag);
+    #endif
+
+    //printf("At mag: %.3f\n",mag);
+
+    if (yaw <= 90.0) {
+        //First quadrant
+        ned->n = mag * cosf(yaw*DEGREE_TO_RADIAN);
+        ned->e = mag * sinf(yaw*DEGREE_TO_RADIAN);
+    }
+    else if (yaw > 90.0 && yaw <= 180.0) {
+        // Second quadrant
+        yaw = yaw - 270.0;
+        ned->n = mag * sinf(yaw*DEGREE_TO_RADIAN);
+        ned->e = -mag * cosf(yaw*DEGREE_TO_RADIAN);
+    }
+    else if (yaw > 180.0 && yaw <= 270.0) {
+        // Third quadrant
+        yaw = yaw - 180.0;
+        ned->n = -mag * cosf(yaw*DEGREE_TO_RADIAN);
+        ned->e = -mag * sinf(yaw*DEGREE_TO_RADIAN);
+    }
+    else if (yaw > 270 < 360.0) {
+        // Fourth quadrant
+        yaw = yaw - 90.0;
+        ned->n = -mag * sinf(yaw*DEGREE_TO_RADIAN);
+        ned->e = mag * cosf(yaw*DEGREE_TO_RADIAN);
+    }
+
+
+    ned->d = height;
+    //printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
+    //    ned->n, ned->e, ned->d);
+}
+
+
+void getCourseVector(CourseVector *course, LocalCoordinate *ned_cur,
+        LocalCoordinate *ned_des) {
+    LocalCoordinate ned_path;
+    ned_path.n = ned_des->n - ned_cur->n;
+    ned_path.e = ned_des->e - ned_cur->e;
+    //ned_path.d = ned_des->d - ned_cur->d;
+
+    // Calculate heading (in degrees from North) of path
+    course->yaw = atanf(fabsf(ned_path.e)/fabsf(ned_path.n))*RADIAN_TO_DEGREE;
+
+    if (ned_path.n < 0.0 && ned_path.e > 0.0)
+        course->yaw += 90.0;
+    else if (ned_path.n < 0.0 && ned_path.e < 0.0)
+        course->yaw += 180.0;
+    else if (ned_path.n > 0.0 && ned_path.e < 0.0)
+        course->yaw += 270.0;
+
+    // Calculate distance to point
+    course->d = (ned_path.n)*(ned_path.n) + (ned_path.e)*(ned_path.e);
+
+}
+
+
+
+
+
 
 /****************************** TESTS ************************************/
 // Test harness that spits out GPS packets over the serial port

@@ -24,6 +24,7 @@
 #include "Ports.h"
 #include "Magnetometer.h"
 #include "Drive.h"
+#include "Mavlink.h"
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -33,9 +34,24 @@ static enum {
     STATE_INITIALIZE  = 0x0, // Initializing and obtaining instructions
     STATE_STATIONKEEP = 0x1, // Maintaining station coordinates
     STATE_OVERRIDE = 0x2,   // Overriden with remote control
-    STATE_RESCUE = 0x3, // Rescuing a drowing person
+    STATE_RESCUE = 0x3,     // Rescuing a drowing person
 } state;
 
+struct event_flags {
+    // Mavlink message flags
+    unsigned int haveReturnStationMessage :1;
+    unsigned int haveReinitializeMessage :1;
+    unsigned int haveOverrideMessage :1;
+    unsigned int haveGeodeticOriginMessage :1;
+    unsigned int haveGeocentricOriginMessage :1;
+    unsigned int haveGeocentricErrorMessage :1;
+    unsigned int haveSetStationMessage :1;
+    unsigned int haveStartRescueMessage :1;
+    unsigned int haveBarometerMessage :1;
+    //
+};
+
+struct event_flags event;
  
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -45,6 +61,31 @@ static enum {
  * PRIVATE FUNCTIONS                                                   *
  ***********************************************************************/
 
+void checkEvents() {
+    if (Mavlink_hasNewMessage())
+        switch (Mavlink_getNewMessageID())
+                case MAVLINK_MSG_ID_RESET:
+                    if (newMessage.resetData->status == MAVLINK_RESET_RETURN_STATION)
+                        event.haveReturnStationMessage = TRUE;
+                    else if (newMessage.resetData->status == MAVLINK_RESET_BOAT)
+                        event.haveReinitializeMessage = TRUE;
+                    else if (newMessage.resetData->status == MAVLINK_RESET_OVERRIDE)
+                        event.haveOverrideMessage = TRUE;
+
+
+
+
+/*
+
+                    desiredLocation.x = startRescueData->North;
+                    desiredLocation.y = startRescueData->East;
+                    startRescueState();
+                    break;
+                case MAVLINK_MSG_ID_STOP_RESCUE:
+                    break;
+                    case MAVLINK_MSG_*/
+
+}
 
 /**
  * Function: main

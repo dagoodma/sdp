@@ -24,19 +24,7 @@
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
 
-#define PI                      3.14159265359f
-#define DEGREE_TO_RADIAN        ((float)PI/180.0)
-#define RADIAN_TO_DEGREE        ((float)180.0/PI)
 
-#define DEGREE_TO_NEDFRAME(deg) (-deg + 90.0)
-/***********************************************************************
- * PUBLIC TYPEDEFS
- ***********************************************************************/
-
-// Geodetic (lat, lon, alt) or NED coordinate for GPS
-typedef struct oCoordinate {
-    float x, y ,z;
-} Coordinate;
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -67,62 +55,6 @@ void Navigation_runSM();
  * @date 2013.03.10  */
 BOOL Navigation_isReady();
 
-
-// -------------------- Library Functions ---------------------------
-/**
- * Function: convertENU2ECEF
- * @param A pointer to a new ECEF coordinate variable to save result into.
- * @param East component in meters.
- * @param North component in meters.
- * @param Up component in meters.
- * @return None.
- * @remark Converts the given ENU vector into a ECEF coordinate.
- * @author David Goodman
- * @author MATLAB
- * @date 2013.03.10  */
-void convertENU2ECEF(Coordinate *var, float east, float north, float up, float lat_ref,
-    float lon_ref, float alt_ref);
-
-/**
- * Function: convertGeodetic2ECEF
- * @param A pointer to a new ECEF coordinate variable to save result into.
- * @param Latitude in degrees.
- * @param Longitude in degrees.
- * @param Altitude in meters.
- * @return None.
- * @remark Converts the given ECEF coordinates into a geodetic coordinate in degrees.
- *  Note that x=lat, y=lon, z=alt.
- * @author David Goodman
- * @author MATLAB
- * @date 2013.03.10  */
-void convertGeodetic2ECEF(Coordinate *var, float lat, float lon, float alt);
-
-/**
- * Function: convertECEF2Geodetic
- * @param A pointer to a new geodetic (LLA) coordinate variable to save result into.
- * @param ECEF X position.
- * @param ECEF Y position.
- * @param ECEF Z position.
- * @return None.
- * @remark Converts the given ECEF coordinates into a geodetic coordinate in degrees.
- *  Note that x=lat, y=lon, z=alt.
- * @author David Goodman
- * @author MATLAB
- * @date 2013.03.10  */
-void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ecef_z);
-
-/**
- * Function: convertEuler2NED
- * @param A pointer to a new NED coordinate variable to save result into.
- * @param Yaw in degrees from north.
- * @param Pitch in degrees from level.
- * @param Height in meters from target.
- * @return None.
- * @remark Projects a ray with the given height from the given yaw and
- *  pitch, and returns a NED for the intersection location.
- * @author David Goodman
- * @date 2013.03.10  */
-void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height);
 
 #endif // Navigation_H
 
