@@ -58,6 +58,8 @@ uint8_t print_count = 0;
 uint32_t oldWindowValue=0, windowValue=0;
 
 uint32_t incoming[NUMBER_OF_SAMPLES],completed[NUMBER_OF_SAMPLES],deleting[NUMBER_OF_SAMPLES];
+uint32_t averaging[NUMBER_OF_SAMPLES][10];
+//uint32_t incoming_average[NUMBER_OF_SAMPLES], completed_average[NUMBER_OF_SAMPLES],deleting_average[NUMBER_OF_SAMPLES];
 
 uint32_t *incoming_sonar_data = (incoming);
 uint32_t *completed_sonar_data = (completed);
@@ -73,12 +75,13 @@ void Sonar_init(){
 }
 
 void Sonar_runSM(void){
-
+    static int x=0;
+    static uint32_t old_windowValue = 0;
     //Filling incoming array with data
     windowValue = getAnalogWindow();
     //if we have hit the peak value(every 100 ms)
-    if(windowValue > INIT_THRESHOLD && count > 5){
-        printf("Anaglog: %d\n", getAnalog());
+    if(old_windowValue > INIT_THRESHOLD && old_windowValue > windowValue){
+        //printf("Anaglog: %d\n", getAnalog());
         //make sure everything was deleted
         while(count < NUMBER_OF_SAMPLES)
             deleting_sonar_data[count++] = 0;
@@ -96,14 +99,26 @@ void Sonar_runSM(void){
         //delete first value
         deleting_sonar_data[count] = 0;
         //fill in first value
+        incoming_sonar_data[count++] = old_windowValue;
         incoming_sonar_data[count++] = windowValue;
         //begin timer
         Timer_new(TIMER_NUMBER, TIMER_TIME);
     }else if(Timer_isExpired(TIMER_NUMBER) && count < NUMBER_OF_SAMPLES){
         deleting_sonar_data[count] = 0;
+     /*   averaging[count][x++%10] = windowValue;
+        //average it
+        int y;
+        int total=0;
+        for(y = 0; y < 10; y++){
+            total += averaging[count][y];
+        }
+        total = total/10;
+        incoming_sonar_data[count++] = total;
+      */
         incoming_sonar_data[count++] = windowValue;
         Timer_new(TIMER_NUMBER, TIMER_TIME);
     }
+    old_windowValue = windowValue;
 }
 
 void Sonar_getRawData(uint32_t *output){
@@ -135,7 +150,7 @@ static uint32_t getAnalogWindow(){
  * Slave will look for packets, and then return the packet data
  * field in  a packet to the Master
  */
-#define SONAR_TEST
+//#define SONAR_TEST
 #ifdef SONAR_TEST
 
 
@@ -156,26 +171,28 @@ int main(){
         Sonar_runSM();
         if(Timer_isExpired(4)){
             Sonar_getRawData(rawAnalogWindow);
-            printf("\nDATA\n");
-            //find average:
-            float average = 0;
+            printf("\n");
             int x;
+            //find average:
+            /*
+            float average = 0;
             for(x = 10; x< NUMBER_OF_SAMPLES -4; x++){
                 average += rawAnalogWindow[x];
             }
             average = average/(NUMBER_OF_SAMPLES -14);
             printf("AVERAGE: %f\n", average);
+            */
             for(x = 0; x < NUMBER_OF_SAMPLES; x++){
-                if(rawAnalogWindow[x]+10-((int)average) > 30                   && x > 14){
+              /*  if(rawAnalogWindow[x]+10-((int)average) > 30 && x > 14){
                     printf("HIT\t");
                 }
                 else{
                     printf("0\t");
-                }
-               /* printf("%d\t",rawAnalogWindow[x]+10-((int)average));
-                if(x > 10 && rawAnalogWindow[x]+10-((int)average) > 20)
-                    printf("<--hit\t");
-                * */
+                }*/
+             
+                printf("%d\t",rawAnalogWindow[x]);
+                //if(x > 10 && rawAnalogWindow[x]+10-((int)average) > 20)
+                //    printf("<--hit\t");*/
                 rawAnalogWindow[x] = 0;
                
             }
@@ -184,4 +201,67 @@ int main(){
 
     }
 }
+#endif
+
+#define SONAR_MATLAB_TEST
+#ifdef SONAR_MATLAB_TEST
+
+
+//#include "Board.h"
+
+#define START_SEQUENCE      (0xFFFF1234)
+
+
+void sendSerial32(uint32_t data);
+void sendSerialFloat(float data) ;
+
+int main(){
+    Board_init();
+    Serial_init();
+    Sonar_init();
+    Timer_new(4, 200);
+
+    uint32_t rawAnalogWindow[NUMBER_OF_SAMPLES] = {0};
+    while(1){
+        Sonar_runSM();
+        if(Timer_isExpired(4)){
+            Sonar_getRawData(rawAnalogWindow);
+            int x;
+
+            sendSerial32(START_SEQUENCE);
+            for(x = 0; x < NUMBER_OF_SAMPLES; x++){
+        
+                sendSerial32(rawAnalogWindow[x]);
+                rawAnalogWindow[x] = 0;
+            }
+            Timer_new(4, 200);
+        }
+
+    }
+}
+
+void sendSerial32(uint32_t data) {
+    #ifndef DEBUG_TEST2
+    int i;
+    for (i = 0; i < 4; i++) {
+        //while (!Serial_isTransmitEmpty()) { asm("nop"); }
+            Serial_putChar((uint8_t)(data >>  (8 * i)));
+    }
+    #else
+    printf("0x%X",data);
+    #endif
+}
+
+void sendSerialFloat(float data) {
+    #ifndef DEBUG_TEST2
+    int i;
+    for (i = 0; i < 4; i++) {
+        //while (!Serial_isTransmitEmpty()) { asm("nop"); }
+            Serial_putChar(((uint8_t)data >>  (8 * i)));
+    }
+    #else
+    printf("_%.8f/",data);
+    #endif
+}
+
 #endif
