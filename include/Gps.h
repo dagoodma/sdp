@@ -20,6 +20,7 @@
  */
 #ifndef Gps_H
 #define Gps_H
+#include <math.h>
 
 
 /***********************************************************************
@@ -28,11 +29,10 @@
 #define USE_GEOCENTRIC_COORDINATES  // uses GEODETIC if not defined
 
 
-#define PI                      3.14159265359f
-#define DEGREE_TO_RADIAN        ((float)PI/180.0)
-#define RADIAN_TO_DEGREE        ((float)180.0/PI)
+#define PI                      M_PI
+#define DEGREE_TO_RADIAN        ((float)(PI/(float)180.0))
+#define RADIAN_TO_DEGREE        ((float)((float)180.0/PI))
 
-#define DEGREE_TO_NEDFRAME(deg) (-deg + 90.0)
 
 /***********************************************************************
  * PUBLIC TYPEDEFS
@@ -92,47 +92,70 @@ void GPS_runSM();
 BOOL GPS_hasFix();
 
 /**********************************************************************
- * Function: GPS_getPosition
- * @return The GPS's current position, in either geodetic coordinates
- *  (latitude, longitude, altitude in degrees), or geocentric coordinates
- *  (ECEF: x, y, z in meters from the earth's center).
+ * Function: GPS_hasPosition
+ * @return TRUE if a valid position has been obtained.
  * @remark
  **********************************************************************/
-#ifdef USE_GEOCENTRIC_COORDINATES
-GeocentricCoordinate GPS_getPosition();
-#else
-GeodeticCoordinate GPS_getPosition();
-#endif
-
-/**********************************************************************
- * Function: GPS_getNorthVelocity
- * @return Returns the current velocity in the north direction.
- * @remark Centimeters per second in the north direction.
- **********************************************************************/
-int32_t GPS_getNorthVelocity();
-
-/**********************************************************************
- * Function: GPS_getEastVelocity
- * @return Returns the current velocity in the east direction.
- * @remark Centimeters per second in the east direction.
- **********************************************************************/
-int32_t GPS_getEastVelocity();
-
-
-/**********************************************************************
- * Function: GPS_getHeading
- * @return Returns the current heading in degrees scaled 1e-5.
- * @remark In degrees scaled by 1e-5.
- **********************************************************************/
-int32_t GPS_getHeading();
-
+BOOL GPS_hasPosition();
 
 /**********************************************************************
  * Function: GPS_isConnected
  * @return Returns true if GPS data seen in last 5 seconds.
  * @remark
  **********************************************************************/
-int32_t GPS_isConnected();
+BOOL GPS_isConnected();
+
+
+#ifdef USE_GEOCENTRIC_COORDINATES
+/**********************************************************************
+ * Function: GPS_getPosition
+ * @param New geocentric coordinate to copy position into.
+ * @return none
+ * @remark  Copies the measured geocentric (ECEF) position in meters into the
+ *  given coordinate object.
+ **********************************************************************/
+void GPS_getPosition(GeocentricCoordinate *ecefPos);
+#else
+
+/**********************************************************************
+ * Function: GPS_getPosition
+ * @param New geodetic coordinate to copy position into.
+ * @return none
+ * @remark  Copies the measured geodetic (LLA) position in degrees (altitude
+ *  in meters) into the given coordinate object.
+ **********************************************************************/
+ void GPS_getPosition(GeodeticCoordinate *llaPos);
+#endif
+
+
+/**********************************************************************
+ * Function: GPS_getNorthVelocity
+ * @return Returns the current velocity in the north direction in cm/s.
+ * @remark Centimeters per second in the north direction.
+ **********************************************************************/
+int32_t GPS_getNorthVelocity();
+
+/**********************************************************************
+ * Function: GPS_getEastVelocity
+ * @return Returns the current velocity in the east direction in cm/s.
+ * @remark Centimeters per second in the east direction.
+ **********************************************************************/
+int32_t GPS_getEastVelocity();
+
+/**********************************************************************
+ * Function: GPS_getVelocity
+ * @return Returns the current velocity in m/s.
+ * @remark
+ **********************************************************************/
+float GPS_getVelocity();
+
+
+/**********************************************************************
+ * Function: GPS_getHeading
+ * @return Returns the current heading in degrees.
+ * @remark 
+ **********************************************************************/
+float GPS_getHeading();
 
 
 

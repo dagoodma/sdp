@@ -2,6 +2,9 @@
  * File:   Navigation.c
  * Author: David Goodman
  *
+ * TODO: Consider adding error correction timeout.
+ * TODO: Consider adding
+ *
  * Created on March 3, 2013, 10:27 AM
  */
 #include <xc.h>
@@ -14,6 +17,7 @@
 #include "Board.h"
 #include "GPS.h"
 #include "Navigation.h"
+#include "Drive.h"
 
 
 /***********************************************************************
@@ -22,15 +26,34 @@
 
 #define DEBUG
 
+#define UPDATE_DELAY        1000 // (ms)
+
+// don't change heading unless calculated is this much away from last
+#define HEADING_TOLERANCE   10 // (deg)
+
+// proportionally scale speed (m/s) for a given distance (m)
+#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.12598)
+
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 
 
+static enum {
+    STATE_IDLE  = 0x0,    // Initializing and obtaining instructions
+    STATE_NAVIGATE = 0x1, // Maintaining station coordinates
+    STATE_ERROR = 0x2,    // Error occured
+} state;
 
-GeocentricCoordinate ecefError;
-BOOL isUsingError = FALSE;
+LocalCoordinate nedDestination;
+float destinationTolerance = 0.0, lastHeading = 0.0;
 
+GeocentricCoordinate ecefError, ecefOrigin;
+GeodeticCoordinate llaOrigin;
+BOOL isDone = FALSE;
+BOOL hasOrigin = FALSE;
+BOOL hasErrorCorrection = FALSE;
+BOOL useErrorCorrection = FALSE;
 
 
 /***********************************************************************
@@ -41,93 +64,200 @@ BOOL isUsingError = FALSE;
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 BOOL Navigation_init() {
-    #ifdef USE_GPS
-    uint8_t options = 0x0;
-    if (GPS_init(options) != SUCCESS || !GPS_isInitialized()) {
-        printf("Failed to initialize Navigation system.\n");
-        return FAILURE;
-    }
-    #endif
+
+    Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
     return SUCCESS;
 }
 
 void Navigation_runSM() {
-    #ifdef USE_GPS
-    GPS_runSM();
-    #endif
+    switch (state) {
+        case STATE_IDLE:
+            // Do Nothing
+            break;
+        case STATE_NAVIGATE:
+            if (!Navigation_isReady()) {
+                startErrorState();
+                break;
+            }
+            if (Timer_isExpired(TIMER_NAVIGATION)) {
+                updateHeading();
+
+                if (isDone)
+                    startIdleState();
+
+                Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
+            }
+            break;
+        case STATE_ERROR:
+            // TODO: add functions to check for and clear this
+            break;
+        default:
+            break;
+    }
 }
 
-BOOL Navigation_isReady() {
-    #ifdef USE_GPS
-    return GPS_isInitialized() && GPS_isConnected() && GPS_hasFix()
-        && GPS_hasPosition();
-    #else
-    return TRUE;
-    #endif
+
+/**********************************************************************
+ * Function: Navigation_gotoLocalCoordinate
+ * @param
+ * @return None
+ * @remark Starts navigating to the desired location until within the given
+ *  tolerance range.
+ **********************************************************************/
+void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance) {
+    if (!Navigation_isReady()) {
+        startErrorState();
+        return;
+    }
+
+    nedDestination.n = ned_des->n;
+    nedDestination.e = ned_des->e;
+    nedDestination.d = ned_des->d;
+    destinationTolerance = tolerance;
+
+    startNavigateState();
 }
 
 
 
 /**********************************************************************
- * Function: GPS_setLongitudeError
+ * Function: Navigation_setOrigin
  * @return None
  * @remark Sets the longitudal error for error corrections.
  **********************************************************************/
-void Navigation_setGeocentricError(GeocentricCoordinate error) {
-    ecefError = error;
+void Navigation_setOrigin(GeocentricCoordinate *ecefRef,
+    GeodeticCoordinate *llaRef) {
+    ecefOrigin.x = ecefRef->x;
+    ecefOrigin.y = ecefRef->y;
+    ecefOrigin.z = ecefRef->z;
+    llaOrigin.lat = llaRef->lat;
+    llaOrigin.lon = llaRef->lon;
+    llaOrigin.alt = llaRef->alt;
+
+    hasOrigin = TRUE;
+}
+
+/**********************************************************************
+ * Function: Navigation_setGeocentricError
+ * @param Geocentric error to add to measured geocentric position.
+ * @return None
+ * @remark Sets the geocentric error for error corrections.
+ **********************************************************************/
+void Navigation_setGeocentricError(GeocentricCoordinate *error) {
+    ecefError.x = error->x;
+    ecefError.y = error->y;
+    ecefError.z = error->z;
+    
+    hasErrorCorrection = TRUE;
+}
+
+void Navigation_cancel() {
+    startIdleState();
 }
 
 
 /**********************************************************************
- * Function: GPS_enableErrorCorrection
+ * Function: Navigation_enableErrorCorrection
  * @return None
  * @remark Enables error correction for retreived coordinates.
  **********************************************************************/
-void GPS_enableErrorCorrection() {
-    isUsingError = TRUE;
+void Navigation_enablePositionErrorCorrection() {
+    if (hasErrorCorrection)
+        useErrorCorrection = TRUE;
 }
 
 /**********************************************************************
- * Function: GPS_disableErrorCorrection
+ * Function: Navigation_disableErrorCorrection
  * @return None
  * @remark Disables error correction for retreived coordinates.
  **********************************************************************/
-void GPS_disableErrorCorrection() {
-    isUsingError = FALSE;
+void Navigation_disablePositionErrorCorrection() {
+    useErrorCorrection = FALSE;
 }
 
 
-/**
- * Function: getCurrentPosition
- * @param A pointer to a new coordinate variable to save result into.
- * @return None.
- * @remark Converts the current GPS position into NED and saves it into
- *  the given Position variable.
- * @author David Goodman
- * @date 2013.03.10 
-void getCurrentPosition(Position pos) {
-    if (!pos || !Navigation_isReady())
+/**********************************************************************
+ * Function: Navigation_isReady
+ * @return True if we are ready to navigate with GPS.
+ * @remark
+ **********************************************************************/
+BOOL Navigation_isReady() {
+    return GPS_isInitialized() && GPS_isConnected() && GPS_hasFix()
+        && GPS_hasPosition() && hasOrigin;
+}
+
+BOOL Navigation_hasError() {
+    return state = STATE_ERROR;
+}
+
+BOOL Navigation_clearError() {
+    if (Navigation_hasError())
+        startIdleState();
+}
+
+BOOL Navigation_isNavigating() {
+    return state = STATE_NAVIGATE;
+}
+
+
+/**********************************************************************
+ * PRIVATE FUNCTIONS                                                  *
+ **********************************************************************/
+
+
+startNavigateState() {
+    state = STATE_NAVIGATE;
+    isDone = FALSE;
+    Drive_stop();
+    Timer_new(TIMER_NAVIGATION, 1); // let expire quickly
+}
+
+startErrorState() {
+    state = STATE_ERROR;
+    isDone = FALSE;
+    Drive_stop();
+}
+
+startIdleState() {
+    state = STATE_IDLE;
+    Drive_stop();
+}
+
+applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
+    ecefPos->x += ecefError.x;
+    ecefPos->y += ecefError.y;
+    ecefPos->z += ecefError.z;
+}
+
+updateHeading() {
+
+    // Calculate NED position
+    GeocentricCoordinate ecefMine;
+    GPS_getPosition(ecefMine);
+    if (useErrorCorrection)
+        applyGeocentricErrorCorrection(&ecefMine);
+
+    LocalCoordinate nedMine;
+    convertECEF2NED(&nedMine, &ecefMine, &ecefOrigin, &llaOrigin);
+
+    // Determine needed course
+    CourseVector course;
+    getCourseVector(&course, &nedMine, &nedDestination);
+
+    // Check tolerance
+    if (course.d < destinationTolerance) {
+        isDone = TRUE;
         return;
+    }
 
-    // Note: x=lat, y=lon, z=alt (in geodetic)
-    float lat = GPS_getLatitude();
-    float lon = GPS_getLongitude();
-    float alt = GPS_getAltitude();
-    
-    // ------- First convert LLA (geo) to ECEF
-    float sinlat = sin(lat);
-    float coslat = cos(lat);
-
-    // Prime vertical radius of curviture
-    float rad_ne = R_EN / sqrt(abs(1.0 - (ECC2 * sinlat * sinlat)));
-    float ecefX = (rad_ne - alt) * coslat * cos(lon);
-    float ecefY = (rad_ne - alt) * coslat * sin(lon);
-    float ecefZ = (rad_ne * (1.0 - ECC2) - alt) * sinlat;
-
-    // Convert ECEF to NED at current lat,lon reference point
-    
-
-} */
+    /* Drive motors to new heading and speed, but only change heading if
+     it varies enough from the previously calcualted one. */
+    float newHeading = (course.yaw < (lastHeading - HEADING_TOLERANCE)
+        || course.yaw > (lastHeading + HEADING_TOLERANCE))?
+            course.yaw : lastHeading;
+    Drive_forwardHeading(DISTANCE_TO_SPEED(course.d), newHeading);
+    lastHeading = newHeading;
+}
 
 
 //#define NAVIGATION_TEST
