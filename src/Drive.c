@@ -30,7 +30,7 @@
 #define MOTOR_LEFT              RC_PORTY06  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
 #define MOTOR_RIGHT             RC_PORTY07  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
 // #define RUDDER_TRIS          RC_TRISY06 // RB15 -- J7-12
-// #define RUDDER                  RC_LATY06 // RB15
+ #define RUDDER                 RC_PORTZ08 // RD8,  J6-05
 
 #define RC_FULL_STOP            1500
 #define RC_FORWARD_RANGE        (MAXPULSE - RC_FULL_STOP)
@@ -80,7 +80,8 @@ unsigned int desiredHeading = 0; // (degrees) from North
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
-static void updateHeading();
+static void updateHeadingPivot();
+static void updateHeadingRudder();
 static void setLeftMotor(uint16_t rc_time);
 static void setRightMotor(uint16_t rc_time);
 static void startPivotState();
@@ -99,6 +100,18 @@ BOOL Drive_init() {
 
     state = STATE_IDLE;
 }
+
+
+BOOL Rudder_init() {
+
+
+    uint16_t RC_pins = RUDDER;
+    RC_init(RC_pins);
+
+    state = STATE_IDLE;
+}
+
+
    
 void Drive_runSM() {
     switch (state) {
@@ -110,7 +123,7 @@ void Drive_runSM() {
             break;
         case STATE_PIVOT:
             if (Timer_isExpired(TIMER_DRIVE)) {
-                updateHeading();
+                updateHeadingPivot();
                 Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
             }
             break;
@@ -177,14 +190,14 @@ static void setRightMotor(uint16_t rc_time) {
 }
 
 /**
- * Function: updateHeading
+ * Function: updateHeadingPivot
  * @return None
  * @remark Determines the heading error using the magnetometer, and
  *  adjusts the motors/rudder accordingly.
  * @author David Goodman
  * @author Darrel Deo
  * @date 2013.03.27  */
-static void updateHeading() {
+static void updateHeadingPivot() {
 //Get error and change PWM Signal based on values
 
     static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
@@ -235,11 +248,80 @@ static void updateHeading() {
         setRightMotor(forwardScaled);
         setLeftMotor(backwardScaled);
     }
-    printf("FORWARD SCALED:  %d\nBACKWARD SCALED: %d\n\n",forwardScaled, backwardScaled);
+    printf("Unorm: %.2f\n\n", Unormalized);
     lastPivotError = thetaError;
     lastPivotState = pivotState;
 
 }
+
+
+/**
+ * Function: updateHeadingRudder
+ * @return None
+ * @remark Determines the heading error using the magnetometer, and
+ *  adjusts the rudder accordingly.
+ * @author Darrel Deo
+ * @date 2013.03.27  */
+static void updateHeadingRudder(){
+static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
+    //Obtain the current Heading and error, previous heading and error, and derivative term
+    int16_t currHeading = (int)Magnetometer_getDegree();
+    int16_t thetaError = desiredHeading - currHeading;
+
+    //In the event that our current heading exceeds desired resulting in negative number
+
+    if ((thetaError > 0) && (thetaError < 180)){            //Desired leads heading and within heading's right hemisphere --> Turn right, theta stays the same
+        pivotState = PIVOT_RIGHT;
+    }else if((thetaError < 0) && (thetaError > -180)){      //Heading leads desired and within desired's right hemisphere --> Turn left, theta gets inverted
+        pivotState = PIVOT_LEFT;
+        thetaError = thetaError*-1;
+    }else if((thetaError > 0)&&(thetaError >= 180)){        //Desired leads heading and within heading's left hemisphere--> Turn left, theta is complement
+        pivotState = PIVOT_LEFT;
+        thetaError = 360 - thetaError;
+    }else if((thetaError < 0)&&(thetaError <= -180)){       //Heading leads desired and within desired's left hemisphere --> Turn right, theta is inverted and complement
+        pivotState = PIVOT_RIGHT;
+        thetaError = 360 - (-1*thetaError);
+    }
+    if (lastPivotState == 0) {
+        lastPivotState = pivotState;
+        lastPivotError = thetaError;
+    }
+
+    if(lastPivotState != pivotState){
+        lastPivotError = 0;
+    }
+    float thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
+    if (thetaErrorDerivative < 0){
+        thetaErrorDerivative = -1*thetaErrorDerivative;
+    }
+
+    //Calculate Compensator's Ucommand
+    float Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
+    float Unormalized = Ucmd/Umax;
+    uint16_t forwardScaled = RC_FULL_STOP + Unormalized*RC_FORWARD_RANGE;
+    uint16_t backwardScaled = RC_FULL_STOP - Unormalized*RC_REVERSE_RANGE;
+
+
+    //uint16_t pwmSpeed = Ucmd*velocity;
+    //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
+    if(pivotState == PIVOT_RIGHT ){ //Turning Right
+        setRightMotor(backwardScaled);//Give negative duty --> Same scaled range for pwm duty
+        setLeftMotor(forwardScaled);
+    }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
+        setRightMotor(forwardScaled);
+        setLeftMotor(backwardScaled);
+    }
+    printf("Unorm: %.2f\n\n", Unormalized);
+    lastPivotError = thetaError;
+    lastPivotState = pivotState;
+
+}
+
+
+
+
+
+
 
 
 /**
@@ -359,7 +441,7 @@ int main() {
 
 #endif
 
-//#define PIVOT_TEST
+#define PIVOT_TEST
 #ifdef PIVOT_TEST
 
 #define FINISH_DELAY      10000 // (ms)
@@ -376,7 +458,6 @@ int main() {
     Drive_init();
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
     Magnetometer_init();
-    //Magnetometer_init();
     printf("Boat initialized.\n");
 
     Drive_stop();
@@ -385,8 +466,8 @@ int main() {
 
     Timer_new(TIMER_TEST,FINISH_DELAY);
     while (1) {
-        if (Timer_isExpired(TIMER_TEST))
-            break;
+      //  if (Timer_isExpired(TIMER_TEST))
+    //        break;
         Drive_runSM();
         Magnetometer_runSM();
     }
@@ -510,7 +591,7 @@ int main(){
 
 
 
-#define RECIEVER_OVERRIDE_INTERRUPT_TEST
+//#define RECIEVER_OVERRIDE_INTERRUPT_TEST
 #ifdef RECIEVER_OVERRIDE_INTERRUPT_TEST
 
 
