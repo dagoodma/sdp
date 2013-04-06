@@ -30,11 +30,12 @@
 #define MOTOR_LEFT              RC_PORTY06  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
 #define MOTOR_RIGHT             RC_PORTY07  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
 // #define RUDDER_TRIS          RC_TRISY06 // RB15 -- J7-12
-// #define RUDDER                  RC_LATY06 // RB15
+ #define RUDDER                 RC_PORTZ08 // RD8,  J6-05
 
 #define RC_FULL_STOP            1500
 #define RC_FORWARD_RANGE        (MAXPULSE - RC_FULL_STOP)
 #define RC_REVERSE_RANGE        (RC_FULL_STOP - MINPULSE)
+#define RC_ONEWAY_RANGE        500
 
 #define SPEED_TO_RCTIME(s)      (5*s + RC_FULL_STOP) // PWM 0-100 to 1500-2000
 #define SPEED_TO_RCTIME_BACKWARD(s)      (RC_FULL_STOP - 5*s) // PWM 0-100 to 1500-2000
@@ -44,12 +45,22 @@
 //PD Controller Parameter Settings
 #define KP 1.0f
 #define KD 1.0f
-#define velocity 5
 #define FORWARD_RANGE (11 - 8.18)
 #define BACKWARD_RANGE (8.18 - 5.5)
 #define FULL_FORWARD 11
 #define FULL_BACKWARD 5.5
 #define FULL_STOP 8.18
+
+
+//PD Controller Param Settings for Rudder
+#define KP_Rudder 1.0f
+
+//Velocity definitions
+#define VMAX 30 //30 MPH
+#define VMIN 0  //0 MPH
+#define VRANGE = VMAX - VMIN
+#define VELOCITY_STOP 1500
+
 
 //defines for Override feature
 #define MICRO_CONTROL            0
@@ -75,14 +86,17 @@ static enum {
 uint16_t lastPivotState, lastPivotError;
 
 unsigned int desiredHeading = 0; // (degrees) from North
-
-
+unsigned int desiredVelocity = 20;  //20 MPH as a desired velocity
+unsigned int Velocity = 1500; //initializing Velocity to 0
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
-static void updateHeading();
+static void updateHeadingPivot();
+static void updateHeadingRudder();
+static void updateVelocity();
 static void setLeftMotor(uint16_t rc_time);
 static void setRightMotor(uint16_t rc_time);
+static void setRudder(uint16_t rc_time);
 static void startPivotState();
 static void startIdleState();
 static void startDriveState();
@@ -99,6 +113,18 @@ BOOL Drive_init() {
 
     state = STATE_IDLE;
 }
+
+
+BOOL Rudder_init() {
+
+
+    uint16_t RC_pins = RUDDER;
+    RC_init(RC_pins);
+
+    state = STATE_IDLE;
+}
+
+
    
 void Drive_runSM() {
     switch (state) {
@@ -110,7 +136,7 @@ void Drive_runSM() {
             break;
         case STATE_PIVOT:
             if (Timer_isExpired(TIMER_DRIVE)) {
-                updateHeading();
+                updateHeadingPivot();
                 Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
             }
             break;
@@ -176,15 +202,19 @@ static void setRightMotor(uint16_t rc_time) {
     RC_setPulseTime(MOTOR_RIGHT, rc_time);
 }
 
+static void setRudder(uint16_t rc_time) {
+    RC_setPulseTime(RUDDER, rc_time);
+}
+
 /**
- * Function: updateHeading
+ * Function: updateHeadingPivot
  * @return None
  * @remark Determines the heading error using the magnetometer, and
  *  adjusts the motors/rudder accordingly.
  * @author David Goodman
  * @author Darrel Deo
  * @date 2013.03.27  */
-static void updateHeading() {
+static void updateHeadingPivot() {
 //Get error and change PWM Signal based on values
 
     static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
@@ -235,11 +265,124 @@ static void updateHeading() {
         setRightMotor(forwardScaled);
         setLeftMotor(backwardScaled);
     }
-    printf("FORWARD SCALED:  %d\nBACKWARD SCALED: %d\n\n",forwardScaled, backwardScaled);
+    printf("Unorm: %.2f\n\n", Unormalized);
     lastPivotError = thetaError;
     lastPivotState = pivotState;
 
 }
+
+
+/**
+ * Function: updateHeadingRudder
+ * @return None
+ * @remark Determines the heading error using the magnetometer, and
+ *  adjusts the rudder accordingly.
+ * @author Darrel Deo
+ * @date 2013.03.27  */
+static void updateHeadingRudder(){
+static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
+    //Obtain the current Heading and error, previous heading and error, and derivative term
+    int16_t currHeading = (int)Magnetometer_getDegree();
+    int16_t thetaError = desiredHeading - currHeading;
+
+    //In the event that our current heading exceeds desired resulting in negative number
+
+    if ((thetaError > 0) && (thetaError < 180)){            //Desired leads heading and within heading's right hemisphere --> Turn right, theta stays the same
+        pivotState = PIVOT_RIGHT;
+    }else if((thetaError < 0) && (thetaError > -180)){      //Heading leads desired and within desired's right hemisphere --> Turn left, theta gets inverted
+        pivotState = PIVOT_LEFT;
+        thetaError = thetaError*-1;
+    }else if((thetaError > 0)&&(thetaError >= 180)){        //Desired leads heading and within heading's left hemisphere--> Turn left, theta is complement
+        pivotState = PIVOT_LEFT;
+        thetaError = 360 - thetaError;
+    }else if((thetaError < 0)&&(thetaError <= -180)){       //Heading leads desired and within desired's left hemisphere --> Turn right, theta is inverted and complement
+        pivotState = PIVOT_RIGHT;
+        thetaError = 360 - (-1*thetaError);
+    }
+    if (lastPivotState == 0) {
+        lastPivotState = pivotState;
+        lastPivotError = thetaError;
+    }
+
+    if(lastPivotState != pivotState){
+        lastPivotError = 0;
+    }
+    float thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
+    if (thetaErrorDerivative < 0){
+        thetaErrorDerivative = -1*thetaErrorDerivative;
+    }
+
+    //Calculate Compensator's Ucommand
+    float Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
+    float Unormalized = Ucmd/Umax;
+    uint16_t forwardScaled = RC_FULL_STOP + Unormalized*RC_FORWARD_RANGE;
+    uint16_t backwardScaled = RC_FULL_STOP - Unormalized*RC_REVERSE_RANGE;
+
+
+    //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
+    if(pivotState == PIVOT_RIGHT ){ //Turning Right
+        setRudder(forwardScaled);
+    }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
+        setRudder(backwardScaled);
+    }
+    printf("Unorm: %.2f\n\n", Unormalized);
+    lastPivotError = thetaError;
+    lastPivotState = pivotState;
+
+}
+
+/**
+ * Function: updateVelocity()
+ * @return None
+ * @remark Velocity controller
+ * @author Darrel Deo
+ * @date 2013.04.06
+ * @note Keep track of global variable Velocity. You must set to 1500 if you wish to stop, or macro STOP */
+static void updateVelocity(){
+    //Get velocity, check if it matches the desired
+    //If not, use a propotional ratio to the min/max pulse of the RCServo library
+
+
+    //Obtain current velocity
+    uint16_t currentVelocity = GPS_getVelocity();
+    uint16_t errorVelocity = desiredVelocity - currentVelocity;
+
+    //Correct the error value incase it is negative
+    if(errorVelocity < 0){
+        errorVelocity = errorVelocity*-1;
+    }
+    float proportionVelocity = errorVelocity/VRANGE;
+    float proportionPulse = proportionVelocity*(RC_ONEWAY_RANGE);
+
+    // Here we add the the amount of propotional pulse to the pulse already
+    //We need to get the current pulse width for the motors
+    
+    //If we need to go faster
+    if((desiredVelocity - currentVelocity) > 0 ){
+        Velocity = Velocity + proportionPulse;
+    }else if((desiredVelocity - currentVelocity) < 0){
+        Velocity = Velocity - proportionPulse;
+    }else if(errorVelocity == 0){
+        Velocity = Velocity;
+    }
+
+    //Now check if we exceed our maximums and minimums
+    if(Velocity > 2000){
+        Velocity = 2000;
+    }else if(Velocity < 1000){
+        Velocity = 1000;
+        }
+
+    if(desiredVelocity == 0){
+        Velocity = VELOCITY_STOP;
+    }
+
+    setRudder(Velocity);
+
+}
+
+
+
 
 
 /**
@@ -359,7 +502,7 @@ int main() {
 
 #endif
 
-//#define PIVOT_TEST
+#define PIVOT_TEST
 #ifdef PIVOT_TEST
 
 #define FINISH_DELAY      10000 // (ms)
@@ -376,7 +519,6 @@ int main() {
     Drive_init();
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
     Magnetometer_init();
-    //Magnetometer_init();
     printf("Boat initialized.\n");
 
     Drive_stop();
@@ -385,8 +527,8 @@ int main() {
 
     Timer_new(TIMER_TEST,FINISH_DELAY);
     while (1) {
-        if (Timer_isExpired(TIMER_TEST))
-            break;
+      //  if (Timer_isExpired(TIMER_TEST))
+    //        break;
         Drive_runSM();
         Magnetometer_runSM();
     }
@@ -510,7 +652,7 @@ int main(){
 
 
 
-#define RECIEVER_OVERRIDE_INTERRUPT_TEST
+//#define RECIEVER_OVERRIDE_INTERRUPT_TEST
 #ifdef RECIEVER_OVERRIDE_INTERRUPT_TEST
 
 

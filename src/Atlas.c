@@ -108,7 +108,7 @@ void checkEvents() {
                     break;
                     case MAVLINK_MSG_*/
 
-}
+
 
 /**
  * Function: main
