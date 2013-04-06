@@ -786,7 +786,6 @@ void projectEulerToNED(LocalCoordinate *ned, float yaw, float pitch, float heigh
         ned->e = mag * cosf(yaw*DEGREE_TO_RADIAN);
     }
 
-
     ned->d = height;
     //printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
     //    ned->n, ned->e, ned->d);
@@ -822,7 +821,7 @@ void getCourseVector(CourseVector *course, LocalCoordinate *ned_cur,
 
 /****************************** TESTS ************************************/
 // Test harness that spits out GPS packets over the serial port
-#define GPS_TEST
+//#define GPS_TEST
 #ifdef GPS_TEST
 int main() {
     Board_init(); // initalize interrupts
@@ -851,7 +850,7 @@ int main() {
 #endif
                 
                 printf("Velocity: %.2f (m/s), Heading: %.2f (deg)\n",
-                    GPS_getVelocity(), GPS_getHeading);
+                    GPS_getVelocity(), GPS_getHeading());
             }
             else {
                 printf("No fix!\n");
@@ -866,6 +865,63 @@ int main() {
 
 #endif
 
+
+//#define GPS_HEADING_TEST
+#ifdef GPS_HEADING_TEST
+
+#include "I2C.h"
+#include "TiltCompass.h"
+
+// Pick the I2C_MODULE to initialize
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000 // (Hz)
+
+int main() {
+    Board_init(); // initalize interrupts
+    Serial_init(); // init serial port for printing messages
+    Timer_init();
+    I2C_init(I2C1, I2C_CLOCK_FREQ);
+    GPS_init();
+    TiltCompass_init();
+    printf("GPS and Compass initialized.\n");
+
+    Timer_new(TIMER_TEST,1000);
+    while(1) {
+        if (Timer_isExpired(TIMER_TEST)) {
+            if (!GPS_isConnected()) {
+                printf("GPS not connected.\n");
+            }
+            else if (GPS_hasFix() && GPS_hasPosition()) {
+#ifndef USE_GEOCENTRIC_COORDINATES
+                GeodeticCoordinate llaPos;
+                GPS_getPosition(&llaPos);
+                printf("Position: lat=%.6f, lon=%.6f, alt=%.2f (deg and m)\n",llaPos.lat,
+                    llaPos.lon, llaPos.alt);
+#else
+                GeocentricCoordinate ecefPos;
+                GPS_getPosition(&ecefPos);
+                printf("GPS Position: x=%.2f, y=%.2f, z=%.2f (m)\n", ecefPos.x,
+                    ecefPos.y, ecefPos.z);
+#endif
+
+                printf("\tVelocity: %.2f (m/s), Heading: %.2f (deg)\n",
+                    GPS_getVelocity(), GPS_getHeading());
+            }
+            else {
+                printf("GPS has no fix!\n");
+            }
+
+            printf("Compass heading: %.1f\n", TiltCompass_getheading());
+            Timer_new(TIMER_TEST,1000);
+        }
+
+        GPS_runSM();
+        TiltCompass_runSM();
+    }
+}
+
+
+#endif
 
 
 //#define GPS_LIBRARY_TEST

@@ -22,11 +22,6 @@
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
 
-#define PI                      3.14159265359f
-#define DEGREE_TO_RADIAN        ((float)PI/180.0)
-#define RADIAN_TO_DEGREE        ((float)180.0/PI)
-
-#define DEGREE_TO_NEDFRAME(deg) (-deg + 90.0)
 
 //For Override feature
 #define Override_INT            INT_CN

@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include <math.h>
+#include "GPS.h"
 
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *
@@ -29,31 +30,68 @@
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
-/**
- * Function: Navigation_init
- * @return SUCCESS or FAILURE.
- * @remark Initializes the navigation system by intializing the GPS module.
- * @author David Goodman
- * @date 2013.03.10  */
 BOOL Navigation_init();
-   
-/**
- * Function: Navigation_runSM
- * @return None.
- * @remark Wrapper around GPS_runSM(), which executes a cycle of the
- *  navigation state machine.
- * @author David Goodman
- * @date 2013.03.10  */
+
 void Navigation_runSM();
 
-/**
+
+/**********************************************************************
+ * Function: Navigation_gotoLocalCoordinate
+ * @param
+ * @return None
+ * @remark Starts navigating to the desired location until within the given
+ *  tolerance range.
+ **********************************************************************/
+void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance);
+
+/**********************************************************************
+ * Function: Navigation_setOrigin
+ * @return None
+ * @remark Sets the longitudal error for error corrections.
+ **********************************************************************/
+void Navigation_setOrigin(GeocentricCoordinate *ecefRef,
+    GeodeticCoordinate *llaRef);
+
+/**********************************************************************
+ * Function: Navigation_setGeocentricError
+ * @param Geocentric error to add to measured geocentric position.
+ * @return None
+ * @remark Sets the geocentric error for error corrections.
+ **********************************************************************/
+void Navigation_setGeocentricError(GeocentricCoordinate *error);
+
+void Navigation_cancel();
+
+
+/**********************************************************************
+ * Function: Navigation_enableErrorCorrection
+ * @return None
+ * @remark Enables error correction for retreived coordinates.
+ **********************************************************************/
+void Navigation_enablePositionErrorCorrection();
+
+/**********************************************************************
+ * Function: Navigation_disableErrorCorrection
+ * @return None
+ * @remark Disables error correction for retreived coordinates.
+ **********************************************************************/
+void Navigation_disablePositionErrorCorrection();
+
+
+/**********************************************************************
  * Function: Navigation_isReady
- * @return TRUE or FALSE if the Navigation system is ready.
- * @remark Returns TRUE if the GPS sub-system has a fix and a current 
- *  geodetic position.
- * @author David Goodman
- * @date 2013.03.10  */
+ * @return True if we are ready to navigate with GPS and have an origin.
+ * @remark
+ **********************************************************************/
 BOOL Navigation_isReady();
+
+BOOL Navigation_hasError();
+
+BOOL Navigation_clearError();
+
+BOOL Navigation_isNavigating();
+
+BOOL Navigation_isDone();
 
 
 #endif // Navigation_H

@@ -12,9 +12,10 @@
  * reduce error and improve accuracy.
  *
  * @note
- *  The longitude and latitude are both in degrees scaled by 1e-7.
- *  The heading is in degrees scaled by 1e-5.
- *  The velocity is in cm/s.
+ *  The longitude and latitude can be in either ECEF or geodetic coordinates,
+ *      where ECEF is in meters.
+ *  The heading is in degrees from north, from 0 to 360.
+ *  The velocity is in m/s.
  * 
  * @date January 1, 2013, 1:25 AM   -- Created.
  */

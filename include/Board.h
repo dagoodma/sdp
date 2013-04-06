@@ -64,6 +64,7 @@
 #define TIMER_HEARTBEAT         7
 #define TIMER_DRIVE             8
 #define TIMER_TEST2             9
+#define TIMER_TILTCOMPASS       10
 #define TIMER_NAVIGATION        11
 #define TIMER_BAROMETER2        14 // remove the blocking code!!
 #define TIMER_TEST              15

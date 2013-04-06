@@ -1,6 +1,6 @@
 /*
  * File:   Navigation.c
- * Author: David Goodman
+ * Author: David     Goodman
  *
  * TODO: Consider adding error correction timeout.
  * TODO: Consider adding
@@ -25,14 +25,15 @@
  ***********************************************************************/
 
 #define DEBUG
+//#define USE_DRIVE
 
-#define UPDATE_DELAY        1000 // (ms)
+#define UPDATE_DELAY        2500 // (ms)
 
 // don't change heading unless calculated is this much away from last
 #define HEADING_TOLERANCE   10 // (deg)
 
 // proportionally scale speed (m/s) for a given distance (m)
-#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.12598)
+#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.065f + 0.22f)
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -59,12 +60,17 @@ BOOL useErrorCorrection = FALSE;
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
+void startNavigateState();
+void startErrorState();
+void startIdleState();
+void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos);
+void updateHeading();
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 BOOL Navigation_init() {
-
+    startIdleState();
     Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
     return SUCCESS;
 }
@@ -82,8 +88,12 @@ void Navigation_runSM() {
             if (Timer_isExpired(TIMER_NAVIGATION)) {
                 updateHeading();
 
-                if (isDone)
+                if (isDone == TRUE) {
+                    #ifdef DEBUG
+                    printf("Finished navigating.\n\n");
+                    #endif
                     startIdleState();
+                }
 
                 Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
             }
@@ -178,7 +188,7 @@ void Navigation_disablePositionErrorCorrection() {
 
 /**********************************************************************
  * Function: Navigation_isReady
- * @return True if we are ready to navigate with GPS.
+ * @return True if we are ready to navigate with GPS and have an origin.
  * @remark
  **********************************************************************/
 BOOL Navigation_isReady() {
@@ -187,7 +197,7 @@ BOOL Navigation_isReady() {
 }
 
 BOOL Navigation_hasError() {
-    return state = STATE_ERROR;
+    return state == STATE_ERROR;
 }
 
 BOOL Navigation_clearError() {
@@ -196,53 +206,68 @@ BOOL Navigation_clearError() {
 }
 
 BOOL Navigation_isNavigating() {
-    return state = STATE_NAVIGATE;
+    return state == STATE_NAVIGATE;
 }
 
+BOOL Navigation_isDone() {
+    return isDone;
+}
 
 /**********************************************************************
  * PRIVATE FUNCTIONS                                                  *
  **********************************************************************/
 
 
-startNavigateState() {
+void startNavigateState() {
     state = STATE_NAVIGATE;
     isDone = FALSE;
+#ifdef USE_DRIVE
     Drive_stop();
+#endif
     Timer_new(TIMER_NAVIGATION, 1); // let expire quickly
 }
 
-startErrorState() {
+void startErrorState() {
     state = STATE_ERROR;
     isDone = FALSE;
+#ifdef USE_DRIVE
     Drive_stop();
+#endif
 }
 
-startIdleState() {
+void startIdleState() {
     state = STATE_IDLE;
+#ifdef USE_DRIVE
     Drive_stop();
+#endif
 }
 
-applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
+void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
     ecefPos->x += ecefError.x;
     ecefPos->y += ecefError.y;
     ecefPos->z += ecefError.z;
 }
 
-updateHeading() {
+void updateHeading() {
 
     // Calculate NED position
     GeocentricCoordinate ecefMine;
-    GPS_getPosition(ecefMine);
+    GPS_getPosition(&ecefMine);
     if (useErrorCorrection)
         applyGeocentricErrorCorrection(&ecefMine);
 
     LocalCoordinate nedMine;
     convertECEF2NED(&nedMine, &ecefMine, &ecefOrigin, &llaOrigin);
+#ifdef DEBUG
+    printf("My position: N=%.2f, E=%.2f, D=%.2f\n",nedMine.n, nedMine.e, nedMine.d);
+#endif
 
     // Determine needed course
     CourseVector course;
     getCourseVector(&course, &nedMine, &nedDestination);
+#ifdef DEBUG
+    printf("\tCourse: distance=%.2f, heading=%.2f\n",course.d,course.yaw);
+#endif
 
     // Check tolerance
     if (course.d < destinationTolerance) {
@@ -255,57 +280,104 @@ updateHeading() {
     float newHeading = (course.yaw < (lastHeading - HEADING_TOLERANCE)
         || course.yaw > (lastHeading + HEADING_TOLERANCE))?
             course.yaw : lastHeading;
+#ifdef USE_DRIVE
     Drive_forwardHeading(DISTANCE_TO_SPEED(course.d), newHeading);
+#elif defined(DEBUG)
+    printf("\tDriving: speed=%.2f [m/s], heading=%.2f [deg]\n",
+        DISTANCE_TO_SPEED(course.d),newHeading);
+#endif
     lastHeading = newHeading;
 }
 
 
-//#define NAVIGATION_TEST
+#define NAVIGATION_TEST
 #ifdef NAVIGATION_TEST
+
+#include "I2C.h"
+#include "TiltCompass.h"
+
+// Pick the I2C_MODULE to initialize
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000 // (Hz)
+
+// Location is BE1 parkinglot bench
+#define ECEF_X_ORIGIN  -2707571.0f
+#define ECEF_Y_ORIGIN -4322145.0f
+#define ECEF_Z_ORIGIN 3817542.0f
+#define GEO_LAT_ORIGIN 37.000042165168395f
+#define GEO_LON_ORIGIN -122.06473588943481f
+#define GEO_ALT_ORIGIN 241.933f
+
+#define DESTINATION_TOLERANCE 2.2f // (m)
+
+#define HEADING_DELAY   UPDATE_DELAY // delay for compass
 
 int main() {
     Board_init();
     Serial_init();
     Timer_init();
-    if (Navigation_init() != SUCCESS) {
-        printf("Navigation system failed to initialize.\n");
-        return FAILURE;
-    }
+    GPS_init();
+#ifdef USE_DRIVE
+    Drive_init();
+#endif
+    I2C_init(I2C1, I2C_CLOCK_FREQ);
+    TiltCompass_init();
+    Timer_new(TIMER_TEST,HEADING_DELAY);
+    Navigation_init();
+
+    // Set command center reference point coordinates
+    GeodeticCoordinate geoOrigin;
+    geoOrigin.lat = GEO_LAT_ORIGIN;
+    geoOrigin.lon = GEO_LON_ORIGIN;
+    geoOrigin.alt = GEO_ALT_ORIGIN;
+    GeocentricCoordinate ecefOrigin;
+    ecefOrigin.x = ECEF_X_ORIGIN;
+    ecefOrigin.y = ECEF_Y_ORIGIN;
+    ecefOrigin.z = ECEF_Z_ORIGIN;
+
+    Navigation_setOrigin(&ecefOrigin, &geoOrigin);
 
     printf("Navigation system initialized.\n");
-    /*while (!Navigation_isReady()) {
+    while (!Navigation_isReady()) {
         Navigation_runSM();
+        GPS_runSM();
     }
-    */
-    Navigation_runSM();
 
-    
     printf("Navigation system is ready.\n");
 
-    Coordinate coord;
 
-    float yaw = 150.0; // (deg)
-    float pitch = 85.0; // (deg)
-    float height = 4.572; // (m)
-    if (Navigation_getProjectedCoordinate(&coord, yaw, pitch, height)) {
-        #ifdef USE_GEODETIC
-        printf("Desired coordinate -- lat:%.6f, lon: %.6f, alt: %.2f (m)\n",
-            coord.x, coord.y, coord.z);
-        #else
-        printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-            coord.x, coord.y, coord.z);
-        #endif
-    }
-    else {
-        #ifdef USE_GEODETIC
-        char s[10] = "geodetic";
-        #else
-        char s[10] = "NED";
-        #endif
-        printf("Failed to obtain desired %s coordinate.\n",s);
+    LocalCoordinate nedDesired;
+    nedDesired.n = 0.0f;
+    nedDesired.e = 0.0f;
+    nedDesired.d = 0.0f;
+    Navigation_gotoLocalCoordinate(&nedDesired, DESTINATION_TOLERANCE);
+
+    while(Navigation_isNavigating()) {
+        GPS_runSM();
+        Navigation_runSM();
+        TiltCompass_runSM();
+#ifdef USE_DRIVE
+        Drive_runSM();
+#endif
+        if (Timer_isExpired(TIMER_TEST)) {
+            printf("\tCompass heading: %.1f\n", TiltCompass_getheading());
+            Timer_new(TIMER_TEST,HEADING_DELAY);
+        }
     }
 
+    Navigation_runSM();
+#ifdef USE_DRIVE
+    Drive_runSM();
+#endif
+    
+    if (Navigation_isDone())
+        printf("At desired point.\n");
+    else
+        printf("Failed to reach desired point.\n");
 
+    // Make sure we don't try and drive any more
+    Navigation_runSM();
+    Navigation_runSM();
     return SUCCESS;
 }
 
