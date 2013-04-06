@@ -86,7 +86,8 @@ float Encoder_getPitch() {
 }
 
 float Encoder_getYaw() {
-    return yawAngle;
+    // Invert yaw direction to be CW from north
+    return 360.0 - yawAngle;
 }
 
 void Encoder_enableZeroAngle() {

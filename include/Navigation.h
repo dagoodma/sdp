@@ -19,85 +19,80 @@
 
 #include <stdint.h>
 #include <math.h>
+#include "GPS.h"
 
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
 
-#define PI                      3.14159265359f
-#define DEGREE_TO_RADIAN        ((float)PI/180.0)
-#define RADIAN_TO_DEGREE        ((float)180.0/PI)
 
-#define DEGREE_TO_NEDFRAME(deg) (-deg + 90.0)
-
-// Angle limits 
-#define YAW_LIMIT       360.0f // (non-inclusive)
-#define PITCH_LIMIT     90.0f  // (inclusive)
-
-/***********************************************************************
- * PUBLIC TYPEDEFS
- ***********************************************************************/
-
-// Geodetic (lat, lon, alt) or NED coordinate for GPS
-typedef struct oCoordinate {
-    float x, y ,z;
-} Coordinate;
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
-/**
- * Function: Navigation_init
- * @return SUCCESS or FAILURE.
- * @remark Initializes the navigation system by intializing the GPS module.
- * @author David Goodman
- * @date 2013.03.10  */
 BOOL Navigation_init();
-   
-/**
- * Function: Navigation_runSM
- * @return None.
- * @remark Wrapper around GPS_runSM(), which executes a cycle of the
- *  navigation state machine.
- * @author David Goodman
- * @date 2013.03.10  */
+
 void Navigation_runSM();
 
-/**
+
+/**********************************************************************
+ * Function: Navigation_gotoLocalCoordinate
+ * @param
+ * @return None
+ * @remark Starts navigating to the desired location until within the given
+ *  tolerance range.
+ **********************************************************************/
+void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance);
+
+/**********************************************************************
+ * Function: Navigation_setOrigin
+ * @return None
+ * @remark Sets the longitudal error for error corrections.
+ **********************************************************************/
+void Navigation_setOrigin(GeocentricCoordinate *ecefRef,
+    GeodeticCoordinate *llaRef);
+
+/**********************************************************************
+ * Function: Navigation_setGeocentricError
+ * @param Geocentric error to add to measured geocentric position.
+ * @return None
+ * @remark Sets the geocentric error for error corrections.
+ **********************************************************************/
+void Navigation_setGeocentricError(GeocentricCoordinate *error);
+
+void Navigation_cancel();
+
+
+/**********************************************************************
+ * Function: Navigation_enableErrorCorrection
+ * @return None
+ * @remark Enables error correction for retreived coordinates.
+ **********************************************************************/
+void Navigation_enablePositionErrorCorrection();
+
+/**********************************************************************
+ * Function: Navigation_disableErrorCorrection
+ * @return None
+ * @remark Disables error correction for retreived coordinates.
+ **********************************************************************/
+void Navigation_disablePositionErrorCorrection();
+
+
+/**********************************************************************
  * Function: Navigation_isReady
- * @return TRUE or FALSE if the Navigation system is ready.
- * @remark Returns TRUE if the GPS sub-system has a fix and a current 
- *  geodetic position.
- * @author David Goodman
- * @date 2013.03.10  */
+ * @return True if we are ready to navigate with GPS and have an origin.
+ * @remark
+ **********************************************************************/
 BOOL Navigation_isReady();
 
-#ifdef IS_COMPAS
-/**
- * Function: Navigation_getProjectedCoordinate
- * @param A new geodetic coordinate to save the result into.
- * @param Yaw angle to projected position in degrees.
- * @param Pitch angle to projected position in degrees.
- * @param Height from projected position in degrees
- * @return SUCCESS or FAILURE.
- * @remark Converts the given euler angles to NED, then to ECEF, then adds
- *  them to the current ECEF location, and convert to geodetic (LLA).
- * @author David Goodman
- * @date 2013.03.10  */
-BOOL Navigation_getProjectedCoordinate(Coordinate *coord, float yaw, float pitch, float height);
-#endif
+BOOL Navigation_hasError();
 
-/**
- * Function: Coordinate_new
- * @param New Coordinate.
- * @param X position (either latitude, ecef_x, or north).
- * @param Y position (either longitude, ecef_y, or east).
- * @param Z position (either altitude, ecef_z, or down).
- * @return The Coordinate object pointer.
- * @remark Constructor for a geodetic, NED, or ECEF coordinate.
- * @author David Goodman
- * @date 2013.03.10  */
-//Coordinate Coordinate_new(Coordinate coord, float x, float y, float z);
+BOOL Navigation_clearError();
+
+BOOL Navigation_isNavigating();
+
+BOOL Navigation_isDone();
+
 
 #endif // Navigation_H
 

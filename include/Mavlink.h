@@ -36,6 +36,33 @@ typedef struct{
 }ACK;
 
 ACK start_rescue;
+
+union message {
+    mavlink_reset_t resetData;
+    mavlink_gps_geo_t gpsGeodeticData;
+    mavlink_gps_ecef_t gpsGeocentricData;
+    mavlink_gps_ned_t gpsLocalData;
+    mavlink_barometer_t barometerData;
+} newMessage;
+
+// Reset message status flags
+#define MAVLINK_RESET_INITIALIZE        0x1
+#define MAVLINK_RESET_RETURN_STATION    0x2
+#define MAVLINK_RESET_BOAT              0x3
+#define MAVLINK_RESET_OVERRIDE          0x4
+
+// GPS ECEF message status flags
+#define MAVLINK_GEOCENTRIC_ORIGIN       0x1
+#define MAVLINK_GEOCENTRIC_ERROR        0x2
+
+// GPS Local message status flags
+#define MAVLINK_LOCAL_SET_STATION       0x1
+#define MAVLINK_LOCAL_START_RESCUE      0x2
+#define MAVLINK_LOCAL_BOAT              0x3
+
+#define WANT_ACK    TRUE
+#define NO_ACK      FALSE
+
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
@@ -56,6 +83,8 @@ void Mavlink_send_gps_ned_error(uint8_t uart_id, float north, float east);
 
 void Mavlink_send_gps_geo_origin(uint8_t uart_id, float latitude, float longitude);
 
+void Mavlink_send_barometer_data(uint8_t uart_id, int32_t temp_C, float temp_F, int32_t pressure, float altitude);
+
 #ifdef XBEE_TEST
 void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data);
 #endif
@@ -70,4 +99,6 @@ void Mavlink_recieve_GPS_geo_origin(mavlink_gps_geo_origin_t* packet);
 void Mavlink_recieve_GPS_ned_error(mavlink_gps_ned_error_t* packet);
 
 void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet);
+
+void Mavlink_recieve_barometer_data(mavlink_barometer_data_t* packet);
 #endif

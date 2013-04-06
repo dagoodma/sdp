@@ -15,6 +15,9 @@
  History
  When                   Who         What/Why
  --------------         ---         --------
+4/03/2013   9:30PM      dagoodma    Started integrating GPS module.
+4/01/2013   3:00PM      jash        Integrated barometer module.
+3/15/2014   12:00PM     shehadeh    Winter quarter check off ready.
 3/08/2013   6:41PM      dagoodma    Copied initial code from Shah's Position module.
 3/08/2013   12:00PM     shehadeh    Wrote initial code.
 2/25/2013   11:10PM     jash        Created project.
@@ -36,6 +39,7 @@
 #include "UART.h"
 #include "Gps.h"
 #include "Navigation.h"
+#include "Barometer.h"
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
@@ -91,9 +95,14 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 //------------------------------- XBEE --------------------------------
 #define USE_XBEE
 
+//----------------------------- Barometer -----------------------------
+#define USE_BAROMETER
+
+#define ALTITUDE_OFFSET      2.1336f // (m) hardcoded error offset b/w boat and cc
+
 //----------------------------- Other Modules ---------------------------
 #define USE_MAGNETOMETER
-#define USE_NAVIGATION
+#define USE_GPS
 #define USE_ENCODERS
 
 
@@ -103,8 +112,10 @@ I2C_MODULE      I2C_BUS_ID = I2C1;
 
 void initMasterSM();
 void runMasterSM();
+
 void updateAccelerometerLEDs();
 void updateHeading();
+float calculateAltitudeDifference();
 
 BOOL readLockButton();
 BOOL readZeroButton();
@@ -114,10 +125,17 @@ BOOL isZeroPressed();
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
-
+#ifndef USE_BAROMETER
+// Use hardcoded height if no barometer available
 float height = 5.44; // (m)
+#else
+float boatAltitude = 0; // (m)
+#endif
+
+// Heading from north
 float heading = 0;
-// Printing debug messages over serial
+
+// Whether to turn leveler lights on
 BOOL useLevel = FALSE;
 
 BOOL lockPressed = FALSE, lockTimerStarted = FALSE;
@@ -166,14 +184,17 @@ void initMasterSM() {
     Xbee_init();
     #endif
 
-    #ifdef USE_NAVIGATION
-    Navigation_init();
+    #ifdef USE_GPS
+    GPS_init();
     #endif
 
     #ifdef USE_ENCODERS
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
     #endif
 
+    #ifdef USE_BAROMETER
+    Barometer_init();
+    #endif
 
     #ifdef USE_ACCELEROMETER
     //printf("Initializing accelerometer...\n");
@@ -217,15 +238,21 @@ void runMasterSM() {
             #ifdef USE_ENCODERS
             Encoder_enableZeroAngle();
             Encoder_runSM();
-            Coordinate ned; // = Coordinate_new(ned, 0, 0 ,0);
+
+            #ifdef USE_BAROMETER
+            float height = calculateHeightDifference();
+            #endif
+
+            LocalCoordinate ned;
             if (Navigation_getProjectedCoordinate(&ned, Encoder_getYaw(),
                 Encoder_getPitch(), height)) {
                 printf("Desired coordinate -- N: %.6f, E: %.6f, D: %.2f (m)\n",
-                    ned.x, ned.y, ned.z);
+                    ned.n, ned.e, ned.d);
 
 
                 #ifdef USE_XBEE
-                Mavlink_send_start_rescue(XBEE_UART_ID, TRUE, 0,ned.x, ned.y);
+                Mavlink_send_gps_ned(XBEE_UART_ID, WANT_ACK,
+                     MAVLINK_LOCAL_START_RESCUE, ned.n, ned.e, ned.d);
                 #endif
             }
             else {
@@ -273,6 +300,10 @@ void runMasterSM() {
 
     #ifdef USE_XBEE
     Xbee_runSM();
+    #endif
+
+    #ifdef USE_BAROMETER
+    Barometer_runSM();
     #endif
 
 }
@@ -345,7 +376,11 @@ void updateAccelerometerLEDs() {
 }
 #endif
 
-
+#ifdef USE_BAROMETER
+float calculateAltitudeDifference() {
+    return Barometer_getAltitude() - boatAltitude + ALTITUDE_OFFSET;
+}
+#endif
 
 BOOL readLockButton() {
     return !LOCK_BUTTON;
@@ -356,54 +391,54 @@ BOOL readZeroButton() {
 }
 
 
- BOOL isLockPressed() {
-     // Start lock press timer if pressed
-     if (!readLockButton()) {
-         if (lockTimerStarted)
-             lockTimerStarted = FALSE;
+BOOL isLockPressed() {
+    // Start lock press timer if pressed
+    if (!readLockButton()) {
+        if (lockTimerStarted)
+            lockTimerStarted = FALSE;
 
-         //printf("Lock released.\n");
-         lockPressed = FALSE;
-     }
-     else if (!lockTimerStarted && readLockButton()) {
-         Timer_new(TIMER_BUTTONS, BUTTON_DELAY);
-         lockTimerStarted = TRUE;
-         lockPressed = FALSE;
+        //printf("Lock released.\n");
+        lockPressed = FALSE;
+    }
+    else if (!lockTimerStarted && readLockButton()) {
+        Timer_new(TIMER_BUTTONS, BUTTON_DELAY);
+        lockTimerStarted = TRUE;
+        lockPressed = FALSE;
 
-         //printf("Lock timer started.\n");
-     }
-     else if (Timer_isExpired(TIMER_BUTTONS)) {
-         lockPressed = TRUE;
+        //printf("Lock timer started.\n");
+    }
+    else if (Timer_isExpired(TIMER_BUTTONS)) {
+        lockPressed = TRUE;
 
-         //printf("Lock on.\n");
-     }
+        //printf("Lock on.\n");
+    }
 
-     return lockPressed;
- }
+    return lockPressed;
+}
 
- BOOL isZeroPressed() {
-     // Start lock press timer if pressed
-     if (!readZeroButton()) {
-         if (zeroTimerStarted)
-             zeroTimerStarted = FALSE;
+BOOL isZeroPressed() {
+    // Start lock press timer if pressed
+    if (!readZeroButton()) {
+        if (zeroTimerStarted)
+            zeroTimerStarted = FALSE;
 
-         //printf("Zero released.\n");
-         zeroPressed = FALSE;
-     }
-     else if (!zeroTimerStarted && readZeroButton()) {
-         Timer_new(TIMER_BUTTONS, BUTTON_DELAY);
-         zeroTimerStarted = TRUE;
-         zeroPressed = FALSE;
+        //printf("Zero released.\n");
+        zeroPressed = FALSE;
+    }
+    else if (!zeroTimerStarted && readZeroButton()) {
+        Timer_new(TIMER_BUTTONS, BUTTON_DELAY);
+        zeroTimerStarted = TRUE;
+        zeroPressed = FALSE;
 
-         //printf("Zero timer started.\n");
-     }
-     else if (Timer_isExpired(TIMER_BUTTONS)) {
-         zeroPressed = TRUE;
+        //printf("Zero timer started.\n");
+    }
+    else if (Timer_isExpired(TIMER_BUTTONS)) {
+        zeroPressed = TRUE;
 
-         //printf("Zero on.\n");
-     }
+        //printf("Zero on.\n");
+    }
 
-     return zeroPressed;
- }
+    return zeroPressed;
+}
 
 

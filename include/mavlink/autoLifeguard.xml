@@ -14,29 +14,38 @@
 				<description>This messages will send a sinlge byte with the mavlink message id</description>
 				<field type="uint8_t" name="Message_Name"> Returns the name of message recieved</field>
           </message>
-		  <message id="240" name="GPS_NED_ERROR">
-				<description>This messages will send the correction for the local GPS area</description>
+		  <message id="238" name="RESET">
+				<description>essage id</description>
 				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
-				<field type="float" name="North">North Error amount</field>
-                <field type="float" name="East">East Error amount</field>
+				<field type="uint8_t" name="status">Boat is initializing (0x1), return to station (0x2), tells the boat to reinitialize (0x3), shutdown into override (0x4)</field>
           </message>
-		  <message id="241" name="START_RESCUE">
-				<description>This messages will send a GPS location to the boat</description>
+		  <message id="239" name="GPS_GEO">
+				<description>GPS geodetic coordinate used upon boat initialization for origin</description>
 				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
-				<field type="uint8_t" name="status">Holds status informatiom for the boat</field>
-				<field type="float" name="North">Latitude data for the boat to travel to</field>
-				<field type="float" name="East">Longitude data for the boat to travel to</field>
+				<field type="float" name="latitiude">Geodetic latitude position in degrees</field>
+                <field type="float" name="longitude">Geodetic longitude position in degrees</field>
           </message>
-		  <message id="242" name="STOP_RESCUE">
-				<description>This messages will send a sinlge byte with the mavlink message id</description>
+		  <message id="240" name="GPS_ECEF">
+				<description>GPS geocentric, earth-centered, earth-fixed coordinate</description>
 				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
-				<field type="uint8_t" name="data">Holds a Message ID number</field>
+                <field type="uint8_t" name="status">Command center's origin (0x1), or GPS error (0x2)</field>
+				<field type="float" name="x">Geocentric x position in meters</field>
+                <field type="float" name="y">Geocentric y position in meters</field>
+				<field type="float" name="z">Geocentric z position in meters</field>
           </message>
-		  <message id="243" name="GPS_GEO_ORIGIN">
-				<description>This message will contain the LAT/LONG GPS DATA</description>
+		  <message id="241" name="GPS_NED">
+				<description>GPS NED local coordinate relative to command center</description>
 				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
-				<field type="float" name="latitiude">Holds a Message ID number</field>
-                <field type="float" name="longitude">Longitude data for the boat to travel to</field>
+                <field type="uint8_t" name="status">Set boat's station location (0x1), start a rescue (0x2), or report boat's location (0x3)</field>
+				<field type="float" name="n">North component in meters</field>
+                <field type="float" name="e">Geocentric y position in meters</field>
+				<field type="float" name="d">Geocentric z position in meters</field>
+          </message>
+          <message id="242" name="BAROMETER">
+				<description>Barometer data sent from boat to command center for height</description>
+				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+				<field type="int32_t" name="temperature">Contains the temperature in degrees celcius</field>
+                <field type="float" name="altitude">Contains the altitude calculated from the barometer</field>
           </message>
      </messages>
 </mavlink>

@@ -102,21 +102,21 @@ static void updateReadings(int BAROMETER_I2C_ID);
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 
-void Barometer_init(int BAROMETER_I2C_ID) {
+void Barometer_init() {
 
-    ac1 = readTwoDataBytes(AC1_ADDRESS, BAROMETER_I2C_ID);
-    ac2 = readTwoDataBytes(AC2_ADDRESS, BAROMETER_I2C_ID);
-    ac3 = readTwoDataBytes(AC3_ADDRESS, BAROMETER_I2C_ID);
-    ac4 = readTwoDataBytes(AC4_ADDRESS, BAROMETER_I2C_ID);
-    ac5 = readTwoDataBytes(AC5_ADDRESS, BAROMETER_I2C_ID);
-    ac6 = readTwoDataBytes(AC6_ADDRESS, BAROMETER_I2C_ID);
-    b1 = readTwoDataBytes(B1_ADDRESS, BAROMETER_I2C_ID);
-    b2 = readTwoDataBytes(B2_ADDRESS, BAROMETER_I2C_ID);
-    mb = readTwoDataBytes(MB_ADDRESS, BAROMETER_I2C_ID);
-    mc = readTwoDataBytes(MC_ADDRESS, BAROMETER_I2C_ID);
-    md = readTwoDataBytes(MD_ADDRESS, BAROMETER_I2C_ID);
+    ac1 = readTwoDataBytes(AC1_ADDRESS, BAROMETER_COMPAS_I2C_ID);
+    ac2 = readTwoDataBytes(AC2_ADDRESS, BAROMETER_COMPAS_I2C_ID);
+    ac3 = readTwoDataBytes(AC3_ADDRESS, BAROMETER_COMPAS_I2C_ID);
+    ac4 = readTwoDataBytes(AC4_ADDRESS, BAROMETER_COMPAS_I2C_ID);
+    ac5 = readTwoDataBytes(AC5_ADDRESS, BAROMETER_COMPAS_I2C_ID);
+    ac6 = readTwoDataBytes(AC6_ADDRESS, BAROMETER_COMPAS_I2C_ID);
+    b1 = readTwoDataBytes(B1_ADDRESS, BAROMETER_COMPAS_I2C_ID);
+    b2 = readTwoDataBytes(B2_ADDRESS, BAROMETER_COMPAS_I2C_ID);
+    mb = readTwoDataBytes(MB_ADDRESS, BAROMETER_COMPAS_I2C_ID);
+    mc = readTwoDataBytes(MC_ADDRESS, BAROMETER_COMPAS_I2C_ID);
+    md = readTwoDataBytes(MD_ADDRESS, BAROMETER_COMPAS_I2C_ID);
 
-    updateReadings(BAROMETER_I2C_ID);
+    updateReadings(BAROMETER_COMPAS_I2C_ID);
     Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
 
 }
