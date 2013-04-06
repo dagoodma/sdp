@@ -35,6 +35,7 @@
 #define RC_FULL_STOP            1500
 #define RC_FORWARD_RANGE        (MAXPULSE - RC_FULL_STOP)
 #define RC_REVERSE_RANGE        (RC_FULL_STOP - MINPULSE)
+#define RC_ONEWAY_RANGE        500
 
 #define SPEED_TO_RCTIME(s)      (5*s + RC_FULL_STOP) // PWM 0-100 to 1500-2000
 #define SPEED_TO_RCTIME_BACKWARD(s)      (RC_FULL_STOP - 5*s) // PWM 0-100 to 1500-2000
@@ -44,12 +45,22 @@
 //PD Controller Parameter Settings
 #define KP 1.0f
 #define KD 1.0f
-#define velocity 5
 #define FORWARD_RANGE (11 - 8.18)
 #define BACKWARD_RANGE (8.18 - 5.5)
 #define FULL_FORWARD 11
 #define FULL_BACKWARD 5.5
 #define FULL_STOP 8.18
+
+
+//PD Controller Param Settings for Rudder
+#define KP_Rudder 1.0f
+
+//Velocity definitions
+#define VMAX 30 //30 MPH
+#define VMIN 0  //0 MPH
+#define VRANGE = VMAX - VMIN
+#define VELOCITY_STOP 1500
+
 
 //defines for Override feature
 #define MICRO_CONTROL            0
@@ -75,15 +86,17 @@ static enum {
 uint16_t lastPivotState, lastPivotError;
 
 unsigned int desiredHeading = 0; // (degrees) from North
-
-
+unsigned int desiredVelocity = 20;  //20 MPH as a desired velocity
+unsigned int Velocity = 1500; //initializing Velocity to 0
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
 static void updateHeadingPivot();
 static void updateHeadingRudder();
+static void updateVelocity();
 static void setLeftMotor(uint16_t rc_time);
 static void setRightMotor(uint16_t rc_time);
+static void setRudder(uint16_t rc_time);
 static void startPivotState();
 static void startIdleState();
 static void startDriveState();
@@ -187,6 +200,10 @@ static void setLeftMotor(uint16_t rc_time) {
 
 static void setRightMotor(uint16_t rc_time) {
     RC_setPulseTime(MOTOR_RIGHT, rc_time);
+}
+
+static void setRudder(uint16_t rc_time) {
+    RC_setPulseTime(RUDDER, rc_time);
 }
 
 /**
@@ -302,14 +319,11 @@ static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     uint16_t backwardScaled = RC_FULL_STOP - Unormalized*RC_REVERSE_RANGE;
 
 
-    //uint16_t pwmSpeed = Ucmd*velocity;
     //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
     if(pivotState == PIVOT_RIGHT ){ //Turning Right
-        setRightMotor(backwardScaled);//Give negative duty --> Same scaled range for pwm duty
-        setLeftMotor(forwardScaled);
+        setRudder(forwardScaled);
     }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
-        setRightMotor(forwardScaled);
-        setLeftMotor(backwardScaled);
+        setRudder(backwardScaled);
     }
     printf("Unorm: %.2f\n\n", Unormalized);
     lastPivotError = thetaError;
@@ -317,8 +331,55 @@ static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
 
 }
 
+/**
+ * Function: updateVelocity()
+ * @return None
+ * @remark Velocity controller
+ * @author Darrel Deo
+ * @date 2013.04.06
+ * @note Keep track of global variable Velocity. You must set to 1500 if you wish to stop, or macro STOP */
+static void updateVelocity(){
+    //Get velocity, check if it matches the desired
+    //If not, use a propotional ratio to the min/max pulse of the RCServo library
 
 
+    //Obtain current velocity
+    uint16_t currentVelocity = GPS_getVelocity();
+    uint16_t errorVelocity = desiredVelocity - currentVelocity;
+
+    //Correct the error value incase it is negative
+    if(errorVelocity < 0){
+        errorVelocity = errorVelocity*-1;
+    }
+    float proportionVelocity = errorVelocity/VRANGE;
+    float proportionPulse = proportionVelocity*(RC_ONEWAY_RANGE);
+
+    // Here we add the the amount of propotional pulse to the pulse already
+    //We need to get the current pulse width for the motors
+    
+    //If we need to go faster
+    if((desiredVelocity - currentVelocity) > 0 ){
+        Velocity = Velocity + proportionPulse;
+    }else if((desiredVelocity - currentVelocity) < 0){
+        Velocity = Velocity - proportionPulse;
+    }else if(errorVelocity == 0){
+        Velocity = Velocity;
+    }
+
+    //Now check if we exceed our maximums and minimums
+    if(Velocity > 2000){
+        Velocity = 2000;
+    }else if(Velocity < 1000){
+        Velocity = 1000;
+        }
+
+    if(desiredVelocity == 0){
+        Velocity = VELOCITY_STOP;
+    }
+
+    setRudder(Velocity);
+
+}
 
 
 
