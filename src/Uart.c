@@ -61,14 +61,14 @@ unsigned char writeBack(CBRef cB, unsigned char data);
 /*******************************************************************************
  * PRIVATE VARIABLES                                                           *
  ******************************************************************************/
-struct CircBuffer outgoingUart1;
-CBRef transmitBufferUart1;
-struct CircBuffer incomingUart1;
-CBRef receiveBufferUart1;
-struct CircBuffer outgoingUart2;
-CBRef transmitBufferUart2;
-struct CircBuffer incomingUart2;
-CBRef receiveBufferUart2;
+static struct CircBuffer outgoingUart1;
+static CBRef transmitBufferUart1;
+static struct CircBuffer incomingUart1;
+static CBRef receiveBufferUart1;
+static struct CircBuffer outgoingUart2;
+static CBRef transmitBufferUart2;
+static struct CircBuffer incomingUart2;
+static CBRef receiveBufferUart2;
 
 
 
