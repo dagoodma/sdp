@@ -281,7 +281,7 @@ void updateHeading() {
         || course.yaw > (lastHeading + HEADING_TOLERANCE))?
             course.yaw : lastHeading;
 #ifdef USE_DRIVE
-    Drive_forwardHeading(DISTANCE_TO_SPEED(course.d), newHeading);
+    Drive_forwardHeading(DISTANCE_TO_SPEED(course.d), (uint16_t)newHeading);
 #elif defined(DEBUG)
     printf("\tDriving: speed=%.2f [m/s], heading=%.2f [deg]\n",
         DISTANCE_TO_SPEED(course.d),newHeading);
@@ -360,7 +360,7 @@ int main() {
         Drive_runSM();
 #endif
         if (Timer_isExpired(TIMER_TEST)) {
-            printf("\tCompass heading: %.1f\n", TiltCompass_getheading());
+            printf("\tCompass heading: %.1f\n", TiltCompass_getHeading());
             Timer_new(TIMER_TEST,HEADING_DELAY);
         }
     }

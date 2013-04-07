@@ -45,10 +45,10 @@ void TiltCompass_init();
 void TiltCompass_runSM();
 
 /**********************************************************************
- * Function: TiltCompass_getheading
+ * Function: TiltCompass_getHeading
  * @return Heading from north in degrees from 0 to 360.
  * @remark 
  **********************************************************************/
-float TiltCompass_getheading();
+float TiltCompass_getHeading();
  
  #endif

@@ -68,11 +68,11 @@ void TiltCompass_init() {
 }
  
 /**********************************************************************
- * Function: TiltCompass_getheading
+ * Function: TiltCompass_getHeading
  * @return Heading from north in degrees from 0 to 360.
  * @remark 
  **********************************************************************/
-float TiltCompass_getheading(){
+float TiltCompass_getHeading(){
     return finalHeading;
 }
 
@@ -193,7 +193,7 @@ int main(void) {
     Timer_new(TIMER_TEST,PRINT_DELAY);
     while(1){
         if(Timer_isExpired(TIMER_TEST)){
-            printf("Heading: %.1f\n", TiltCompass_getheading());
+            printf("Heading: %.1f\n", TiltCompass_getHeading());
             Timer_new(TIMER_TEST,PRINT_DELAY);
         }
         TiltCompass_runSM();

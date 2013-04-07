@@ -83,8 +83,19 @@ void Drive_backward(uint8_t speed);
  * @author David Goodman
  * @date 2013.03.30 
  */
-void Drive_forwardHeading(uint8_t speed, uint16_t angle);
- 
+void Drive_forwardHeading(float speed, uint16_t angle);
+
+/**
+ * Function: Drive_pivot
+ * @return None
+ * @param Heading to position boat to in degrees from North (0 to 359).
+ * @remark Actively holds the given heading by pivoting with a single motor at a time,
+ *  until the desired heading is obtained.
+ * @author David Goodman
+ * @author Darrel Deo
+ * @date 2013.03.27  */
+void Drive_pivot(uint16_t angle);
+
 /**
  * Function: Drive_stop
  * @return None
@@ -93,17 +104,6 @@ void Drive_forwardHeading(uint8_t speed, uint16_t angle);
  * @author Darrel Deo
  * @date 2013.03.27  */
 void Drive_stop();
-
-/**
- * Function: Drive_setHeading
- * @return None
- * @param Heading from North to position boat to in degrees from North (0 to 359).
- * @remark Actively holds the given heading by pivoting with a single motor at a time,
- *  until the desired heading is obtained.
- * @author David Goodman
- * @author Darrel Deo
- * @date 2013.03.27  */
-void Drive_setHeading(uint16_t angle);
 
 /**
  * Function: Override_init

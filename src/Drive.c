@@ -18,7 +18,7 @@
 #include "GPS.h"
 #include "Drive.h"
 #include "I2C.h"
-#include "Magnetometer.h"
+#include "TiltCompass.h"
 
 
 /***********************************************************************
@@ -30,15 +30,15 @@
 #define MOTOR_LEFT              RC_PORTY06  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
 #define MOTOR_RIGHT             RC_PORTY07  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
 // #define RUDDER_TRIS          RC_TRISY06 // RB15 -- J7-12
- #define RUDDER                 RC_PORTZ08 // RD8,  J6-05
+#define RUDDER                 RC_PORTZ08 // RD8,  J6-05
 
-#define RC_FULL_STOP            1500
-#define RC_FORWARD_RANGE        (MAXPULSE - RC_FULL_STOP)
-#define RC_REVERSE_RANGE        (RC_FULL_STOP - MINPULSE)
+#define RC_STOP_PULSE            1500
+#define RC_FORWARD_RANGE        (MAXPULSE - RC_STOP_PULSE)
+#define RC_REVERSE_RANGE        (RC_STOP_PULSE - MINPULSE)
 #define RC_ONEWAY_RANGE        500
 
-#define SPEED_TO_RCTIME(s)      (5*s + RC_FULL_STOP) // PWM 0-100 to 1500-2000
-#define SPEED_TO_RCTIME_BACKWARD(s)      (RC_FULL_STOP - 5*s) // PWM 0-100 to 1500-2000
+#define PERCENT_TO_RCPULSE(s)      (5*s + RC_STOP_PULSE) // PWM 0-100 to 1500-2000
+#define PERCENT_TO_RCPULSE_BACKWARD(s)      (RC_STOP_PULSE - 5*s) // PWM 0-100 to 1500-2000
 
 #define HEADING_UPDATE_DELAY    100 // (ms)
 
@@ -58,8 +58,7 @@
 //Velocity definitions
 #define VMAX 30 //30 MPH
 #define VMIN 0  //0 MPH
-#define VRANGE = VMAX - VMIN
-#define VELOCITY_STOP 1500
+#define VRANGE (VMAX - VMIN)
 
 
 //defines for Override feature
@@ -76,6 +75,7 @@ static enum {
     STATE_IDLE  = 0x0,      // Motors are stopped
     STATE_DRIVE = 0x1,      // Driving forward.
     STATE_PIVOT = 0x2,      // Pivoting in place.
+    STATE_TRACK = 0x3,      // Tracking a desired  velocity and heading
 } state;
 
 static enum {
@@ -85,9 +85,9 @@ static enum {
 
 uint16_t lastPivotState, lastPivotError;
 
-unsigned int desiredHeading = 0; // (degrees) from North
-unsigned int desiredVelocity = 20;  //20 MPH as a desired velocity
-unsigned int Velocity = 1500; //initializing Velocity to 0
+uint16_t desiredHeading = 0; // (degrees) from North
+float desiredVelocity = 0.0;  // (m/s) desired velocity
+uint16_t velocityPulse = RC_STOP_PULSE; // (ms) velocity RC servo pulse time
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
@@ -100,6 +100,7 @@ static void setRudder(uint16_t rc_time);
 static void startPivotState();
 static void startIdleState();
 static void startDriveState();
+static void startTrackState();
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -140,20 +141,33 @@ void Drive_runSM() {
                 Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
             }
             break;
+        case STATE_TRACK:
+            if (Timer_isExpired(TIMER_DRIVE)) {
+                updateVelocity();
+                updateHeadingRudder();
+                Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
+            }
+            break;
 
     } // switch
 }
 
 void Drive_forward(uint8_t speed) {
     startDriveState();
-    uint16_t rc_time = SPEED_TO_RCTIME(speed);
+    uint16_t rc_time = PERCENT_TO_RCPULSE(speed);
     setLeftMotor(rc_time);
     setRightMotor(rc_time);
 }
 
+void Drive_forwardHeading(float speed, uint16_t angle) {
+    startTrackState();
+    desiredVelocity = speed;
+    desiredHeading = angle;
+}
+
 void Drive_backward(uint8_t speed){
     startDriveState();
-    uint16_t rc_time = SPEED_TO_RCTIME_BACKWARD(speed);
+    uint16_t rc_time = PERCENT_TO_RCPULSE_BACKWARD(speed);
     setLeftMotor(rc_time);
     setRightMotor(rc_time);
 }
@@ -163,7 +177,7 @@ void Drive_stop() {
     startIdleState();
 }
 
-void Drive_setHeading(uint16_t angle) {
+void Drive_pivot(uint16_t angle) {
     startPivotState();
     
     // For now, just stop and pivot in place.
@@ -186,12 +200,21 @@ static void startPivotState() {
 
 static void startIdleState() {
     state = STATE_IDLE;
-    setLeftMotor(RC_FULL_STOP);
-    setRightMotor(RC_FULL_STOP);
+    setLeftMotor(RC_STOP_PULSE);
+    setRightMotor(RC_STOP_PULSE);
 }
 
 static void startDriveState() {
     state = STATE_DRIVE;
+}
+
+static void startTrackState() {
+    state = STATE_TRACK;
+    setLeftMotor(RC_STOP_PULSE);
+    setRightMotor(RC_STOP_PULSE);
+
+    lastPivotState = 0;
+    lastPivotError = 0;
 }
 
 static void setLeftMotor(uint16_t rc_time) {
@@ -217,9 +240,9 @@ static void setRudder(uint16_t rc_time) {
 static void updateHeadingPivot() {
 //Get error and change PWM Signal based on values
 
-    static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
+    static uint32_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     //Obtain the current Heading and error, previous heading and error, and derivative term
-    int16_t currHeading = (int)Magnetometer_getDegree();
+    int16_t currHeading = (int)TiltCompass_getHeading();
     int16_t thetaError = desiredHeading - currHeading;
 
     //In the event that our current heading exceeds desired resulting in negative number
@@ -252,8 +275,8 @@ static void updateHeadingPivot() {
     //Calculate Compensator's Ucommand
     float Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
     float Unormalized = Ucmd/Umax;
-    uint16_t forwardScaled = RC_FULL_STOP + Unormalized*RC_FORWARD_RANGE;
-    uint16_t backwardScaled = RC_FULL_STOP - Unormalized*RC_REVERSE_RANGE;
+    uint16_t forwardScaled = RC_STOP_PULSE + Unormalized*RC_FORWARD_RANGE;
+    uint16_t backwardScaled = RC_STOP_PULSE - Unormalized*RC_REVERSE_RANGE;
 
 
     //uint16_t pwmSpeed = Ucmd*velocity;
@@ -280,9 +303,9 @@ static void updateHeadingPivot() {
  * @author Darrel Deo
  * @date 2013.03.27  */
 static void updateHeadingRudder(){
-static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
+static uint32_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     //Obtain the current Heading and error, previous heading and error, and derivative term
-    int16_t currHeading = (int)Magnetometer_getDegree();
+    uint16_t currHeading = (uint16_t)(TiltCompass_getHeading());
     int16_t thetaError = desiredHeading - currHeading;
 
     //In the event that our current heading exceeds desired resulting in negative number
@@ -297,7 +320,7 @@ static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
         thetaError = 360 - thetaError;
     }else if((thetaError < 0)&&(thetaError <= -180)){       //Heading leads desired and within desired's left hemisphere --> Turn right, theta is inverted and complement
         pivotState = PIVOT_RIGHT;
-        thetaError = 360 - (-1*thetaError);
+        thetaError = 360 - (-thetaError);
     }
     if (lastPivotState == 0) {
         lastPivotState = pivotState;
@@ -315,8 +338,8 @@ static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     //Calculate Compensator's Ucommand
     float Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
     float Unormalized = Ucmd/Umax;
-    uint16_t forwardScaled = RC_FULL_STOP + Unormalized*RC_FORWARD_RANGE;
-    uint16_t backwardScaled = RC_FULL_STOP - Unormalized*RC_REVERSE_RANGE;
+    uint16_t forwardScaled = (uint16_t)(RC_STOP_PULSE + Unormalized*RC_FORWARD_RANGE);
+    uint16_t backwardScaled = (uint16_t)(RC_STOP_PULSE - Unormalized*RC_REVERSE_RANGE);
 
 
     //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
@@ -325,7 +348,9 @@ static unsigned int Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
         setRudder(backwardScaled);
     }
+#ifdef DEBUG
     printf("Unorm: %.2f\n\n", Unormalized);
+#endif
     lastPivotError = thetaError;
     lastPivotState = pivotState;
 
@@ -344,88 +369,41 @@ static void updateVelocity(){
 
 
     //Obtain current velocity
-    uint16_t currentVelocity = GPS_getVelocity();
-    uint16_t errorVelocity = desiredVelocity - currentVelocity;
+    float currentVelocity = GPS_getVelocity();
+    float errorVelocity = desiredVelocity - currentVelocity;
 
     //Correct the error value incase it is negative
-    if(errorVelocity < 0){
-        errorVelocity = errorVelocity*-1;
+    if(errorVelocity < 0.0){
+        errorVelocity = -errorVelocity;
     }
     float proportionVelocity = errorVelocity/VRANGE;
-    float proportionPulse = proportionVelocity*(RC_ONEWAY_RANGE);
+    float proportionPulse = proportionVelocity * (RC_ONEWAY_RANGE);
 
     // Here we add the the amount of propotional pulse to the pulse already
     //We need to get the current pulse width for the motors
     
     //If we need to go faster
-    if((desiredVelocity - currentVelocity) > 0 ){
-        Velocity = Velocity + proportionPulse;
-    }else if((desiredVelocity - currentVelocity) < 0){
-        Velocity = Velocity - proportionPulse;
-    }else if(errorVelocity == 0){
-        Velocity = Velocity;
+    if((desiredVelocity - currentVelocity) > 0.0 ){
+        velocityPulse = (uint16_t)(velocityPulse + proportionPulse);
+    }else if((desiredVelocity - currentVelocity) < 0.0){
+        velocityPulse = (uint16_t)(velocityPulse - proportionPulse);
+    }else if(errorVelocity == 0.0){
+        //velocityPulse = velocityPulse;
     }
 
     //Now check if we exceed our maximums and minimums
-    if(Velocity > 2000){
-        Velocity = 2000;
-    }else if(Velocity < 1000){
-        Velocity = 1000;
-        }
-
-    if(desiredVelocity == 0){
-        Velocity = VELOCITY_STOP;
+    if(velocityPulse > MAXPULSE){
+        velocityPulse = MAXPULSE;
+    }else if(velocityPulse < MINPULSE){
+        velocityPulse =  MINPULSE;
     }
 
-    setRudder(Velocity);
+    if(desiredVelocity == 0.0){
+        velocityPulse = RC_STOP_PULSE;
+    }
 
-}
-
-
-
-
-
-/**
- * Function: Override_init()
- * @return None
- * @remark Initializes interrupt for Override functionality
- * @author Darrel Deo
- * @date 2013.04.01  */
-void Override_init(){
-    //Enable the interrupt for the override feature
-
-    mPORTBSetPinsDigitalIn(BIT_0); // CN2
-
-    mCNOpen(CN_ON | CN_IDLE_CON , CN2_ENABLE , CN_PULLUP_DISABLE_ALL);
-    uint16_t value = mPORTDRead();
-    ConfigIntCN(CHANGE_INT_ON | CHANGE_INT_PRI_2);
-    //CN2 J5-15
-    INTEnableSystemMultiVectoredInt();
-    printf("Override Function has been Initialized\n\n");
-    //INTEnableInterrupts();
-    INTEnable(INT_CN,1);
-}
-
-
-
-/**
- * Function: Interrupt Service Routine
- * @return None
- * @remark ISR that is called when CH3 pings external interrupt
- * @author Darrel Deo
- * @date 2013.04.01  */
-void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
-    mPORTDRead();
-    Serial_putChar('Y');
-
-    //Change top-level state machine so it is in state Reciever
-    CONTROL_MASTER = RECIEVER_CONTROL;
-    OVERRIDE_TRIGGERED = TRUE;
-    //Clear the interrupt flag that was risen for the external interrupt
-    //might want to set a timer in here
-
-    mCNClearIntFlag();
-    INTEnable(INT_CN,0);
+    setRightMotor(velocityPulse);
+    setLeftMotor(velocityPulse);
 }
 
 
@@ -502,7 +480,7 @@ int main() {
 
 #endif
 
-#define PIVOT_TEST
+//#define PIVOT_TEST
 #ifdef PIVOT_TEST
 
 #define FINISH_DELAY      10000 // (ms)
@@ -523,7 +501,7 @@ int main() {
 
     Drive_stop();
     DELAY(5);
-    Drive_setHeading(0);
+    Drive_pivot(0);
 
     Timer_new(TIMER_TEST,FINISH_DELAY);
     while (1) {
@@ -663,7 +641,7 @@ int main(){
 #define MICRO 0
 #define RECIEVER 1
 
-
+void Override_init();
 
 
 int main(){
@@ -748,5 +726,52 @@ int main(){
 
 
 }
+
+
+
+
+/**
+ * Function: Override_init()
+ * @return None
+ * @remark Initializes interrupt for Override functionality
+ * @author Darrel Deo
+ * @date 2013.04.01  */
+void Override_init(){
+    //Enable the interrupt for the override feature
+
+    mPORTBSetPinsDigitalIn(BIT_0); // CN2
+
+    mCNOpen(CN_ON | CN_IDLE_CON , CN2_ENABLE , CN_PULLUP_DISABLE_ALL);
+    uint16_t value = mPORTDRead();
+    ConfigIntCN(CHANGE_INT_ON | CHANGE_INT_PRI_2);
+    //CN2 J5-15
+    INTEnableSystemMultiVectoredInt();
+    printf("Override Function has been Initialized\n\n");
+    //INTEnableInterrupts();
+    INTEnable(INT_CN,1);
+}
+
+
+
+/**
+ * Function: Interrupt Service Routine
+ * @return None
+ * @remark ISR that is called when CH3 pings external interrupt
+ * @author Darrel Deo
+ * @date 2013.04.01  */
+void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
+    mPORTDRead();
+    Serial_putChar('Y');
+
+    //Change top-level state machine so it is in state Reciever
+    CONTROL_MASTER = RECIEVER_CONTROL;
+    OVERRIDE_TRIGGERED = TRUE;
+    //Clear the interrupt flag that was risen for the external interrupt
+    //might want to set a timer in here
+
+    mCNClearIntFlag();
+    INTEnable(INT_CN,0);
+}
+
 
 #endif
