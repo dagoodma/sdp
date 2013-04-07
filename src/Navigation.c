@@ -18,14 +18,15 @@
 #include "GPS.h"
 #include "Navigation.h"
 #include "Drive.h"
-
+#include "Logger.h"
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
 #define DEBUG
-//#define USE_DRIVE
+#define USE_DRIVE
+#define USE_LOGGER
 
 #define UPDATE_DELAY        2500 // (ms)
 
@@ -33,7 +34,23 @@
 #define HEADING_TOLERANCE   10 // (deg)
 
 // proportionally scale speed (m/s) for a given distance (m)
-#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.065f + 0.22f)
+#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.015f + 0.1f) // test speeds
+//#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.065f + 0.22f)
+
+#if defined(DEBUG)
+#ifdef USE_LOGGER
+#define DBPRINT(msg) do { Logger_write(msg); } while(0)
+#else
+#define DBPRINT(msg) do { printf(msg); } while(0)
+#endif
+#else
+#define DBPRINT(msg)    ((int)0)
+#endif
+
+ 
+#ifdef DEBUG
+    char debug[255];
+#endif
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -89,9 +106,7 @@ void Navigation_runSM() {
                 updateHeading();
 
                 if (isDone == TRUE) {
-                    #ifdef DEBUG
-                    printf("Finished navigating.\n\n");
-                    #endif
+                    DBPRINT("Finished navigating.\n\n");
                     startIdleState();
                 }
 
@@ -259,14 +274,16 @@ void updateHeading() {
     LocalCoordinate nedMine;
     convertECEF2NED(&nedMine, &ecefMine, &ecefOrigin, &llaOrigin);
 #ifdef DEBUG
-    printf("My position: N=%.2f, E=%.2f, D=%.2f\n",nedMine.n, nedMine.e, nedMine.d);
+    sprintf(debug, "My position: N=%.2f, E=%.2f, D=%.2f\n",nedMine.n, nedMine.e, nedMine.d);
+    DBPRINT(debug);
 #endif
 
     // Determine needed course
     CourseVector course;
     getCourseVector(&course, &nedMine, &nedDestination);
 #ifdef DEBUG
-    printf("\tCourse: distance=%.2f, heading=%.2f\n",course.d,course.yaw);
+    sprintf(debug, "\tCourse: distance=%.2f, heading=%.2f\n",course.d,course.yaw);
+    DBPRINT(debug);
 #endif
 
     // Check tolerance
@@ -283,14 +300,15 @@ void updateHeading() {
 #ifdef USE_DRIVE
     Drive_forwardHeading(DISTANCE_TO_SPEED(course.d), (uint16_t)newHeading);
 #elif defined(DEBUG)
-    printf("\tDriving: speed=%.2f [m/s], heading=%.2f [deg]\n",
+    sprintf(debug, "\tDriving: speed=%.2f [m/s], heading=%.2f [deg]\n",
         DISTANCE_TO_SPEED(course.d),newHeading);
+    DBPRINT(debug);
 #endif
     lastHeading = newHeading;
 }
 
 
-#define NAVIGATION_TEST
+//#define NAVIGATION_TEST
 #ifdef NAVIGATION_TEST
 
 #include "I2C.h"
@@ -382,3 +400,209 @@ int main() {
 }
 
 #endif
+
+
+#define NAVIGATION_OVERRIDE_TEST
+#ifdef NAVIGATION_OVERRIDE_TEST
+
+#include "I2C.h"
+#include "TiltCompass.h"
+#include "Ports.h"
+
+// Pick the I2C_MODULE to initialize
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000 // (Hz)
+
+// Location is BE1 parkinglot bench
+#define ECEF_X_ORIGIN  -2707571.0f
+#define ECEF_Y_ORIGIN -4322145.0f
+#define ECEF_Z_ORIGIN 3817542.0f
+#define GEO_LAT_ORIGIN 37.000042165168395f
+#define GEO_LON_ORIGIN -122.06473588943481f
+#define GEO_ALT_ORIGIN 241.933f
+
+#define DESTINATION_TOLERANCE 2.2f // (m)
+
+#define HEADING_DELAY   UPDATE_DELAY // delay for compass
+
+#define STARTUP_DELAY   3000 // time for gps to get stable fix
+
+// Override defines
+#define ENABLE_OUT_TRIS PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
+
+#define MICRO       0
+#define RECIEVER    1
+
+
+// Prototypes
+void initializeOverride();
+void giveReceiverControl();
+
+// Global variables
+static BOOL overrideTriggered;
+
+int main() {
+
+    ENABLE_OUT_TRIS = OUTPUT;  // Set pin to be an output (fed to the AND gates)
+    ENABLE_OUT_LAT = MICRO;    // Initialize control for Microcontroller
+
+    Board_init();
+    Serial_init();
+    Timer_init();
+    GPS_init();
+#ifdef USE_DRIVE
+    Drive_init();
+#endif
+#ifdef USE_LOGGER
+    if (Logger_init() != SUCCESS)
+        return FAILURE;
+#endif
+    I2C_init(I2C1, I2C_CLOCK_FREQ);
+    TiltCompass_init();
+    Navigation_init();
+    initializeOverride(); 
+
+    // Set command center reference point coordinates
+    GeodeticCoordinate geoOrigin;
+    geoOrigin.lat = GEO_LAT_ORIGIN;
+    geoOrigin.lon = GEO_LON_ORIGIN;
+    geoOrigin.alt = GEO_ALT_ORIGIN;
+    GeocentricCoordinate ecefOrigin;
+    ecefOrigin.x = ECEF_X_ORIGIN;
+    ecefOrigin.y = ECEF_Y_ORIGIN;
+    ecefOrigin.z = ECEF_Z_ORIGIN;
+
+    Navigation_setOrigin(&ecefOrigin, &geoOrigin);
+    DBPRINT("Navigation system initialized.\n");
+
+    // Wait for GPS fix
+    while (!Navigation_isReady()) {
+        Navigation_runSM();
+        GPS_runSM();
+    }
+    Timer_new(TIMER_TEST,STARTUP_DELAY); // let gps get good fix
+    while (!Timer_isExpired(TIMER_TEST)) {
+        asm("nop");
+    }
+
+    Timer_new(TIMER_TEST,HEADING_DELAY); // Start compass heading print timer
+    DBPRINT("Navigation and GPS are ready.\n\n");
+
+
+    // Make desired point the origin
+    LocalCoordinate nedDesired;
+    nedDesired.n = 0.0f;
+    nedDesired.e = 0.0f;
+    nedDesired.d = 0.0f;
+
+
+    // Navigate to origin
+    Navigation_gotoLocalCoordinate(&nedDesired, DESTINATION_TOLERANCE);
+    while(Navigation_isNavigating()) {
+        GPS_runSM();
+        Navigation_runSM();
+        TiltCompass_runSM();
+#ifdef USE_DRIVE
+        Drive_runSM();
+#endif
+#ifdef DEBUG
+        if (Timer_isExpired(TIMER_TEST)) {
+            sprintf(debug, "\tCompass heading: %.1f\n", TiltCompass_getHeading());
+            DBPRINT(debug);
+            Timer_new(TIMER_TEST,HEADING_DELAY);
+        }
+#endif
+        if (overrideTriggered == TRUE) {
+            // Receiver came online
+            Navigation_cancel();
+            Drive_stop();
+            break;
+        }
+
+    }
+
+    // Run SM's one last time
+    Navigation_runSM();
+#ifdef USE_DRIVE
+    Drive_runSM();
+#endif
+    
+    // Did we reach the desired point, or did an error occur ?
+    // TODO: add a GPS position check here, and add error printing for lost fix
+    if (Navigation_isDone())
+        DBPRINT("At desired point.\n");
+    else
+        DBPRINT("Failed to reach desired point.\n");
+
+    // Disable everything and let receiver have control
+    giveReceiverControl();
+    while (1) {
+        // Do nothing
+        asm("nop");
+    }
+
+    return SUCCESS;
+}
+
+
+
+/**
+ * Function: initializeOverride()
+ * @return None
+ * @remark Initializes interrupt for override functionality
+ * @author Darrel Deo
+ * @date 2013.04.01  */
+void initializeOverride(){
+    overrideTriggered = FALSE;
+
+    //Enable the interrupt for the override feature
+    mPORTBSetPinsDigitalIn(BIT_0); // CN2
+
+    mCNOpen(CN_ON | CN_IDLE_CON , CN2_ENABLE , CN_PULLUP_DISABLE_ALL);
+    uint16_t value = mPORTDRead();
+    ConfigIntCN(CHANGE_INT_ON | CHANGE_INT_PRI_2);
+    //CN2 J5-15
+    INTEnableSystemMultiVectoredInt();
+    DBPRINT("Override Function has been Initialized\n");
+    //INTEnableInterrupts(); // handled in Board.c
+    INTEnable(INT_CN,1);
+}
+
+/**
+ * Function: Interrupt Service Routine
+ * @return None
+ * @remark ISR that is called when CH3 pings external interrupt
+ * @author Darrel Deo
+ * @date 2013.04.01  */
+void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
+    mPORTDRead();
+
+    overrideTriggered = TRUE;
+
+    //Clear the interrupt flag that was risen for the external interrupt
+    //might want to set a timer in here
+
+    mCNClearIntFlag();
+    INTEnable(INT_CN,0);
+}
+
+
+/**
+ * Function: giveReceiverControl
+ * @return None
+ * @remark Passes motor control over to the receiver.
+ * @author David Goodman
+ * @date 2013.04.01  */
+void giveReceiverControl() {
+    DBPRINT("Reciever Control\n\n");
+#ifdef USE_DRIVE
+    Drive_stop();
+#endif
+    ENABLE_OUT_LAT = RECIEVER;      //Give control over to Reciever using the enable line
+    INTEnable(INT_CN,1); // may not need this for now
+}
+
+
+#endif
+

@@ -86,7 +86,7 @@ static enum {
 uint16_t lastPivotState, lastPivotError;
 
 uint16_t desiredHeading = 0; // (degrees) from North
-float desiredVelocity = 0.0;  // (m/s) desired velocity
+float desiredVelocity = 0.0f;  // (m/s) desired velocity
 uint16_t velocityPulse = RC_STOP_PULSE; // (ms) velocity RC servo pulse time
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -200,6 +200,8 @@ static void startPivotState() {
 
 static void startIdleState() {
     state = STATE_IDLE;
+    velocityPulse = RC_STOP_PULSE;
+    desiredVelocity = 0.0f;
     setLeftMotor(RC_STOP_PULSE);
     setRightMotor(RC_STOP_PULSE);
 }

@@ -104,7 +104,7 @@ void Logger_write(char *str) {
 
 
 
-#define LOGGER_TEST
+//#define LOGGER_TEST
 #ifdef LOGGER_TEST
 
 int main(void) {
