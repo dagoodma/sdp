@@ -30,7 +30,7 @@
 #define MOTOR_LEFT              RC_PORTY06  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
 #define MOTOR_RIGHT             RC_PORTY07  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
 // #define RUDDER_TRIS          RC_TRISY06 // RB15 -- J7-12
-#define RUDDER                 RC_PORTZ08 // RD8,  J6-05
+#define RUDDER                  RC_PORTV03 //RB2, J7-01
 
 #define RC_STOP_PULSE            1500
 #define RC_FORWARD_RANGE        (MAXPULSE - RC_STOP_PULSE)
@@ -109,18 +109,9 @@ static void startTrackState();
 BOOL Drive_init() {
 
 
-    uint16_t RC_pins = MOTOR_LEFT  | MOTOR_RIGHT;
+    uint16_t RC_pins = MOTOR_LEFT  | MOTOR_RIGHT | RUDDER;
     RC_init(RC_pins);
-
-    state = STATE_IDLE;
-}
-
-
-BOOL Rudder_init() {
-
-
-    uint16_t RC_pins = RUDDER;
-    RC_init(RC_pins);
+    Timer_new(TIMER_DRIVE, 1);
 
     state = STATE_IDLE;
 }
@@ -347,8 +338,10 @@ static uint32_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
     if(pivotState == PIVOT_RIGHT ){ //Turning Right
         setRudder(forwardScaled);
+        printf("RC TIME Forward: %d\n\n",forwardScaled);
     }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
         setRudder(backwardScaled);
+    printf("RC TIME Backward: %d\n\n",backwardScaled);
     }
 #ifdef DEBUG
     printf("Unorm: %.2f\n\n", Unormalized);
@@ -482,35 +475,47 @@ int main() {
 
 #endif
 
-//#define PIVOT_TEST
-#ifdef PIVOT_TEST
+#define PIVOT_TEST_DRIVE
+#ifdef PIVOT_TEST_DRIVE
+//#define MOTOR_TEST
+#define RUDDER_TEST
+#define MICRO 0
 
 #define FINISH_DELAY      10000 // (ms)
-
+#define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
 
 I2C_MODULE      I2C_BUS_ID = I2C1;
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  80000 // (Hz)
 
 int main() {
+    ENABLE_OUT_TRIS = OUTPUT;            //Set Enable output pin to be an output, fed to the AND gates
+    ENABLE_OUT_LAT = MICRO;             //Initialize control to that of Microcontroller
     Board_init();
     Serial_init();
     Timer_init();
     Drive_init();
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
-    Magnetometer_init();
+    TiltCompass_init();
     printf("Boat initialized.\n");
 
     Drive_stop();
     DELAY(5);
+#ifdef MOTOR_TEST
     Drive_pivot(0);
+#endif
+
+#ifdef RUDDER_TEST
+   Drive_forwardHeading(0.0, desiredHeading);
+#endif
 
     Timer_new(TIMER_TEST,FINISH_DELAY);
     while (1) {
       //  if (Timer_isExpired(TIMER_TEST))
     //        break;
         Drive_runSM();
-        Magnetometer_runSM();
+        TiltCompass_runSM();
     }
 
     Drive_stop();

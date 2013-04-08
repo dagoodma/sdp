@@ -402,7 +402,7 @@ int main() {
 #endif
 
 
-#define NAVIGATION_OVERRIDE_TEST
+//#define NAVIGATION_OVERRIDE_TEST
 #ifdef NAVIGATION_OVERRIDE_TEST
 
 #include "I2C.h"
@@ -447,6 +447,7 @@ int main() {
     ENABLE_OUT_TRIS = OUTPUT;  // Set pin to be an output (fed to the AND gates)
     ENABLE_OUT_LAT = MICRO;    // Initialize control for Microcontroller
 
+    //Initializations
     Board_init();
     Serial_init();
     Timer_init();
