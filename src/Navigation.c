@@ -26,9 +26,9 @@
 
 #define DEBUG
 #define USE_DRIVE
-//#define USE_LOGGER
+#define USE_LOGGER
 
-#define UPDATE_DELAY        2500 // (ms)
+#define UPDATE_DELAY        1500 // (ms)
 
 // don't change heading unless calculated is this much away from last
 #define HEADING_TOLERANCE   10 // (deg)
@@ -402,7 +402,7 @@ int main() {
 #endif
 
 
-//#define NAVIGATION_OVERRIDE_TEST
+#define NAVIGATION_OVERRIDE_TEST
 #ifdef NAVIGATION_OVERRIDE_TEST
 
 #include "I2C.h"
@@ -449,16 +449,18 @@ int main() {
 
     //Initializations
     Board_init();
+#ifdef USE_LOGGER
+    if (Logger_init() != SUCCESS)
+        return FAILURE;
+#else
     Serial_init();
+#endif
     Timer_init();
     GPS_init();
 #ifdef USE_DRIVE
     Drive_init();
 #endif
-#ifdef USE_LOGGER
-    if (Logger_init() != SUCCESS)
-        return FAILURE;
-#endif
+
     I2C_init(I2C1, I2C_CLOCK_FREQ);
     TiltCompass_init();
     Navigation_init();
