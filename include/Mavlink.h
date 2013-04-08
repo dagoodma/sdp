@@ -92,13 +92,15 @@ void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data);
 /**********************************************************************
  * RECIEVE FUNCTIONS                                                  *
  **********************************************************************/
-void Compas_recieve_start_rescue(mavlink_start_rescue_t* packet);
+void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet);
+
+
+/*void Compas_recieve_start_rescue(mavlink_start_rescue_t* packet);
 
 void Mavlink_recieve_GPS_geo_origin(mavlink_gps_geo_origin_t* packet);
 
 void Mavlink_recieve_GPS_ned_error(mavlink_gps_ned_error_t* packet);
 
-void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet);
-
 void Mavlink_recieve_barometer_data(mavlink_barometer_data_t* packet);
+ */
 #endif
