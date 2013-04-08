@@ -30,8 +30,8 @@
 
 #define STARTUP_CHARACTERS      3
 
-#define LOGGER_RESET_TRIS       PORTY09_TRIS
-#define LOGGER_RESET            PORTY09_LAT
+#define LOGGER_RESET_TRIS       PORTZ08_TRIS
+#define LOGGER_RESET            PORTZ08_LAT
 
 #define RESET_LOGGER
 
