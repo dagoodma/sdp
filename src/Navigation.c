@@ -26,7 +26,7 @@
 
 #define DEBUG
 #define USE_DRIVE
-#define USE_LOGGER
+//#define USE_LOGGER
 
 #define UPDATE_DELAY        2500 // (ms)
 
@@ -414,12 +414,12 @@ int main() {
 #define I2C_CLOCK_FREQ  100000 // (Hz)
 
 // Location is BE1 parkinglot bench
-#define ECEF_X_ORIGIN  -2707571.0f
-#define ECEF_Y_ORIGIN -4322145.0f
-#define ECEF_Z_ORIGIN 3817542.0f
-#define GEO_LAT_ORIGIN 37.000042165168395f
-#define GEO_LON_ORIGIN -122.06473588943481f
-#define GEO_ALT_ORIGIN 241.933f
+#define ECEF_X_ORIGIN -2707512.0f
+#define ECEF_Y_ORIGIN -4322157.0f
+#define ECEF_Z_ORIGIN 3817571.0f
+#define GEO_LAT_ORIGIN 37.000357054124315f
+#define GEO_LON_ORIGIN -122.06410154700279f
+#define GEO_ALT_ORIGIN 242.607f
 
 #define DESTINATION_TOLERANCE 2.2f // (m)
 
