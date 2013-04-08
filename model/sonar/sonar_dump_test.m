@@ -18,7 +18,7 @@ delete(instrfindall)
 
 % com ports (configure these)
 clear portnums;
-portnums(uno32)=7; %Com Port
+portnums(uno32)=5; %Com Port
 %portnums(uno32)={'/dev/tty.usbserial-AM01ALQX'};
 
 % connect to devices

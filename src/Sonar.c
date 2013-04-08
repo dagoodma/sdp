@@ -36,7 +36,9 @@
 
 #define TIMER_NUMBER 8
 #define TIMER_TIME 100/NUMBER_OF_SAMPLES
-#define INIT_THRESHOLD 1022
+#define INIT_THRESHOLD 1020
+
+#define DO_AVERAGE
 
 
 
@@ -105,7 +107,8 @@ void Sonar_runSM(void){
         Timer_new(TIMER_NUMBER, TIMER_TIME);
     }else if(Timer_isExpired(TIMER_NUMBER) && count < NUMBER_OF_SAMPLES){
         deleting_sonar_data[count] = 0;
-     /*   averaging[count][x++%10] = windowValue;
+#ifdef DO_AVERAGE
+        averaging[count][x++%10] = windowValue;
         //average it
         int y;
         int total=0;
@@ -114,8 +117,10 @@ void Sonar_runSM(void){
         }
         total = total/10;
         incoming_sonar_data[count++] = total;
-      */
+
+#else
         incoming_sonar_data[count++] = windowValue;
+#endif
         Timer_new(TIMER_NUMBER, TIMER_TIME);
     }
     old_windowValue = windowValue;
