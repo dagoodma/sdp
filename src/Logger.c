@@ -148,7 +148,7 @@ static void resetLogger() {
 }
 
 
-#define LOGGER_TEST
+//#define LOGGER_TEST
 #ifdef LOGGER_TEST
 
 int main(void) {
