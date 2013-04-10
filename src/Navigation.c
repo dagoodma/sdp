@@ -401,6 +401,9 @@ int main() {
 
 #endif
 
+// ************************************************************************
+// ---------------------------- Override Test ----------------------------
+// ************************************************************************
 
 #define NAVIGATION_OVERRIDE_TEST
 #ifdef NAVIGATION_OVERRIDE_TEST
@@ -414,12 +417,12 @@ int main() {
 #define I2C_CLOCK_FREQ  100000 // (Hz)
 
 // Location is BE1 parkinglot bench
-#define ECEF_X_ORIGIN -2707512.0f
-#define ECEF_Y_ORIGIN -4322157.0f
-#define ECEF_Z_ORIGIN 3817571.0f
-#define GEO_LAT_ORIGIN 37.000357054124315f
-#define GEO_LON_ORIGIN -122.06410154700279f
-#define GEO_ALT_ORIGIN 242.607f
+#define ECEF_X_ORIGIN -2707515.0f
+#define ECEF_Y_ORIGIN -4322155.0f
+#define ECEF_Z_ORIGIN 3817570.0f
+#define GEO_LAT_ORIGIN  37.00035586423005f
+#define GEO_LON_ORIGIN -122.06414669763035f
+#define GEO_ALT_ORIGIN 242.066f
 
 #define DESTINATION_TOLERANCE 2.2f // (m)
 
@@ -434,14 +437,25 @@ int main() {
 #define MICRO       0
 #define RECIEVER    1
 
+#define MAX_ERRORS 3 // max lost fixes and stuff
 
-// Prototypes
+
+// ----------------------------- Prototypes -------------------------------
 void initializeOverride();
 void giveReceiverControl();
 
-// Global variables
+// -------------------------- Global variables ----------------------------
 static BOOL overrideTriggered;
+static uint8_t errorsSeen = 0;
+static BOOL startDelayExpired = FALSE;
 
+static enum {
+    INITIALIZE = 0x1, // Waiting for GPS lock
+    NAVIGATE  = 0x2, // GPS guided navigation with drive controller
+    OVERRIDE = 0x3, // reciever has control
+} testState;
+
+// ---------------------------- Entry point ------------------------------
 int main() {
 
     ENABLE_OUT_TRIS = OUTPUT;  // Set pin to be an output (fed to the AND gates)
@@ -476,54 +490,92 @@ int main() {
     ecefOrigin.y = ECEF_Y_ORIGIN;
     ecefOrigin.z = ECEF_Z_ORIGIN;
 
-    Navigation_setOrigin(&ecefOrigin, &geoOrigin);
-    DBPRINT("Navigation system initialized.\n");
-
-    // Wait for GPS fix
-    while (!Navigation_isReady()) {
-        Navigation_runSM();
-        GPS_runSM();
-    }
-    Timer_new(TIMER_TEST,STARTUP_DELAY); // let gps get good fix
-    while (!Timer_isExpired(TIMER_TEST)) {
-        asm("nop");
-    }
-
-    Timer_new(TIMER_TEST,HEADING_DELAY); // Start compass heading print timer
-    DBPRINT("Navigation and GPS are ready.\n\n");
-
-
     // Make desired point the origin
     LocalCoordinate nedDesired;
     nedDesired.n = 0.0f;
     nedDesired.e = 0.0f;
     nedDesired.d = 0.0f;
 
+    Navigation_setOrigin(&ecefOrigin, &geoOrigin);
+    DBPRINT("Navigation system initialized... waiting for lock.\n");
 
-    // Navigate to origin
-    Navigation_gotoLocalCoordinate(&nedDesired, DESTINATION_TOLERANCE);
-    while(Navigation_isNavigating()) {
-        GPS_runSM();
-        Navigation_runSM();
-        TiltCompass_runSM();
-#ifdef USE_DRIVE
-        Drive_runSM();
-#endif
+    startInitialize();
+
+    while (1) {
+        switch (testState) {
+            case INITIALIZE:
+                // Waiting for lock
+                Navigation_runSM();
+                GPS_runSM();
+                if (overrideTriggered)
+                    startOverride();
+                if (Navigation_isReady())
+                    startNavigate();
+                break;
+            case NAVIGATE:
+                GPS_runSM();
+                Navigation_runSM();
+                TiltCompass_runSM();
+                #ifdef USE_DRIVE
+                Drive_runSM();
+                #endif
+                if (overrideTriggered)
+                    startOverride();
+                // Start up delay before navigating
+                if (Timer_isExpired(TIMER_TEST) && !startDelayExpired) {
+                    startDelayExpired = TRUE;
+                    // Send navigate command
+                    Navigation_gotoLocalCoordinate(&nedDesired, DESTINATION_TOLERANCE);
+                }
+                // Compass printing
+                if (Timer_isExpired(TIMER_TEST)) {
+                    sprintf(debug, "\tCompass heading: %.1f\n", TiltCompass_getHeading());
+                    DBPRINT(debug);
+                    Timer_new(TIMER_TEST,HEADING_DELAY);
+                }
+                if (Navigation_isDone()) {
+                    DBPRINT("At desired point. Giving receiver control.\n");
+                    startOverride();
+                }
+                break;
+            case OVERRIDE:
+                // Do Nothing
+                break;
+        } // switch
+
+        // Check for navigation error
+        if (Navigation_hasError()) {
+            // An error occured, try and reinit to regain lock
+            DBPRINT("An error occured navigating... ");
+            errorsSeen++;
+            if (errorsSeen > MAX_ERRORS) {
+                // Go into override state and do nothing
+                startOverride();
+                DBPRINT("going into override.\n");
+            }
+            else {
+                startInitialize();
 #ifdef DEBUG
-        if (Timer_isExpired(TIMER_TEST)) {
-            sprintf(debug, "\tCompass heading: %.1f\n", TiltCompass_getHeading());
-            DBPRINT(debug);
-            Timer_new(TIMER_TEST,HEADING_DELAY);
-        }
+                char lockStr[25] = (GPS_hasFix())? "" : " to regain lock";
+                sprintf(debug,"reinitialinge%s.\n",lockStr);
+                DBPRINT(debug);
 #endif
-        if (overrideTriggered == TRUE) {
-            // Receiver came online
-            Navigation_cancel();
-            Drive_stop();
-            break;
-        }
-
+            }
+            Navigation_clearError();
+        } // hasError
+    } // while
+    // Wait for GPS fix
+    while (!Navigation_isReady()) {
+        Navigation_runSM();
+        GPS_runSM();
     }
+    
+    while (!Timer_isExpired(TIMER_TEST)) {
+        asm("nop");
+    }
+
+
+
 
     // Run SM's one last time
     Navigation_runSM();
@@ -533,12 +585,10 @@ int main() {
     
     // Did we reach the desired point, or did an error occur ?
     // TODO: add a GPS position check here, and add error printing for lost fix
-    if (Navigation_isDone())
-        DBPRINT("At desired point.\n");
-    else
-        DBPRINT("Failed to reach desired point.\n");
+    
 
     // Disable everything and let receiver have control
+    RECEIVER:
     giveReceiverControl();
     while (1) {
         // Do nothing
@@ -548,7 +598,27 @@ int main() {
     return SUCCESS;
 }
 
+void startInitialize() {
+    testState = INITIALIZE;
 
+    giveMicroControl();
+}
+
+void startNavigate() {
+    testState = NAVIGATE;
+    DBPRINT("Navigation and GPS are ready.\n\n");
+    Timer_new(TIMER_TEST,STARTUP_DELAY); // let gps get good fix
+    startDelayExpired = FALSE;
+}
+
+void startOverride() {
+    testState = OVERRIDE;
+    Navigation_cancel();
+    Drive_stop();
+    Navigation_runSM();
+    Drive_runSM();
+    giveReceiverControl();
+}
 
 /**
  * Function: initializeOverride()
@@ -605,6 +675,22 @@ void giveReceiverControl() {
     ENABLE_OUT_LAT = RECIEVER;      //Give control over to Reciever using the enable line
     INTEnable(INT_CN,1); // may not need this for now
 }
+
+/**
+ * Function: giveMicroControl
+ * @return None
+ * @remark Passes motor control over to the micro.
+ * @author David Goodman
+ * @date 2013.04.01  */
+void giveMicroControl() {
+    DBPRINT("Micro has control\n\n");
+#ifdef USE_DRIVE
+    Drive_stop();
+#endif
+    ENABLE_OUT_LAT = MICRO;      //Give control over to Reciever using the enable line
+    INTEnable(INT_CN,1); // may not need this for now
+}
+
 
 
 #endif
