@@ -27,6 +27,8 @@
 #define REFRESH_DELAY               200
 
 #define HEADING_1E1_TO_DEGREES(heading) 	((float)heading/10.0)
+
+#define MAGNETIC_NORTH_OFFSET       13.7275f // (deg) offset eastward from true north
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
@@ -73,7 +75,7 @@ void TiltCompass_init() {
  * @remark 
  **********************************************************************/
 float TiltCompass_getHeading(){
-    return finalHeading;
+    return finalHeading - MAGNETIC_NORTH_OFFSET;
 }
 
 
