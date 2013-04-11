@@ -176,8 +176,15 @@ void Navigation_setGeocentricError(GeocentricCoordinate *error) {
     hasErrorCorrection = TRUE;
 }
 
+
+/**********************************************************************
+ * Function: Navigation_cancel
+ * @return None
+ * @remark Stops navigating and the the mototrs.
+ **********************************************************************/
 void Navigation_cancel() {
-    startIdleState();
+    if (Navigation_isNavigating())
+        startIdleState();
 }
 
 
@@ -211,19 +218,40 @@ BOOL Navigation_isReady() {
         && GPS_hasPosition() && hasOrigin;
 }
 
+/**********************************************************************
+ * Function: Navigation_hasError
+ * @return True if an error occured while navigating.
+ * @remark
+ **********************************************************************/
 BOOL Navigation_hasError() {
     return state == STATE_ERROR;
 }
 
+/**********************************************************************
+ * Function: Navigation_clearError
+ * @return None
+ * @remark Clears the error if one occured.
+ **********************************************************************/
 BOOL Navigation_clearError() {
     if (Navigation_hasError())
         startIdleState();
 }
 
+
+/**********************************************************************
+ * Function: Navigation_isNavigating
+ * @return True if navigating to a point.
+ * @remark 
+ **********************************************************************/
 BOOL Navigation_isNavigating() {
     return state == STATE_NAVIGATE;
 }
 
+/**********************************************************************
+ * Function: Navigation_isDone
+ * @return True if navigation finished and arrived at the desired point.
+ * @remark 
+ **********************************************************************/
 BOOL Navigation_isDone() {
     return isDone;
 }
@@ -232,7 +260,11 @@ BOOL Navigation_isDone() {
  * PRIVATE FUNCTIONS                                                  *
  **********************************************************************/
 
-
+/**********************************************************************
+ * Function: startNavigateState
+ * @return None
+ * @remark Begins the navigation state, for navigating to a coordinate.
+ **********************************************************************/
 void startNavigateState() {
     state = STATE_NAVIGATE;
     isDone = FALSE;
@@ -242,6 +274,14 @@ void startNavigateState() {
     Timer_new(TIMER_NAVIGATION, 1); // let expire quickly
 }
 
+
+/**********************************************************************
+ * Function: startErrorState
+ * @return None
+ * @remark Begins the error state if navigation failed, such as when
+ *  GPS lost the fix, an obstruction was reached, or a person man have
+ *  grabbed on.
+ **********************************************************************/
 void startErrorState() {
     state = STATE_ERROR;
     isDone = FALSE;
@@ -250,6 +290,12 @@ void startErrorState() {
 #endif
 }
 
+
+/**********************************************************************
+ * Function: startIdleState
+ * @return None
+ * @remark Begins the idle state, which stops the motors.
+ **********************************************************************/
 void startIdleState() {
     state = STATE_IDLE;
 #ifdef USE_DRIVE
@@ -257,12 +303,23 @@ void startIdleState() {
 #endif
 }
 
+/**********************************************************************
+ * Function: applyGeocentricErrorCorrection
+ * @return None
+ * @remark Applies the error corrections to the given position (geocentric).
+ **********************************************************************/
 void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
     ecefPos->x += ecefError.x;
     ecefPos->y += ecefError.y;
     ecefPos->z += ecefError.z;
 }
 
+/**********************************************************************
+ * Function: updateHeading
+ * @return None
+ * @remark Drives the motors by calculating the needed heading and speed
+ *  to reach the desired location when navigating.
+ **********************************************************************/
 void updateHeading() {
 
     // Calculate NED position
@@ -297,9 +354,11 @@ void updateHeading() {
     float newHeading = (course.yaw < (lastHeading - HEADING_TOLERANCE)
         || course.yaw > (lastHeading + HEADING_TOLERANCE))?
             course.yaw : lastHeading;
+
 #ifdef USE_DRIVE
     Drive_forwardHeading(DISTANCE_TO_SPEED(course.d), (uint16_t)newHeading);
-#elif defined(DEBUG)
+#endif
+#ifdef DEBUG
     sprintf(debug, "\tDriving: speed=%.2f [m/s], heading=%.2f [deg]\n",
         DISTANCE_TO_SPEED(course.d),newHeading);
     DBPRINT(debug);
@@ -307,6 +366,9 @@ void updateHeading() {
     lastHeading = newHeading;
 }
 
+/*********************************************************************
+ *                           Test Harnesses                          *
+ *********************************************************************/
 
 //#define NAVIGATION_TEST
 #ifdef NAVIGATION_TEST
@@ -429,15 +491,16 @@ int main() {
 #define HEADING_DELAY   UPDATE_DELAY // delay for compass
 
 #define STARTUP_DELAY   3000 // time for gps to get stable fix
+#define RECEIVER_TIMEOUT_DELAY  1000 // time for receiver to be off for micro to take over
 
 // Override defines
 #define ENABLE_OUT_TRIS PORTX12_TRIS // J5-06
 #define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
-
 #define MICRO       0
 #define RECIEVER    1
 
-#define MAX_ERRORS 3 // max lost fixes and stuff
+// Others
+#define MAX_ERRORS 3 // max lost fixes and errors
 
 
 // ----------------------------- Prototypes -------------------------------
@@ -497,14 +560,14 @@ int main() {
     nedDesired.d = 0.0f;
 
     Navigation_setOrigin(&ecefOrigin, &geoOrigin);
-    DBPRINT("Navigation system initialized... waiting for lock.\n");
+    DBPRINT("System initialized... waiting for lock.\n");
 
     startInitialize();
 
     while (1) {
         switch (testState) {
+            // Initialize state for waiting for GPS lock
             case INITIALIZE:
-                // Waiting for lock
                 Navigation_runSM();
                 GPS_runSM();
                 if (overrideTriggered)
@@ -512,6 +575,7 @@ int main() {
                 if (Navigation_isReady())
                     startNavigate();
                 break;
+            // Navigate state for micro navigating to a position
             case NAVIGATE:
                 GPS_runSM();
                 Navigation_runSM();
@@ -521,81 +585,71 @@ int main() {
                 #endif
                 if (overrideTriggered)
                     startOverride();
-                // Start up delay before navigating
+
+                // Start up delay before navigating for stable fix
                 if (Timer_isExpired(TIMER_TEST) && !startDelayExpired) {
                     startDelayExpired = TRUE;
                     // Send navigate command
                     Navigation_gotoLocalCoordinate(&nedDesired, DESTINATION_TOLERANCE);
                 }
-                // Compass printing
+
+                // Compass debug printing
+                #ifdef DEBUG
                 if (Timer_isExpired(TIMER_TEST)) {
                     sprintf(debug, "\tCompass heading: %.1f\n", TiltCompass_getHeading());
                     DBPRINT(debug);
                     Timer_new(TIMER_TEST,HEADING_DELAY);
                 }
+                #endif
+                // Did we arrive?
                 if (Navigation_isDone()) {
                     DBPRINT("At desired point. Giving receiver control.\n");
                     startOverride();
                 }
+
+                // Check for navigation error and handle
+                if (Navigation_hasError())
+                    handleError();
+
                 break;
             case OVERRIDE:
-                // Do Nothing
+                // Reset timer if we keep seeing the receiver signal
+                if (overrideTriggered) {
+                    Timer_new(TIMER_TEST, RECEIVER_TIMEOUT_DELAY);   
+                    overrideTriggered = FALSE;
+                }
+
+                // Did receiver turn off and timeout occured?
+                if (Timer_isExpired(TIMER_TEST)) {
+                    giveMicroControl();
+                    startInitialize();
+                }
+
                 break;
         } // switch
-
-        // Check for navigation error
-        if (Navigation_hasError()) {
-            // An error occured, try and reinit to regain lock
-            DBPRINT("An error occured navigating... ");
-            errorsSeen++;
-            if (errorsSeen > MAX_ERRORS) {
-                // Go into override state and do nothing
-                startOverride();
-                DBPRINT("going into override.\n");
-            }
-            else {
-                startInitialize();
-#ifdef DEBUG
-                char lockStr[25] = (GPS_hasFix())? "" : " to regain lock";
-                sprintf(debug,"reinitialinge%s.\n",lockStr);
-                DBPRINT(debug);
-#endif
-            }
-            Navigation_clearError();
-        } // hasError
     } // while
-    // Wait for GPS fix
-    while (!Navigation_isReady()) {
-        Navigation_runSM();
-        GPS_runSM();
-    }
-    
-    while (!Timer_isExpired(TIMER_TEST)) {
-        asm("nop");
-    }
-
-
-
-
-    // Run SM's one last time
-    Navigation_runSM();
-#ifdef USE_DRIVE
-    Drive_runSM();
-#endif
-    
-    // Did we reach the desired point, or did an error occur ?
-    // TODO: add a GPS position check here, and add error printing for lost fix
-    
-
-    // Disable everything and let receiver have control
-    RECEIVER:
-    giveReceiverControl();
-    while (1) {
-        // Do nothing
-        asm("nop");
-    }
 
     return SUCCESS;
+}
+
+void handleError() {
+    // An error occured, try and reinit to regain lock
+    DBPRINT("An error occured navigating... ");
+    errorsSeen++;
+    if (errorsSeen > MAX_ERRORS) {
+        // Go into override state and do nothing
+        startOverride();
+        DBPRINT("going into override.\n");
+    }
+    else {
+        startInitialize();
+        #ifdef DEBUG
+        char lockStr[25] = (GPS_hasFix())? "" : " to regain lock";
+        sprintf(debug,"reinitialinge%s.\n",lockStr);
+        DBPRINT(debug);
+        #endif
+    }
+    Navigation_clearError();
 }
 
 void startInitialize() {
@@ -636,7 +690,7 @@ void initializeOverride(){
     uint16_t value = mPORTDRead();
     ConfigIntCN(CHANGE_INT_ON | CHANGE_INT_PRI_2);
     //CN2 J5-15
-    INTEnableSystemMultiVectoredInt();
+    // INTEnableSystemMultiVectoredInt(); // this happens in Board_init()
     DBPRINT("Override Function has been Initialized\n");
     //INTEnableInterrupts(); // handled in Board.c
     INTEnable(INT_CN,1);
