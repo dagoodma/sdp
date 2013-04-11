@@ -27,8 +27,8 @@
 
 #define DEBUG
 
-#define MOTOR_LEFT              RC_PORTY06  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
-#define MOTOR_RIGHT             RC_PORTY07  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
+#define MOTOR_LEFT              RC_PORTY07  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
+#define MOTOR_RIGHT             RC_PORTY06  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
 // #define RUDDER_TRIS          RC_TRISY06 // RB15 -- J7-12
 #define RUDDER                  RC_PORTV03 //RB2, J7-01
 
@@ -800,14 +800,16 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
 #define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
 #define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
 
-#define ACTUATOR_DELAY 2000 //ms
+#define ACTUATOR_DELAY 2500 //ms
 
-#define MAX_PULSE 2000
-#define MIN_PULSE 1000
+#define MAX_PULSE 1750
+#define MIN_PULSE 1250
 #define STOP_PULSE 1500
+#define MICRO 0
+#define RECIEVER 1
 
 
-void Override_init();
+//#define RECIEVE_CONTROL
 
 int main(){
     //Initializations
@@ -815,33 +817,79 @@ int main(){
     Serial_init();
     Timer_init();
     Drive_init();
+    ENABLE_OUT_TRIS = OUTPUT;  
+    ENABLE_OUT_LAT = MICRO;
+
+#ifdef RECIEVE_CONTROL
+    ENABLE_OUT_LAT = RECIEVER;
+    while(1){
+        ;
+    }
+#endif
+
     printf("Actuator Test Harness Initiated\n\n");
 
     //Test Rudder
-    setRudder(MAX_PULSE); //push to one direction
-    DELAY(ACTUATOR_DELAY);
-    setRudder(MIN_PULSE);
-    DELAY(ACTUATOR_DELAY);
+    printf("Centering rudder.\n");
     setRudder(STOP_PULSE);
-    DELAY(ACTUATOR_DELAY);
+    delayMillisecond(ACTUATOR_DELAY);
+
+    printf("Turning rudder left.\n");
+    setRudder(MAX_PULSE); //push to one direction
+    delayMillisecond(ACTUATOR_DELAY);
+    printf("Centering rudder.\n");
+    setRudder(STOP_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+
+    printf("Turning rudder right.\n");
+    setRudder(MIN_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    
+    printf("Centering rudder.\n");
+    setRudder(STOP_PULSE);
+    
 
     //Test Motor Left
-    setLeftMotor(MAX_PULSE);
-    DELAY(ACTUATOR_DELAY);
-    setLeftMotor(MIN_PULSE);
-    DELAY(ACTUATOR_DELAY);
+    printf("Testing left motor.\n");
     setLeftMotor(STOP_PULSE);
-    DELAY(ACTUATOR_DELAY);
+    delayMillisecond(ACTUATOR_DELAY);
+    printf("Driving left motor forward.\n");
+    setLeftMotor(MAX_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    setLeftMotor(STOP_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    printf("Driving left motor reverse.\n");
+    setLeftMotor(MIN_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    setLeftMotor(STOP_PULSE);
+   
 
     //Test Motor Right
-    setRightMotor(MAX_PULSE);
-    DELAY(ACTUATOR_DELAY);
-    setRightMotor(MIN_PULSE);
-    DELAY(ACTUATOR_DELAY);
+    printf("Testing right motor.\n");
     setRightMotor(STOP_PULSE);
-    DELAY(ACTUATOR_DELAY);
+    delayMillisecond(ACTUATOR_DELAY);
+    printf("Driving right motor forward.\n");
+    setRightMotor(MAX_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    setRightMotor(STOP_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    printf("Driving right motor reverse.\n");
+    setRightMotor(MIN_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    setRightMotor(STOP_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+
+//    // Remove this code
+//    setRightMotor(MAX_PULSE);
+//    setLeftMotor(MAX_PULSE);
+//    while (1)
+//        asm("nop");
+//
+//
+//    printf("\nDone with drive test.\n");
 
 }
+
 
 
 #endif
