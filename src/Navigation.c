@@ -402,7 +402,7 @@ int main() {
 #endif
 
 
-#define NAVIGATION_OVERRIDE_TEST
+//#define NAVIGATION_OVERRIDE_TEST
 #ifdef NAVIGATION_OVERRIDE_TEST
 
 #include "I2C.h"

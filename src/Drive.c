@@ -782,3 +782,66 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
 
 
 #endif
+
+
+#define ACTUATOR_TEST
+#ifdef ACTUATOR_TEST
+
+#include "I2C.h"
+#include "TiltCompass.h"
+#include "Ports.h"
+#include "Drive.h"
+
+// Pick the I2C_MODULE to initialize
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000 // (Hz)
+
+//Define and enable the Enable pin for override
+#define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
+
+#define ACTUATOR_DELAY 2000 //ms
+
+#define MAX_PULSE 2000
+#define MIN_PULSE 1000
+#define STOP_PULSE 1500
+
+
+void Override_init();
+
+int main(){
+    //Initializations
+    Board_init();
+    Serial_init();
+    Timer_init();
+    Drive_init();
+    printf("Actuator Test Harness Initiated\n\n");
+
+    //Test Rudder
+    setRudder(MAX_PULSE); //push to one direction
+    DELAY(ACTUATOR_DELAY);
+    setRudder(MIN_PULSE);
+    DELAY(ACTUATOR_DELAY);
+    setRudder(STOP_PULSE);
+    DELAY(ACTUATOR_DELAY);
+
+    //Test Motor Left
+    setLeftMotor(MAX_PULSE);
+    DELAY(ACTUATOR_DELAY);
+    setLeftMotor(MIN_PULSE);
+    DELAY(ACTUATOR_DELAY);
+    setLeftMotor(STOP_PULSE);
+    DELAY(ACTUATOR_DELAY);
+
+    //Test Motor Right
+    setRightMotor(MAX_PULSE);
+    DELAY(ACTUATOR_DELAY);
+    setRightMotor(MIN_PULSE);
+    DELAY(ACTUATOR_DELAY);
+    setRightMotor(STOP_PULSE);
+    DELAY(ACTUATOR_DELAY);
+
+}
+
+
+#endif
