@@ -800,14 +800,21 @@ void getCourseVector(CourseVector *course, LocalCoordinate *ned_cur,
     //ned_path.d = ned_des->d - ned_cur->d;
 
     // Calculate heading (in degrees from North) of path
-    course->yaw = atanf(fabsf(ned_path.e)/fabsf(ned_path.n))*RADIAN_TO_DEGREE;
-
-    if (ned_path.n < 0.0 && ned_path.e > 0.0)
+    if (ned_path.n > 0.0 && ned_path.e > 0.0) {
+        course->yaw = atanf(fabsf(ned_path.e)/fabsf(ned_path.n))*RADIAN_TO_DEGREE;
+    }
+    else if (ned_path.n < 0.0 && ned_path.e > 0.0) {
+        course->yaw = atanf(fabsf(ned_path.n)/fabsf(ned_path.e))*RADIAN_TO_DEGREE;
         course->yaw += 90.0;
-    else if (ned_path.n < 0.0 && ned_path.e < 0.0)
+    }
+    else if (ned_path.n < 0.0 && ned_path.e < 0.0) {
+        course->yaw = atanf(fabsf(ned_path.e)/fabsf(ned_path.n))*RADIAN_TO_DEGREE;
         course->yaw += 180.0;
-    else if (ned_path.n > 0.0 && ned_path.e < 0.0)
+    }
+    else if (ned_path.n > 0.0 && ned_path.e < 0.0) {
+        course->yaw = atanf(fabsf(ned_path.n)/fabsf(ned_path.e))*RADIAN_TO_DEGREE;
         course->yaw += 270.0;
+    }
 
     // Calculate distance to point
     course->d = sqrtf((ned_path.n)*(ned_path.n) + (ned_path.e)*(ned_path.e));
