@@ -25,7 +25,7 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-#define DEBUG
+//#define DEBUG
 
 #define MOTOR_LEFT              RC_PORTY07  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
 #define MOTOR_RIGHT             RC_PORTY06  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
@@ -56,7 +56,9 @@
 
 
 //PD Controller Param Settings for Rudder
-#define KP_Rudder 1.0f
+#define KP_Rudder 1.5f
+#define KD_Rudder 0.0f
+#define K_VELOCITY 0.5f
 
 //Velocity definitions
 #define VMAX 30 //30 MPH
@@ -104,7 +106,7 @@ static void startPivotState();
 static void startIdleState();
 static void startDriveState();
 static void startTrackState();
-
+static uint16_t getVelocityPulse();
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
@@ -137,7 +139,7 @@ void Drive_runSM() {
             break;
         case STATE_TRACK:
             if (Timer_isExpired(TIMER_DRIVE)) {
-                updateVelocity();
+                //updateVelocity();
                 updateHeadingRudder();
                 Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
             }
@@ -225,6 +227,10 @@ static void setRudder(uint16_t rc_time) {
     RC_setPulseTime(RUDDER, rc_time);
 }
 
+
+static uint16_t getVelocityPulse(){
+    return velocityPulse;
+}
 /**
  * Function: updateHeadingPivot
  * @return None
@@ -299,13 +305,21 @@ static void updateHeadingPivot() {
  * @author Darrel Deo
  * @date 2013.03.27  */
 static void updateHeadingRudder(){
-static uint32_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
-    //Obtain the current Heading and error, previous heading and error, and derivative term
+static uint32_t Umax = KP_Rudder*(180) + KD_Rudder*(180/HEADING_UPDATE_DELAY);
+static int16_t ErrorFlag = 0;
+//Obtain the current Heading and error, previous heading and error, and derivative term
     uint16_t currHeading = (uint16_t)(TiltCompass_getHeading());
     int16_t thetaError = desiredHeading - currHeading;
-
     //In the event that our current heading exceeds desired resulting in negative number
-
+    
+    uint16_t tempThetaError = thetaError;
+    if(tempThetaError <0) {
+        tempThetaError = tempThetaError * -1;
+    }
+    if(tempThetaError < 10){
+        ErrorFlag = 0;
+        setRudder(RC_STOP_PULSE);
+    }
     if ((thetaError > 0) && (thetaError < 180)){            //Desired leads heading and within heading's right hemisphere --> Turn right, theta stays the same
         pivotState = PIVOT_RIGHT;
     }else if((thetaError < 0) && (thetaError > -180)){      //Heading leads desired and within desired's right hemisphere --> Turn left, theta gets inverted
@@ -324,7 +338,11 @@ static uint32_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     }
 
     if(lastPivotState != pivotState){
+        if(lastPivotError > 100){
+            ErrorFlag = 1;
+        }
         lastPivotError = 0;
+        //implement a hard lock in that direction until desired point is
     }
     float thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
     if (thetaErrorDerivative < 0){
@@ -332,20 +350,61 @@ static uint32_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     }
 
     //Calculate Compensator's Ucommand
-    float Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
+    float Ucmd = KP_Rudder*(thetaError) + KD_Rudder*(thetaErrorDerivative);
     float Unormalized = Ucmd/Umax;
-    uint16_t forwardScaled = (uint16_t)(RC_STOP_PULSE + Unormalized*RC_FORWARD_RANGE);
-    uint16_t backwardScaled = (uint16_t)(RC_STOP_PULSE - Unormalized*RC_REVERSE_RANGE);
+//    uint16_t leftScaled = (uint16_t)(RC_STOP_PULSE + Unormalized*RC_FORWARD_RANGE);
+//    uint16_t rightScaled = (uint16_t)(RC_STOP_PULSE - Unormalized*RC_REVERSE_RANGE);
 
+    uint16_t leftScaled = (uint16_t)(Unormalized*RC_FORWARD_RANGE);
+    uint16_t rightScaled = (uint16_t)(Unormalized*RC_REVERSE_RANGE);
+    printf("UNORM: %d\n\n",leftScaled);
+//Added in to scale rudder for less actuation given how fast we are going
+    uint16_t currVelocity = getVelocityPulse();
+    printf("OUR CURRENT VELOCITY: %d\n\n",currVelocity);
+    uint16_t velocityComplement = (MAXPULSE - currVelocity);
+    printf("OUR VELOCITY COMPLEMENT: %d\n\n",velocityComplement);\
 
+    float velocityRatio = (float)velocityComplement/RC_ONEWAY_RANGE;
+    velocityRatio = K_VELOCITY*velocityRatio;
+    if(velocityRatio > 1){
+        velocityRatio = 1;
+    }
+
+    printf("VELOCITY RATIO: %f\n\n",velocityRatio);
+
+    leftScaled = RC_STOP_PULSE + leftScaled*(velocityRatio);
+    rightScaled = RC_STOP_PULSE - rightScaled*(velocityRatio);
+    printf("LEFT_SCALED: %d\nRIGHT_SCALED: %d\n\n",leftScaled,rightScaled);
+
+    //In the event that we are pulsing at MAXPULSE for motors we want to turn rudders slightly
+    if (currVelocity == (MAXPULSE)){
+        leftScaled = RC_STOP_PULSE + 100;
+        rightScaled = RC_STOP_PULSE - 100;
+    }
+
+if(ErrorFlag == 0){
     //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
     if(pivotState == PIVOT_RIGHT ){ //Turning Right
-        setRudder(forwardScaled);
-        printf("RC TIME Forward: %d\n\n",forwardScaled);
+        setRudder(rightScaled);
+        printf("RC TIME RIGHT: %d\n\n",rightScaled);
     }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
-        setRudder(backwardScaled);
-    printf("RC TIME Backward: %d\n\n",backwardScaled);
+        setRudder(leftScaled);
+        printf("RC TIME LEFT: %d\n\n",leftScaled);
     }
+
+}else if(ErrorFlag == 1){
+    if(lastPivotState == PIVOT_RIGHT){
+        rightScaled = RC_STOP_PULSE - RC_ONEWAY_RANGE/2;
+        setRudder(rightScaled);
+        printf("YOU PASSED 180, TURNING RIGHT UNTIL DESIRED HIT with Pulse %d\n\n",rightScaled);
+    }else if(lastPivotState == PIVOT_LEFT){
+        leftScaled = RC_STOP_PULSE + RC_ONEWAY_RANGE/2;
+        setRudder(leftScaled);
+        printf("YOU PASSED 180, TURNING LEFT UNTIL DESIRED HIT with Pulse  %d\n\n",leftScaled);
+    }
+    pivotState = lastPivotState;// To keep it turning in this direction.
+}
+
 #ifdef DEBUG
     printf("Unorm: %.2f\n\n", Unormalized);
 #endif
@@ -405,6 +464,11 @@ static void updateVelocity(){
 }
 
 
+
+
+
+
+/*TEST HARNESSES*/
 
 
 
@@ -478,13 +542,13 @@ int main() {
 
 #endif
 
-//#define PIVOT_TEST_DRIVE
+#define PIVOT_TEST_DRIVE
 #ifdef PIVOT_TEST_DRIVE
 //#define MOTOR_TEST
 #define RUDDER_TEST
 #define MICRO 0
 
-#define FINISH_DELAY      10000 // (ms)
+#define FINISH_DELAY      5000 // (ms)
 #define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
 #define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
 
@@ -512,11 +576,23 @@ int main() {
 #ifdef RUDDER_TEST
    Drive_forwardHeading(0.0, desiredHeading);
 #endif
-
+   int i = 0;
+   int velocity[] = {1600, 1600, 1600, 1600, 1600};
+   velocityPulse = velocity[i];
     Timer_new(TIMER_TEST,FINISH_DELAY);
     while (1) {
-      //  if (Timer_isExpired(TIMER_TEST))
-    //        break;
+        if (Timer_isExpired(TIMER_TEST))
+        {
+            i++;
+            if (i == 5){
+                i = 0;
+            }
+            velocityPulse = velocity[i];
+           printf("CURRENT VELOCITY: %d\n\n",velocityPulse);
+            Timer_new(TIMER_TEST,FINISH_DELAY);
+
+        }
+         
         Drive_runSM();
         TiltCompass_runSM();
     }
@@ -527,13 +603,6 @@ int main() {
 }
 
 #endif
-
-
-
-
-
-
-
 
 
 //#define RECIEVER_OVERRIDE_TEST
@@ -633,10 +702,6 @@ int main(){
 }
 
 #endif
-
-
-
-
 
 
 
@@ -787,7 +852,7 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
 #endif
 
 
-#define ACTUATOR_TEST
+//#define ACTUATOR_TEST
 #ifdef ACTUATOR_TEST
 
 #include "I2C.h"
