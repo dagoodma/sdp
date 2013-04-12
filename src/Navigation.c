@@ -467,7 +467,7 @@ int main() {
 // ---------------------------- Override Test ----------------------------
 // ************************************************************************
 
-//#define NAVIGATION_OVERRIDE_TEST
+#define NAVIGATION_OVERRIDE_TEST
 #ifdef NAVIGATION_OVERRIDE_TEST
 
 #define USE_COMPASS

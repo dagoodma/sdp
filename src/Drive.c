@@ -542,7 +542,7 @@ int main() {
 
 #endif
 
-#define PIVOT_TEST_DRIVE
+//#define PIVOT_TEST_DRIVE
 #ifdef PIVOT_TEST_DRIVE
 //#define MOTOR_TEST
 #define RUDDER_TEST
