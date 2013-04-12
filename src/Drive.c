@@ -27,6 +27,17 @@
 
 //#define DEBUG
 
+#if defined(DEBUG)
+char debug[255];
+#ifdef USE_LOGGER
+#define DBPRINT(msg) do { Logger_write(msg); } while(0)
+#else
+#define DBPRINT(msg) do { printf(msg); } while(0)
+#endif
+#else
+#define DBPRINT(msg)    ((int)0)
+#endif
+
 #define MOTOR_LEFT              RC_PORTY07  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
 #define MOTOR_RIGHT             RC_PORTY06  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
 // #define RUDDER_TRIS          RC_TRISY06 // RB15 -- J7-12
@@ -139,7 +150,7 @@ void Drive_runSM() {
             break;
         case STATE_TRACK:
             if (Timer_isExpired(TIMER_DRIVE)) {
-                //updateVelocity();
+                updateVelocity();
                 updateHeadingRudder();
                 Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
             }
@@ -290,7 +301,10 @@ static void updateHeadingPivot() {
         setRightMotor(forwardScaled);
         setLeftMotor(backwardScaled);
     }
-    printf("Unorm: %.2f\n\n", Unormalized);
+    #ifdef DEBUG
+    sprintf(debug,"Unorm: %.2f\n\n", Unormalized);
+    DBPRINT(debug);
+    #endif
     lastPivotError = thetaError;
     lastPivotState = pivotState;
 
@@ -357,12 +371,14 @@ static int16_t ErrorFlag = 0;
 
     uint16_t leftScaled = (uint16_t)(Unormalized*RC_FORWARD_RANGE);
     uint16_t rightScaled = (uint16_t)(Unormalized*RC_REVERSE_RANGE);
-    printf("UNORM: %d\n\n",leftScaled);
 //Added in to scale rudder for less actuation given how fast we are going
     uint16_t currVelocity = getVelocityPulse();
-    printf("OUR CURRENT VELOCITY: %d\n\n",currVelocity);
     uint16_t velocityComplement = (MAXPULSE - currVelocity);
-    printf("OUR VELOCITY COMPLEMENT: %d\n\n",velocityComplement);\
+    #ifdef DEBUG
+    printf("UNORM: %d\n\n",leftScaled);
+    printf("OUR CURRENT VELOCITY: %d\n\n",currVelocity);
+    printf("OUR VELOCITY COMPLEMENT: %d\n\n",velocityComplement);
+    #endif
 
     float velocityRatio = (float)velocityComplement/RC_ONEWAY_RANGE;
     velocityRatio = K_VELOCITY*velocityRatio;
@@ -370,11 +386,15 @@ static int16_t ErrorFlag = 0;
         velocityRatio = 1;
     }
 
+    #ifdef DEBUG
     printf("VELOCITY RATIO: %f\n\n",velocityRatio);
+    #endif
 
     leftScaled = RC_STOP_PULSE + leftScaled*(velocityRatio);
     rightScaled = RC_STOP_PULSE - rightScaled*(velocityRatio);
+    #ifdef DEBUG
     printf("LEFT_SCALED: %d\nRIGHT_SCALED: %d\n\n",leftScaled,rightScaled);
+    #endif
 
     //In the event that we are pulsing at MAXPULSE for motors we want to turn rudders slightly
     if (currVelocity == (MAXPULSE)){
@@ -386,28 +406,36 @@ if(ErrorFlag == 0){
     //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
     if(pivotState == PIVOT_RIGHT ){ //Turning Right
         setRudder(rightScaled);
+        #ifdef DEBUG
         printf("RC TIME RIGHT: %d\n\n",rightScaled);
+        #endif
     }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
         setRudder(leftScaled);
+        #ifdef DEBUG
         printf("RC TIME LEFT: %d\n\n",leftScaled);
+        #endif
     }
 
 }else if(ErrorFlag == 1){
     if(lastPivotState == PIVOT_RIGHT){
         rightScaled = RC_STOP_PULSE - RC_ONEWAY_RANGE/2;
         setRudder(rightScaled);
+        #ifdef DEBUG
         printf("YOU PASSED 180, TURNING RIGHT UNTIL DESIRED HIT with Pulse %d\n\n",rightScaled);
+        #endif
     }else if(lastPivotState == PIVOT_LEFT){
         leftScaled = RC_STOP_PULSE + RC_ONEWAY_RANGE/2;
         setRudder(leftScaled);
+        #ifdef DEBUG
         printf("YOU PASSED 180, TURNING LEFT UNTIL DESIRED HIT with Pulse  %d\n\n",leftScaled);
+        #endif
     }
     pivotState = lastPivotState;// To keep it turning in this direction.
 }
 
-#ifdef DEBUG
+    #ifdef DEBUG
     printf("Unorm: %.2f\n\n", Unormalized);
-#endif
+    #endif
     lastPivotError = thetaError;
     lastPivotState = pivotState;
 

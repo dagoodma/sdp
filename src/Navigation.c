@@ -733,6 +733,7 @@ void startOverride() {
     Navigation_runSM();
     Drive_runSM();
     giveReceiverControl();
+    Timer_new(TIMER_TEST, RECEIVER_TIMEOUT_DELAY);
 }
 
 
@@ -778,7 +779,7 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
     //might want to set a timer in here
 
     mCNClearIntFlag();
-    INTEnable(INT_CN,0);
+    //INTEnable(INT_CN,0);
 }
 
 
@@ -789,12 +790,12 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
  * @author David Goodman
  * @date 2013.04.01  */
 void giveReceiverControl() {
-    DBPRINT("Reciever has control\n\n");
+    DBPRINT("Reciever has control\n");
 #ifdef USE_DRIVE
     Drive_stop();
 #endif
     ENABLE_OUT_LAT = RECIEVER;      //Give control over to Reciever using the enable line
-    INTEnable(INT_CN,1); // may not need this for now
+    //INTEnable(INT_CN,1); // may not need this for now
 }
 
 /**
@@ -804,12 +805,12 @@ void giveReceiverControl() {
  * @author David Goodman
  * @date 2013.04.01  */
 void giveMicroControl() {
-    DBPRINT("Micro has control\n\n");
+    DBPRINT("Micro has control\n");
 #ifdef USE_DRIVE
     Drive_stop();
 #endif
     ENABLE_OUT_LAT = MICRO;      //Give control over to Reciever using the enable line
-    INTEnable(INT_CN,1); // may not need this for now
+    //INTEnable(INT_CN,1); // may not need this for now
 }
 
 
