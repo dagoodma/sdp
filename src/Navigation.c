@@ -470,21 +470,27 @@ int main() {
 #define NAVIGATION_OVERRIDE_TEST
 #ifdef NAVIGATION_OVERRIDE_TEST
 
+#define USE_COMPASS
+#define USE_OVERRIDE
+
+#ifdef USE_COMPASS
 #include "I2C.h"
 #include "TiltCompass.h"
+#endif
 #include "Ports.h"
+
 
 // Pick the I2C_MODULE to initialize
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  100000 // (Hz)
 
 // Location is BE1 parkinglot bench
-#define ECEF_X_ORIGIN -2707515.0f
-#define ECEF_Y_ORIGIN -4322155.0f
-#define ECEF_Z_ORIGIN 3817570.0f
-#define GEO_LAT_ORIGIN  37.00035586423005f
-#define GEO_LON_ORIGIN -122.06414669763035f
-#define GEO_ALT_ORIGIN 242.066f
+#define ECEF_X_ORIGIN -2707354.0f
+#define ECEF_Y_ORIGIN -4322242.0f
+#define ECEF_Z_ORIGIN 3817601.0f
+#define GEO_LAT_ORIGIN  37.0006376f
+#define GEO_LON_ORIGIN -122.0620921f
+#define GEO_ALT_ORIGIN 251.322f
 
 #define DESTINATION_TOLERANCE 2.2f // (m)
 
@@ -500,15 +506,23 @@ int main() {
 #define RECIEVER    1
 
 // Others
-#define MAX_ERRORS 3 // max lost fixes and errors
+#define MAX_ERRORS 3 // max nav. errors before receiver has control forever
 
 
 // ----------------------------- Prototypes -------------------------------
-void initializeOverride();
-void giveReceiverControl();
 
+void initializeDestination();
+void handleError();
+void startInitialize();
+void startNavigate();
+void startOverride();
+BOOL nearDesiredPoint();
+
+void initializeOverride();
+void giveMicroControl();
+void giveReceiverControl();
 // -------------------------- Global variables ----------------------------
-static BOOL overrideTriggered;
+static BOOL overrideTriggered = FALSE;
 static uint8_t errorsSeen = 0;
 static BOOL startDelayExpired = FALSE;
 
@@ -518,52 +532,43 @@ static enum {
     OVERRIDE = 0x3, // reciever has control
 } testState;
 
+
+static LocalCoordinate nedDesired;
+
 // ---------------------------- Entry point ------------------------------
 int main() {
-
-    ENABLE_OUT_TRIS = OUTPUT;  // Set pin to be an output (fed to the AND gates)
-    ENABLE_OUT_LAT = MICRO;    // Initialize control for Microcontroller
-
-    //Initializations
+    // --------------------------- Initialization ------------------------
     Board_init();
-#ifdef USE_LOGGER
+
+    #ifdef USE_LOGGER
     if (Logger_init() != SUCCESS)
         return FAILURE;
-#else
+    #else
     Serial_init();
-#endif
+    #endif
+
     Timer_init();
     GPS_init();
-#ifdef USE_DRIVE
+    #ifdef USE_DRIVE
     Drive_init();
-#endif
+    #endif
 
+    #ifdef USE_COMPASS
     I2C_init(I2C1, I2C_CLOCK_FREQ);
     TiltCompass_init();
+    #endif
     Navigation_init();
-    initializeOverride(); 
+    #ifdef USE_OVERRIDE
+    initializeOverride();
+    #endif
+    initializeDestination();
 
-    // Set command center reference point coordinates
-    GeodeticCoordinate geoOrigin;
-    geoOrigin.lat = GEO_LAT_ORIGIN;
-    geoOrigin.lon = GEO_LON_ORIGIN;
-    geoOrigin.alt = GEO_ALT_ORIGIN;
-    GeocentricCoordinate ecefOrigin;
-    ecefOrigin.x = ECEF_X_ORIGIN;
-    ecefOrigin.y = ECEF_Y_ORIGIN;
-    ecefOrigin.z = ECEF_Z_ORIGIN;
-
-    // Make desired point the origin
-    LocalCoordinate nedDesired;
-    nedDesired.n = 0.0f;
-    nedDesired.e = 0.0f;
-    nedDesired.d = 0.0f;
-
-    Navigation_setOrigin(&ecefOrigin, &geoOrigin);
-    DBPRINT("System initialized... waiting for lock.\n");
-
+    // Start out in intiialize state
     startInitialize();
 
+    DBPRINT("System initialized... waiting for lock.\n");
+
+    // ----------------------------- State machine --------------------------
     while (1) {
         switch (testState) {
             // Initialize state for waiting for GPS lock
@@ -579,7 +584,9 @@ int main() {
             case NAVIGATE:
                 GPS_runSM();
                 Navigation_runSM();
+                #ifdef USE_COMPASS
                 TiltCompass_runSM();
+                #endif
                 #ifdef USE_DRIVE
                 Drive_runSM();
                 #endif
@@ -590,11 +597,16 @@ int main() {
                 if (Timer_isExpired(TIMER_TEST) && !startDelayExpired) {
                     startDelayExpired = TRUE;
                     // Send navigate command
+                    #ifdef DEBUG
+                    sprintf(debug, "Navigating to desired point to within %.2f m.\n",
+                        DESTINATION_TOLERANCE);
+                    DBPRINT(debug);
                     Navigation_gotoLocalCoordinate(&nedDesired, DESTINATION_TOLERANCE);
+                    #endif
                 }
 
-                // Compass debug printing
-                #ifdef DEBUG
+                // Compass heading printing
+                #if  defined(DEBUG) && defined(USE_COMPASS)
                 if (Timer_isExpired(TIMER_TEST)) {
                     sprintf(debug, "\tCompass heading: %.1f\n", TiltCompass_getHeading());
                     DBPRINT(debug);
@@ -603,8 +615,14 @@ int main() {
                 #endif
                 // Did we arrive?
                 if (Navigation_isDone()) {
-                    DBPRINT("At desired point. Giving receiver control.\n");
+                    DBPRINT("At desired point. ");
+                    #ifdef USE_OVERRIDE
+                    DBPRINT("Giving receiver control.\n");
                     startOverride();
+                    #else
+                    DBPRINT("Ending test.\n");
+                    goto EXIT;
+                    #endif
                 }
 
                 // Check for navigation error and handle
@@ -619,23 +637,67 @@ int main() {
                     overrideTriggered = FALSE;
                 }
 
-                // Did receiver turn off and timeout occured?
-                if (Timer_isExpired(TIMER_TEST)) {
-                    giveMicroControl();
-                    startInitialize();
+                /* Did receiver turn off, timeout occured, and we moved away
+                   from the desired point? */
+                if (Timer_isExpired(TIMER_TEST) && !nearDesiredPoint()) {
+                    DBPRINTF("Receiver timed out. Restarting test.\n");
+                    startInitialize(); // gives micro control
                 }
 
                 break;
         } // switch
     } // while
-
+    EXIT:
     return SUCCESS;
+}
+
+// ---------------- Override test helper functions --------------------------
+
+BOOL nearDesiredPoint() {
+    // Calculate NED position
+    GeocentricCoordinate ecefMine;
+    GPS_getPosition(&ecefMine);
+    if (useErrorCorrection)
+        applyGeocentricErrorCorrection(&ecefMine);
+
+    LocalCoordinate nedMine;
+    convertECEF2NED(&nedMine, &ecefMine, &ecefOrigin, &llaOrigin);
+
+    // Determine needed course
+    CourseVector course;
+    getCourseVector(&course, &nedMine, &nedDestination);
+
+    // Check tolerance
+    if (course.d < destinationTolerance) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void initializeDestination() {
+    // Set command center reference point coordinates
+    GeodeticCoordinate geoOrigin;
+    geoOrigin.lat = GEO_LAT_ORIGIN;
+    geoOrigin.lon = GEO_LON_ORIGIN;
+    geoOrigin.alt = GEO_ALT_ORIGIN;
+    GeocentricCoordinate ecefOrigin;
+    ecefOrigin.x = ECEF_X_ORIGIN;
+    ecefOrigin.y = ECEF_Y_ORIGIN;
+    ecefOrigin.z = ECEF_Z_ORIGIN;
+
+    // Make desired point the origin
+    nedDesired.n = 0.0f;
+    nedDesired.e = 0.0f;
+    nedDesired.d = 0.0f;
+
+    Navigation_setOrigin(&ecefOrigin, &geoOrigin);
 }
 
 void handleError() {
     // An error occured, try and reinit to regain lock
     DBPRINT("An error occured navigating... ");
     errorsSeen++;
+    Navigation_clearError();
     if (errorsSeen > MAX_ERRORS) {
         // Go into override state and do nothing
         startOverride();
@@ -644,23 +706,23 @@ void handleError() {
     else {
         startInitialize();
         #ifdef DEBUG
-        char lockStr[25] = (GPS_hasFix())? "" : " to regain lock";
-        sprintf(debug,"reinitialinge%s.\n",lockStr);
+        char *lockStr = (GPS_hasFix())? "" : " to regain lock";
+        sprintf(debug,"reinitializing%s.\n",lockStr);
         DBPRINT(debug);
         #endif
     }
-    Navigation_clearError();
 }
 
+
+// -------------------------- Start test states ---------------------------
 void startInitialize() {
     testState = INITIALIZE;
-
     giveMicroControl();
 }
 
 void startNavigate() {
     testState = NAVIGATE;
-    DBPRINT("Navigation and GPS are ready.\n\n");
+    DBPRINT("Navigation and GPS are ready.\n");
     Timer_new(TIMER_TEST,STARTUP_DELAY); // let gps get good fix
     startDelayExpired = FALSE;
 }
@@ -668,11 +730,11 @@ void startNavigate() {
 void startOverride() {
     testState = OVERRIDE;
     Navigation_cancel();
-    Drive_stop();
     Navigation_runSM();
     Drive_runSM();
     giveReceiverControl();
 }
+
 
 /**
  * Function: initializeOverride()
@@ -681,13 +743,18 @@ void startOverride() {
  * @author Darrel Deo
  * @date 2013.04.01  */
 void initializeOverride(){
+
+    // Initialize override board pins to give Micro control
+    ENABLE_OUT_TRIS = OUTPUT;  // Set pin to be an output (fed to the AND gates)
+    ENABLE_OUT_LAT = MICRO;    // Initialize control for Microcontroller
+
     overrideTriggered = FALSE;
 
     //Enable the interrupt for the override feature
     mPORTBSetPinsDigitalIn(BIT_0); // CN2
 
     mCNOpen(CN_ON | CN_IDLE_CON , CN2_ENABLE , CN_PULLUP_DISABLE_ALL);
-    uint16_t value = mPORTDRead();
+    uint16_t value = mPORTDRead(); //?
     ConfigIntCN(CHANGE_INT_ON | CHANGE_INT_PRI_2);
     //CN2 J5-15
     // INTEnableSystemMultiVectoredInt(); // this happens in Board_init()
@@ -703,7 +770,7 @@ void initializeOverride(){
  * @author Darrel Deo
  * @date 2013.04.01  */
 void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
-    mPORTDRead();
+    mPORTDRead(); //?
 
     overrideTriggered = TRUE;
 
@@ -722,7 +789,7 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
  * @author David Goodman
  * @date 2013.04.01  */
 void giveReceiverControl() {
-    DBPRINT("Reciever Control\n\n");
+    DBPRINT("Reciever has control\n\n");
 #ifdef USE_DRIVE
     Drive_stop();
 #endif
