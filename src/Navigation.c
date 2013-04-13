@@ -484,13 +484,18 @@ int main() {
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  100000 // (Hz)
 
-// Location is BE1 parkinglot bench
-#define ECEF_X_ORIGIN -3359392.0f
-#define ECEF_Y_ORIGIN -5366552.0f
-#define ECEF_Z_ORIGIN 769573.0f
-#define GEO_LAT_ORIGIN  36.97657819924821f
-#define GEO_LON_ORIGIN -122.04603418707848f
-#define GEO_ALT_ORIGIN 78.638f
+// --------------- Center of west lake -------------
+#define ECEF_X_ORIGIN -2706922.0f
+#define ECEF_Y_ORIGIN -4324246.0f
+#define ECEF_Z_ORIGIN 3815364.0f
+#define GEO_LAT_ORIGIN  36.9765781f
+#define GEO_LON_ORIGIN -122.0460341f
+#define GEO_ALT_ORIGIN 78.64f
+
+// --------------- Center of baskin circle ----------
+//..
+
+///
 
 #define DESTINATION_TOLERANCE 3.2f // (m)
 
