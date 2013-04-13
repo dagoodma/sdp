@@ -70,6 +70,7 @@
 #define TIMER_BAROMETER2        14 // remove the blocking code!!
 #define TIMER_TEST              15
 #define TIMER_DELAY             16
+#define TIMER_TEST3             17
 
 
 #ifdef Board_H_PRIVATE_INCLUDE

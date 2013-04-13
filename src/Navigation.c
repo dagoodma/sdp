@@ -34,7 +34,7 @@
 #define HEADING_TOLERANCE   10 // (deg)
 
 // proportionally scale speed (m/s) for a given distance (m)
-#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.015f + 0.1f) // test speeds
+#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.012f + 0.1f) // test speeds
 //#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.065f + 0.22f)
 
 #if defined(DEBUG)
@@ -485,14 +485,14 @@ int main() {
 #define I2C_CLOCK_FREQ  100000 // (Hz)
 
 // Location is BE1 parkinglot bench
-#define ECEF_X_ORIGIN -2707354.0f
-#define ECEF_Y_ORIGIN -4322242.0f
-#define ECEF_Z_ORIGIN 3817601.0f
-#define GEO_LAT_ORIGIN  37.0006376f
-#define GEO_LON_ORIGIN -122.0620921f
-#define GEO_ALT_ORIGIN 251.322f
+#define ECEF_X_ORIGIN -3359392.0f
+#define ECEF_Y_ORIGIN -5366552.0f
+#define ECEF_Z_ORIGIN 769573.0f
+#define GEO_LAT_ORIGIN  36.97657819924821f
+#define GEO_LON_ORIGIN -122.04603418707848f
+#define GEO_ALT_ORIGIN 78.638f
 
-#define DESTINATION_TOLERANCE 2.2f // (m)
+#define DESTINATION_TOLERANCE 3.2f // (m)
 
 #define HEADING_DELAY   UPDATE_DELAY // delay for compass
 
