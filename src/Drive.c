@@ -25,7 +25,7 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-//#define DEBUG
+#define DEBUG
 
 #if defined(DEBUG)
 char debug[255];
@@ -48,6 +48,9 @@ char debug[255];
 #define RC_REVERSE_RANGE        (RC_STOP_PULSE - MINPULSE)
 #define RC_ONEWAY_RANGE        500
 
+#define RC_MOTOR_MAX            1600
+#define RC_MOTOR_MIN            1400
+
 #define RC_RUDDER_LEFT_MAX      MAXPULSE
 #define RC_RUDDER_RIGHT_MAX     MINPULSE
 
@@ -69,7 +72,10 @@ char debug[255];
 //PD Controller Param Settings for Rudder
 #define KP_Rudder 1.5f
 #define KD_Rudder 0.0f
-#define K_VELOCITY 0.5f
+#define K_VELOCITY_RUDDER 0.00f // how much velocity effects rudder changes
+
+// P Controller param for velocity controller
+#define KP_VELOCITY 0.01f;
 
 //Velocity definitions
 #define VMAX 30 //30 MPH
@@ -80,6 +86,8 @@ char debug[255];
 //defines for Override feature
 #define MICRO_CONTROL            0
 #define RECIEVER_CONTROL         1
+
+#define DEBUG_PRINT_DELAY   1000
 
 //Override test variables
 static uint16_t OVERRIDE_TRIGGERED = FALSE;
@@ -128,6 +136,10 @@ BOOL Drive_init() {
     uint16_t RC_pins = MOTOR_LEFT  | MOTOR_RIGHT | RUDDER;
     RC_init(RC_pins);
     Timer_new(TIMER_DRIVE, 1);
+#ifdef DEBUG
+    Timer_new(TIMER_TEST2,1);
+    Timer_new(TIMER_TEST3,1);
+#endif
 
     state = STATE_IDLE;
 }
@@ -227,11 +239,19 @@ static void startTrackState() {
 }
 
 static void setLeftMotor(uint16_t rc_time) {
-    RC_setPulseTime(MOTOR_LEFT, rc_time);
+    uint16_t rc_time_use = (rc_time > RC_MOTOR_MAX)?
+            RC_MOTOR_MAX : rc_time;
+    rc_time_use = (rc_time_use < RC_MOTOR_MIN)?
+        RC_MOTOR_MIN : rc_time_use;
+    RC_setPulseTime(MOTOR_LEFT, rc_time_use);
 }
 
 static void setRightMotor(uint16_t rc_time) {
-    RC_setPulseTime(MOTOR_RIGHT, rc_time);
+    uint16_t rc_time_use = (rc_time > RC_MOTOR_MAX)?
+            RC_MOTOR_MAX : rc_time;
+    rc_time_use = (rc_time_use < RC_MOTOR_MIN)?
+        RC_MOTOR_MIN : rc_time_use;
+    RC_setPulseTime(MOTOR_RIGHT, rc_time_use);
 }
 
 static void setRudder(uint16_t rc_time) {
@@ -374,44 +394,48 @@ static int16_t ErrorFlag = 0;
 //Added in to scale rudder for less actuation given how fast we are going
     uint16_t currVelocity = getVelocityPulse();
     uint16_t velocityComplement = (MAXPULSE - currVelocity);
-    #ifdef DEBUG
+    #ifdef DEBUG_VERBOSE
     printf("UNORM: %d\n\n",leftScaled);
     printf("OUR CURRENT VELOCITY: %d\n\n",currVelocity);
     printf("OUR VELOCITY COMPLEMENT: %d\n\n",velocityComplement);
     #endif
 
     float velocityRatio = (float)velocityComplement/RC_ONEWAY_RANGE;
-    velocityRatio = K_VELOCITY*velocityRatio;
-    if(velocityRatio > 1){
-        velocityRatio = 1;
+    velocityRatio = (float)K_VELOCITY_RUDDER*velocityRatio;
+    if(velocityRatio > 1.0f){
+        velocityRatio = 1.0f;
     }
 
-    #ifdef DEBUG
+    #ifdef DEBUG_VERBOSE
     printf("VELOCITY RATIO: %f\n\n",velocityRatio);
     #endif
 
-    leftScaled = RC_STOP_PULSE + leftScaled*(velocityRatio);
-    rightScaled = RC_STOP_PULSE - rightScaled*(velocityRatio);
-    #ifdef DEBUG
-    printf("LEFT_SCALED: %d\nRIGHT_SCALED: %d\n\n",leftScaled,rightScaled);
-    #endif
+    leftScaled = (uint16_t)(RC_STOP_PULSE + (float)leftScaled*(velocityRatio));
+    rightScaled = (uint16_t)(RC_STOP_PULSE - (float)rightScaled*(velocityRatio));
+   
 
     //In the event that we are pulsing at MAXPULSE for motors we want to turn rudders slightly
     if (currVelocity == (MAXPULSE)){
         leftScaled = RC_STOP_PULSE + 100;
         rightScaled = RC_STOP_PULSE - 100;
     }
+    #ifdef DEBUG
+    if (Timer_isExpired(TIMER_TEST2)) {
+        printf("LEFT_SCALED: %d\nRIGHT_SCALED: %d\n\n",leftScaled,rightScaled);
+        Timer_new(TIMER_TEST2,DEBUG_PRINT_DELAY);
+    }
+    #endif
 
 if(ErrorFlag == 0){
     //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
     if(pivotState == PIVOT_RIGHT ){ //Turning Right
         setRudder(rightScaled);
-        #ifdef DEBUG
+        #ifdef DEBUG_VERBOSE
         printf("RC TIME RIGHT: %d\n\n",rightScaled);
         #endif
     }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
         setRudder(leftScaled);
-        #ifdef DEBUG
+        #ifdef DEBUG_VERBOSE
         printf("RC TIME LEFT: %d\n\n",leftScaled);
         #endif
     }
@@ -420,20 +444,20 @@ if(ErrorFlag == 0){
     if(lastPivotState == PIVOT_RIGHT){
         rightScaled = RC_STOP_PULSE - RC_ONEWAY_RANGE/2;
         setRudder(rightScaled);
-        #ifdef DEBUG
+        #ifdef DEBUG_VERBOSE
         printf("YOU PASSED 180, TURNING RIGHT UNTIL DESIRED HIT with Pulse %d\n\n",rightScaled);
         #endif
     }else if(lastPivotState == PIVOT_LEFT){
         leftScaled = RC_STOP_PULSE + RC_ONEWAY_RANGE/2;
         setRudder(leftScaled);
-        #ifdef DEBUG
+        #ifdef DEBUG_VERBOSE
         printf("YOU PASSED 180, TURNING LEFT UNTIL DESIRED HIT with Pulse  %d\n\n",leftScaled);
         #endif
     }
     pivotState = lastPivotState;// To keep it turning in this direction.
 }
 
-    #ifdef DEBUG
+    #ifdef DEBUG_VERBOSE
     printf("Unorm: %.2f\n\n", Unormalized);
     #endif
     lastPivotError = thetaError;
@@ -462,7 +486,7 @@ static void updateVelocity(){
         errorVelocity = -errorVelocity;
     }
     float proportionVelocity = errorVelocity/VRANGE;
-    float proportionPulse = proportionVelocity * (RC_ONEWAY_RANGE);
+    float proportionPulse = proportionVelocity * (RC_ONEWAY_RANGE) * KP_VELOCITY;
 
     // Here we add the the amount of propotional pulse to the pulse already
     //We need to get the current pulse width for the motors
@@ -487,6 +511,12 @@ static void updateVelocity(){
         velocityPulse = RC_STOP_PULSE;
     }
 
+#ifdef DEBUG
+    if (Timer_isExpired(TIMER_TEST3)) {
+        printf("Velocity pulse: %d\n",velocityPulse);
+        Timer_new(TIMER_TEST3,DEBUG_PRINT_DELAY);
+    }
+#endif
     setRightMotor(velocityPulse);
     setLeftMotor(velocityPulse);
 }
@@ -931,14 +961,14 @@ int main(){
     delayMillisecond(ACTUATOR_DELAY);
 
     printf("Turning rudder left.\n");
-    setRudder(MAX_PULSE); //push to one direction
+    setRudder(MAXPULSE); //push to one direction
     delayMillisecond(ACTUATOR_DELAY);
     printf("Centering rudder.\n");
     setRudder(STOP_PULSE);
     delayMillisecond(ACTUATOR_DELAY);
 
     printf("Turning rudder right.\n");
-    setRudder(MIN_PULSE);
+    setRudder(MINPULSE);
     delayMillisecond(ACTUATOR_DELAY);
     
     printf("Centering rudder.\n");
