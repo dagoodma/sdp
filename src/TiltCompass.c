@@ -22,6 +22,8 @@
 #define SLAVE_READ_ADDRESS          0x33
 #define SLAVE_WRITE_ADDRESS         0x32
 #define SLAVE_DEGREE_ADDRESS        0x50
+
+//#define USE_ACCUMULATOR
 #define ACCUMULATOR_LENGTH          1
 #define STARTUP_DELAY               500
 #define REFRESH_DELAY               200
@@ -75,7 +77,7 @@ void TiltCompass_init() {
  * @remark 
  **********************************************************************/
 float TiltCompass_getHeading(){
-    return finalHeading - MAGNETIC_NORTH_OFFSET;
+    return finalHeading;
 }
 
 
@@ -86,6 +88,7 @@ float TiltCompass_getHeading(){
  **********************************************************************/
 void TiltCompass_runSM() {
     if(Timer_isExpired(TIMER_TILTCOMPASS)) {
+#ifdef USE_ACCUMULATOR
         // Taking reading from the magnetometer and accumulate it
         uint16_t heading = readSensor();
         if(heading < 0020)
@@ -101,15 +104,23 @@ void TiltCompass_runSM() {
             #else
             finalHeading = (float)headingAccumulator;
             #endif
-            finalHeading = HEADING_1E1_TO_DEGREES(finalHeading);
-            if(finalHeading > 360.0)
-                finalHeading -= 360.0;
-            if(finalHeading < 0.5 || finalHeading > 359.5)
-                finalHeading = 0;
+            finalHeading = HEADING_1E1_TO_DEGREES(finalHeading) - MAGNETIC_NORTH_OFFSET;
+            if(finalHeading > 360.0f)
+                finalHeading -= 360.0f;
+            if (finalHeading < 0.0f)
+                finalHeading += 360.0f;
+            if (finalHeading < 0.5f || finalHeading > 359.5f)
+                finalHeading = 0.0f;
 
-            headingAccumulator = 0.0;
+            headingAccumulator = 0.0f;
             accumulatorIndex = 0;
         }
+#else
+        finalHeading = HEADING_1E1_TO_DEGREES(readSensor());
+        finalHeading -= MAGNETIC_NORTH_OFFSET;
+        if (finalHeading < 0.0f)
+                finalHeading += 360.0f;
+#endif
     }
 }
     
