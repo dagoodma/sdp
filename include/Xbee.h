@@ -64,7 +64,7 @@ void Xbee_runSM();
  * @date February 1st 2013
  **********************************************************************/
 void Xbee_recieved_message_heartbeat(mavlink_xbee_heartbeat_t* packet);
-
+//#define XBEE_TEST
 #ifdef XBEE_TEST
 /**********************************************************************
  * Function: void Xbee_message_data_test();

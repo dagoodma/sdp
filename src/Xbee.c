@@ -73,6 +73,7 @@ uint8_t Xbee_init(){
     UART_init(XBEE_UART_ID,XBEE_BAUD_RATE);
 #ifdef XBEE_RESET_FACTORY
     if( Xbee_programMode() == FAILURE){
+        while(1);
         return FAILURE;
     }
 #endif
