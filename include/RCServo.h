@@ -41,10 +41,10 @@
 #define RC_PORTY07 0x008
 #define RC_PORTZ08 0x010
 #define RC_PORTZ09 0x020
-#define RC_PORTV03 0x040
-#define RC_PORTV04 0x080
-#define RC_PORTW07 0x100
-#define RC_PORTW08 0x200
+#define RC_PORTV03 0x040 //RB2, J7-01
+#define RC_PORTV04 0x080 //RB3, J7-02
+#define RC_PORTW07 0x100 //RB15, J7-12
+#define RC_PORTW08 0x200 //RB14, J7-11
 
 
 

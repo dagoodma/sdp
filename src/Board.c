@@ -48,6 +48,12 @@ unsigned int Board_GetPBClock()
     return PB_CLOCK;
 }
 
+void delayMillisecond(int ms) {
+    Timer_new(TIMER_DELAY, ms);
+    while (!Timer_isExpired(TIMER_DELAY))
+        asm("nop");
+}
+
 
 
 //#define BOARD_TEST

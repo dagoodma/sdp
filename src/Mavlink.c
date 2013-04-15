@@ -9,64 +9,75 @@ static int packet_drops = 0;
 static mavlink_message_t msg;
 static mavlink_status_t status;
 
+
+static uint8_t newMsgID = 0;
+static BOOL hasNewMsg = FALSE;
+
 #define MAV_NUMBER 15 // defines the MAV number, arbitrary
 #define COMP_ID 15
 
 void Mavlink_recieve(uint8_t uart_id){
-    while(UART_isReceiveEmpty(uart_id) == FALSE){
+    while(UART_isReceiveEmpty(uart_id) == FALSE) {
         uint8_t c = UART_getChar(uart_id);
         //if a message can be deciphered
         if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
-            switch(msg.msgid){
+            switch(msg.msgid) {
                 case MAVLINK_MSG_ID_XBEE_HEARTBEAT:
-                {
+                {//REQUIRED DO NOT REMOVE -- JOHN
                     mavlink_xbee_heartbeat_t data;
                     mavlink_msg_xbee_heartbeat_decode(&msg, &data);
                     //call outside function to handle data
                     Xbee_recieved_message_heartbeat(&data);
-                }break;
+                    break;
+                }//REQUIRED DO NOT REMOVE -- JOHN
+                case MAVLINK_MSG_ID_MAVLINK_ACK:
+                {//REQUIRED DO NOT REMOVE -- JOHN
+                    mavlink_mavlink_ack_t data;
+                    mavlink_msg_mavlink_ack_decode(&msg, &data);
+                    Mavlink_recieve_ACK(&data);
+                }//REQUIRED DO NOT REMOVE -- JOHN
+                    break;
 #ifdef XBEE_TEST
                 case MAVLINK_MSG_ID_TEST_DATA:
-                {
                     mavlink_test_data_t data;
                     mavlink_msg_test_data_decode(&msg, &data);
                     //call outside function to handle data
                     Xbee_message_data_test(&data);
-                }break;
+                    break;
 #endif
-                case MAVLINK_MSG_ID_START_RESCUE:
-                {
-                    mavlink_start_rescue_t data;
-                    mavlink_msg_start_rescue_decode(&msg, &data);
-                    if(data.ack == TRUE){
-                        Mavlink_send_ACK(XBEE_UART_ID, messageName_start_rescue);
+                case MAVLINK_MSG_ID_RESET:
+                    //mavlink_reset_t newMessage.resetData;
+                    mavlink_msg_reset_decode(&msg, &(newMessage.resetData));
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
+                    break;
+                case MAVLINK_MSG_ID_GPS_GEO:
+                    //mavlink_gps_geo_t newMessage.gpsGeodeticData;
+                    mavlink_msg_gps_geo_decode(&msg, &(newMessage.gpsGeodeticData));
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
+                    break;
+                case MAVLINK_MSG_ID_GPS_ECEF:
+                    //mavlink_gps_ecef_t newMessage.gpsGeocentricData;
+                    mavlink_msg_gps_ecef_decode(&msg, &(newMessage.gpsGeocentricData));
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
+                    break;
+                case MAVLINK_MSG_ID_GPS_NED:
+                    //mavlink_gps_ned_t newMessage.gpsLocalData;
+                    mavlink_msg_gps_ned_decode(&msg,&(newMessage.gpsLocalData));
+                    if (newMessage.gpsLocalData.ack == TRUE) {
+                        Mavlink_send_ACK(XBEE_UART_ID, MAVLINK_MSG_ID_GPS_NED);
                     }
-                    Compas_recieve_start_rescue(&data);
-                }break;
-                case MAVLINK_MSG_ID_MAVLINK_ACK:
-                {
-                    mavlink_mavlink_ack_t data;
-                    mavlink_msg_mavlink_ack_decode(&msg, &data);
-                    Mavlink_recieve_ACK(&data);
-                }break;
-                case MAVLINK_MSG_ID_GPS_GEO_ORIGIN:
-                {
-                    mavlink_gps_geo_origin_t data;
-                    mavlink_msg_gps_geo_origin_decode(&msg,&data);
-                    Mavlink_recieve_GPS_geo_origin(&data);
-                }break;
-                case MAVLINK_MSG_ID_GPS_NED_ERROR:
-                {
-                    mavlink_gps_ned_error_t data;
-                    mavlink_msg_gps_ned_error_decode(&msg,&data);
-                    Mavlink_recieve_GPS_ned_error(&data);
-                }break;
-                case MAVLINK_MSG_ID_BAROMETER_DATA:
-                {
-                    mavlink_barometer_data_t data;
-                    mavlink_msg_barometer_data_decode(&msg, &data);
-                    Mavlink_recieve_barometer_data(&data);
-                }break;
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
+                    break;
+                case MAVLINK_MSG_ID_BAROMETER:
+                    //mavlink_barometer_t newMessage.barometerData;
+                    mavlink_msg_barometer_decode(&msg, &(newMessage.barometerData));
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
+                    break;
             }
         }
     }
@@ -91,10 +102,10 @@ void Mavlink_send_xbee_heartbeat(uint8_t uart_id, uint8_t data){
     UART_putString(uart_id, buf, length);
 }
 
-void Mavlink_send_start_rescue(uint8_t uart_id, uint8_t ack, uint8_t status, float latitude, float longitude){
+void Mavlink_send_gps_ned(uint8_t uart_id, uint8_t ack, uint8_t status, float north, float east, float down){
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-    mavlink_msg_start_rescue_pack(MAV_NUMBER, COMP_ID, &msg, ack, status, latitude, longitude);
+    mavlink_msg_gps_ned_pack(MAV_NUMBER, COMP_ID, &msg, ack, status, north, east, down);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
     UART_putString(uart_id, buf, length);
     if(ack == TRUE){
@@ -108,26 +119,26 @@ void Mavlink_send_start_rescue(uint8_t uart_id, uint8_t ack, uint8_t status, flo
     }
 }
 
-void Mavlink_send_gps_geo_origin(uint8_t uart_id, float latitude, float longitude){
+void Mavlink_send_gps_ecef(uint8_t uart_id, uint8_t status, float latitude, float x, float y, float z){
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-    mavlink_msg_gps_geo_origin_pack(MAV_NUMBER, COMP_ID, &msg, FALSE, latitude, longitude);
+    mavlink_msg_gps_ecef_pack(MAV_NUMBER, COMP_ID, &msg, FALSE, status, x, y, z);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
     UART_putString(uart_id, buf, length);
 }
 
-void Mavlink_send_gps_ned_error(uint8_t uart_id, float north, float east){
+void Mavlink_send_gps_geo(uint8_t uart_id, float north, float east){
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-    mavlink_msg_gps_ned_error_pack(MAV_NUMBER, COMP_ID, &msg, FALSE, north, east);
+    mavlink_msg_gps_geo_pack(MAV_NUMBER, COMP_ID, &msg, FALSE, north, east);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
     UART_putString(uart_id, buf, length);
 }
 
-void Mavlink_send_barometer_data(uint8_t uart_id, int32_t temp_C, float temp_F, int32_t pressure, float altitude){
+void Mavlink_send_barometer(uint8_t uart_id, int32_t temp_C, float altitude){
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-    mavlink_msg_barometer_data_pack(MAV_NUMBER, COMP_ID, &msg, FALSE, temp_C, temp_F, pressure, altitude);
+    mavlink_msg_barometer_pack(MAV_NUMBER, COMP_ID, &msg, FALSE, temp_C, altitude);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
     UART_putString(uart_id, buf, length);
 }
@@ -157,31 +168,14 @@ void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet){
     }
 }
 
-void Compas_recieve_start_rescue(mavlink_start_rescue_t* packet){
-    printf("North: %f East: %f\n",packet->north,packet->east);
+BOOL Mavlink_hasNewMessage() {
+    uint8_t result = hasNewMsg;
+    hasNewMsg = FALSE;
+    return result;
 }
 
-void Mavlink_recieve_GPS_geo_origin(mavlink_gps_geo_origin_t* packet){
-    //What would you like this function to do?
-    //most likely store these values to a global variable and set a flag to read them. etc....
-    float lat, longi;
-    lat = packet->latitiude;
-    longi = packet->longitude;
-}
-
-void Mavlink_recieve_GPS_ned_error(mavlink_gps_ned_error_t* packet){
-    //What would you like this function to do?
-    //most likely store these values to a global variable and set a flag to read them. etc....
-    float North, East;
-    North = packet->north;
-    East = packet->east;
-}
-
-void Mavlink_recieve_barometer_data(mavlink_barometer_data_t* packet){
-    their_barometer.altitude = packet->altitude;
-    their_barometer.pressure = packet->pressure;
-    their_barometer.temp_C = packet->temperature_celcius;
-    their_barometer.temp_F = packet->temperature_fahrenheit;
+int Mavlink_getNewMessageID() {
+    return newMsgID;
 }
 
 

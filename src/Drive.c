@@ -18,7 +18,7 @@
 #include "GPS.h"
 #include "Drive.h"
 #include "I2C.h"
-#include "Magnetometer.h"
+#include "TiltCompass.h"
 
 
 /***********************************************************************
@@ -27,36 +27,79 @@
 
 #define DEBUG
 
-#define MOTOR_LEFT              RC_PORTY06  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
-#define MOTOR_RIGHT             RC_PORTY07  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
+#if defined(DEBUG)
+char debug[255];
+#ifdef USE_LOGGER
+#define DBPRINT(msg) do { Logger_write(msg); } while(0)
+#else
+#define DBPRINT(msg) do { printf(msg); } while(0)
+#endif
+#else
+#define DBPRINT(msg)    ((int)0)
+#endif
+
+#define MOTOR_LEFT              RC_PORTY07  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
+#define MOTOR_RIGHT             RC_PORTY06  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
 // #define RUDDER_TRIS          RC_TRISY06 // RB15 -- J7-12
-// #define RUDDER                  RC_LATY06 // RB15
+#define RUDDER                  RC_PORTV03 //RB2, J7-01
 
-#define RC_FULL_STOP            1500
-#define RC_FORWARD_RANGE        (MAXPULSE - RC_FULL_STOP)
-#define RC_REVERSE_RANGE        (RC_FULL_STOP - MINPULSE)
+#define RC_STOP_PULSE            1500
+#define RC_FORWARD_RANGE        (MAXPULSE - RC_STOP_PULSE)
+#define RC_REVERSE_RANGE        (RC_STOP_PULSE - MINPULSE)
+#define RC_ONEWAY_RANGE        500
 
-#define SPEED_TO_RCTIME(s)      (5*s + RC_FULL_STOP) // PWM 0-100 to 1500-2000
-#define SPEED_TO_RCTIME_BACKWARD(s)      (RC_FULL_STOP - 5*s) // PWM 0-100 to 1500-2000
+#define RC_MOTOR_MAX            1600
+#define RC_MOTOR_MIN            1400
 
-#define HEADING_UPDATE_DELAY    250 // (ms)
+#define RC_RUDDER_LEFT_MAX      MAXPULSE
+#define RC_RUDDER_RIGHT_MAX     MINPULSE
+
+#define PERCENT_TO_RCPULSE(s)      (5*s + RC_STOP_PULSE) // PWM 0-100 to 1500-2000
+#define PERCENT_TO_RCPULSE_BACKWARD(s)      (RC_STOP_PULSE - 5*s) // PWM 0-100 to 1500-2000
+
+#define HEADING_UPDATE_DELAY    100 // (ms)
 
 //PD Controller Parameter Settings
 #define KP 1.0f
 #define KD 1.0f
-#define velocity 5
 #define FORWARD_RANGE (11 - 8.18)
 #define BACKWARD_RANGE (8.18 - 5.5)
 #define FULL_FORWARD 11
 #define FULL_BACKWARD 5.5
 #define FULL_STOP 8.18
+
+
+//PD Controller Param Settings for Rudder
+#define KP_Rudder 1.5f
+#define KD_Rudder 0.0f
+#define K_VELOCITY_RUDDER 0.00f // how much velocity effects rudder changes
+
+// P Controller param for velocity controller
+#define KP_VELOCITY 0.01f;
+
+//Velocity definitions
+#define VMAX 30 //30 MPH
+#define VMIN 0  //0 MPH
+#define VRANGE (VMAX - VMIN)
+
+
+//defines for Override feature
+#define MICRO_CONTROL            0
+#define RECIEVER_CONTROL         1
+
+#define DEBUG_PRINT_DELAY   1000
+
+//Override test variables
+static uint16_t OVERRIDE_TRIGGERED = FALSE;
+static uint16_t CONTROL_MASTER = MICRO_CONTROL;
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 static enum {
-    STATE_IDLE  = 0x0,   // Motors are stopped
-    STATE_DRIVE = 0x1, // Driving forward.
-    STATE_PIVOT = 0x2, // Pivoting in place.
+    STATE_IDLE  = 0x0,      // Motors are stopped
+    STATE_DRIVE = 0x1,      // Driving forward.
+    STATE_PIVOT = 0x2,      // Pivoting in place.
+    STATE_TRACK = 0x3,      // Tracking a desired  velocity and heading
 } state;
 
 static enum {
@@ -67,17 +110,22 @@ static enum {
 uint16_t lastPivotState, lastPivotError;
 
 uint16_t desiredHeading = 0; // (degrees) from North
- 
+float desiredVelocity = 0.0f;  // (m/s) desired velocity
+uint16_t velocityPulse = RC_STOP_PULSE; // (ms) velocity RC servo pulse time
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
-static void updateHeading();
+static void updateHeadingPivot();
+static void updateHeadingRudder();
+static void updateVelocity();
 static void setLeftMotor(uint16_t rc_time);
 static void setRightMotor(uint16_t rc_time);
+static void setRudder(uint16_t rc_time);
 static void startPivotState();
 static void startIdleState();
 static void startDriveState();
-
+static void startTrackState();
+static uint16_t getVelocityPulse();
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
@@ -85,11 +133,18 @@ static void startDriveState();
 BOOL Drive_init() {
 
 
-    uint16_t RC_pins = MOTOR_LEFT  | MOTOR_RIGHT;
+    uint16_t RC_pins = MOTOR_LEFT  | MOTOR_RIGHT | RUDDER;
     RC_init(RC_pins);
+    Timer_new(TIMER_DRIVE, 1);
+#ifdef DEBUG
+    Timer_new(TIMER_TEST2,1);
+    Timer_new(TIMER_TEST3,1);
+#endif
 
     state = STATE_IDLE;
 }
+
+
    
 void Drive_runSM() {
     switch (state) {
@@ -101,23 +156,37 @@ void Drive_runSM() {
             break;
         case STATE_PIVOT:
             if (Timer_isExpired(TIMER_DRIVE)) {
-                updateHeading();
+                updateHeadingPivot();
                 Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
             }
             break;
+        case STATE_TRACK:
+            if (Timer_isExpired(TIMER_DRIVE)) {
+                updateVelocity();
+                updateHeadingRudder();
+                Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
+            }
+            break;
+
     } // switch
 }
 
 void Drive_forward(uint8_t speed) {
     startDriveState();
-    uint16_t rc_time = SPEED_TO_RCTIME(speed);
+    uint16_t rc_time = PERCENT_TO_RCPULSE(speed);
     setLeftMotor(rc_time);
     setRightMotor(rc_time);
 }
 
+void Drive_forwardHeading(float speed, uint16_t angle) {
+    startTrackState();
+    desiredVelocity = speed;
+    desiredHeading = angle;
+}
+
 void Drive_backward(uint8_t speed){
     startDriveState();
-    uint16_t rc_time = SPEED_TO_RCTIME_BACKWARD(speed);
+    uint16_t rc_time = PERCENT_TO_RCPULSE_BACKWARD(speed);
     setLeftMotor(rc_time);
     setRightMotor(rc_time);
 }
@@ -127,11 +196,11 @@ void Drive_stop() {
     startIdleState();
 }
 
-void Drive_setHeading(uint16_t angle) {
+void Drive_pivot(uint16_t angle) {
     startPivotState();
     
     // For now, just stop and pivot in place.
-    Drive_stop();
+    //Drive_stop();
 
     Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
     desiredHeading = angle;
@@ -150,37 +219,64 @@ static void startPivotState() {
 
 static void startIdleState() {
     state = STATE_IDLE;
-    setLeftMotor(RC_FULL_STOP);
-    setRightMotor(RC_FULL_STOP);
+    velocityPulse = RC_STOP_PULSE;
+    desiredVelocity = 0.0f;
+    setLeftMotor(RC_STOP_PULSE);
+    setRightMotor(RC_STOP_PULSE);
 }
 
 static void startDriveState() {
     state = STATE_DRIVE;
 }
 
+static void startTrackState() {
+    state = STATE_TRACK;
+    setLeftMotor(RC_STOP_PULSE);
+    setRightMotor(RC_STOP_PULSE);
+
+    lastPivotState = 0;
+    lastPivotError = 0;
+}
+
 static void setLeftMotor(uint16_t rc_time) {
-    RC_setPulseTime(MOTOR_LEFT, rc_time);
+    uint16_t rc_time_use = (rc_time > RC_MOTOR_MAX)?
+            RC_MOTOR_MAX : rc_time;
+    rc_time_use = (rc_time_use < RC_MOTOR_MIN)?
+        RC_MOTOR_MIN : rc_time_use;
+    RC_setPulseTime(MOTOR_LEFT, rc_time_use);
 }
 
 static void setRightMotor(uint16_t rc_time) {
-    RC_setPulseTime(MOTOR_RIGHT, rc_time);
+    uint16_t rc_time_use = (rc_time > RC_MOTOR_MAX)?
+            RC_MOTOR_MAX : rc_time;
+    rc_time_use = (rc_time_use < RC_MOTOR_MIN)?
+        RC_MOTOR_MIN : rc_time_use;
+    RC_setPulseTime(MOTOR_RIGHT, rc_time_use);
 }
 
+static void setRudder(uint16_t rc_time) {
+    RC_setPulseTime(RUDDER, rc_time);
+}
+
+
+static uint16_t getVelocityPulse(){
+    return velocityPulse;
+}
 /**
- * Function: updateHeading
+ * Function: updateHeadingPivot
  * @return None
  * @remark Determines the heading error using the magnetometer, and
  *  adjusts the motors/rudder accordingly.
  * @author David Goodman
  * @author Darrel Deo
  * @date 2013.03.27  */
-static void updateHeading() {
+static void updateHeadingPivot() {
 //Get error and change PWM Signal based on values
 
-    static uint16_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
+    static uint32_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
     //Obtain the current Heading and error, previous heading and error, and derivative term
-    uint16_t currHeading = Magnetometer_getDegree();
-    uint16_t thetaError = desiredHeading - currHeading;
+    int16_t currHeading = (int)TiltCompass_getHeading();
+    int16_t thetaError = desiredHeading - currHeading;
 
     //In the event that our current heading exceeds desired resulting in negative number
     
@@ -204,16 +300,16 @@ static void updateHeading() {
     if(lastPivotState != pivotState){
         lastPivotError = 0;
     }
-    uint16_t thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
+    float thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
     if (thetaErrorDerivative < 0){
         thetaErrorDerivative = -1*thetaErrorDerivative;
     }
 
     //Calculate Compensator's Ucommand
-    uint16_t Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
-    uint16_t Unormalized = Ucmd/Umax;
-    uint16_t forwardScaled = RC_FULL_STOP + Unormalized*RC_FORWARD_RANGE;
-    uint16_t backwardScaled = RC_FULL_STOP - Unormalized*RC_REVERSE_RANGE;
+    float Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
+    float Unormalized = Ucmd/Umax;
+    uint16_t forwardScaled = RC_STOP_PULSE + Unormalized*RC_FORWARD_RANGE;
+    uint16_t backwardScaled = RC_STOP_PULSE - Unormalized*RC_REVERSE_RANGE;
 
 
     //uint16_t pwmSpeed = Ucmd*velocity;
@@ -225,11 +321,213 @@ static void updateHeading() {
         setRightMotor(forwardScaled);
         setLeftMotor(backwardScaled);
     }
-
+    #ifdef DEBUG
+    sprintf(debug,"Unorm: %.2f\n\n", Unormalized);
+    DBPRINT(debug);
+    #endif
     lastPivotError = thetaError;
     lastPivotState = pivotState;
 
 }
+
+
+/**
+ * Function: updateHeadingRudder
+ * @return None
+ * @remark Determines the heading error using the magnetometer, and
+ *  adjusts the rudder accordingly.
+ * @author Darrel Deo
+ * @date 2013.03.27  */
+static void updateHeadingRudder(){
+static uint32_t Umax = KP_Rudder*(180) + KD_Rudder*(180/HEADING_UPDATE_DELAY);
+static int16_t ErrorFlag = 0;
+//Obtain the current Heading and error, previous heading and error, and derivative term
+    uint16_t currHeading = (uint16_t)(TiltCompass_getHeading());
+    int16_t thetaError = desiredHeading - currHeading;
+    //In the event that our current heading exceeds desired resulting in negative number
+    
+    uint16_t tempThetaError = thetaError;
+    if(tempThetaError <0) {
+        tempThetaError = tempThetaError * -1;
+    }
+    if(tempThetaError < 10){
+        ErrorFlag = 0;
+        setRudder(RC_STOP_PULSE);
+    }
+    if ((thetaError > 0) && (thetaError < 180)){            //Desired leads heading and within heading's right hemisphere --> Turn right, theta stays the same
+        pivotState = PIVOT_RIGHT;
+    }else if((thetaError < 0) && (thetaError > -180)){      //Heading leads desired and within desired's right hemisphere --> Turn left, theta gets inverted
+        pivotState = PIVOT_LEFT;
+        thetaError = thetaError*-1;
+    }else if((thetaError > 0)&&(thetaError >= 180)){        //Desired leads heading and within heading's left hemisphere--> Turn left, theta is complement
+        pivotState = PIVOT_LEFT;
+        thetaError = 360 - thetaError;
+    }else if((thetaError < 0)&&(thetaError <= -180)){       //Heading leads desired and within desired's left hemisphere --> Turn right, theta is inverted and complement
+        pivotState = PIVOT_RIGHT;
+        thetaError = 360 - (-thetaError);
+    }
+    if (lastPivotState == 0) {
+        lastPivotState = pivotState;
+        lastPivotError = thetaError;
+    }
+
+    if(lastPivotState != pivotState){
+        if(lastPivotError > 100){
+            ErrorFlag = 1;
+        }
+        lastPivotError = 0;
+        //implement a hard lock in that direction until desired point is
+    }
+    float thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
+    if (thetaErrorDerivative < 0){
+        thetaErrorDerivative = -1*thetaErrorDerivative;
+    }
+
+    //Calculate Compensator's Ucommand
+    float Ucmd = KP_Rudder*(thetaError) + KD_Rudder*(thetaErrorDerivative);
+    float Unormalized = Ucmd/Umax;
+//    uint16_t leftScaled = (uint16_t)(RC_STOP_PULSE + Unormalized*RC_FORWARD_RANGE);
+//    uint16_t rightScaled = (uint16_t)(RC_STOP_PULSE - Unormalized*RC_REVERSE_RANGE);
+
+    uint16_t leftScaled = (uint16_t)(Unormalized*RC_FORWARD_RANGE);
+    uint16_t rightScaled = (uint16_t)(Unormalized*RC_REVERSE_RANGE);
+//Added in to scale rudder for less actuation given how fast we are going
+    uint16_t currVelocity = getVelocityPulse();
+    uint16_t velocityComplement = (MAXPULSE - currVelocity);
+    #ifdef DEBUG_VERBOSE
+    printf("UNORM: %d\n\n",leftScaled);
+    printf("OUR CURRENT VELOCITY: %d\n\n",currVelocity);
+    printf("OUR VELOCITY COMPLEMENT: %d\n\n",velocityComplement);
+    #endif
+
+    float velocityRatio = (float)velocityComplement/RC_ONEWAY_RANGE;
+    velocityRatio = (float)K_VELOCITY_RUDDER*velocityRatio;
+    if(velocityRatio > 1.0f){
+        velocityRatio = 1.0f;
+    }
+
+    #ifdef DEBUG_VERBOSE
+    printf("VELOCITY RATIO: %f\n\n",velocityRatio);
+    #endif
+
+    leftScaled = (uint16_t)(RC_STOP_PULSE + (float)leftScaled*(velocityRatio));
+    rightScaled = (uint16_t)(RC_STOP_PULSE - (float)rightScaled*(velocityRatio));
+   
+
+    //In the event that we are pulsing at MAXPULSE for motors we want to turn rudders slightly
+    if (currVelocity == (MAXPULSE)){
+        leftScaled = RC_STOP_PULSE + 100;
+        rightScaled = RC_STOP_PULSE - 100;
+    }
+    #ifdef DEBUG
+    if (Timer_isExpired(TIMER_TEST2)) {
+        printf("LEFT_SCALED: %d\nRIGHT_SCALED: %d\n\n",leftScaled,rightScaled);
+        Timer_new(TIMER_TEST2,DEBUG_PRINT_DELAY);
+    }
+    #endif
+
+if(ErrorFlag == 0){
+    //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
+    if(pivotState == PIVOT_RIGHT ){ //Turning Right
+        setRudder(rightScaled);
+        #ifdef DEBUG_VERBOSE
+        printf("RC TIME RIGHT: %d\n\n",rightScaled);
+        #endif
+    }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
+        setRudder(leftScaled);
+        #ifdef DEBUG_VERBOSE
+        printf("RC TIME LEFT: %d\n\n",leftScaled);
+        #endif
+    }
+
+}else if(ErrorFlag == 1){
+    if(lastPivotState == PIVOT_RIGHT){
+        rightScaled = RC_STOP_PULSE - RC_ONEWAY_RANGE/2;
+        setRudder(rightScaled);
+        #ifdef DEBUG_VERBOSE
+        printf("YOU PASSED 180, TURNING RIGHT UNTIL DESIRED HIT with Pulse %d\n\n",rightScaled);
+        #endif
+    }else if(lastPivotState == PIVOT_LEFT){
+        leftScaled = RC_STOP_PULSE + RC_ONEWAY_RANGE/2;
+        setRudder(leftScaled);
+        #ifdef DEBUG_VERBOSE
+        printf("YOU PASSED 180, TURNING LEFT UNTIL DESIRED HIT with Pulse  %d\n\n",leftScaled);
+        #endif
+    }
+    pivotState = lastPivotState;// To keep it turning in this direction.
+}
+
+    #ifdef DEBUG_VERBOSE
+    printf("Unorm: %.2f\n\n", Unormalized);
+    #endif
+    lastPivotError = thetaError;
+    lastPivotState = pivotState;
+
+}
+
+/**
+ * Function: updateVelocity()
+ * @return None
+ * @remark Velocity controller
+ * @author Darrel Deo
+ * @date 2013.04.06
+ * @note Keep track of global variable Velocity. You must set to 1500 if you wish to stop, or macro STOP */
+static void updateVelocity(){
+    //Get velocity, check if it matches the desired
+    //If not, use a propotional ratio to the min/max pulse of the RCServo library
+
+
+    //Obtain current velocity
+    float currentVelocity = GPS_getVelocity();
+    float errorVelocity = desiredVelocity - currentVelocity;
+
+    //Correct the error value incase it is negative
+    if(errorVelocity < 0.0){
+        errorVelocity = -errorVelocity;
+    }
+    float proportionVelocity = errorVelocity/VRANGE;
+    float proportionPulse = proportionVelocity * (RC_ONEWAY_RANGE) * KP_VELOCITY;
+
+    // Here we add the the amount of propotional pulse to the pulse already
+    //We need to get the current pulse width for the motors
+    
+    //If we need to go faster
+    if((desiredVelocity - currentVelocity) > 0.0 ){
+        velocityPulse = (uint16_t)(velocityPulse + proportionPulse);
+    }else if((desiredVelocity - currentVelocity) < 0.0){
+        velocityPulse = (uint16_t)(velocityPulse - proportionPulse);
+    }else if(errorVelocity == 0.0){
+        //velocityPulse = velocityPulse;
+    }
+
+    //Now check if we exceed our maximums and minimums
+    if(velocityPulse > MAXPULSE){
+        velocityPulse = MAXPULSE;
+    }else if(velocityPulse < MINPULSE){
+        velocityPulse =  MINPULSE;
+    }
+
+    if(desiredVelocity == 0.0){
+        velocityPulse = RC_STOP_PULSE;
+    }
+
+#ifdef DEBUG
+    if (Timer_isExpired(TIMER_TEST3)) {
+        printf("Velocity pulse: %d\n",velocityPulse);
+        Timer_new(TIMER_TEST3,DEBUG_PRINT_DELAY);
+    }
+#endif
+    setRightMotor(velocityPulse);
+    setLeftMotor(velocityPulse);
+}
+
+
+
+
+
+
+/*TEST HARNESSES*/
+
 
 
 //#define DRIVE_TEST
@@ -302,36 +600,59 @@ int main() {
 
 #endif
 
-//#define PIVOT_TEST
-#ifdef PIVOT_TEST
+//#define PIVOT_TEST_DRIVE
+#ifdef PIVOT_TEST_DRIVE
+//#define MOTOR_TEST
+#define RUDDER_TEST
+#define MICRO 0
 
-#define FINISH_DELAY      10000 // (ms)
-
+#define FINISH_DELAY      5000 // (ms)
+#define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
 
 I2C_MODULE      I2C_BUS_ID = I2C1;
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  80000 // (Hz)
 
 int main() {
+    ENABLE_OUT_TRIS = OUTPUT;            //Set Enable output pin to be an output, fed to the AND gates
+    ENABLE_OUT_LAT = MICRO;             //Initialize control to that of Microcontroller
     Board_init();
     Serial_init();
     Timer_init();
     Drive_init();
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
-    Magnetometer_init();
-    //Magnetometer_init();
+    TiltCompass_init();
     printf("Boat initialized.\n");
 
     Drive_stop();
     DELAY(5);
-    Drive_setHeading(0);
+#ifdef MOTOR_TEST
+    Drive_pivot(0);
+#endif
 
+#ifdef RUDDER_TEST
+   Drive_forwardHeading(0.0, desiredHeading);
+#endif
+   int i = 0;
+   int velocity[] = {1600, 1600, 1600, 1600, 1600};
+   velocityPulse = velocity[i];
     Timer_new(TIMER_TEST,FINISH_DELAY);
     while (1) {
         if (Timer_isExpired(TIMER_TEST))
-            break;
+        {
+            i++;
+            if (i == 5){
+                i = 0;
+            }
+            velocityPulse = velocity[i];
+           printf("CURRENT VELOCITY: %d\n\n",velocityPulse);
+            Timer_new(TIMER_TEST,FINISH_DELAY);
+
+        }
+         
         Drive_runSM();
-        Magnetometer_runSM();
+        TiltCompass_runSM();
     }
 
     Drive_stop();
@@ -342,14 +663,7 @@ int main() {
 #endif
 
 
-
-
-
-
-
-
-
-#define RECIEVER_OVERRIDE_TEST
+//#define RECIEVER_OVERRIDE_TEST
 #ifdef RECIEVER_OVERRIDE_TEST
 
 //Define the Enable input pin which should  be interrupt driven in the future.
@@ -362,8 +676,7 @@ int main() {
 #define RECIEVER_DELAY      3000 // (ms)
 #define MICRO 0
 #define RECIEVER 1
-#define OUTPUT 0
-#define INPUT 1
+
 
 int main(){
     //Initializations
@@ -445,5 +758,264 @@ int main(){
 
 
 }
+
+#endif
+
+
+
+//#define RECIEVER_OVERRIDE_INTERRUPT_TEST
+#ifdef RECIEVER_OVERRIDE_INTERRUPT_TEST
+
+
+#define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
+
+#define RECIEVER_DELAY      3000 // (ms)
+#define MICRO 0
+#define RECIEVER 1
+
+void Override_init();
+
+
+int main(){
+    //Initializations
+    Board_init();
+    Serial_init();
+    Timer_init();
+    Drive_init();
+    int spd = 10;
+
+
+    ENABLE_OUT_TRIS = OUTPUT;            //Set Enable output pin to be an output, fed to the AND gates
+    ENABLE_OUT_LAT = MICRO;             //Initialize control to that of Microcontroller
+
+    enum{
+        MICRO_FORWARD = 0x01,         //State where Microcontroller is driving forward
+        MICRO_STOP = 0x02,        //State where Micro is driving backwards
+        MICRO_LIMBO = 0x03,
+        RECIEVER_STATE = 0x04,        //Reciever has taken over state
+    }test_state;
+
+    printf("Boat is Initialized\n");
+
+    //Initialize the state to begin at forward
+    test_state = MICRO_FORWARD;
+    Drive_stop();
+    Timer_new(TIMER_TEST,RECIEVER_DELAY);
+    int state_flag = 0;
+    Override_init();
+
+
+    while(1){
+
+        switch(test_state){
+            case MICRO_FORWARD:
+                printf("STATE: MICRO_FORWARD\n\n\n");
+                Drive_forward(spd); //The input param is a pwm duty cycle percentage that gets translated to a RC Servo time pulse
+                Timer_new(TIMER_TEST2,RECIEVER_DELAY);
+                test_state = MICRO_STOP;
+
+                break;
+            case MICRO_STOP:
+                if(Timer_isExpired(TIMER_TEST2)){
+                    printf("STATE: MICRO_STOP\n\n\n:");
+                    Drive_stop();
+                    Timer_new(TIMER_TEST2,RECIEVER_DELAY);
+                    test_state = MICRO_LIMBO;
+                }
+
+                break;
+            case MICRO_LIMBO:
+                if(Timer_isExpired(TIMER_TEST2)){
+                    printf("STATE: MICRO_LIMBO\n\n\n");
+                    test_state = MICRO_FORWARD;
+                }
+                Drive_stop();
+                break;
+            case RECIEVER_STATE:
+                ;
+                break;
+
+        }
+        //If we got a pulse, control to reciever.
+        if (OVERRIDE_TRIGGERED == TRUE){
+            printf("Reciever Control\n\n");
+            Timer_new(TIMER_TEST, 1000);    //Set timer that is greater than the pulsewidth of the CH3 signal(54Hz)
+            OVERRIDE_TRIGGERED = FALSE;     //Re-init to zero so that we know when our pulse is triggered again.
+            test_state = RECIEVER_STATE;    //Set state equal to reciever where we do nothing autonomous
+            ENABLE_OUT_LAT = RECIEVER;      //Give control over to Reciever using the enable line
+            INTEnable(INT_CN,1);
+        }
+        if (Timer_isExpired(TIMER_TEST)){   //Reciever gave up control
+            printf("Micro Has Control\n\n");
+            Timer_clear(TIMER_TEST);        //Clear timer so that it doesn't keep registering an expired signal
+            test_state = MICRO_LIMBO;     //Set state equal to forward for regular function
+            OVERRIDE_TRIGGERED = FALSE;     //Set Override to false to be sure that we don't trigger falsely
+            ENABLE_OUT_LAT = MICRO;         //Give Control back to microcontroller using enable line
+            Timer_new(TIMER_TEST2, RECIEVER_DELAY);
+        }
+
+    }
+
+
+}
+
+
+
+
+/**
+ * Function: Override_init()
+ * @return None
+ * @remark Initializes interrupt for Override functionality
+ * @author Darrel Deo
+ * @date 2013.04.01  */
+void Override_init(){
+    //Enable the interrupt for the override feature
+
+    mPORTBSetPinsDigitalIn(BIT_0); // CN2
+
+    mCNOpen(CN_ON | CN_IDLE_CON , CN2_ENABLE , CN_PULLUP_DISABLE_ALL);
+    uint16_t value = mPORTDRead();
+    ConfigIntCN(CHANGE_INT_ON | CHANGE_INT_PRI_2);
+    //CN2 J5-15
+    INTEnableSystemMultiVectoredInt();
+    printf("Override Function has been Initialized\n\n");
+    //INTEnableInterrupts();
+    INTEnable(INT_CN,1);
+}
+
+
+
+/**
+ * Function: Interrupt Service Routine
+ * @return None
+ * @remark ISR that is called when CH3 pings external interrupt
+ * @author Darrel Deo
+ * @date 2013.04.01  */
+void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
+    mPORTDRead();
+    Serial_putChar('Y');
+
+    //Change top-level state machine so it is in state Reciever
+    CONTROL_MASTER = RECIEVER_CONTROL;
+    OVERRIDE_TRIGGERED = TRUE;
+    //Clear the interrupt flag that was risen for the external interrupt
+    //might want to set a timer in here
+
+    mCNClearIntFlag();
+    INTEnable(INT_CN,0);
+}
+
+
+#endif
+
+
+//#define ACTUATOR_TEST
+#ifdef ACTUATOR_TEST
+
+#include "I2C.h"
+#include "TiltCompass.h"
+#include "Ports.h"
+#include "Drive.h"
+
+// Pick the I2C_MODULE to initialize
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000 // (Hz)
+
+//Define and enable the Enable pin for override
+#define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
+
+#define ACTUATOR_DELAY 2500 //ms
+
+#define MAX_PULSE 1750
+#define MIN_PULSE 1250
+#define STOP_PULSE 1500
+#define MICRO 0
+#define RECIEVER 1
+
+
+//#define RECIEVE_CONTROL
+
+int main(){
+    //Initializations
+    Board_init();
+    Serial_init();
+    Timer_init();
+    Drive_init();
+    ENABLE_OUT_TRIS = OUTPUT;  
+    ENABLE_OUT_LAT = MICRO;
+
+#ifdef RECIEVE_CONTROL
+    ENABLE_OUT_LAT = RECIEVER;
+    while(1){
+        ;
+    }
+#endif
+
+    printf("Actuator Test Harness Initiated\n\n");
+
+    //Test Rudder
+    printf("Centering rudder.\n");
+    setRudder(STOP_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+
+    printf("Turning rudder left.\n");
+    setRudder(MAXPULSE); //push to one direction
+    delayMillisecond(ACTUATOR_DELAY);
+    printf("Centering rudder.\n");
+    setRudder(STOP_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+
+    printf("Turning rudder right.\n");
+    setRudder(MINPULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    
+    printf("Centering rudder.\n");
+    setRudder(STOP_PULSE);
+    
+
+    //Test Motor Left
+    printf("Testing left motor.\n");
+    setLeftMotor(STOP_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    printf("Driving left motor forward.\n");
+    setLeftMotor(MAX_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    setLeftMotor(STOP_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    printf("Driving left motor reverse.\n");
+    setLeftMotor(MIN_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    setLeftMotor(STOP_PULSE);
+   
+
+    //Test Motor Right
+    printf("Testing right motor.\n");
+    setRightMotor(STOP_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    printf("Driving right motor forward.\n");
+    setRightMotor(MAX_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    setRightMotor(STOP_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    printf("Driving right motor reverse.\n");
+    setRightMotor(MIN_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+    setRightMotor(STOP_PULSE);
+    delayMillisecond(ACTUATOR_DELAY);
+
+//    // Remove this code
+//    setRightMotor(MAX_PULSE);
+//    setLeftMotor(MAX_PULSE);
+//    while (1)
+//        asm("nop");
+//
+//
+//    printf("\nDone with drive test.\n");
+
+}
+
+
 
 #endif

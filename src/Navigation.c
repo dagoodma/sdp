@@ -1,6 +1,9 @@
 /*
  * File:   Navigation.c
- * Author: David Goodman
+ * Author: David     Goodman
+ *
+ * TODO: Consider adding error correction timeout.
+ * TODO: Consider adding
  *
  * Created on March 3, 2013, 10:27 AM
  */
@@ -14,366 +17,808 @@
 #include "Board.h"
 #include "GPS.h"
 #include "Navigation.h"
-
+#include "Drive.h"
+#include "Logger.h"
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
 #define DEBUG
+#define USE_DRIVE
+#define USE_LOGGER
 
-// Ellipsoid (olbate) constants for coordinate conversions
-#define ECC     0.0818191908426f // eccentricity
-#define ECC2    (ECC*ECC)
-#define ECCP2   (ECC2 / (1.0 - ECC2)) // square of second eccentricity
-#define FLATR   (ECC2 / (1.0 + sqrt(1.0 - ECC2))) // flattening ratio
+#define UPDATE_DELAY        1500 // (ms)
 
-// Radius of earth's curviture on semi-major and minor axes respectively
-#define R_EN    6378137.0f     // (m) prime vertical radius (semi-major axis)
-#define R_EM    (R_EN * (1 - FLATR)) // meridian radius (semi-minor axis)
+// don't change heading unless calculated is this much away from last
+#define HEADING_TOLERANCE   10 // (deg)
 
+// proportionally scale speed (m/s) for a given distance (m)
+#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.012f + 0.1f) // test speeds
+//#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.065f + 0.22f)
 
+#if defined(DEBUG)
+#ifdef USE_LOGGER
+#define DBPRINT(msg) do { Logger_write(msg); } while(0)
+#else
+#define DBPRINT(msg) do { printf(msg); } while(0)
+#endif
+#else
+#define DBPRINT(msg)    ((int)0)
+#endif
+
+ 
+#ifdef DEBUG
+    char debug[255];
+#endif
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 
+
+static enum {
+    STATE_IDLE  = 0x0,    // Initializing and obtaining instructions
+    STATE_NAVIGATE = 0x1, // Maintaining station coordinates
+    STATE_ERROR = 0x2,    // Error occured
+} state;
+
+LocalCoordinate nedDestination;
+float destinationTolerance = 0.0, lastHeading = 0.0;
+
+GeocentricCoordinate ecefError, ecefOrigin;
+GeodeticCoordinate llaOrigin;
+BOOL isDone = FALSE;
+BOOL hasOrigin = FALSE;
+BOOL hasErrorCorrection = FALSE;
+BOOL useErrorCorrection = FALSE;
+
+
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
-void convertENU2ECEF(Coordinate *var, float east, float north, float up, float lat_ref,
-    float lon_ref, float alt_ref);
-void convertGeodetic2ECEF(Coordinate *var, float lat, float lon, float alt);
-void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ecef_z);
-void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height);
+void startNavigateState();
+void startErrorState();
+void startIdleState();
+void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos);
+void updateHeading();
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 BOOL Navigation_init() {
-    #ifdef USE_GPS
-    uint8_t options = 0x0;
-    if (GPS_init(options) != SUCCESS || !GPS_isInitialized()) {
-        printf("Failed to initialize Navigation system.\n");
-        return FAILURE;
-    }
-    #endif
+    startIdleState();
+    Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
     return SUCCESS;
 }
 
 void Navigation_runSM() {
-    #ifdef USE_GPS
-    GPS_runSM();
-    #endif
-}
+    switch (state) {
+        case STATE_IDLE:
+            // Do Nothing
+            break;
+        case STATE_NAVIGATE:
+            if (!Navigation_isReady()) {
+                startErrorState();
+                break;
+            }
+            if (Timer_isExpired(TIMER_NAVIGATION)) {
+                updateHeading();
 
-BOOL Navigation_isReady() {
-    #ifdef USE_GPS
-    return GPS_isInitialized() && GPS_isConnected() && GPS_hasFix()
-        && GPS_hasPosition();
-    #else
-    return TRUE;
-    #endif
-}
+                if (isDone == TRUE) {
+                    DBPRINT("Finished navigating.\n\n");
+                    startIdleState();
+                }
 
-
-//#ifdef IS_COMPAS
-BOOL Navigation_getProjectedCoordinate(Coordinate *coord, float yaw, float pitch, float height) {
-    if (yaw >= YAW_LIMIT)
-        return FALSE;
-    else if (pitch > PITCH_LIMIT)
-        return FALSE;
-
-    #ifdef USE_GEODETIC
-    if ( ! Navigation_isReady())
-        return FALSE;
-
-    float alt = GPS_getAltitude();
-    #endif
-    float alt = 0.0;
-    
-    // Convert params to NED vector (x=north, y=east, z=down)
-    Coordinate ned;
-    convertEuler2NED(&ned, yaw, pitch, height + alt);
-
-    #ifdef USE_GEODETIC
-    // Get refence geodetic coordinate
-    float lat = GPS_getLatitude();
-    float lon = GPS_getLongitude();
-
-    // Convert NED to ENU and obtain projected ECEF
-    Coordinate ecef = Coordinate_new(ecef, 0, 0 ,0);
-    convertENU2ECEF(ecef, ned->y, ned->x, -(ned->z), lat, lon, alt);
-
-    // Convert projected ECEF into projected Geodetic (LLA)
-    convertECEF2Geodetic(geo, ecef->x, ecef->y, ecef->z);
-
-    #else
-    coord->x = ned.x;
-    coord->y = ned.y;
-    coord->z = ned.z;
-    /*
-    printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-        coord->x, coord->y, coord->z);
-    printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-        ned.x, ned.y, ned.z);
-    */
-    #endif
-
-    return TRUE;
-}
-//#endif
-
-// -------------------------- Functions for Types ----------------------
-/*
-Coordinate Coordinate_new(Coordinate coord, float x, float y, float z) {
-    //if (coord) {
-        coord.x = x;
-        coord.y = y;
-        coord.z = z;
-    //}
-
-    return coord;
-}
-*/
-/*******************************************************************************
- * PRIVATE FUNCTIONS                                                          *
- ******************************************************************************/
-
-/**
- * Function: convertENU2ECEF
- * @param A pointer to a new ECEF coordinate variable to save result into.
- * @param East component in meters.
- * @param North component in meters.
- * @param Up component in meters.
- * @return None.
- * @remark Converts the given ENU vector into a ECEF coordinate.
- * @author David Goodman
- * @author MATLAB
- * @date 2013.03.10  */
-void convertENU2ECEF(Coordinate *var, float east, float north, float up, float lat_ref,
-    float lon_ref, float alt_ref) {
-    // Convert geodetic lla  reference to ecef
-    Coordinate ecef_ref; //= Coordinate_new(ecef_ref, 0, 0, 0);
-    convertGeodetic2ECEF(&ecef_ref, lat_ref, lon_ref, alt_ref);
-
-    float coslat = cos(DEGREE_TO_RADIAN*lat_ref);
-    float sinlat = sin(DEGREE_TO_RADIAN*lat_ref);
-    float coslon = cos(DEGREE_TO_RADIAN*lon_ref);
-    float sinlon = sin(DEGREE_TO_RADIAN*lon_ref);
-
-    float t = coslat * up - sinlat * north;
-    float dz = sinlat * up + coslat * north;
-
-    float dx = coslon * t - sinlon * east;
-    float dy = sinlon * t + coslon * east;
-
-    var->x = ecef_ref.x + dx;
-    var->y = ecef_ref.y + dy;
-    var->z = ecef_ref.z + dz;
-}
-
-
-/**
- * Function: convertGeodetic2ECEF
- * @param A pointer to a new ECEF coordinate variable to save result into.
- * @param Latitude in degrees.
- * @param Longitude in degrees.
- * @param Altitude in meters.
- * @return None.
- * @remark Converts the given ECEF coordinates into a geodetic coordinate in degrees.
- *  Note that x=lat, y=lon, z=alt.
- * @author David Goodman
- * @author MATLAB
- * @date 2013.03.10  */
-void convertGeodetic2ECEF(Coordinate *var, float lat, float lon, float alt) {
-    float sinlat = sin(DEGREE_TO_RADIAN*lat);
-    float coslat = cos(DEGREE_TO_RADIAN*lat);
-
-    float rad_ne = R_EN / sqrt(1.0 - (ECC2 * sinlat * sinlat));
-    var->x = (rad_ne + alt) * coslat * cos(lon*DEGREE_TO_RADIAN);
-    var->y = (rad_ne + alt) * coslat * sin(lon*DEGREE_TO_RADIAN);
-    var->z = (rad_ne*(1.0 - ECC2) + alt) * sinlat;
-}
-
-
-/**
- * Function: convertECEF2Geodetic
- * @param A pointer to a new geodetic (LLA) coordinate variable to save result into.
- * @param ECEF X position.
- * @param ECEF Y position.
- * @param ECEF Z position.
- * @return None.
- * @remark Converts the given ECEF coordinates into a geodetic coordinate in degrees.
- *  Note that x=lat, y=lon, z=alt.
- * @author David Goodman
- * @author MATLAB
- * @date 2013.03.10  */
-void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ecef_z) {
-    float lat = 0, lon = 0, alt = 0;
-
-    lon = atan2(ecef_y, ecef_x);
-
-    float rho = hypotf(ecef_x,ecef_y); // distance from z-axis
-    float beta = atan2(ecef_z, (1 - FLATR) * rho);
-
-    lat = atan2(ecef_z + R_EM * ECCP2 * sin(beta)*sin(beta)*sin(beta),
-        rho - R_EN * ECC2 * cos(beta)*cos(beta)*cos(beta));
-
-    float betaNew = atan2((1 - FLATR)*sin(lat), cos(lat));
-    int count = 0;
-    while (beta != betaNew && count < 5) {
-        beta = betaNew;
-        var->x = atan2(ecef_z  + R_EM * ECCP2 * sin(beta)*sin(beta)*sin(beta),
-            rho - R_EN * ECC2 * cos(beta)*cos(beta)*cos(beta));
-
-        betaNew = atan2((1 - FLATR)*sin(lat), cos(lat));
-        count = count + 1;
+                Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
+            }
+            break;
+        case STATE_ERROR:
+            // TODO: add functions to check for and clear this
+            break;
+        default:
+            break;
     }
-
-    float sinlat = sin(lat);
-    float rad_ne = R_EN / sqrt(1.0 - (ECC2 * sinlat * sinlat));
-
-    alt = rho * cos(lat) + (ecef_z + ECC2 * rad_ne * sinlat) * sinlat - rad_ne;
-
-    // Convert radian geodetic to degrees
-    var->x = RADIAN_TO_DEGREE*lat;
-    var->y = RADIAN_TO_DEGREE*lon;
-    var->z = alt;
 }
 
 
-/**
- * Function: convertEuler2NED
- * @param A pointer to a new NED coordinate variable to save result into.
- * @param Yaw in degrees from north.
- * @param Pitch in degrees from level.
- * @param Height in meters from target.
- * @return None.
- * @remark Projects a ray with the given height from the given yaw and
- *  pitch, and returns a NED for the intersection location.
- * @author David Goodman
- * @date 2013.03.10  */
-void convertEuler2NED(Coordinate *var, float yaw, float pitch, float height) {
-    //printf("At angle: %.3f and pitch: %.3f\n",yaw,pitch);
-
-    float mag = height * tan((90.0-pitch)*DEGREE_TO_RADIAN);
-    #ifdef DEBUG
-    printf("\tMagnitude: %.3f\n",mag);
-    #endif
-
-    //printf("At mag: %.3f\n",mag);
-    
-    if (yaw <= 90.0) {
-        //First quadrant
-        var->x = mag * cos(yaw*DEGREE_TO_RADIAN);
-        var->y = mag * sin(yaw*DEGREE_TO_RADIAN);
-    }
-    else if (yaw > 90.0 && yaw <= 180.0) {
-        // Second quadrant
-        yaw = yaw - 270.0;
-        var->x = mag * sin(yaw*DEGREE_TO_RADIAN);
-        var->y = -mag * cos(yaw*DEGREE_TO_RADIAN);
-    }
-    else if (yaw > 180.0 && yaw <= 270.0) {
-        // Third quadrant
-        yaw = yaw - 180.0;
-        var->x = -mag * cos(yaw*DEGREE_TO_RADIAN);
-        var->y = -mag * sin(yaw*DEGREE_TO_RADIAN);
-    }
-    else if (yaw > 270 < 360.0) {
-        // Fourth quadrant
-        yaw = yaw - 90.0;
-        var->x = -mag * sin(yaw*DEGREE_TO_RADIAN);
-        var->y = mag * cos(yaw*DEGREE_TO_RADIAN);
-    }
-
-
-    var->z = height;
-    //printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-    //    var->x, var->y, var->z);
-}
-
-/**
- * Function: getCurrentPosition
- * @param A pointer to a new coordinate variable to save result into.
- * @return None.
- * @remark Converts the current GPS position into NED and saves it into
- *  the given Position variable.
- * @author David Goodman
- * @date 2013.03.10 
-void getCurrentPosition(Position pos) {
-    if (!pos || !Navigation_isReady())
+/**********************************************************************
+ * Function: Navigation_gotoLocalCoordinate
+ * @param
+ * @return None
+ * @remark Starts navigating to the desired location until within the given
+ *  tolerance range.
+ **********************************************************************/
+void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance) {
+    if (!Navigation_isReady()) {
+        startErrorState();
         return;
+    }
 
-    // Note: x=lat, y=lon, z=alt (in geodetic)
-    float lat = GPS_getLatitude();
-    float lon = GPS_getLongitude();
-    float alt = GPS_getAltitude();
+    nedDestination.n = ned_des->n;
+    nedDestination.e = ned_des->e;
+    nedDestination.d = ned_des->d;
+    destinationTolerance = tolerance;
+
+    startNavigateState();
+}
+
+
+
+/**********************************************************************
+ * Function: Navigation_setOrigin
+ * @return None
+ * @remark Sets the longitudal error for error corrections.
+ **********************************************************************/
+void Navigation_setOrigin(GeocentricCoordinate *ecefRef,
+    GeodeticCoordinate *llaRef) {
+    ecefOrigin.x = ecefRef->x;
+    ecefOrigin.y = ecefRef->y;
+    ecefOrigin.z = ecefRef->z;
+    llaOrigin.lat = llaRef->lat;
+    llaOrigin.lon = llaRef->lon;
+    llaOrigin.alt = llaRef->alt;
+
+    hasOrigin = TRUE;
+}
+
+/**********************************************************************
+ * Function: Navigation_setGeocentricError
+ * @param Geocentric error to add to measured geocentric position.
+ * @return None
+ * @remark Sets the geocentric error for error corrections.
+ **********************************************************************/
+void Navigation_setGeocentricError(GeocentricCoordinate *error) {
+    ecefError.x = error->x;
+    ecefError.y = error->y;
+    ecefError.z = error->z;
     
-    // ------- First convert LLA (geo) to ECEF
-    float sinlat = sin(lat);
-    float coslat = cos(lat);
+    hasErrorCorrection = TRUE;
+}
 
-    // Prime vertical radius of curviture
-    float rad_ne = R_EN / sqrt(abs(1.0 - (ECC2 * sinlat * sinlat)));
-    float ecefX = (rad_ne - alt) * coslat * cos(lon);
-    float ecefY = (rad_ne - alt) * coslat * sin(lon);
-    float ecefZ = (rad_ne * (1.0 - ECC2) - alt) * sinlat;
 
-    // Convert ECEF to NED at current lat,lon reference point
-    
+/**********************************************************************
+ * Function: Navigation_cancel
+ * @return None
+ * @remark Stops navigating and the the mototrs.
+ **********************************************************************/
+void Navigation_cancel() {
+    if (Navigation_isNavigating())
+        startIdleState();
+}
 
-} */
 
+/**********************************************************************
+ * Function: Navigation_enableErrorCorrection
+ * @return None
+ * @remark Enables error correction for retreived coordinates.
+ **********************************************************************/
+void Navigation_enablePositionErrorCorrection() {
+    if (hasErrorCorrection)
+        useErrorCorrection = TRUE;
+}
+
+/**********************************************************************
+ * Function: Navigation_disableErrorCorrection
+ * @return None
+ * @remark Disables error correction for retreived coordinates.
+ **********************************************************************/
+void Navigation_disablePositionErrorCorrection() {
+    useErrorCorrection = FALSE;
+}
+
+
+/**********************************************************************
+ * Function: Navigation_isReady
+ * @return True if we are ready to navigate with GPS and have an origin.
+ * @remark
+ **********************************************************************/
+BOOL Navigation_isReady() {
+    return GPS_isInitialized() && GPS_isConnected() && GPS_hasFix()
+        && GPS_hasPosition() && hasOrigin;
+}
+
+/**********************************************************************
+ * Function: Navigation_hasError
+ * @return True if an error occured while navigating.
+ * @remark
+ **********************************************************************/
+BOOL Navigation_hasError() {
+    return state == STATE_ERROR;
+}
+
+/**********************************************************************
+ * Function: Navigation_clearError
+ * @return None
+ * @remark Clears the error if one occured.
+ **********************************************************************/
+BOOL Navigation_clearError() {
+    if (Navigation_hasError())
+        startIdleState();
+}
+
+
+/**********************************************************************
+ * Function: Navigation_isNavigating
+ * @return True if navigating to a point.
+ * @remark 
+ **********************************************************************/
+BOOL Navigation_isNavigating() {
+    return state == STATE_NAVIGATE;
+}
+
+/**********************************************************************
+ * Function: Navigation_isDone
+ * @return True if navigation finished and arrived at the desired point.
+ * @remark 
+ **********************************************************************/
+BOOL Navigation_isDone() {
+    return isDone;
+}
+
+/**********************************************************************
+ * PRIVATE FUNCTIONS                                                  *
+ **********************************************************************/
+
+/**********************************************************************
+ * Function: startNavigateState
+ * @return None
+ * @remark Begins the navigation state, for navigating to a coordinate.
+ **********************************************************************/
+void startNavigateState() {
+    state = STATE_NAVIGATE;
+    isDone = FALSE;
+#ifdef USE_DRIVE
+    Drive_stop();
+#endif
+    Timer_new(TIMER_NAVIGATION, 1); // let expire quickly
+}
+
+
+/**********************************************************************
+ * Function: startErrorState
+ * @return None
+ * @remark Begins the error state if navigation failed, such as when
+ *  GPS lost the fix, an obstruction was reached, or a person man have
+ *  grabbed on.
+ **********************************************************************/
+void startErrorState() {
+    state = STATE_ERROR;
+    isDone = FALSE;
+#ifdef USE_DRIVE
+    Drive_stop();
+#endif
+}
+
+
+/**********************************************************************
+ * Function: startIdleState
+ * @return None
+ * @remark Begins the idle state, which stops the motors.
+ **********************************************************************/
+void startIdleState() {
+    state = STATE_IDLE;
+#ifdef USE_DRIVE
+    Drive_stop();
+#endif
+}
+
+/**********************************************************************
+ * Function: applyGeocentricErrorCorrection
+ * @return None
+ * @remark Applies the error corrections to the given position (geocentric).
+ **********************************************************************/
+void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
+    ecefPos->x += ecefError.x;
+    ecefPos->y += ecefError.y;
+    ecefPos->z += ecefError.z;
+}
+
+/**********************************************************************
+ * Function: updateHeading
+ * @return None
+ * @remark Drives the motors by calculating the needed heading and speed
+ *  to reach the desired location when navigating.
+ **********************************************************************/
+void updateHeading() {
+
+    // Calculate NED position
+    GeocentricCoordinate ecefMine;
+    GPS_getPosition(&ecefMine);
+    if (useErrorCorrection)
+        applyGeocentricErrorCorrection(&ecefMine);
+
+    LocalCoordinate nedMine;
+    convertECEF2NED(&nedMine, &ecefMine, &ecefOrigin, &llaOrigin);
+#ifdef DEBUG
+    sprintf(debug, "My position: N=%.2f, E=%.2f, D=%.2f\n",nedMine.n, nedMine.e, nedMine.d);
+    DBPRINT(debug);
+#endif
+
+    // Determine needed course
+    CourseVector course;
+    getCourseVector(&course, &nedMine, &nedDestination);
+#ifdef DEBUG
+    sprintf(debug, "\tCourse: distance=%.2f, heading=%.2f\n",course.d,course.yaw);
+    DBPRINT(debug);
+#endif
+
+    // Check tolerance
+    if (course.d < destinationTolerance) {
+        isDone = TRUE;
+        return;
+    }
+
+    /* Drive motors to new heading and speed, but only change heading if
+     it varies enough from the previously calcualted one. */
+    float newHeading = (course.yaw < (lastHeading - HEADING_TOLERANCE)
+        || course.yaw > (lastHeading + HEADING_TOLERANCE))?
+            course.yaw : lastHeading;
+
+#ifdef USE_DRIVE
+    Drive_forwardHeading(DISTANCE_TO_SPEED(course.d), (uint16_t)newHeading);
+#endif
+#ifdef DEBUG
+    sprintf(debug, "\tDriving: speed=%.2f [m/s], heading=%.2f [deg]\n",
+        DISTANCE_TO_SPEED(course.d),newHeading);
+    DBPRINT(debug);
+#endif
+    lastHeading = newHeading;
+}
+
+/*********************************************************************
+ *                           Test Harnesses                          *
+ *********************************************************************/
 
 //#define NAVIGATION_TEST
 #ifdef NAVIGATION_TEST
+
+#include "I2C.h"
+#include "TiltCompass.h"
+
+// Pick the I2C_MODULE to initialize
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000 // (Hz)
+
+// Location is BE1 parkinglot bench
+#define ECEF_X_ORIGIN  -2707571.0f
+#define ECEF_Y_ORIGIN -4322145.0f
+#define ECEF_Z_ORIGIN 3817542.0f
+#define GEO_LAT_ORIGIN 37.000042165168395f
+#define GEO_LON_ORIGIN -122.06473588943481f
+#define GEO_ALT_ORIGIN 241.933f
+
+#define DESTINATION_TOLERANCE 2.2f // (m)
+
+#define HEADING_DELAY   UPDATE_DELAY // delay for compass
 
 int main() {
     Board_init();
     Serial_init();
     Timer_init();
-    if (Navigation_init() != SUCCESS) {
-        printf("Navigation system failed to initialize.\n");
-        return FAILURE;
-    }
+    GPS_init();
+#ifdef USE_DRIVE
+    Drive_init();
+#endif
+    I2C_init(I2C1, I2C_CLOCK_FREQ);
+    TiltCompass_init();
+    Timer_new(TIMER_TEST,HEADING_DELAY);
+    Navigation_init();
+
+    // Set command center reference point coordinates
+    GeodeticCoordinate geoOrigin;
+    geoOrigin.lat = GEO_LAT_ORIGIN;
+    geoOrigin.lon = GEO_LON_ORIGIN;
+    geoOrigin.alt = GEO_ALT_ORIGIN;
+    GeocentricCoordinate ecefOrigin;
+    ecefOrigin.x = ECEF_X_ORIGIN;
+    ecefOrigin.y = ECEF_Y_ORIGIN;
+    ecefOrigin.z = ECEF_Z_ORIGIN;
+
+    Navigation_setOrigin(&ecefOrigin, &geoOrigin);
 
     printf("Navigation system initialized.\n");
-    /*while (!Navigation_isReady()) {
+    while (!Navigation_isReady()) {
         Navigation_runSM();
+        GPS_runSM();
     }
-    */
-    Navigation_runSM();
 
-    
     printf("Navigation system is ready.\n");
 
-    Coordinate coord;
 
-    float yaw = 150.0; // (deg)
-    float pitch = 85.0; // (deg)
-    float height = 4.572; // (m)
-    if (Navigation_getProjectedCoordinate(&coord, yaw, pitch, height)) {
-        #ifdef USE_GEODETIC
-        printf("Desired coordinate -- lat:%.6f, lon: %.6f, alt: %.2f (m)\n",
-            coord.x, coord.y, coord.z);
-        #else
-        printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-            coord.x, coord.y, coord.z);
-        #endif
-    }
-    else {
-        #ifdef USE_GEODETIC
-        char s[10] = "geodetic";
-        #else
-        char s[10] = "NED";
-        #endif
-        printf("Failed to obtain desired %s coordinate.\n",s);
+    LocalCoordinate nedDesired;
+    nedDesired.n = 0.0f;
+    nedDesired.e = 0.0f;
+    nedDesired.d = 0.0f;
+    Navigation_gotoLocalCoordinate(&nedDesired, DESTINATION_TOLERANCE);
+
+    while(Navigation_isNavigating()) {
+        GPS_runSM();
+        Navigation_runSM();
+        TiltCompass_runSM();
+#ifdef USE_DRIVE
+        Drive_runSM();
+#endif
+        if (Timer_isExpired(TIMER_TEST)) {
+            printf("\tCompass heading: %.1f\n", TiltCompass_getHeading());
+            Timer_new(TIMER_TEST,HEADING_DELAY);
+        }
     }
 
+    Navigation_runSM();
+#ifdef USE_DRIVE
+    Drive_runSM();
+#endif
+    
+    if (Navigation_isDone())
+        printf("At desired point.\n");
+    else
+        printf("Failed to reach desired point.\n");
 
+    // Make sure we don't try and drive any more
+    Navigation_runSM();
+    Navigation_runSM();
     return SUCCESS;
 }
 
 #endif
+
+// ************************************************************************
+// ---------------------------- Override Test ----------------------------
+// ************************************************************************
+
+#define NAVIGATION_OVERRIDE_TEST
+#ifdef NAVIGATION_OVERRIDE_TEST
+
+#define USE_COMPASS
+#define USE_OVERRIDE
+
+#ifdef USE_COMPASS
+#include "I2C.h"
+#include "TiltCompass.h"
+#endif
+#include "Ports.h"
+
+
+// Pick the I2C_MODULE to initialize
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000 // (Hz)
+
+// --------------- Center of west lake -------------
+#define ECEF_X_ORIGIN -2706922.0f
+#define ECEF_Y_ORIGIN -4324246.0f
+#define ECEF_Z_ORIGIN 3815364.0f
+#define GEO_LAT_ORIGIN  36.9765781f
+#define GEO_LON_ORIGIN -122.0460341f
+#define GEO_ALT_ORIGIN 78.64f
+
+// --------------- Center of baskin circle ----------
+//..
+
+///
+
+#define DESTINATION_TOLERANCE 3.2f // (m)
+
+#define HEADING_DELAY   UPDATE_DELAY // delay for compass
+
+#define STARTUP_DELAY   3000 // time for gps to get stable fix
+#define RECEIVER_TIMEOUT_DELAY  1000 // time for receiver to be off for micro to take over
+
+// Override defines
+#define ENABLE_OUT_TRIS PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
+#define MICRO       0
+#define RECIEVER    1
+
+// Others
+#define MAX_ERRORS 3 // max nav. errors before receiver has control forever
+
+
+// ----------------------------- Prototypes -------------------------------
+
+void initializeDestination();
+void handleError();
+void startInitialize();
+void startNavigate();
+void startOverride();
+BOOL nearDesiredPoint();
+
+void initializeOverride();
+void giveMicroControl();
+void giveReceiverControl();
+// -------------------------- Global variables ----------------------------
+static BOOL overrideTriggered = FALSE;
+static uint8_t errorsSeen = 0;
+static BOOL startDelayExpired = FALSE;
+
+static enum {
+    INITIALIZE = 0x1, // Waiting for GPS lock
+    NAVIGATE  = 0x2, // GPS guided navigation with drive controller
+    OVERRIDE = 0x3, // reciever has control
+} testState;
+
+
+static LocalCoordinate nedDesired;
+
+// ---------------------------- Entry point ------------------------------
+int main() {
+    // --------------------------- Initialization ------------------------
+    Board_init();
+
+    #ifdef USE_LOGGER
+    if (Logger_init() != SUCCESS)
+        return FAILURE;
+    #else
+    Serial_init();
+    #endif
+
+    Timer_init();
+    GPS_init();
+    #ifdef USE_DRIVE
+    Drive_init();
+    #endif
+
+    #ifdef USE_COMPASS
+    I2C_init(I2C1, I2C_CLOCK_FREQ);
+    TiltCompass_init();
+    #endif
+    Navigation_init();
+    #ifdef USE_OVERRIDE
+    initializeOverride();
+    #endif
+    initializeDestination();
+
+    // Start out in intiialize state
+    startInitialize();
+
+    DBPRINT("System initialized... waiting for lock.\n");
+
+    // ----------------------------- State machine --------------------------
+    while (1) {
+        switch (testState) {
+            // Initialize state for waiting for GPS lock
+            case INITIALIZE:
+                Navigation_runSM();
+                GPS_runSM();
+                if (overrideTriggered)
+                    startOverride();
+                if (Navigation_isReady())
+                    startNavigate();
+                break;
+            // Navigate state for micro navigating to a position
+            case NAVIGATE:
+                GPS_runSM();
+                Navigation_runSM();
+                #ifdef USE_COMPASS
+                TiltCompass_runSM();
+                #endif
+                #ifdef USE_DRIVE
+                Drive_runSM();
+                #endif
+                if (overrideTriggered)
+                    startOverride();
+
+                // Start up delay before navigating for stable fix
+                if (Timer_isExpired(TIMER_TEST) && !startDelayExpired) {
+                    startDelayExpired = TRUE;
+                    // Send navigate command
+                    #ifdef DEBUG
+                    sprintf(debug, "Navigating to desired point to within %.2f m.\n",
+                        DESTINATION_TOLERANCE);
+                    DBPRINT(debug);
+                    Navigation_gotoLocalCoordinate(&nedDesired, DESTINATION_TOLERANCE);
+                    #endif
+                }
+
+                // Compass heading printing
+                #if  defined(DEBUG) && defined(USE_COMPASS)
+                if (Timer_isExpired(TIMER_TEST)) {
+                    sprintf(debug, "\tCompass heading: %.1f\n", TiltCompass_getHeading());
+                    DBPRINT(debug);
+                    Timer_new(TIMER_TEST,HEADING_DELAY);
+                }
+                #endif
+                // Did we arrive?
+                if (Navigation_isDone()) {
+                    DBPRINT("At desired point. ");
+                    #ifdef USE_OVERRIDE
+                    DBPRINT("Giving receiver control.\n");
+                    startOverride();
+                    #else
+                    DBPRINT("Ending test.\n");
+                    goto EXIT;
+                    #endif
+                }
+
+                // Check for navigation error and handle
+                if (Navigation_hasError())
+                    handleError();
+
+                break;
+            case OVERRIDE:
+                // Reset timer if we keep seeing the receiver signal
+                if (overrideTriggered) {
+                    Timer_new(TIMER_TEST, RECEIVER_TIMEOUT_DELAY);   
+                    overrideTriggered = FALSE;
+                }
+
+                /* Did receiver turn off, timeout occured, and we moved away
+                   from the desired point? */
+                if (Timer_isExpired(TIMER_TEST) && !nearDesiredPoint()) {
+                    DBPRINTF("Receiver timed out. Restarting test.\n");
+                    startInitialize(); // gives micro control
+                }
+
+                break;
+        } // switch
+    } // while
+    EXIT:
+    return SUCCESS;
+}
+
+// ---------------- Override test helper functions --------------------------
+
+BOOL nearDesiredPoint() {
+    // Calculate NED position
+    GeocentricCoordinate ecefMine;
+    GPS_getPosition(&ecefMine);
+    if (useErrorCorrection)
+        applyGeocentricErrorCorrection(&ecefMine);
+
+    LocalCoordinate nedMine;
+    convertECEF2NED(&nedMine, &ecefMine, &ecefOrigin, &llaOrigin);
+
+    // Determine needed course
+    CourseVector course;
+    getCourseVector(&course, &nedMine, &nedDestination);
+
+    // Check tolerance
+    if (course.d < destinationTolerance) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void initializeDestination() {
+    // Set command center reference point coordinates
+    GeodeticCoordinate geoOrigin;
+    geoOrigin.lat = GEO_LAT_ORIGIN;
+    geoOrigin.lon = GEO_LON_ORIGIN;
+    geoOrigin.alt = GEO_ALT_ORIGIN;
+    GeocentricCoordinate ecefOrigin;
+    ecefOrigin.x = ECEF_X_ORIGIN;
+    ecefOrigin.y = ECEF_Y_ORIGIN;
+    ecefOrigin.z = ECEF_Z_ORIGIN;
+
+    // Make desired point the origin
+    nedDesired.n = 0.0f;
+    nedDesired.e = 0.0f;
+    nedDesired.d = 0.0f;
+
+    Navigation_setOrigin(&ecefOrigin, &geoOrigin);
+}
+
+void handleError() {
+    // An error occured, try and reinit to regain lock
+    DBPRINT("An error occured navigating... ");
+    errorsSeen++;
+    Navigation_clearError();
+    if (errorsSeen > MAX_ERRORS) {
+        // Go into override state and do nothing
+        startOverride();
+        DBPRINT("going into override.\n");
+    }
+    else {
+        startInitialize();
+        #ifdef DEBUG
+        char *lockStr = (GPS_hasFix())? "" : " to regain lock";
+        sprintf(debug,"reinitializing%s.\n",lockStr);
+        DBPRINT(debug);
+        #endif
+    }
+}
+
+
+// -------------------------- Start test states ---------------------------
+void startInitialize() {
+    testState = INITIALIZE;
+    giveMicroControl();
+}
+
+void startNavigate() {
+    testState = NAVIGATE;
+    DBPRINT("Navigation and GPS are ready.\n");
+    Timer_new(TIMER_TEST,STARTUP_DELAY); // let gps get good fix
+    startDelayExpired = FALSE;
+}
+
+void startOverride() {
+    testState = OVERRIDE;
+    Navigation_cancel();
+    Navigation_runSM();
+    Drive_runSM();
+    giveReceiverControl();
+    Timer_new(TIMER_TEST, RECEIVER_TIMEOUT_DELAY);
+}
+
+
+/**
+ * Function: initializeOverride()
+ * @return None
+ * @remark Initializes interrupt for override functionality
+ * @author Darrel Deo
+ * @date 2013.04.01  */
+void initializeOverride(){
+
+    // Initialize override board pins to give Micro control
+    ENABLE_OUT_TRIS = OUTPUT;  // Set pin to be an output (fed to the AND gates)
+    ENABLE_OUT_LAT = MICRO;    // Initialize control for Microcontroller
+
+    overrideTriggered = FALSE;
+
+    //Enable the interrupt for the override feature
+    mPORTBSetPinsDigitalIn(BIT_0); // CN2
+
+    mCNOpen(CN_ON | CN_IDLE_CON , CN2_ENABLE , CN_PULLUP_DISABLE_ALL);
+    uint16_t value = mPORTDRead(); //?
+    ConfigIntCN(CHANGE_INT_ON | CHANGE_INT_PRI_2);
+    //CN2 J5-15
+    // INTEnableSystemMultiVectoredInt(); // this happens in Board_init()
+    DBPRINT("Override Function has been Initialized\n");
+    //INTEnableInterrupts(); // handled in Board.c
+    INTEnable(INT_CN,1);
+}
+
+/**
+ * Function: Interrupt Service Routine
+ * @return None
+ * @remark ISR that is called when CH3 pings external interrupt
+ * @author Darrel Deo
+ * @date 2013.04.01  */
+void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
+    mPORTDRead(); //?
+
+    overrideTriggered = TRUE;
+
+    //Clear the interrupt flag that was risen for the external interrupt
+    //might want to set a timer in here
+
+    mCNClearIntFlag();
+    //INTEnable(INT_CN,0);
+}
+
+
+/**
+ * Function: giveReceiverControl
+ * @return None
+ * @remark Passes motor control over to the receiver.
+ * @author David Goodman
+ * @date 2013.04.01  */
+void giveReceiverControl() {
+    DBPRINT("Reciever has control\n");
+#ifdef USE_DRIVE
+    Drive_stop();
+#endif
+    ENABLE_OUT_LAT = RECIEVER;      //Give control over to Reciever using the enable line
+    //INTEnable(INT_CN,1); // may not need this for now
+}
+
+/**
+ * Function: giveMicroControl
+ * @return None
+ * @remark Passes motor control over to the micro.
+ * @author David Goodman
+ * @date 2013.04.01  */
+void giveMicroControl() {
+    DBPRINT("Micro has control\n");
+#ifdef USE_DRIVE
+    Drive_stop();
+#endif
+    ENABLE_OUT_LAT = MICRO;      //Give control over to Reciever using the enable line
+    //INTEnable(INT_CN,1); // may not need this for now
+}
+
+
+
+#endif
+

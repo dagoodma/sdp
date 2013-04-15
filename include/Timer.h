@@ -21,7 +21,7 @@
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
 
-#define TIMER_NUMBER_MAX    16
+#define TIMER_NUMBER_MAX    32
 
 #define TIMER_ACTIVE 1
 #define TIMER_EXPIRED 1

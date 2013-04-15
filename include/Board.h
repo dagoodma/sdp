@@ -64,8 +64,13 @@
 #define TIMER_HEARTBEAT         7
 #define TIMER_DRIVE             8
 #define TIMER_TEST2             9
+#define TIMER_TILTCOMPASS       10
+#define TIMER_NAVIGATION        11
+#define TIMER_LOGGER            12
 #define TIMER_BAROMETER2        14 // remove the blocking code!!
 #define TIMER_TEST              15
+#define TIMER_DELAY             16
+#define TIMER_TEST3             17
 
 
 #ifdef Board_H_PRIVATE_INCLUDE
@@ -111,6 +116,15 @@ void Board_init();
  * @author David Goodman
  * @date 2013.01.18  */
 uint32_t Board_GetPBClock();
+
+/**
+ * Function: delayMillisecond
+ * @param Number of millisecond to delay.
+ * @return None
+ * @remark Blocking delay using timer module.
+ * @author David Goodman
+ * @date 2013.04.11  */
+void delayMillisecond(int ms);
 
 #endif	/* Board_H */
 

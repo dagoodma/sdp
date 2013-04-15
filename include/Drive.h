@@ -22,11 +22,9 @@
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
 
-#define PI                      3.14159265359f
-#define DEGREE_TO_RADIAN        ((float)PI/180.0)
-#define RADIAN_TO_DEGREE        ((float)180.0/PI)
 
-#define DEGREE_TO_NEDFRAME(deg) (-deg + 90.0)
+//For Override feature
+#define Override_INT            INT_CN
 
 // Limits
 #define SPEED_LIMIT		100 // (% PWM)
@@ -58,7 +56,7 @@ void Drive_runSM();
 /**
  * Function: Drive_forward
  * @return None
- * @param Speed to drive both motors forward in percent pwm (% PWM).
+ * @param Speed to drive both motors forward in percent, from 0 to 100.
  * @remark Drives both motors at the given speed.
  * @author David Goodman
  * @author Darrel Deo
@@ -66,26 +64,38 @@ void Drive_runSM();
 void Drive_forward(uint8_t speed);
 
 /**
- * Function: Drive_forward
+ * Function: Drive_backward
  * @return None
- * @param Speed to drive both motors backward in percent pwm (% PWM).
- * @remark Drives both motors at the given speed in reverse.
- * @author David Goodman
- * @author Darrel Deo
- * @date 2013.03.27  */
-void Drive_backward(uint8_t speed);
-
-/**
- * Function: Drive_reverse
- * @return None
- * @param Speed to drive both motors in reverse in percent pwm (% PWM).
+ * @param Speed to drive both motors in reverse in percent, 0 to 100.
  * @remark Drives both motors in reverse at the given speed.
  * @author David Goodman
  * @author Darrel Deo
  * @date 2013.03.27 
-void Drive_reverse();
  */
- 
+void Drive_backward(uint8_t speed);
+
+/**
+ * Function: Drive_forwardHeading
+ * @return None
+ * @param Speed to drive at in meters per second.
+ * @param Heading to hold in degrees from north, from 0 to 359.
+ * @remark Tracks the given speed and heading.
+ * @author David Goodman
+ * @date 2013.03.30 
+ */
+void Drive_forwardHeading(float speed, uint16_t angle);
+
+/**
+ * Function: Drive_pivot
+ * @return None
+ * @param Heading to position boat to in degrees from North (0 to 359).
+ * @remark Actively holds the given heading by pivoting with a single motor at a time,
+ *  until the desired heading is obtained.
+ * @author David Goodman
+ * @author Darrel Deo
+ * @date 2013.03.27  */
+void Drive_pivot(uint16_t angle);
+
 /**
  * Function: Drive_stop
  * @return None
@@ -96,15 +106,12 @@ void Drive_reverse();
 void Drive_stop();
 
 /**
- * Function: Drive_setHeading
- * @return None
- * @param Heading from North to position boat to in degrees from North (0 to 359).
- * @remark Actively holds the given heading by pivoting with the motors, or 
- *	scaling the motor's PWM values.
- * @author David Goodman
- * @author Darrel Deo
- * @date 2013.03.27  */
-void Drive_setHeading(uint16_t angle);
+ * Function: Override_init
+ * @return Void.
+ * @remark Initializes the interrupt for the Override feature.
+ * @author Darrel R. Deo
+ * @date 2013.04.01  */
+void Override_init();
 
 #endif // Drive_H
 

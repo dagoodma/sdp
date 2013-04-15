@@ -4,14 +4,12 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>../../include/Board.h</itemPath>
-      <itemPath>../../include/Gps.h</itemPath>
-      <itemPath>../../include/Ports.h</itemPath>
       <itemPath>../../include/Serial.h</itemPath>
-      <itemPath>../../include/Timer.h</itemPath>
       <itemPath>../../include/Uart.h</itemPath>
-      <itemPath>../../include/TiltCompass.h</itemPath>
-      <itemPath>../../include/I2C.h</itemPath>
+      <itemPath>../../include/Board.h</itemPath>
+      <itemPath>../../include/Logger.h</itemPath>
+      <itemPath>/Users/dagoodma/Dropbox/Projects/sdp/sdp/include/Timer.h</itemPath>
+      <itemPath>../../include/Ports.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -20,13 +18,11 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../../src/Board.c</itemPath>
-      <itemPath>../../src/Gps.c</itemPath>
       <itemPath>../../src/Serial.c</itemPath>
-      <itemPath>../../src/Timer.c</itemPath>
       <itemPath>../../src/Uart.c</itemPath>
-      <itemPath>../../src/I2C.c</itemPath>
-      <itemPath>../../src/TiltCompass.c</itemPath>
+      <itemPath>../../src/Logger.c</itemPath>
+      <itemPath>/Users/dagoodma/Dropbox/Projects/sdp/sdp/src/Timer.c</itemPath>
+      <itemPath>../../src/Board.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
