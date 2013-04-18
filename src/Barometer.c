@@ -58,8 +58,9 @@
 //#define FAHRENHEIT_TO_CELCIUS(T)    ((T * (9/5)) + 32)
 #define CELCIUS_TO_FAHRENHEIT(T)    (((float)T/10)*1.8 + 32)
 //#define PASCALS_TO_METERS(P)        () // Converts pressure to altitude
+#define METERS_TO_FEET(m)           ((float)m * 3.28084f)
 
-#define PRESSURE_P0		102201.209 // (Pa)
+#define PRESSURE_P0		102201.209f // (Pa)
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -133,16 +134,16 @@ int32_t Barometer_getPressure(){
     return pressure;
 }
 
-void Barometer_runSM(int BAROMETER_I2C_ID) {
+void Barometer_runSM() {
     if (Timer_isExpired(TIMER_BAROMETER)) {
-        updateReadings(BAROMETER_I2C_ID);
+        updateReadings(BAROMETER_COMPAS_I2C_ID);
         Timer_new(TIMER_BAROMETER,UPDATE_DELAY);
     }
 }
 
 float Barometer_getAltitude() {
     //return 44330.8 - 4946.54 * pow(pressure,0.1902632);
-	return (float)((44330*(1 - pow(((float)pressure/PRESSURE_P0),0.19029)))*3.2808);
+    return (float)((44330.0f*(1.0f - powf(((float)pressure/PRESSURE_P0),0.19029f))));
 }
 
 
@@ -439,6 +440,45 @@ int main(void) {
         accumulator = 0;
     }
 
+    return (SUCCESS);
+}
+
+#endif
+
+
+#define BAROMETER_TEST_2
+#ifdef BAROMETER_TEST_2
+
+#define PRINT_DELAY     100 // (ms)
+
+int main(void) {
+// Initialize the UART,Timers, and I2C1
+    Board_init();
+
+    Timer_init();
+    Serial_init();
+    printf("Serial init done\n");
+    I2C_init(BAROMETER_COMPAS_I2C_ID, I2C_CLOCK_FREQ);
+    printf("I2C Init done\n");
+    Barometer_init();
+    printf("Baro init\n");
+    Timer_new(TIMER_TEST, PRINT_DELAY );
+    printf("Timer \n");
+
+    while(1){
+
+            //Barometer_init(BAROMETER_COMPAS_I2C_ID);
+            // Convert the raw data to real values
+            while (!Timer_isExpired(TIMER_TEST)){
+                Barometer_runSM();
+                asm("nop");
+            }
+                //printf("Altitude1: %.1f (ft)\n\n", Barometer_getAltitude());
+            float baro1 = Barometer_getAltitude();
+            Timer_new(TIMER_TEST, PRINT_DELAY );
+            printf("%f\n", baro1);
+            Barometer_runSM();
+    }
     return (SUCCESS);
 }
 
