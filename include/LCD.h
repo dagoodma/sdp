@@ -17,6 +17,7 @@
 
 #ifndef LCD_H
 #define LCD_H
+#include <stdint.h>
 
 
 /*******************************************************************************
@@ -24,22 +25,19 @@
  ******************************************************************************/
 
 // LCD modules line length and number of lines
-#define LCD_LINE_LENGTH		16
-#define LCD_LCD_TOTAL		4
+#define LCD_LINE_LENGTH		20
+#define LCD_LINE_TOTAL		4
+#define LCD_CHARACTER_TOTAL     (LCD_LINE_TOTAL*LCD_LINE_LENGTH)
 
-/**
- * 1.64ms delay 
- * This macro defines a short delay of 1.64ms (129 counts of 156,250 Hz clock)
- * in units that are appropriate for the prescalar register of a timer. It can
- * therefore be passed directly into the SET_TIMER2_DELAY() macro.
- */
-#define LONG_DELAY	129
+#define LCD_START_LINE1  0x00     /**< DDRAM address of first char of line 1 */
+#define LCD_START_LINE2  0x40     /**< DDRAM address of first char of line 2 */
+#define LCD_START_LINE3  0x14     /**< DDRAM address of first char of line 3 */
+#define LCD_START_LINE4  0x54     /**< DDRAM address of first char of line 4 */
 
-/**
- * This macro is similar to LONG_DELAY above, but defines a short 40us delay
- * (4 counts of 156,250 Hz clock).
- */
-#define SHORT_DELAY	4
+// LCD pins
+#define LCD_CGRAM             6      /* DB6: set CG RAM address             */
+#define LCD_DDRAM             7      /* DB7: set DD RAM address             */
+#define LCD_BUSY              7      /* DB7: LCD is busy                    */
 
 /**
  * This enum contains all the LCD commands that are required for configuring
@@ -49,12 +47,16 @@
 enum {
 	// Module configuration
 	SetDisplayMode = 0x38, // Requires a long delay afterwards
-	EnableDisplay = 0x0C,
-	SetEntryMode = 0x06,
+	EnableDisplay = 0x0C, // Display on, cursor and blinking off
+	SetEntryMode = 0x06, // Set moving direction of cursor and display (Inc)
+        ClearDisplay = 0x01, // writes 0x20 to DDRAM and sets address to 0x00
 
 	// Cursor positioning
-	MoveCursorToFirstLine = 0x02, // Requires a long delay afterwards
-	MoveCursorToSecondLine = 0xC0
+        ReturnHome = 0x02, // Requires a long delay afterwards
+        MoveCursorToLine1 = 0x00,
+        MoveCursorToLine2 = 0x40,
+        MoveCursorToLine3 = 0x14,
+        MoveCursorToLine4 = 0x54,
 };
 
 /*******************************************************************************
@@ -75,27 +77,29 @@ enum {
 void LCD_init(void);
 
 /**********************************************************************
- * Function: LCD_setLine
+ * Function: LCD_writeString
+ * @param String to show on LCD display.
  * @return None.
- * @remark Sets the characters that will display on the given line of the LCD. As the LCD can
- * 	only hold LCD_LINE_LENGTH characters per line, extra characters beyond these will be ignored.
- * 	If fewer characters than LCD_LINE_LENGTH are passed , it will be assumed that
- * 	the rest of the line should be empty and so it will be cleared appropriately.
- * @remark Reads the input string until a NULL-character is found or LCD_LINE_LENGTH characters
- * 	have been read.
+ * @remark Writes the given string to the display, and creates a newline for
+ *  every newline character '\n'.
   **********************************************************************/
-void LCD_setLine(uint8_t line, const char *newLine);
-
+void LCD_writeString(const char *s);
 
 /**********************************************************************
- * Function: LCD_getLine
- * @return Character array for the given line of the LCD.
- * @remark Returns characters passed in to the LCD_setLine() up to
- * 	LCD_LINE_LENGTH + 1.
- * @remark Character pointer is statically allocated and so should not be
- *  free()d or otherwise modified by the calling code. Use strcpy()d if
- *	desired.
+ * Function: LCD_clearDisplay
+ * @return None.
+ * @remark Clears all text on the LCD display.
   **********************************************************************/
-const char *LCD_getLine(uint8_t line);
+void LCD_clearDisplay();
+
+/**********************************************************************
+ * Function: LCD_setPosition
+ * @param Line to set the cursor to.
+ * @param Character position to set the cursor to.
+ * @return None.
+ * @remark Sets the cursor to the given position for writing.
+  **********************************************************************/
+void LCD_setPosition(uint8_t line, uint8_t col);
+
 
 #endif // LCD_H
