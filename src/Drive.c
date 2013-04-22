@@ -38,35 +38,49 @@ char debug[255];
 #define DBPRINT(msg)    ((int)0)
 #endif
 
+
+// --------------------- Acutator ports -----------------------------
 #define MOTOR_LEFT              RC_PORTY07  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
 #define MOTOR_RIGHT             RC_PORTY06  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
-// #define RUDDER_TRIS          RC_TRISY06 // RB15 -- J7-12
 #define RUDDER                  RC_PORTV03 //RB2, J7-01
 
+// ---------------------- RC Time Definitions -----------------------
 #define RC_STOP_PULSE            1500
-#define RC_FORWARD_RANGE        (MAXPULSE - RC_STOP_PULSE)
-#define RC_REVERSE_RANGE        (RC_STOP_PULSE - MINPULSE)
-#define RC_ONEWAY_RANGE        500
 
+// Motor limits
 #define RC_MOTOR_MAX            1700
 #define RC_MOTOR_MIN            1300
+#define RC_MOTOR_FORWARD_RANGE  (RC_MOTOR_MAX - RC_STOP_PULSE)
+#define RC_MOTOR_REVERSE_RANGE  (RC_STOP_PULSE - RC_MOTOR_MIN)
 
+// Rudder limits
 #define RC_RUDDER_MAX           2000
 #define RC_RUDDER_MIN           1000
+#define RC_RUDDER_LEFT_MAX      RC_RUDDER_MAX
+#define RC_RUDDER_RIGHT_MAX     RC_RUDDER_MIN
+#define RC_RUDDER_RANGE         (RC_RUDDER_MAX - RC_STOP_PULSE) // left/right dynamic range
+#define LEFT                    (0)
+#define RIGHT                   (1)
 
-#define RC_RUDDER_LEFT_MAX      MAXPULSE
-#define RC_RUDDER_RIGHT_MAX     MINPULSE
-
+// Thresholds for rudder bang-bang control
 #define RC_RUDDER_MIN_PULSE     1600
 #define RUDDER_ERROR_MIN        15
 
-#define PERCENT_TO_RCPULSE(s)      (5*s + RC_STOP_PULSE) // PWM 0-100 to 1500-2000
-#define PERCENT_TO_RCPULSE_BACKWARD(s)      (RC_STOP_PULSE - 5*s) // PWM 0-100 to 1500-2000
-#define SPEED_TO_RCPULSE(s)         ((uint16_t)((100.0*s) + 1500.0))
 
+// Convert speed (0 to 100%) to RC time
+#define MOTOR_PERCENT_TO_RCPULSE(s)           (((uint16_t)RC_MOTOR_FORWARD_RANGE/100)*s + RC_STOP_PULSE)
+#define MOTOR_PERCENT_TO_RCPULSE_REVERSE(s)   (((uint16_t)RC_MOTOR_REVERSE_RANGE/100)*s + RC_STOP_PULSE)
+
+// Convert rudder angle to RC time
+#define RUDDER_PERCENT_TO_RCPULSE_LEFT(s)     (((uint16_t)RC_RUDDER_RANGE/100)*s + RC_STOP_PULSE)
+#define RUDDER_PERCENT_TO_RCPULSE_RIGHT(s)    (-((uint16_t)RC_RUDDER_RANGE/100)*s + RC_STOP_PULSE)
+
+
+// Delays for control system updating
 #define HEADING_UPDATE_DELAY    100 // (ms)
 
-//PD Controller Parameter Settings
+/* ------------------------ remove these */
+// PD Controller Parameter Settings
 #define KP 1.0f
 #define KD 1.0f
 #define FORWARD_RANGE (11 - 8.18)
@@ -89,10 +103,7 @@ char debug[255];
 #define VMIN 0  //0 MPH
 #define VRANGE (VMAX - VMIN)
 
-
-//defines for Override feature
-#define MICRO_CONTROL            0
-#define RECIEVER_CONTROL         1
+/* stop ----------------------------- */
 
 #define DEBUG_PRINT_DELAY   1000
 
@@ -106,7 +117,7 @@ static enum {
     STATE_IDLE  = 0x0,      // Motors are stopped
     STATE_DRIVE = 0x1,      // Driving forward.
     STATE_PIVOT = 0x2,      // Pivoting in place.
-    STATE_TRACK = 0x3,      // Tracking a desired  velocity and heading
+    STATE_TRACK = 0x3,      // Tracking desired heading at speed
 } state;
 
 static enum {
@@ -114,11 +125,15 @@ static enum {
     PIVOT_RIGHT = 0x2, // Pivot to the Right --> Motor Arrangement
 } pivotState;
 
-uint16_t lastPivotState, lastPivotError;
+static uint16_t lastPivotState, lastPivotError;
 
-uint16_t desiredHeading = 0; // (degrees) from North
-float desiredVelocity = 0.0f;  // (m/s) desired velocity
-uint16_t velocityPulse = RC_STOP_PULSE; // (ms) velocity RC servo pulse time
+// --
+static uint8_t desiredSpeed = 0; // (percent) from 0 to 100%
+
+static uint16_t desiredHeading = 0; // (degrees) from North
+static float desiredVelocity = 0.0f;  // (m/s) desired velocity
+static uint16_t velocityPulse = RC_STOP_PULSE; // (ms) velocity RC servo pulse time
+
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
@@ -143,7 +158,9 @@ BOOL Drive_init() {
     uint16_t RC_pins = MOTOR_LEFT  | MOTOR_RIGHT | RUDDER;
     RC_init(RC_pins);
     Timer_new(TIMER_DRIVE, 1);
+
 #ifdef DEBUG
+    // Timers for debug print statements
     Timer_new(TIMER_TEST2,1);
     Timer_new(TIMER_TEST3,1);
 #endif
@@ -179,23 +196,28 @@ void Drive_runSM() {
 }
 
 void Drive_forward(uint8_t speed) {
+    desiredSpeed = speed;
     startDriveState();
+
     uint16_t rc_time = PERCENT_TO_RCPULSE(speed);
+    setLeftMotor(speed);
+    setRightMotor(rc_time);
+}
+
+void Drive_forwardHeading(uint8_t speed, uint16_t angle) {
+    desiredSpeed = speed;
+    desiredHeading = angle;
+    startTrackState();
+    
+    uint16_t rc_time = SPEED_TO_RCPULSE(speed);
     setLeftMotor(rc_time);
     setRightMotor(rc_time);
 }
 
-void Drive_forwardHeading(float speed, uint16_t angle) {
-    startTrackState();
-    desiredVelocity = speed;
-    desiredHeading = angle;
-
-    setLeftMotor(SPEED_TO_RCPULSE(speed));
-    setRightMotor(SPEED_TO_RCPULSE(speed));
-}
-
-void Drive_backward(uint8_t speed){
+void Drive_backward(uint8_t speed) {
+    desiredSpeed = speed;
     startDriveState();
+
     uint16_t rc_time = PERCENT_TO_RCPULSE_BACKWARD(speed);
     setLeftMotor(rc_time);
     setRightMotor(rc_time);
@@ -220,6 +242,11 @@ void Drive_pivot(uint16_t angle) {
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
+/**********************************************************************
+ * Function: startPivotState
+ * @return None
+ * @remark Switches into the pivot state for turning in place.
+ **********************************************************************/
 static void startPivotState() {
     state = STATE_PIVOT;
 
@@ -227,18 +254,35 @@ static void startPivotState() {
     lastPivotError = 0;
 }
 
+
+/**********************************************************************
+ * Function: startIdleState
+ * @return None
+ * @remark Switches into the idle state, which stops the boat.
+ **********************************************************************/
 static void startIdleState() {
     state = STATE_IDLE;
-    velocityPulse = RC_STOP_PULSE;
-    desiredVelocity = 0.0f;
+    desiredSpeed = 0;
+
     setLeftMotor(RC_STOP_PULSE);
     setRightMotor(RC_STOP_PULSE);
 }
 
+/**********************************************************************
+ * Function: startDriveState
+ * @return None
+ * @remark Switches into the drive state for driving straight forward.
+ **********************************************************************/
 static void startDriveState() {
     state = STATE_DRIVE;
 }
 
+/**********************************************************************
+ * Function: startTrackState
+ * @return None
+ * @remark Switches into the track state for maintaining a heading
+ *  and driving forward at a given speed.
+ **********************************************************************/
 static void startTrackState() {
     state = STATE_TRACK;
     setLeftMotor(RC_STOP_PULSE);
@@ -248,23 +292,50 @@ static void startTrackState() {
     lastPivotError = 0;
 }
 
-static void setLeftMotor(uint16_t rc_time) {
-    uint16_t rc_time_use = (rc_time > RC_MOTOR_MAX)?
-            RC_MOTOR_MAX : rc_time;
-    rc_time_use = (rc_time_use < RC_MOTOR_MIN)?
-        RC_MOTOR_MIN : rc_time_use;
-    RC_setPulseTime(MOTOR_LEFT, rc_time_use);
+/**********************************************************************
+ * Function: setLeftMotor
+ * @param Speed in percent from 0 to 100%.
+ * @return None
+ * @remark Sets the left motor to drive at the given speed in percent.
+ **********************************************************************/
+static void setLeftMotor(uint8_t speed) {
+    uint16_t rc_time = SPEED_TO_RCPULSE(speed);
+    // Limit the rc times
+    if (rc_time > RC_MOTOR_MAX)
+        rc_time = RC_MOTOR_MAX;
+    if (rc_time < RC_MOTOR_MIN)
+        rc_time = RC_MOTOR_MIN;
+
+    RC_setPulseTime(MOTOR_LEFT, rc_time);
 }
 
-static void setRightMotor(uint16_t rc_time) {
-    uint16_t rc_time_use = (rc_time > RC_MOTOR_MAX)?
-            RC_MOTOR_MAX : rc_time;
-    rc_time_use = (rc_time_use < RC_MOTOR_MIN)?
-        RC_MOTOR_MIN : rc_time_use;
-    RC_setPulseTime(MOTOR_RIGHT, rc_time_use);
+/**********************************************************************
+ * Function: setRightMotor
+ * @param Speed in percent from 0 to 100%.
+ * @return None
+ * @remark Sets the right motor to drive at the given speed in percent.
+ **********************************************************************/
+static void setRightMotor(uint8_t speed) {
+    uint16_t rc_time = SPEED_TO_RCPULSE(speed);
+    // Limit the rc times
+    if (rc_time > RC_MOTOR_MAX)
+        rc_time = RC_MOTOR_MAX;
+    if (rc_time < RC_MOTOR_MIN)
+        rc_time = RC_MOTOR_MIN;
+
+    RC_setPulseTime(MOTOR_RIGHT, rc_time);
 }
 
-static void setRudder(uint16_t rc_time) {
+/**********************************************************************
+ * Function: setRudder
+ * @param Direction left or right to set the rudder to (0 = LEFT, 1 = RIGHT).
+ * @param Angle in percent of full rudder range to set to (0 to 100%).
+ * @return None
+ * @remark Sets the right motor to drive at the given speed in percent.
+ **********************************************************************/
+static void setRudder(char direction, uint8_t percentAngle) {
+    uint16_t rc_time = (direction == LEFT)?
+        : ;
     uint16_t rc_time_use = (rc_time > RC_RUDDER_MAX)?
             RC_RUDDER_MAX : rc_time;
     rc_time_use = (rc_time_use < RC_RUDDER_MIN)?
@@ -272,10 +343,7 @@ static void setRudder(uint16_t rc_time) {
     RC_setPulseTime(RUDDER, rc_time_use);
 }
 
-
-static uint16_t getVelocityPulse(){
-    return velocityPulse;
-}
+// ---------------- Update functions for state machines ----------------
 /**
  * Function: updateHeadingPivot
  * @return None
@@ -792,6 +860,11 @@ int main(){
 #define RECIEVER_DELAY      3000 // (ms)
 #define MICRO 0
 #define RECIEVER 1
+
+//defines for Override feature
+#define MICRO_CONTROL            0
+#define RECIEVER_CONTROL         1
+
 
 void Override_init();
 
