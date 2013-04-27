@@ -26,13 +26,15 @@ static BOOL hasNewMsg = FALSE;
 /********************************************************************
  * PRIVATE PROTOTYPES                                               *
  ********************************************************************/
-void Mavlink_sendBarometer(float temperatureCelsius, float altitude);
-void Mavlink_sendGpsEcef(bool ack, uint8_t status, GeocentricCoordinate *ecef);
-void Mavlink_sendCmdOther(bool ack, uint8_t command);
-void Mavlink_sendStatusAndError(uint16_t status, uint16_t error);
-void Mavlink_sendGpsNed(bool ack, uint8_t status, LocalCoordinate *nedPos);
+static void sendGpsNed(bool ack, uint8_t status, LocalCoordinate *nedPos);
+static void sendStatusAndError(uint16_t status, uint16_t error);
+static void sendCmdOther(bool ack, uint8_t command);
+static void sendGpsEcef(bool ack, uint8_t status, GeocentricCoordinate *ecef);
+static void sendBarometer(float temperatureCelsius, float altitude);
 
-
+/********************************************************************
+ * Public Functions
+ ********************************************************************/
 
 void Mavlink_recieve(){
     while(UART_isReceiveEmpty(MAVLINK_UART_ID) == FALSE) {
@@ -104,9 +106,6 @@ void Mavlink_recieve(){
     packet_drops += status.packet_rx_drop_count;
 }
 
-/*************************************************************************
- * PUBLIC FUNCTIONS                                                      *
- *************************************************************************/
 /*------------------------- Receive Messages ----------------------------*/
 
 bool Mavlink_hasNewMessage() {
@@ -155,59 +154,59 @@ void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data){
 /* --- Command Other --- */
 
 void Mavlink_sendReturnStation(bool ack){
-    Mavlink_sendCmdOther(ack, 0x01);
+    sendCmdOther(ack, 0x01);
 }
 
 void Mavlink_sendReinitialize(bool ack){
-    Mavlink_sendCmdOther(ack, 0x02);
+    sendCmdOther(ack, 0x02);
 }
 
 void Mavlink_sendOverride(bool ack){
-    Mavlink_sendCmdOther(ack, 0x03);
+    sendCmdOther(ack, 0x03);
 }
 
 /* --- Status and Error --- */
 
 void Mavlink_sendStatus(uint16_t status){
-    Mavlink_sendStatusAndError(status, 0);
+    sendStatusAndError(status, 0);
 }
 
 void Mavlink_sendError(uint16_t error){
-    Mavlink_sendStatusAndError(0, error);
+    sendStatusAndError(0, error);
 }
 
 
 /* --- Coordinate Commands --- */
 
 void Mavlink_sendOrigin(bool ack, GeocentricCoordinate *ecefOrigin){
-    Mavlink_sendGpsEcef(ack, 0x01, ecefOrigin);
+    sendGpsEcef(ack, 0x01, ecefOrigin);
 }
 
 void Mavlink_sendStation(bool ack, LocalCoordinate *nedPos){
-    Mavlink_sendGpsNed(ack, 0x1, nedPos);
+    sendGpsNed(ack, 0x1, nedPos);
 }
 
 void Mavlink_sendStartRescue(bool ack, LocalCoordinate *nedPos){
-    Mavlink_sendGpsNed(ack, 0x2, nedPos);
+    sendGpsNed(ack, 0x2, nedPos);
 }
 
 
 /* --- Coordinate and Sensor Data --- */
 
 void Mavlink_sendGeocentricError(GeocentricCoordinate *ecefError){
-    Mavlink_sendGpsEcef(NO_ACK, 0x02, ecefError);
+    sendGpsEcef(NO_ACK, 0x02, ecefError);
 }
 
 void Mavlink_sendBoatPosition(LocalCoordinate *nedPos){
-    Mavlink_sendGpsNed(NO_ACK, 0x3, nedPos);
+    sendGpsNed(NO_ACK, 0x3, nedPos);
 }
-void Mavlink_sendBarometerData(float temperatureCelsius, float altitude);
+
 
 /************************************************************************
  * PRIVATE FUNCTIONS                                                    *
  ************************************************************************/
 
-void Mavlink_sendGpsNed(bool ack, uint8_t status, LocalCoordinate *nedPos){
+static void sendGpsNed(bool ack, uint8_t status, LocalCoordinate *nedPos){
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_gps_ned_pack(MAV_NUMBER, COMP_ID, &msg, ack,status, nedPos->n, nedPos->e, nedPos->d);
@@ -215,7 +214,7 @@ void Mavlink_sendGpsNed(bool ack, uint8_t status, LocalCoordinate *nedPos){
     UART_putString(MAVLINK_UART_ID, buf, length);
 }
 
-void Mavlink_sendStatusAndError(uint16_t status, uint16_t error){
+static void sendStatusAndError(uint16_t status, uint16_t error){
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_status_and_error_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, status, error);
@@ -223,7 +222,7 @@ void Mavlink_sendStatusAndError(uint16_t status, uint16_t error){
     UART_putString(MAVLINK_UART_ID, buf, length);
 }
 
-void Mavlink_sendCmdOther(bool ack, uint8_t command){
+static void sendCmdOther(bool ack, uint8_t command){
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_cmd_other_pack(MAV_NUMBER, COMP_ID, &msg, ack, command);
@@ -231,7 +230,7 @@ void Mavlink_sendCmdOther(bool ack, uint8_t command){
     UART_putString(MAVLINK_UART_ID, buf, length);
 }
 
-void Mavlink_sendGpsEcef(bool ack, uint8_t status, GeocentricCoordinate *ecef){
+static void sendGpsEcef(bool ack, uint8_t status, GeocentricCoordinate *ecef){
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_gps_ecef_pack(MAV_NUMBER, COMP_ID, &msg, ack, status,ecef->x,ecef->y,ecef->z);
@@ -239,7 +238,7 @@ void Mavlink_sendGpsEcef(bool ack, uint8_t status, GeocentricCoordinate *ecef){
     UART_putString(MAVLINK_UART_ID, buf, length);
 }
 
-void Mavlink_sendBarometer(float temperatureCelsius, float altitude){
+static void Mavlink_sendBarometer(float temperatureCelsius, float altitude){
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_barometer_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, temperatureCelsius, altitude);
