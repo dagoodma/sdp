@@ -21,7 +21,7 @@ static BOOL hasNewMsg = FALSE;
 
 #define MAV_NUMBER 15 // defines the MAV number, arbitrary
 #define COMP_ID 15
-#define MAVLINK_UART_ID UART1_ID
+
 
 /********************************************************************
  * PRIVATE PROTOTYPES                                               *
@@ -43,36 +43,40 @@ void Mavlink_recieve(){
         if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
             switch(msg.msgid) {
                 case MAVLINK_MSG_ID_XBEE_HEARTBEAT:
-                {//REQUIRED DO NOT REMOVE -- JOHN
+                {
                     mavlink_xbee_heartbeat_t data;
                     mavlink_msg_xbee_heartbeat_decode(&msg, &data);
                     //call outside function to handle data
                     Xbee_recieved_message_heartbeat(&data);
                     break;
-                }//REQUIRED DO NOT REMOVE -- JOHN
-                case MAVLINK_MSG_ID_MAVLINK_ACK:
-                {//REQUIRED DO NOT REMOVE -- JOHN
-                    mavlink_mavlink_ack_t data;
-                    mavlink_msg_mavlink_ack_decode(&msg, &data);
-
-                }//REQUIRED DO NOT REMOVE -- JOHN
-                    break;
-#ifdef XBEE_TEST
+                }
+                #ifdef XBEE_TEST
                 case MAVLINK_MSG_ID_TEST_DATA:
+                {
                     mavlink_test_data_t data;
                     mavlink_msg_test_data_decode(&msg, &data);
                     //call outside function to handle data
                     Xbee_message_data_test(&data);
+                }
                     break;
-#endif
-                    /*
-                case MAVLINK_MSG_ID_RESET:
+                #endif
+                case MAVLINK_MSG_ID_MAVLINK_ACK:
+                    mavlink_msg_mavlink_ack_decode(&msg, &Mavlink_newMessage.ackData);
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
+                    break;  
+                case MAVLINK_MSG_ID_CMD_OTHER:
                     //mavlink_reset_t newMessage.resetData;
-                    mavlink_msg_reset_decode(&msg, &(newMessage.resetData));
+                    mavlink_msg_cmd_other_decode(&msg, &(Mavlink_newMessage.commandOtherData));
                     hasNewMsg = TRUE;
                     newMsgID = msg.msgid;
                     break;
-                     */
+                case MAVLINK_MSG_ID_STATUS_AND_ERROR:
+                    //mavlink_reset_t newMessage.resetData;
+                    mavlink_msg_status_and_error_decode(&msg, &(Mavlink_newMessage.statusAndErrorData));
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
+                    break;
                 case MAVLINK_MSG_ID_GPS_GEO:
                     //mavlink_gps_geo_t newMessage.gpsGeodeticData;
                     mavlink_msg_gps_geo_decode(&msg, &(Mavlink_newMessage.gpsGeodeticData));
@@ -154,15 +158,15 @@ void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data){
 /* --- Command Other --- */
 
 void Mavlink_sendReturnStation(bool ack){
-    sendCmdOther(ack, 0x01);
+    sendCmdOther(ack, MAVLINK_RETURN_STATION);
 }
 
 void Mavlink_sendReinitialize(bool ack){
-    sendCmdOther(ack, 0x02);
+    sendCmdOther(ack, MAVLINK_REINITIALIZE);
 }
 
 void Mavlink_sendOverride(bool ack){
-    sendCmdOther(ack, 0x03);
+    sendCmdOther(ack, MAVLINK_OVERRIDE);
 }
 
 /* --- Status and Error --- */
@@ -179,26 +183,26 @@ void Mavlink_sendError(uint16_t error){
 /* --- Coordinate Commands --- */
 
 void Mavlink_sendOrigin(bool ack, GeocentricCoordinate *ecefOrigin){
-    sendGpsEcef(ack, 0x01, ecefOrigin);
+    sendGpsEcef(ack, MAVLINK_GEOCENTRIC_ORIGIN, ecefOrigin);
 }
 
 void Mavlink_sendStation(bool ack, LocalCoordinate *nedPos){
-    sendGpsNed(ack, 0x1, nedPos);
+    sendGpsNed(ack, MAVLINK_LOCAL_SET_STATION, nedPos);
 }
 
 void Mavlink_sendStartRescue(bool ack, LocalCoordinate *nedPos){
-    sendGpsNed(ack, 0x2, nedPos);
+    sendGpsNed(ack, MAVLINK_LOCAL_START_RESCUE, nedPos);
 }
 
 
 /* --- Coordinate and Sensor Data --- */
 
 void Mavlink_sendGeocentricError(GeocentricCoordinate *ecefError){
-    sendGpsEcef(NO_ACK, 0x02, ecefError);
+    sendGpsEcef(NO_ACK, MAVLINK_GEOCENTRIC_ERROR, ecefError);
 }
 
 void Mavlink_sendBoatPosition(LocalCoordinate *nedPos){
-    sendGpsNed(NO_ACK, 0x3, nedPos);
+    sendGpsNed(NO_ACK, MAVLINK_LOCAL_BOAT_POSITION, nedPos);
 }
 
 
