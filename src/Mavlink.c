@@ -1,9 +1,15 @@
+/**********************************************************************
+ Module
+ Mavlink.c
+
+ Author: John Ash, David Goodman
+
+***********************************************************************/
 #include <xc.h>
 #include "Mavlink.h"
 #include "Uart.h"
 #include "Board.h"
 #include "Xbee.h"
-#include "Compas.h"
 
 static int packet_drops = 0;
 static mavlink_message_t msg;
@@ -83,9 +89,42 @@ void Mavlink_recieve(uint8_t uart_id){
     }
     packet_drops += status.packet_rx_drop_count;
 }
+
 /*************************************************************************
- * SEND FUNCTIONS                                                        *
+ * PUBLIC FUNCTIONS                                                      *
  *************************************************************************/
+/*------------------------- Receive Messages ----------------------------*/
+
+// TODO remove this
+void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet){
+    switch(packet->Message_Name){
+        case messageName_start_rescue:
+        {
+            start_rescue.ACK_status = ACK_STATUS_RECIEVED;
+        }break;
+    }
+}
+
+BOOL Mavlink_hasNewMessage() {
+    uint8_t result = hasNewMsg;
+    hasNewMsg = FALSE;
+    return result;
+}
+
+int Mavlink_getNewMessageID() {
+    return newMsgID;
+}
+
+
+/*------------------------- Send Messages ----------------------------*/
+
+void Mavlink_resend_message(ACK *message){
+    UART_putString(message->last_uart_id, message->last_buf, message->last_length);
+    message->ACK_status = ACK_STATUS_WAIT;
+}
+
+
+
 
 void Mavlink_send_ACK(uint8_t uart_id, uint8_t Message_Name){
     mavlink_message_t msg;
@@ -155,35 +194,13 @@ void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data){
 #endif
 
 
-/*************************************************************************
- * RECIEVE FUNCTIONS                                                     *
- *************************************************************************/
-
-void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet){
-    switch(packet->Message_Name){
-        case messageName_start_rescue:
-        {
-            start_rescue.ACK_status = ACK_STATUS_RECIEVED;
-        }break;
-    }
-}
-
-BOOL Mavlink_hasNewMessage() {
-    uint8_t result = hasNewMsg;
-    hasNewMsg = FALSE;
-    return result;
-}
-
-int Mavlink_getNewMessageID() {
-    return newMsgID;
-}
 
 
-/*************************************************************************
- * PUBLIC FUNCTIONS                                                      *
- *************************************************************************/
-
-void Mavlink_resend_message(ACK *message){
-    UART_putString(message->last_uart_id, message->last_buf, message->last_length);
-    message->ACK_status = ACK_STATUS_WAIT;
+void Mavlink_sendStartRescue(bool ack, LocalCoordinate *nedPos) {
+    mavlink_message_t msg;
+    uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+    mavlink_msg_gps_ned_pack(MAV_NUMBER, COMP_ID, &msg, ack,
+        MAVLINK_LOCAL_START_RESCUE, nedPos->north, nedPos->east, nedPos->down);
+    uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
+    UART_putString(MAVLINK_UART_ID, buf, length);
 }
