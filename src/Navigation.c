@@ -83,15 +83,28 @@ void startIdleState();
 void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos);
 void updateHeading();
 
+
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
+
+/**********************************************************************
+ * Function: Navigation_init
+ * @return TRUE or FALSE whether initialization succeeded.
+ * @remark Initializes the navigation state machine.
+ **********************************************************************/
 BOOL Navigation_init() {
     startIdleState();
     Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
     return SUCCESS;
 }
 
+
+/**********************************************************************
+ * Function: Navigation_runSM
+ * @return None
+ * @remark Steps through the navigation state machine by one cycle.
+ **********************************************************************/
 void Navigation_runSM() {
     switch (state) {
         case STATE_IDLE:
@@ -147,17 +160,25 @@ void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance) {
 
 /**********************************************************************
  * Function: Navigation_setOrigin
+ * @param A pointer to geocentric coordinate location.
  * @return None
- * @remark Sets the longitudal error for error corrections.
+ * @remark Sets the geodetic and ECEF origin point (generally the location
+ *  of the command center), by calculating the geodetic from the given
+ *  ECEF coordinate.
  **********************************************************************/
-void Navigation_setOrigin(GeocentricCoordinate *ecefRef,
-    GeodeticCoordinate *llaRef) {
+void Navigation_setOrigin(GeocentricCoordinate *ecefRef) {
+/*, GeodeticCoordinate *llaRef) { */
     ecefOrigin.x = ecefRef->x;
     ecefOrigin.y = ecefRef->y;
     ecefOrigin.z = ecefRef->z;
+    /*
     llaOrigin.lat = llaRef->lat;
     llaOrigin.lon = llaRef->lon;
     llaOrigin.alt = llaRef->alt;
+    */
+    // calculate lla origin from ecef
+    convertECEF2Geodetic(&llaOrigin, ecefRef->x, ecefRef->y, ecefRef->z);
+    
 
     hasOrigin = TRUE;
 }
@@ -180,7 +201,7 @@ void Navigation_setGeocentricError(GeocentricCoordinate *error) {
 /**********************************************************************
  * Function: Navigation_cancel
  * @return None
- * @remark Stops navigating and the the mototrs.
+ * @remark Cancels the current mission if navigating to a location.
  **********************************************************************/
 void Navigation_cancel() {
     if (Navigation_isNavigating())
@@ -220,27 +241,36 @@ BOOL Navigation_isReady() {
 
 /**********************************************************************
  * Function: Navigation_hasError
- * @return True if an error occured while navigating.
- * @remark
+ * @return TRUE or FALSE if an error occuirred while navigating.
+ * @remark Errors occur if the GPS has lost a fix or become disconnected.
+ *  Error codes are defined in Error.h, and can be obtained with the
+ *  Navigation_getError() function.
  **********************************************************************/
 BOOL Navigation_hasError() {
     return state == STATE_ERROR;
 }
 
 /**********************************************************************
- * Function: Navigation_clearError
- * @return None
- * @remark Clears the error if one occured.
+ * Function: Navigation_getError
+ * @return Error code corresponding to the last error experienced
+ *  while navigating.
+ * @remark Error codes are defined in Error.h. Note that this function
+ *  clears the error. Also, using Navigation_gotoLocalCoordinate will
+ *  clear any error codes.
  **********************************************************************/
-BOOL Navigation_clearError() {
-    if (Navigation_hasError())
+int Navigation_getError() {
+    int result = ERROR_NONE;
+    if (Navigation_hasError()) {
         startIdleState();
+        result = lastErrorCode;
+    }
+    return result;
 }
 
 
 /**********************************************************************
  * Function: Navigation_isNavigating
- * @return True if navigating to a point.
+ * @return TRUE or FALSE whether we are navigating to a location.
  * @remark 
  **********************************************************************/
 BOOL Navigation_isNavigating() {
@@ -249,7 +279,8 @@ BOOL Navigation_isNavigating() {
 
 /**********************************************************************
  * Function: Navigation_isDone
- * @return True if navigation finished and arrived at the desired point.
+ * @return TRUE or FALSE whether we successfully navigated to a
+ *  desired location.
  * @remark 
  **********************************************************************/
 BOOL Navigation_isDone() {
