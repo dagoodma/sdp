@@ -90,21 +90,21 @@ void GPS_runSM();
  * @return TRUE if a lock has been obtained.
  * @remark
  **********************************************************************/
-BOOL GPS_hasFix();
+bool GPS_hasFix();
 
 /**********************************************************************
  * Function: GPS_hasPosition
  * @return TRUE if a valid position has been obtained.
  * @remark
  **********************************************************************/
-BOOL GPS_hasPosition();
+bool GPS_hasPosition();
 
 /**********************************************************************
  * Function: GPS_isConnected
  * @return Returns true if GPS data seen in last 5 seconds.
  * @remark
  **********************************************************************/
-BOOL GPS_isConnected();
+bool GPS_isConnected();
 
 
 #ifdef USE_GEOCENTRIC_COORDINATES

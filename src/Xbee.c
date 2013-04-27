@@ -51,15 +51,11 @@
 #define DELAY_HEARTBEAT 1000 //Time to wait before send heartbeat
 #endif
 
-
-#define ACK_WAIT_TIME 3000
 /**********************************************************************
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
 
 static uint8_t Xbee_programMode();
-
-void check_ACK(ACK *message);
 
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
@@ -103,11 +99,6 @@ void Xbee_runSM(){
         printf("XBEE LOST CONNECTION\n");
     }
 #endif
-    
-    //check ACKS
-    check_ACK(&start_rescue);
-
-
 }
 
 
@@ -169,24 +160,6 @@ static uint8_t Xbee_programMode(){
     DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATCN\r", 5);//Leave the menu.
     return SUCCESS;
-}
-
-
-void check_ACK(ACK *message){
-    if(message->ACK_status == ACK_STATUS_WAIT){
-        if(message->ACK_time == 0) {
-            message->ACK_time = get_time();
-
-        }
-        else if((get_time() - message->ACK_time) >= ACK_WAIT_TIME){
-            Mavlink_resend_message(message);
-            message->ACK_time = 0;
-        }
-
-    }else if(message->ACK_status == ACK_STATUS_RECIEVED){
-            message->ACK_status = ACK_STATUS_NO_ACK;
-            message->ACK_time = 0;
-    }
 }
 
 
