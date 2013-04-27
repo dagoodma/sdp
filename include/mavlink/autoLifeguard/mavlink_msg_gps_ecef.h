@@ -1,18 +1,18 @@
 // MESSAGE GPS_ECEF PACKING
 
-#define MAVLINK_MSG_ID_GPS_ECEF 240
+#define MAVLINK_MSG_ID_GPS_ECEF 241
 
 typedef struct __mavlink_gps_ecef_t
 {
  float x; ///< Geocentric x position in meters
  float y; ///< Geocentric y position in meters
  float z; ///< Geocentric z position in meters
- uint8_t ack; ///<  TRUE if we want an ACK return FALSE else
+ uint8_t ack; ///< TRUE or FALSE if acknowledgement required.
  uint8_t status; ///< Command center's origin (0x1), or GPS error (0x2)
 } mavlink_gps_ecef_t;
 
 #define MAVLINK_MSG_ID_GPS_ECEF_LEN 14
-#define MAVLINK_MSG_ID_240_LEN 14
+#define MAVLINK_MSG_ID_241_LEN 14
 
 
 
@@ -34,7 +34,7 @@ typedef struct __mavlink_gps_ecef_t
  * @param component_id ID of this component (e.g. 200 for IMU)
  * @param msg The MAVLink message to compress the data into
  *
- * @param ack  TRUE if we want an ACK return FALSE else
+ * @param ack TRUE or FALSE if acknowledgement required.
  * @param status Command center's origin (0x1), or GPS error (0x2)
  * @param x Geocentric x position in meters
  * @param y Geocentric y position in meters
@@ -74,7 +74,7 @@ static inline uint16_t mavlink_msg_gps_ecef_pack(uint8_t system_id, uint8_t comp
  * @param component_id ID of this component (e.g. 200 for IMU)
  * @param chan The MAVLink channel this message was sent over
  * @param msg The MAVLink message to compress the data into
- * @param ack  TRUE if we want an ACK return FALSE else
+ * @param ack TRUE or FALSE if acknowledgement required.
  * @param status Command center's origin (0x1), or GPS error (0x2)
  * @param x Geocentric x position in meters
  * @param y Geocentric y position in meters
@@ -126,7 +126,7 @@ static inline uint16_t mavlink_msg_gps_ecef_encode(uint8_t system_id, uint8_t co
  * @brief Send a gps_ecef message
  * @param chan MAVLink channel to send the message
  *
- * @param ack  TRUE if we want an ACK return FALSE else
+ * @param ack TRUE or FALSE if acknowledgement required.
  * @param status Command center's origin (0x1), or GPS error (0x2)
  * @param x Geocentric x position in meters
  * @param y Geocentric y position in meters
@@ -165,7 +165,7 @@ static inline void mavlink_msg_gps_ecef_send(mavlink_channel_t chan, uint8_t ack
 /**
  * @brief Get field ack from gps_ecef message
  *
- * @return  TRUE if we want an ACK return FALSE else
+ * @return TRUE or FALSE if acknowledgement required.
  */
 static inline uint8_t mavlink_msg_gps_ecef_get_ack(const mavlink_message_t* msg)
 {

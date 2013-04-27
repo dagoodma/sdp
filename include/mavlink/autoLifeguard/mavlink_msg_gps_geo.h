@@ -1,16 +1,16 @@
 // MESSAGE GPS_GEO PACKING
 
-#define MAVLINK_MSG_ID_GPS_GEO 239
+#define MAVLINK_MSG_ID_GPS_GEO 240
 
 typedef struct __mavlink_gps_geo_t
 {
  float latitiude; ///< Geodetic latitude position in degrees
  float longitude; ///< Geodetic longitude position in degrees
- uint8_t ack; ///<  TRUE if we want an ACK return FALSE else
+ uint8_t ack; ///< TRUE or FALSE if acknowledgement required.
 } mavlink_gps_geo_t;
 
 #define MAVLINK_MSG_ID_GPS_GEO_LEN 9
-#define MAVLINK_MSG_ID_239_LEN 9
+#define MAVLINK_MSG_ID_240_LEN 9
 
 
 
@@ -30,7 +30,7 @@ typedef struct __mavlink_gps_geo_t
  * @param component_id ID of this component (e.g. 200 for IMU)
  * @param msg The MAVLink message to compress the data into
  *
- * @param ack  TRUE if we want an ACK return FALSE else
+ * @param ack TRUE or FALSE if acknowledgement required.
  * @param latitiude Geodetic latitude position in degrees
  * @param longitude Geodetic longitude position in degrees
  * @return length of the message in bytes (excluding serial stream start sign)
@@ -64,7 +64,7 @@ static inline uint16_t mavlink_msg_gps_geo_pack(uint8_t system_id, uint8_t compo
  * @param component_id ID of this component (e.g. 200 for IMU)
  * @param chan The MAVLink channel this message was sent over
  * @param msg The MAVLink message to compress the data into
- * @param ack  TRUE if we want an ACK return FALSE else
+ * @param ack TRUE or FALSE if acknowledgement required.
  * @param latitiude Geodetic latitude position in degrees
  * @param longitude Geodetic longitude position in degrees
  * @return length of the message in bytes (excluding serial stream start sign)
@@ -110,7 +110,7 @@ static inline uint16_t mavlink_msg_gps_geo_encode(uint8_t system_id, uint8_t com
  * @brief Send a gps_geo message
  * @param chan MAVLink channel to send the message
  *
- * @param ack  TRUE if we want an ACK return FALSE else
+ * @param ack TRUE or FALSE if acknowledgement required.
  * @param latitiude Geodetic latitude position in degrees
  * @param longitude Geodetic longitude position in degrees
  */
@@ -143,7 +143,7 @@ static inline void mavlink_msg_gps_geo_send(mavlink_channel_t chan, uint8_t ack,
 /**
  * @brief Get field ack from gps_geo message
  *
- * @return  TRUE if we want an ACK return FALSE else
+ * @return TRUE or FALSE if acknowledgement required.
  */
 static inline uint8_t mavlink_msg_gps_geo_get_ack(const mavlink_message_t* msg)
 {

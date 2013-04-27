@@ -7,44 +7,51 @@
           </message>
           <message id="236" name="XBEE_HEARTBEAT">
 				<description>This message will send a single byte that will count and check that xbee is alive.</description>
-				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+				<field type="uint8_t" name="ack">TRUE or FALSE if acknowledgement required.</field>
 				<field type="uint8_t" name="data">Holds raw data for use in testing</field>
           </message>
 		  <message id="237" name="MAVLINK_ACK">
-				<description>This messages will send a sinlge byte with the mavlink message id</description>
-				<field type="uint8_t" name="Message_Name"> Returns the name of message recieved</field>
+				<description>Acknowledgment response to message.</description>
+				<field type="uint8_t" name="msgID">ID of message being acknowledged.</field>
+                <field type="uint16_t" name="msgStatus">Status code of message being acknowledged.</field>
           </message>
-		  <message id="238" name="RESET">
-				<description>essage id</description>
-				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
-				<field type="uint8_t" name="status">Boat is initializing (0x1), return to station (0x2), tells the boat to reinitialize (0x3), shutdown into override (0x4)</field>
+		  <message id="238" name="CMD_OTHER">
+				<description>Command codes.</description>
+				<field type="uint8_t" name="ack">TRUE or FALSE if acknowledgement required.</field>
+				<field type="uint8_t" name="command">Return to station (0x1), reinitialize boat (0x2), start override (0x3)</field>
           </message>
-		  <message id="239" name="GPS_GEO">
-				<description>GPS geodetic coordinate used upon boat initialization for origin</description>
-				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+          <message id="239" name="STATUS_AND_ERROR">
+                <description>Status and error codes used for debugging.</description>
+				<field type="uint8_t" name="ack">TRUE or FALSE if acknowledgement required.</field>
+				<field type="uint16_t" name="status">Boat is initializing (0x1), boat is rescuing (0x2),  boat rescue success (0x3), boat is returning to station (0x4), boat in override (0x5).</field>
+                <field type="uint16_t" name="error">Error codes defined in Error.h</field>
+          </message>
+		  <message id="240" name="GPS_GEO">
+				<description>GPS geodetic coordinate used upon boat initialization for origin.</description>
+				<field type="uint8_t" name="ack">TRUE or FALSE if acknowledgement required.</field>
 				<field type="float" name="latitiude">Geodetic latitude position in degrees</field>
                 <field type="float" name="longitude">Geodetic longitude position in degrees</field>
           </message>
-		  <message id="240" name="GPS_ECEF">
-				<description>GPS geocentric, earth-centered, earth-fixed coordinate</description>
-				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+		  <message id="241" name="GPS_ECEF">
+				<description>GPS geocentric, earth-centered, earth-fixed coordinate used for initialization or error correction.</description>
+				<field type="uint8_t" name="ack">TRUE or FALSE if acknowledgement required.</field>
                 <field type="uint8_t" name="status">Command center's origin (0x1), or GPS error (0x2)</field>
 				<field type="float" name="x">Geocentric x position in meters</field>
                 <field type="float" name="y">Geocentric y position in meters</field>
 				<field type="float" name="z">Geocentric z position in meters</field>
           </message>
-		  <message id="241" name="GPS_NED">
-				<description>GPS NED local coordinate relative to command center</description>
-				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
+		  <message id="242" name="GPS_NED">
+				<description>GPS command with NED local coordinate relative to command center used for initialization and to start a rescue.</description>
+				<field type="uint8_t" name="ack">TRUE or FALSE if acknowledgement required.</field>
                 <field type="uint8_t" name="status">Set boat's station location (0x1), start a rescue (0x2), or report boat's location (0x3)</field>
-				<field type="float" name="n">North component in meters</field>
-                <field type="float" name="e">Geocentric y position in meters</field>
-				<field type="float" name="d">Geocentric z position in meters</field>
+				<field type="float" name="north">North component in meters.</field>
+                <field type="float" name="east">East component in meters.</field>
+				<field type="float" name="down">Down component in meters.</field>
           </message>
-          <message id="242" name="BAROMETER">
-				<description>Barometer data sent from boat to command center for height</description>
-				<field type="uint8_t" name="ack"> TRUE if we want an ACK return FALSE else</field>
-				<field type="int32_t" name="temperature">Contains the temperature in degrees celcius</field>
+          <message id="243" name="BAROMETER">
+				<description>Barometer data from boat containing temperature and altitude information.</description>
+				<field type="uint8_t" name="ack">TRUE or FALSE if acknowledgement required.</field>
+				<field type="float" name="temperature">Contains the temperature in degrees Celsius.</field>
                 <field type="float" name="altitude">Contains the altitude calculated from the barometer</field>
           </message>
      </messages>
