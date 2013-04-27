@@ -33,6 +33,8 @@
 #define WANT_ACK    TRUE
 #define NO_ACK      FALSE
 
+#define MAVLINK_UART_ID UART2_ID
+
 //-------------------- Message Status Codes --------------------------
 // Other command
 #define MAVLINK_RETURN_STATION          0x1
