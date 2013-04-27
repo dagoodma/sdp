@@ -4,7 +4,7 @@
 
 typedef struct __mavlink_xbee_heartbeat_t
 {
- uint8_t ack; ///<  TRUE if we want an ACK return FALSE else
+ uint8_t ack; ///< TRUE or FALSE if acknowledgement required.
  uint8_t data; ///< Holds raw data for use in testing
 } mavlink_xbee_heartbeat_t;
 
@@ -28,7 +28,7 @@ typedef struct __mavlink_xbee_heartbeat_t
  * @param component_id ID of this component (e.g. 200 for IMU)
  * @param msg The MAVLink message to compress the data into
  *
- * @param ack  TRUE if we want an ACK return FALSE else
+ * @param ack TRUE or FALSE if acknowledgement required.
  * @param data Holds raw data for use in testing
  * @return length of the message in bytes (excluding serial stream start sign)
  */
@@ -59,7 +59,7 @@ static inline uint16_t mavlink_msg_xbee_heartbeat_pack(uint8_t system_id, uint8_
  * @param component_id ID of this component (e.g. 200 for IMU)
  * @param chan The MAVLink channel this message was sent over
  * @param msg The MAVLink message to compress the data into
- * @param ack  TRUE if we want an ACK return FALSE else
+ * @param ack TRUE or FALSE if acknowledgement required.
  * @param data Holds raw data for use in testing
  * @return length of the message in bytes (excluding serial stream start sign)
  */
@@ -102,7 +102,7 @@ static inline uint16_t mavlink_msg_xbee_heartbeat_encode(uint8_t system_id, uint
  * @brief Send a xbee_heartbeat message
  * @param chan MAVLink channel to send the message
  *
- * @param ack  TRUE if we want an ACK return FALSE else
+ * @param ack TRUE or FALSE if acknowledgement required.
  * @param data Holds raw data for use in testing
  */
 #ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
@@ -132,7 +132,7 @@ static inline void mavlink_msg_xbee_heartbeat_send(mavlink_channel_t chan, uint8
 /**
  * @brief Get field ack from xbee_heartbeat message
  *
- * @return  TRUE if we want an ACK return FALSE else
+ * @return TRUE or FALSE if acknowledgement required.
  */
 static inline uint8_t mavlink_msg_xbee_heartbeat_get_ack(const mavlink_message_t* msg)
 {
