@@ -99,6 +99,9 @@ union EVENTS
     unsigned char bytes[EVENT_BYTE_SIZE]; // allows for 80 bitfields
 } event;
 
+
+bool overrideShutdown = FALSE; //  whether to force override
+
 LocalCoordinate nedStation; // NED coordinate with station location
 
 int lastMavlinkMessageID; // ID of most recently received Mavlink message
@@ -143,12 +146,17 @@ void checkEvents() {
         lastMessageID = Mavlink_getNewMessageID();
         switch (lastMessageID) {
             case MAVLINK_MSG_ID_RESET:
-                if (newMessage.commandOther->status == MAVLINK_RETURN_STATION)
+                if (newMessage.commandOther->status == MAVLINK_RETURN_STATION) {
                     event.flags.haveReturnStationMessage = TRUE;
-                else if (newMessage.commandOther->status == MAVLINK_REINITIALIZE)
+                    overrideShutdown = FALSE;
+                }
+                else if (newMessage.commandOther->status == MAVLINK_REINITIALIZE) {
                     event.flags.haveReinitializeMessage = TRUE;
-                else if (newMessage.commandOther->status == MAVLINK_OVERRIDE)
+                }
+                else if (newMessage.commandOther->status == MAVLINK_OVERRIDE) {
                     event.flags.haveOverrideMessage = TRUE;
+                    overrideShutdown = TRUE;
+                }
                 break;
             case MAVLINK_MSG_ID_GPS_ECEF:
                 if (newMessage.gpsGeocentricData.status == MAVLINK_GEOCENTRIC_ORIGIN)
@@ -234,7 +242,7 @@ void doInitializeSM() {
 /**********************************************************************
  * Function: doStationKeepSM
  * @return None
- * @remark Steps into the station keeping state machine/ 
+ * @remark Steps into the station keeping state machine.
  **********************************************************************/
 void doStationKeepSM() {
     switch (subState) {
@@ -247,48 +255,82 @@ void doStationKeepSM() {
 
 
 /**********************************************************************
- * Function: checkEvents
+ * Function: doOverrideSM
  * @return None
- * @remark Checks for various events that can occur, and sets the 
- *  appropriate flags for handling later.
+ * @remark Executes one cycle of the boat's override state machine.
  **********************************************************************/
 void doOverrideSM() {
 }
 
 
 /**********************************************************************
- * Function: checkEvents
+ * Function: doRescueSM
  * @return None
- * @remark Checks for various events that can occur, and sets the 
- *  appropriate flags for handling later.
+ * @remark Executes one cycle of the boat's rescue state machine.
  **********************************************************************/
 void doRescueSM() {
 }
 
-
 /**********************************************************************
- * Function: checkEvents
- * @return None
- * @remark Checks for various events that can occur, and sets the 
- *  appropriate flags for handling later.
- **********************************************************************/
-void doMasterSM() {
-    switch (state)
-}
-
-
-/**********************************************************************
- * Function: runMasterSM
+ * Function: doMasterSM
  * @return None.
- * @remark Executes one cycle of the boat's state machine.
+ * @remark Executes one cycle of the boat's master state machine.
  * @author David Goodman
  * @date 2013.03.28 
  **********************************************************************/
-void runMasterSM() {
-    //Serial_runSM(); // for non-blocking state machine
-    Magnetometer_runSM();
-    Drive_runSM();
+void doMasterSM() {
+    checkEvents();
 
+    #ifdef USE_DRIVE
+    Drive_runSM();
+    #endif
+
+    // I2C bus
+    I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
+
+    #ifdef USE_TILTCOMPASS
+    TiltCompass_init();
+    #endif
+
+    #ifdef USE_GPS
+    GPS_init();
+    #endif
+
+    #ifdef USE_NAVIGATION
+    Navigation_init();
+    #endif
+
+    #ifdef USE_OVERRIDE
+    Override_init();
+    #endif
+        
+
+
+    switch (state) {
+        case STATE_INITIALIZE:
+            doInitializeSM();
+            if (event.flags.initializeDone)
+                startStationKeepSM();
+            if (event.flags.initializeFail)
+                startOverrideSM();
+            break;
+        case STATE_STATIONKEEP:
+            doStationKeepSM();
+
+            break;
+
+        case STATE_OVERRIDE:
+            doOverrideSM();
+
+            break;
+
+        case STATE_RESCUE:
+            doRescueSM();
+            break;
+    }
+    // Caught by all states
+    if (event.flags.overrideTriggered || event.flags.haveOverrideMessage)
+        startOverrideSM();
 }
 
 

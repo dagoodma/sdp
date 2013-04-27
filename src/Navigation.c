@@ -68,10 +68,10 @@ float destinationTolerance = 0.0, lastHeading = 0.0;
 
 GeocentricCoordinate ecefError, ecefOrigin;
 GeodeticCoordinate llaOrigin;
-BOOL isDone = FALSE;
-BOOL hasOrigin = FALSE;
-BOOL hasErrorCorrection = FALSE;
-BOOL useErrorCorrection = FALSE;
+bool isDone = FALSE;
+bool hasOrigin = FALSE;
+bool hasErrorCorrection = FALSE;
+bool useErrorCorrection = FALSE;
 
 
 /***********************************************************************
@@ -93,7 +93,7 @@ void updateHeading();
  * @return TRUE or FALSE whether initialization succeeded.
  * @remark Initializes the navigation state machine.
  **********************************************************************/
-BOOL Navigation_init() {
+bool Navigation_init() {
     startIdleState();
     Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
     return SUCCESS;
@@ -234,7 +234,7 @@ void Navigation_disablePositionErrorCorrection() {
  * @return True if we are ready to navigate with GPS and have an origin.
  * @remark
  **********************************************************************/
-BOOL Navigation_isReady() {
+bool Navigation_isReady() {
     return GPS_isInitialized() && GPS_isConnected() && GPS_hasFix()
         && GPS_hasPosition() && hasOrigin;
 }
@@ -246,7 +246,7 @@ BOOL Navigation_isReady() {
  *  Error codes are defined in Error.h, and can be obtained with the
  *  Navigation_getError() function.
  **********************************************************************/
-BOOL Navigation_hasError() {
+bool Navigation_hasError() {
     return state == STATE_ERROR;
 }
 
@@ -273,7 +273,7 @@ int Navigation_getError() {
  * @return TRUE or FALSE whether we are navigating to a location.
  * @remark 
  **********************************************************************/
-BOOL Navigation_isNavigating() {
+bool Navigation_isNavigating() {
     return state == STATE_NAVIGATE;
 }
 
@@ -283,7 +283,7 @@ BOOL Navigation_isNavigating() {
  *  desired location.
  * @remark 
  **********************************************************************/
-BOOL Navigation_isDone() {
+bool Navigation_isDone() {
     return isDone;
 }
 
@@ -552,15 +552,15 @@ void handleError();
 void startInitialize();
 void startNavigate();
 void startOverride();
-BOOL nearDesiredPoint();
+bool nearDesiredPoint();
 
 void initializeOverride();
 void giveMicroControl();
 void giveReceiverControl();
 // -------------------------- Global variables ----------------------------
-static BOOL overrideTriggered = FALSE;
+static bool overrideTriggered = FALSE;
 static uint8_t errorsSeen = 0;
-static BOOL startDelayExpired = FALSE;
+static bool startDelayExpired = FALSE;
 
 static enum {
     INITIALIZE = 0x1, // Waiting for GPS lock
@@ -689,7 +689,7 @@ int main() {
 
 // ---------------- Override test helper functions --------------------------
 
-BOOL nearDesiredPoint() {
+bool nearDesiredPoint() {
     // Calculate NED position
     GeocentricCoordinate ecefMine;
     GPS_getPosition(&ecefMine);

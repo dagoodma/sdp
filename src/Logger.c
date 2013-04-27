@@ -44,7 +44,7 @@
 /*******************************************************************************
  * PRIVATE FUNCTIONS PROTOTYPES                                                *
  ******************************************************************************/
-static BOOL hasNewByte();
+static bool hasNewByte();
 static uint8_t readByte();
 static void resetLogger();
 
@@ -124,7 +124,7 @@ void Logger_write(char *str) {
  * @return Returns true if a new message is ready to be read
  * @remark
  **********************************************************************/
-static BOOL hasNewByte() {
+static bool hasNewByte() {
     return !UART_isReceiveEmpty(LOGGER_UART_ID);
 }
 

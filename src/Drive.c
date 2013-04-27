@@ -130,7 +130,7 @@ static uint16_t getVelocityPulse();
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 
-BOOL Drive_init() {
+bool Drive_init() {
 
 
     uint16_t RC_pins = MOTOR_LEFT  | MOTOR_RIGHT | RUDDER;

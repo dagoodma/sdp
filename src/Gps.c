@@ -87,7 +87,7 @@
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
  **********************************************************************/
-BOOL gpsInitialized = FALSE;
+bool gpsInitialized = FALSE;
 
 static enum {
     STATE_IDLE      = 0x0,
@@ -100,7 +100,7 @@ uint8_t byteIndex = 0, messageLength = LENGTH2_INDEX + 1,
         messageClass = 0, messageId = 0, gpsStatus = NOFIX_STATUS;
 
 
-BOOL hasNewMessage = FALSE, isConnected = FALSE, hasPosition = FALSE;
+bool hasNewMessage = FALSE, isConnected = FALSE, hasPosition = FALSE;
 
 // Variables read from the GPS
 
@@ -126,7 +126,7 @@ struct {
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
 
-static BOOL hasNewByte();
+static bool hasNewByte();
 static void startReadState();
 static void startIdleState();
 static void startParseState();
@@ -143,7 +143,7 @@ static void parsePayloadField();
  * @return none
  * @remark Initializes the GPS.
  **********************************************************************/
-BOOL GPS_init() {
+bool GPS_init() {
 #ifdef DEBUG
     printf("Intializing the GPS on uart %d.\n", GPS_UART_ID);
 #endif
@@ -160,7 +160,7 @@ BOOL GPS_init() {
  * @return Whether the GPS was initialized.
  * @remark none
  **********************************************************************/
-BOOL GPS_isInitialized() {
+bool GPS_isInitialized() {
     return gpsInitialized;
 }
 
@@ -211,7 +211,7 @@ void GPS_runSM() {
  * @return TRUE if a lock has been obtained.
  * @remark
  **********************************************************************/
-BOOL GPS_hasFix() {
+bool GPS_hasFix() {
     return gpsStatus != NOFIX_STATUS;
 }
 
@@ -221,7 +221,7 @@ BOOL GPS_hasFix() {
  * @return TRUE if a valid position has been obtained.
  * @remark
  **********************************************************************/
-BOOL GPS_hasPosition() {
+bool GPS_hasPosition() {
     return hasPosition;
 }
 
@@ -230,7 +230,7 @@ BOOL GPS_hasPosition() {
  * @return Returns true if GPS data seen in last 5 seconds.
  * @remark
  **********************************************************************/
-BOOL GPS_isConnected() {
+bool GPS_isConnected() {
     return isConnected;
 }
 
@@ -316,7 +316,7 @@ float GPS_getHeading() {
  * @return Returns true if a new message is ready to be read
  * @remark 
  **********************************************************************/
-static BOOL hasNewByte() {
+static bool hasNewByte() {
     return !UART_isReceiveEmpty(GPS_UART_ID);
 }
 

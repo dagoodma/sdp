@@ -290,7 +290,7 @@ static int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
 static int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID) {
-    BOOL success = FALSE;
+    bool success = FALSE;
     int32_t data = 0;
 
     do {

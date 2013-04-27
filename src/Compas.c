@@ -117,10 +117,10 @@ void updateAccelerometerLEDs();
 void updateHeading();
 float calculateAltitudeDifference();
 
-BOOL readLockButton();
-BOOL readZeroButton();
-BOOL isLockPressed();
-BOOL isZeroPressed();
+bool readLockButton();
+bool readZeroButton();
+bool isLockPressed();
+bool isZeroPressed();
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -136,10 +136,10 @@ float boatAltitude = 0; // (m)
 float heading = 0;
 
 // Whether to turn leveler lights on
-BOOL useLevel = FALSE;
+bool useLevel = FALSE;
 
-BOOL lockPressed = FALSE, lockTimerStarted = FALSE;
-BOOL zeroPressed = FALSE, zeroTimerStarted = FALSE;
+bool lockPressed = FALSE, lockTimerStarted = FALSE;
+bool zeroPressed = FALSE, zeroTimerStarted = FALSE;
 
 /******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
@@ -382,16 +382,16 @@ float calculateAltitudeDifference() {
 }
 #endif
 
-BOOL readLockButton() {
+bool readLockButton() {
     return !LOCK_BUTTON;
 }
 
-BOOL readZeroButton() {
+bool readZeroButton() {
     return !ZERO_BUTTON;
 }
 
 
-BOOL isLockPressed() {
+bool isLockPressed() {
     // Start lock press timer if pressed
     if (!readLockButton()) {
         if (lockTimerStarted)
@@ -416,7 +416,7 @@ BOOL isLockPressed() {
     return lockPressed;
 }
 
-BOOL isZeroPressed() {
+bool isZeroPressed() {
     // Start lock press timer if pressed
     if (!readZeroButton()) {
         if (zeroTimerStarted)

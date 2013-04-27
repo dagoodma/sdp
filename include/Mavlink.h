@@ -87,7 +87,7 @@ void Mavlink_recieve(uint8_t uart_id);
 
 //void Mavlink_resend_message(ACK *message);
 
-BOOL Mavlink_hasNewMessage();
+bool Mavlink_hasNewMessage();
 
 int Mavlink_getNewMessageID();
 

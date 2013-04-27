@@ -36,7 +36,7 @@
  * @return TRUE or FALSE whether initialization succeeded.
  * @remark Initializes the navigation state machine.
  **********************************************************************/
-BOOL Navigation_init();
+bool Navigation_init();
 
 
 /**********************************************************************
@@ -106,7 +106,7 @@ void Navigation_disablePositionErrorCorrection();
  * @return True if we are ready to navigate with GPS and have an origin.
  * @remark
  **********************************************************************/
-BOOL Navigation_isReady();
+bool Navigation_isReady();
 
 
 /**********************************************************************
@@ -116,7 +116,7 @@ BOOL Navigation_isReady();
  *  Error codes are defined in Error.h, and can be obtained with the
  *  Navigation_getError() function.
  **********************************************************************/
-BOOL Navigation_hasError();
+bool Navigation_hasError();
 
 
 /**********************************************************************
@@ -136,7 +136,7 @@ int Navigation_getError();
  *  desired location.
  * @remark 
  **********************************************************************/
-BOOL Navigation_isDone();
+bool Navigation_isDone();
 
 
 /**********************************************************************
@@ -144,7 +144,7 @@ BOOL Navigation_isDone();
  * @return TRUE or FALSE whether we are navigating to a location.
  * @remark 
  **********************************************************************/
-BOOL Navigation_isNavigating();
+bool Navigation_isNavigating();
 
 
 #endif // Navigation_H

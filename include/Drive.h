@@ -43,7 +43,7 @@
  * @remark Initializes the drive system state machine.
  * @author David Goodman
  * @date 2013.03.27  */
-BOOL Drive_init();
+bool Drive_init();
    
 /**
  * Function: Drive_runSM

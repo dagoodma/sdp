@@ -17,7 +17,7 @@ static mavlink_status_t status;
 
 
 static uint8_t newMsgID = 0;
-static BOOL hasNewMsg = FALSE;
+static bool hasNewMsg = FALSE;
 
 #define MAV_NUMBER 15 // defines the MAV number, arbitrary
 #define COMP_ID 15
@@ -105,7 +105,7 @@ void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet){
     }
 }
 
-BOOL Mavlink_hasNewMessage() {
+bool Mavlink_hasNewMessage() {
     uint8_t result = hasNewMsg;
     hasNewMsg = FALSE;
     return result;

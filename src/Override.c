@@ -122,7 +122,7 @@ void Override_giveMicroControl() {
  * @author David Goodman
  * @date 2013.04.01  
  **********************************************************************/
-BOOL Override_isTriggered() {
+bool Override_isTriggered() {
 
     return !Timer_isExpired(TIMER_OVERRIDE);
 }

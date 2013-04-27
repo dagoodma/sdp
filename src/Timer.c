@@ -40,7 +40,7 @@
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
-static BOOL     timerInitialized = FALSE;
+static bool     timerInitialized = FALSE;
 static uint32_t timerArray[TIMER_NUMBER_MAX];
 static volatile uint32_t timerActiveFlags;
 static volatile uint32_t timerEventFlags;
@@ -73,7 +73,7 @@ void Timer_init(void) {
  * @return Whether the timer was initialized.
  * @remark none
  **********************************************************************/
-BOOL Timer_isInitialized() {
+bool Timer_isInitialized() {
     return timerInitialized;
 }
 
@@ -146,7 +146,7 @@ int8_t Timer_set(uint8_t timerNumber, uint16_t newTime) {
  * @return TRUE if the specified timer is active and counting down.
  * @remark none
  **********************************************************************/
-BOOL Timer_isActive(uint8_t timerNumber) {
+bool Timer_isActive(uint8_t timerNumber) {
     if (timerNumber >= TIMER_NUMBER_MAX)
 	return ERROR;
 
@@ -160,7 +160,7 @@ BOOL Timer_isActive(uint8_t timerNumber) {
  * @return TRUE if the specified timer is active and counting down.
  * @remark none
  **********************************************************************/
-BOOL Timer_isExpired(uint8_t timerNumber) {
+bool Timer_isExpired(uint8_t timerNumber) {
     if (timerNumber >= TIMER_NUMBER_MAX)
         return ERROR;
 
