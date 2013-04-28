@@ -81,7 +81,7 @@ char debug[255];
 #define KP_Rudder 4.5f
 #define KD_Rudder 0.0f
 #define K_VELOCITY_RUDDER 0.00f // how much velocity effects rudder changes
-#define BANG_BANG_VELOCITY_THRESH 10 //Percentage of a duty cycle that will govern bang bang control
+#define BANG_BANG_VELOCITY_THRESH 1600 //Percentage of a duty cycle that will govern bang bang control
 #define MAX_ERROR_LIMIT 180 //maximum ThetaError that will govern max actuator range, smaller the variable, the greater the effort for smaller variations
 
 
@@ -418,9 +418,17 @@ static uint32_t Umax = KP_Rudder*(MAX_ERROR_LIMIT) + KD_Rudder*(MAX_ERROR_LIMIT/
 		rightScaled = RC_RUDDER_RIGHT_MAX;
 	}
 
+
+        #ifdef DEBUG_VERBOSE
+        printf("velocityPulse: %d\n\n", velocityPulse);
+        #endif
+
 	//Here we check the velocity, if it is within some percentage that is set by the uses in BANG_BANG_VELOCITY_THRESH
 	if(velocityPulse < BANG_BANG_VELOCITY_THRESH){
 	//Initiate BANG BANG CONTROL
+        #ifdef DEBUG_VERBOSE
+        printf("WE HAVE ENTERED BANG BANG\n\n");
+        #endif
 	rightScaled = RC_RUDDER_RIGHT_MAX;
 	leftScaled  = RC_RUDDER_LEFT_MAX;
 	}
@@ -749,7 +757,7 @@ int main() {
 #endif
    int i = 0;
    //set velocity equal to percentages or meters per second, whichever implementation you choose
-   int velocity[] = {100, 90, 80, 50, 9}; //in percentages
+   int velocity[] = {2000, 1700, 1600, 1550, 1525}; //in percentages
    velocityPulse = velocity[i];
     Timer_new(TIMER_TEST,FINISH_DELAY);
     while (1) {
@@ -766,6 +774,10 @@ int main() {
         }
          
         Drive_runSM();
+
+    #ifdef DEBUG
+    printf("velocityPulse:  %d\n\n",velocityPulse);
+    #endif
         TiltCompass_runSM();
     }
 

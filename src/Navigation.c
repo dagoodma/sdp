@@ -507,8 +507,8 @@ int main() {
 // Override defines
 #define ENABLE_OUT_TRIS PORTX12_TRIS // J5-06
 #define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
-#define MICRO       0
-#define RECIEVER    1
+#define MICRO       1
+#define RECIEVER    0
 
 // Others
 #define MAX_ERRORS 3 // max nav. errors before receiver has control forever
