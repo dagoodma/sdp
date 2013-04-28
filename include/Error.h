@@ -20,6 +20,8 @@
 
 #define GET_ERROR_MESSAGE(code)     ((const char*)errorMessage[code])
 
+typedef uint16_t error_t;
+
 /**********************************************************************
  * PUBLIC VARIABLES                                                   *
  **********************************************************************/

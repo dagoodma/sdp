@@ -20,6 +20,7 @@
 #include <xc.h>
 #include <plib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 
 /*******************************************************************************

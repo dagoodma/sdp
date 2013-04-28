@@ -57,6 +57,15 @@ void Navigation_runSM();
 void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance);
 
 
+/**********************************************************************
+ * Function: Navigation_getLocalDistance
+ * @param A pointer to a local coordinate point.
+ * @return Distance to the point in meters.
+ * @remark Calculates the distance to the given point from the current
+ *  position (in the local frame).
+ **********************************************************************/
+float Navigation_getLocalDistance(LocalCoordinate *nedPoint);
+
 
 /**********************************************************************
  * Function: Navigation_setOrigin
@@ -81,7 +90,8 @@ void Navigation_setGeocentricError(GeocentricCoordinate *error);
 /**********************************************************************
  * Function: Navigation_cancel
  * @return None
- * @remark Cancels the current mission if navigating to a location.
+ * @remark Cancels the current mission ,if navigating to a location,
+ *  and stops the motors and centers the rudder.
  **********************************************************************/
 void Navigation_cancel();
 
