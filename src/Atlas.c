@@ -47,6 +47,10 @@
 // Maximum substate errors before failing (fall into override)
 #define INITIALIZE_ERROR_MAX            5
 
+#define STATION_TOLERANCE_MIN           5.0f // (meters) to approach station
+#define STATION_TOLERANCE_MAX           25.0f // (meters) distance to float away
+#define RESCUE_TOLERANCE                2.0f // (meters) to approach person
+
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
@@ -61,6 +65,8 @@ static enum {
 
 // ---- State for Sub SM ------
 static enum {
+    STATE_NONE = 0x0,
+
     /* - Rescue SM - */
     STATE_RESCUE_WAIT,  
     STATE_RESCUE_GOTO,
@@ -92,6 +98,10 @@ union EVENTS
         /*  - Navigation events - */
         unsigned int navigationDone :1;
         unsigned int navigationError :1;
+        /* - Rescue events - */
+        unsigned int rescueFail :1;
+        /* - Station Keep events - */
+        unsigned int stationKeepFail :1;
         /*  - Initialization events - */
         unsigned int initializeDone :1;
         unsigned int initializeFail :1; // timed out too many times
@@ -101,8 +111,10 @@ union EVENTS
 
 
 bool overrideShutdown = FALSE; //  whether to force override
+bool isInitialized = FALSE;
 
 LocalCoordinate nedStation; // NED coordinate with station location
+LocalCoordinate nedRescue; // NED coordinate of drowning person
 
 int lastMavlinkMessageID; // ID of most recently received Mavlink message
 
@@ -113,8 +125,16 @@ int errorCount = 0; // Number of errors that have occurred in current state
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
 void checkEvents();
-
-
+void doInitializeSM();
+void doStationKeepSM();
+void doOverrideSM();
+void doRescueSM();
+void doMasterSM();
+void startInitializeSM();
+void startStationKeepSM();
+void startOverrideSM();
+void startRescueSM();
+void initializeAtlas();
 
 /***********************************************************************
  * PRIVATE FUNCTIONS                                                   *
@@ -139,6 +159,10 @@ void checkEvents() {
 
     if (Navigation_hasError())
         event.flags.navigationError = TRUE;
+
+    // Override
+    if (Override_isTriggered())
+        event.flags.overrideTriggered = TRUE;
 
 
     // XBee messages (from command center)
@@ -247,9 +271,31 @@ void doInitializeSM() {
 void doStationKeepSM() {
     switch (subState) {
         case STATE_STATIONKEEP_RETURN:
+            // Driving to the station
             if (event.flags.navigationDone) {
-                subState = 
+                subState = STATE_STATIONKEEP_IDLE;
+                Timer_new(TIMER_MAIN,STATION_KEEP_DELAY);
             }
+            // TODO obstacle detection
+            break;
+        case STATE_STATIONKEEP_IDLE:
+            // Wait to float away from the station
+            if (Timer_isExpired(TIMER_MAIN)) {
+                // Check if we floated too far away from the station
+                if (Navigation_getLocalDistance(&nedStation) > STATION_TOLERANCE_MAX) {
+                    startStationKeepSM(); // return to station
+                    return;
+                }
+
+                Timer_new(TIMER_MAIN, STATION_KEEP_DELAY);
+            }
+            break;
+    }
+    if (event.flags.navigationFail) {
+        error_t errorCode = Navigation_getError();
+        Mavlink_sendError(errorCode);
+        DBPRINTF("Error: %s\n", ERROR_MESSAGE[errorCode]);
+        event.flags.stationKeepFail = TRUE;
     }
 }
 
@@ -260,6 +306,7 @@ void doStationKeepSM() {
  * @remark Executes one cycle of the boat's override state machine.
  **********************************************************************/
 void doOverrideSM() {
+    // Do nothing
 }
 
 
@@ -269,6 +316,31 @@ void doOverrideSM() {
  * @remark Executes one cycle of the boat's rescue state machine.
  **********************************************************************/
 void doRescueSM() {
+    switch (subState) {
+        case STATE_RESCUE_GOTO:
+            if (event.flags.navigationFail) {
+                error_t errorCode = Navigation_getError();
+                Mavlink_sendError(errorCode);
+                DBPRINTF("Error: %s\n", ERROR_MESSAGE[errorCode]);
+                event.flags.rescueFail = TRUE;
+            }
+            if (event.flags.navigationDone) {
+                subState = STATE_RESCUE_SEARCH;
+                Navigation_cancel();
+            }
+            break;
+        case STATE_RESCUE_SEARCH:
+            // Human sensor event handling
+            // Falls through to success for now
+            subState = STATE_RESCUE_SUPPORT;
+            DBPRINTF("Rescue mission complete.\n");
+            Navigation_cancel();
+            Mavlink_sendStatus(MAVLINK_STATUS_RESCUE_SUCCESS);
+            break;
+        case STATE_RESCUE_SUPPORT:
+            // Do nothing
+            break;
+    }
 }
 
 /**********************************************************************
@@ -281,60 +353,94 @@ void doRescueSM() {
 void doMasterSM() {
     checkEvents();
 
-    #ifdef USE_DRIVE
-    Drive_runSM();
-    #endif
-
     // I2C bus
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
 
     #ifdef USE_TILTCOMPASS
-    TiltCompass_init();
+    TiltCompass_runSM();
     #endif
 
     #ifdef USE_GPS
-    GPS_init();
+    GPS_runSM();
     #endif
 
     #ifdef USE_NAVIGATION
-    Navigation_init();
+    Navigation_runSM();
     #endif
 
-    #ifdef USE_OVERRIDE
-    Override_init();
+    #ifdef USE_DRIVE
+    Drive_runSM();
     #endif
-        
 
+    #ifdef USE_XBEE
+    Xbee_runSM();
+    #endif
 
     switch (state) {
         case STATE_INITIALIZE:
             doInitializeSM();
-            if (event.flags.initializeDone)
+            
+            // Transition out when finished or failure occurs
+            if (event.flags.initializeDone) {
+                isInitialized = TRUE;
                 startStationKeepSM();
-            if (event.flags.initializeFail)
+            }
+            if (event.flags.initializeFail) {
+                forceOverride = TRUE;
                 startOverrideSM();
+            }
+
             break;
         case STATE_STATIONKEEP:
             doStationKeepSM();
+
+            if (event.flags.haveRescueMessage)
+                startRescueSM();
+            if (event.flags.stationKeepFail)
+                forceOverride = TRUE;
+                startOverrideSM();
+                start
+
 
             break;
 
         case STATE_OVERRIDE:
             doOverrideSM();
+    
+            if (!event.flags.overrideTriggered && !event.flags.haveOverrideMessage) {
+                Override_giveMicroControl();
+                DBPRINTF("Micro has control.\n");
+                startStationKeepSM();
+            }
 
             break;
 
         case STATE_RESCUE:
             doRescueSM();
+
+            if (event.flags.haveReturnStationMessage) {
+                if (isInitialized)
+                    startStationKeepSM();
+                else 
+                    startInitializeSM();
+            }
+            if (event.flags.rescueFail) {
+                forceOverride = TRUE;
+                startOverrideSM();
+            }
+
             break;
     }
-    // Caught by all states
+    //  ------- Caught by all states ----------
     if (event.flags.overrideTriggered || event.flags.haveOverrideMessage)
         startOverrideSM();
+    if (event.flags.haveReinitializeMessage)
+        startInitializeSM();
 }
 
 
 //------------------------ Start States -------------------------------
+
 
 /**********************************************************************
  * Function: startInitializeSM
@@ -346,6 +452,7 @@ void doMasterSM() {
 void startInitializeSM() {
     state = STATE_INITIALIZE;
     subState = STATE_INITIALIZE_ORIGIN;
+    isInitialized = FALSE;
 
     // Send status message to command center to initiate initialization
     Mavlink_sendStatus(MAVLINK_STATUS_START_INITIALIZE);
@@ -368,7 +475,7 @@ void startStationKeepSM() {
     // Send status message for debugging
     Mavlink_sendStatus(MAVLINK_STATUS_RETURN_STATION);
 
-    Navigation_
+    Navigation_gotoLocalCoordinate(&nedStation, STATION_TOLERANCE_MIN);
 }
 
 /**********************************************************************
@@ -379,6 +486,12 @@ void startStationKeepSM() {
  * @date 2013.04.26  
  **********************************************************************/
 void startOverrideSM() {
+    state = STATE_OVERRIDE;
+    subState = STATE_NONE;
+
+    Override_giveReceiverControl();
+    DBPRINT("Reciever has control.\n");
+    Navigation_cancel();
 }
 
 /**********************************************************************
@@ -389,7 +502,22 @@ void startOverrideSM() {
  * @date 2013.04.26  
  **********************************************************************/
 void startRescueSM() {
+    state = STATE_RESCUE;
+    subState = STATE_RESCUE_GOTO;
+
+    DBPRINTF("Start a rescue.\n");
+
+    // Get location data from message
+    nedRescue.north = Mavlink_newMessage.gpsLocalData->north;
+    nedRescue.east = Mavlink_newMessage.gpsLocalData->east;
+    nedRescue.south = Mavlink_newMessage.gpsLocalData->south;
+
+    // Send status message for debugging
+    Mavlink_sendStatus(MAVLINK_STATUS_START_RESCUE);
+
+    Navigation_gotoLocalCoordinate(&nedStation, RESCUE_TOLERANCE);
 }
+
 
 
 
@@ -448,7 +576,7 @@ int main(void) {
     printf("%.2f",0.00);
     printf("Atlas ready for use. \n\n");
     while(1){
-        runMasterSM();
+        doMasterSM();
     }
     return (SUCCESS);
 }

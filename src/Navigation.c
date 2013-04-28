@@ -10,6 +10,7 @@
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
+#include <stdbool.h>
 //#define __XC32
 #include <math.h>
 #include "Serial.h"
@@ -19,6 +20,8 @@
 #include "Navigation.h"
 #include "Drive.h"
 #include "Logger.h"
+#include "Error.h"
+
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
@@ -29,6 +32,7 @@
 #define USE_LOGGER
 
 #define UPDATE_DELAY        1500 // (ms)
+#define TIMEOUT_DELAY       7000 // (ms)
 
 // don't change heading unless calculated is this much away from last
 #define HEADING_TOLERANCE   10 // (deg)
@@ -58,9 +62,10 @@
 
 
 static enum {
-    STATE_IDLE  = 0x0,    // Initializing and obtaining instructions
-    STATE_NAVIGATE = 0x1, // Maintaining station coordinates
-    STATE_ERROR = 0x2,    // Error occured
+    STATE_IDLE  = 0x0,   // Initializing and obtaining instructions
+    STATE_NAVIGATE,      // Maintaining station coordinates
+    STATE_NAVIGATE_WAIT, // Waiting for GPS lock/connection to come back
+    STATE_ERROR,         // Error occured (GPS lost lock or disconnected)
 } state;
 
 LocalCoordinate nedDestination;
@@ -72,6 +77,8 @@ bool isDone = FALSE;
 bool hasOrigin = FALSE;
 bool hasErrorCorrection = FALSE;
 bool useErrorCorrection = FALSE;
+
+error_t lastErrorCode = ERROR_NONE;
 
 
 /***********************************************************************
@@ -95,6 +102,7 @@ void updateHeading();
  **********************************************************************/
 bool Navigation_init() {
     startIdleState();
+    lastErrorCode = 0x0;
     Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
     return SUCCESS;
 }
@@ -112,7 +120,7 @@ void Navigation_runSM() {
             break;
         case STATE_NAVIGATE:
             if (!Navigation_isReady()) {
-                startErrorState();
+                startNavigateWaitState();
                 break;
             }
             if (Timer_isExpired(TIMER_NAVIGATION)) {
@@ -124,6 +132,19 @@ void Navigation_runSM() {
                 }
 
                 Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
+            }
+            break;
+        case STATE_NAVIGATE_WAIT:
+            // Lost lock, waiting or timeout to error
+            if (Navigation_isReady())
+                startNavigateState();
+
+            if (Timer_isExpired(TIMER_NAVIGATION)) {
+                // Couldn't recover GPS
+                if (!GPS_hasFix() || !GPS_hasPosition()) 
+                    setError(ERROR_GPS_NOFIX);
+                if (!GPS_isConnected)
+                    setError(ERROR_GPS_DISCONNECTED);
             }
             break;
         case STATE_ERROR:
@@ -154,6 +175,31 @@ void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance) {
     destinationTolerance = tolerance;
 
     startNavigateState();
+}
+
+
+/**********************************************************************
+ * Function: Navigation_getLocalDistance
+ * @param A pointer to a local coordinate point.
+ * @return Distance to the point in meters.
+ * @remark Calculates the distance to the given point from the current
+ *  position (in the local frame).
+ **********************************************************************/
+float Navigation_getLocalDistance(LocalCoordinate *nedPoint) {
+    if (!Navigation_isReady()) {
+        startErrorState();
+        return;
+    }
+
+    // Get local position
+    LocalCoordinate nedMine;
+    getLocalPosition(&nedMine);
+
+    // Determine needed course
+    CourseVector course;
+    getCourseVector(&course, &nedMine, &nedDestination);
+
+    return course.d;
 }
 
 
@@ -206,6 +252,8 @@ void Navigation_setGeocentricError(GeocentricCoordinate *error) {
 void Navigation_cancel() {
     if (Navigation_isNavigating())
         startIdleState();
+
+    Drive_stop();
 }
 
 
@@ -264,6 +312,7 @@ int Navigation_getError() {
         startIdleState();
         result = lastErrorCode;
     }
+
     return result;
 }
 
@@ -284,7 +333,9 @@ bool Navigation_isNavigating() {
  * @remark 
  **********************************************************************/
 bool Navigation_isDone() {
-    return isDone;
+    bool result = isDone;
+    isDone = FALSE;
+    return result;
 }
 
 /**********************************************************************
@@ -302,8 +353,28 @@ void startNavigateState() {
 #ifdef USE_DRIVE
     Drive_stop();
 #endif
+    // Clear error
+    (void)Navigation_getError();
+
     Timer_new(TIMER_NAVIGATION, 1); // let expire quickly
 }
+
+/**********************************************************************
+ * Function: startNavigateWaitState
+ * @return None
+ * @remark Begins the navigation  waitstate, for waiting for a GPS
+ *  lock to be recovered during navigation.
+ **********************************************************************/
+void startNavigateWaitState() {
+    state = STATE_NAVIGATE_WAIT;
+
+#ifdef USE_DRIVE
+    Drive_stop();
+#endif
+
+    Timer_new(TIMER_NAVIGATION, TIMEOUT_DELAY);
+}
+
 
 
 /**********************************************************************
@@ -345,6 +416,23 @@ void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
     ecefPos->z += ecefError.z;
 }
 
+
+/**********************************************************************
+ * Function: getLocalPosition
+ * @param Local coordinate variable to save position into.
+ * @return None
+ * @remark Calculates current local position relative to the origin
+ *  using the GPS module.
+ **********************************************************************/
+void getLocalPosition(LocalCoordinate *nedVar) {
+    GeocentricCoordinate ecefMine;
+    GPS_getPosition(&ecefMine);
+    if (useErrorCorrection)
+        applyGeocentricErrorCorrection(&ecefMine);
+
+    convertECEF2NED(&nedVar, &ecefMine, &ecefOrigin, &llaOrigin);
+}
+
 /**********************************************************************
  * Function: updateHeading
  * @return None
@@ -353,14 +441,10 @@ void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
  **********************************************************************/
 void updateHeading() {
 
-    // Calculate NED position
-    GeocentricCoordinate ecefMine;
-    GPS_getPosition(&ecefMine);
-    if (useErrorCorrection)
-        applyGeocentricErrorCorrection(&ecefMine);
-
+    // Get local position
     LocalCoordinate nedMine;
-    convertECEF2NED(&nedMine, &ecefMine, &ecefOrigin, &llaOrigin);
+    getLocalPosition(&nedMine);
+
 #ifdef DEBUG
     sprintf(debug, "My position: N=%.2f, E=%.2f, D=%.2f\n",nedMine.n, nedMine.e, nedMine.d);
     DBPRINT(debug);
@@ -395,6 +479,20 @@ void updateHeading() {
     DBPRINT(debug);
 #endif
     lastHeading = newHeading;
+}
+
+
+/**********************************************************************
+ * Function: setError
+ * @param Error code to trigger.
+ * @return None
+ * @remark Sets the navigation module into the error state and sets the 
+ *  error code to the given code.
+ **********************************************************************/
+void setError(error_t errorCode) {
+    lastErrorCode = errorCode;
+
+    startErrorState();
 }
 
 /*********************************************************************

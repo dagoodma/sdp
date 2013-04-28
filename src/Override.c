@@ -76,6 +76,8 @@ void Override_init() {
 
     //DBPRINT("Override Function has been Initialized\n");
 
+    Override_giveMicroControl();
+
     INTEnable(INT_CN,1);
 }
 
