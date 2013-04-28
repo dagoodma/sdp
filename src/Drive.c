@@ -82,7 +82,7 @@ char debug[255];
 #define KD_Rudder 0.0f
 #define K_VELOCITY_RUDDER 0.00f // how much velocity effects rudder changes
 #define BANG_BANG_VELOCITY_THRESH 10 //Percentage of a duty cycle that will govern bang bang control
-#define MAX_ERROR_LIMIT 180 //maximum ThetaError that will govern max actuator range, smaller the variable, the greater the effort
+#define MAX_ERROR_LIMIT 180 //maximum ThetaError that will govern max actuator range, smaller the variable, the greater the effort for smaller variations
 
 
 
@@ -197,6 +197,7 @@ void Drive_forwardHeading(float speed, uint16_t angle) {
 
     setLeftMotor(SPEED_TO_RCPULSE(speed));
     setRightMotor(SPEED_TO_RCPULSE(speed));
+    velocityPulse = SPEED_TO_RCPULSE(speed);
 }
 
 void Drive_backward(uint8_t speed){
@@ -418,7 +419,7 @@ static uint32_t Umax = KP_Rudder*(MAX_ERROR_LIMIT) + KD_Rudder*(MAX_ERROR_LIMIT/
 	}
 
 	//Here we check the velocity, if it is within some percentage that is set by the uses in BANG_BANG_VELOCITY_THRESH
-	if(desiredVelocity < BANG_BANG_VELOCITY_THRESH){
+	if(velocityPulse < BANG_BANG_VELOCITY_THRESH){
 	//Initiate BANG BANG CONTROL
 	rightScaled = RC_RUDDER_RIGHT_MAX;
 	leftScaled  = RC_RUDDER_LEFT_MAX;
@@ -712,7 +713,7 @@ int main() {
 
 #endif
 
-//#define PIVOT_TEST_DRIVE
+#define PIVOT_TEST_DRIVE
 #ifdef PIVOT_TEST_DRIVE
 //#define MOTOR_TEST
 #define RUDDER_TEST
@@ -747,7 +748,8 @@ int main() {
    Drive_forwardHeading(0.0, desiredHeading);
 #endif
    int i = 0;
-   int velocity[] = {1600, 1600, 1600, 1600, 1600};
+   //set velocity equal to percentages or meters per second, whichever implementation you choose
+   int velocity[] = {100, 90, 80, 50, 9}; //in percentages
    velocityPulse = velocity[i];
     Timer_new(TIMER_TEST,FINISH_DELAY);
     while (1) {
