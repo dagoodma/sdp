@@ -33,6 +33,7 @@
 #define WANT_ACK    TRUE
 #define NO_ACK      FALSE
 
+#define MAVLINK_UART_ID UART2_ID
 
 //-------------------- Message Status Codes --------------------------
 // Other command
@@ -71,7 +72,7 @@ ACK start_rescue;
 */
 
 union MAVLINK_MESSAGE {
-    mavlink_ack_t               ackData;
+    mavlink_mavlink_ack_t       ackData;
     mavlink_cmd_other_t         commandOtherData;
     mavlink_status_and_error_t  statusAndErrorData;
     mavlink_gps_geo_t           gpsGeodeticData;
@@ -83,7 +84,7 @@ union MAVLINK_MESSAGE {
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
-void Mavlink_recieve(uint8_t uart_id);
+void Mavlink_recieve();
 
 //void Mavlink_resend_message(ACK *message);
 
@@ -136,9 +137,5 @@ void Mavlink_sendBarometerData(float temperatureCelsius, float altitude);
 #ifdef XBEE_TEST
 void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data);
 #endif
-
-/*------------------------- Receive Messages ----------------------------*/
-
-void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet);
 
 #endif
