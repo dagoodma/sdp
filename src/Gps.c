@@ -918,7 +918,7 @@ int main() {
                 printf("GPS has no fix!\n");
             }
 
-            printf("Compass heading: %.1f\n", TiltCompass_getheading());
+            printf("Compass heading: %.1f\n", TiltCompass_getHeading());
             Timer_new(TIMER_TEST,1000);
         }
 

@@ -48,12 +48,14 @@ char debug[255];
 #define RC_REVERSE_RANGE        (RC_STOP_PULSE - MINPULSE)
 #define RC_ONEWAY_RANGE        500
 
-#define RC_MOTOR_MAX            1700
-#define RC_MOTOR_MIN            1300
+#define RC_MOTOR_MAX            1800
+#define RC_MOTOR_MIN            1200
+#define RC_MOTOR_RANGE          (RC_FORWARD_RANGE - RC_STOP_PULSE)
 
 //RUDDER DEFINES
 #define RC_RUDDER_MAX           2000
 #define RC_RUDDER_MIN           1000
+#define RC_RUDDER_RANGE         (RC_RUDDER_MAX - RC_STOP_PULSE)
 
 #define RC_RUDDER_LEFT_MAX      MAXPULSE
 #define RC_RUDDER_RIGHT_MAX     MINPULSE
@@ -61,11 +63,12 @@ char debug[255];
 #define RC_RUDDER_MIN_PULSE     1600
 #define RUDDER_ERROR_MIN        15
 
-#define PERCENT_TO_RCPULSE(s)      (5*s + RC_STOP_PULSE) // PWM 0-100 to 1500-2000
-#define PERCENT_TO_RCPULSE_BACKWARD(s)      (RC_STOP_PULSE - 5*s) // PWM 0-100 to 1500-2000
-#define SPEED_TO_RCPULSE(s)         ((uint16_t)((100.0*s) + 1500.0))
+#define PERCENT_TO_RCPULSE_MOTOR(s)      (RC_MOTOR_RANGE/100*s + RC_STOP_PULSE) // PWM 0-100 to 1500-2000
+#define PERCENT_TO_RCPULSE_RUDDER(s)     (RC_RUDDER_RANGE/100*s + RC_STOP_PULSE)
 
 #define HEADING_UPDATE_DELAY    100 // (ms)
+
+#define SPEED_TO_RCPULSE
 
 //PD Controller Parameter Settings
 #define KP 1.0f
@@ -78,12 +81,12 @@ char debug[255];
 
 
 //PD Controller Param Settings for Rudder
-#define KP_Rudder 4.5f
+#define KP_Rudder 7.0f
 #define KD_Rudder 0.0f
 #define K_VELOCITY_RUDDER 0.00f // how much velocity effects rudder changes
-#define BANG_BANG_VELOCITY_THRESH 1600 //Percentage of a duty cycle that will govern bang bang control
+#define BANG_BANG_VELOCITY_THRESH 17 //Percentage of a duty cycle that will govern bang bang control
 #define MAX_ERROR_LIMIT 180 //maximum ThetaError that will govern max actuator range, smaller the variable, the greater the effort for smaller variations
-
+#define BANG_BANG_THETA_DEADBAND  10.0f
 
 
 // P Controller param for velocity controller
@@ -123,6 +126,7 @@ uint16_t lastPivotState, lastPivotError;
 
 uint16_t desiredHeading = 0; // (degrees) from North
 float desiredVelocity = 0.0f;  // (m/s) desired velocity
+uint16_t desiredSpeed = 0; // (%)
 uint16_t velocityPulse = RC_STOP_PULSE; // (ms) velocity RC servo pulse time
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -185,24 +189,24 @@ void Drive_runSM() {
 
 void Drive_forward(uint8_t speed) {
     startDriveState();
-    uint16_t rc_time = PERCENT_TO_RCPULSE(speed);
+    uint16_t rc_time = PERCENT_TO_RCPULSE_MOTOR(speed);
     setLeftMotor(rc_time);
     setRightMotor(rc_time);
 }
 
-void Drive_forwardHeading(float speed, uint16_t angle) {
+void Drive_forwardHeading(uint8_t speed, uint16_t angle) {
     startTrackState();
-    desiredVelocity = speed;
+    desiredSpeed = speed;
     desiredHeading = angle;
 
-    setLeftMotor(SPEED_TO_RCPULSE(speed));
-    setRightMotor(SPEED_TO_RCPULSE(speed));
-    velocityPulse = SPEED_TO_RCPULSE(speed);
+    setLeftMotor(PERCENT_TO_RCPULSE_MOTOR(speed));
+    setRightMotor(PERCENT_TO_RCPULSE_MOTOR(speed));
+    velocityPulse = PERCENT_TO_RCPULSE_MOTOR(speed);
 }
 
 void Drive_backward(uint8_t speed){
     startDriveState();
-    uint16_t rc_time = PERCENT_TO_RCPULSE_BACKWARD(speed);
+    uint16_t rc_time = PERCENT_TO_RCPULSE_MOTOR(speed);
     setLeftMotor(rc_time);
     setRightMotor(rc_time);
 }
@@ -239,6 +243,7 @@ static void startIdleState() {
     desiredVelocity = 0.0f;
     setLeftMotor(RC_STOP_PULSE);
     setRightMotor(RC_STOP_PULSE);
+    desiredSpeed = 0;
 }
 
 static void startDriveState() {
@@ -424,7 +429,7 @@ static uint32_t Umax = KP_Rudder*(MAX_ERROR_LIMIT) + KD_Rudder*(MAX_ERROR_LIMIT/
         #endif
 
 	//Here we check the velocity, if it is within some percentage that is set by the uses in BANG_BANG_VELOCITY_THRESH
-	if(velocityPulse < BANG_BANG_VELOCITY_THRESH){
+	if(desiredSpeed < BANG_BANG_VELOCITY_THRESH && thetaError > BANG_BANG_THETA_DEADBAND){
 	//Initiate BANG BANG CONTROL
         #ifdef DEBUG_VERBOSE
         printf("WE HAVE ENTERED BANG BANG\n\n");
@@ -721,7 +726,7 @@ int main() {
 
 #endif
 
-#define PIVOT_TEST_DRIVE
+//#define PIVOT_TEST_DRIVE
 #ifdef PIVOT_TEST_DRIVE
 //#define MOTOR_TEST
 #define RUDDER_TEST
@@ -1057,8 +1062,8 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
 #define MAX_PULSE 1750
 #define MIN_PULSE 1250
 #define STOP_PULSE 1500
-#define MICRO 0
-#define RECIEVER 1
+#define MICRO 1
+#define RECIEVER 0
 
 
 //#define RECIEVE_CONTROL
@@ -1141,7 +1146,58 @@ int main(){
 //    printf("\nDone with drive test.\n");
 
 }
+#endif
+
+//#define ACTUATOR_TEST2
+#ifdef ACTUATOR_TEST2
+
+#include "I2C.h"
+
+// Pick the I2C_MODULE to initialize
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000 // (Hz)
+
+//Define and enable the Enable pin for override
+#define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
+
+#define ACTUATOR_DELAY 2500 //ms
+
+#define MICRO 1
+#define RECIEVER 0
+
+#define MAX_PULSE 2000
 
 
+//#define RECIEVE_CONTROL
 
+int main(){
+    //Initializations
+    Board_init();
+    Serial_init();
+    Timer_init();
+    Drive_init();
+    ENABLE_OUT_TRIS = OUTPUT;
+    ENABLE_OUT_LAT = MICRO;
+
+#ifdef RECIEVE_CONTROL
+    ENABLE_OUT_LAT = RECIEVER;
+    while(1){
+        ;
+    }
+#endif
+
+    printf("Actuator Test2 Harness Initiated\n\n");
+    printf("Driving all actuators full blast.\n");
+    //Test Rudder
+    setRudder(MAX_PULSE);
+    setLeftMotor(MAX_PULSE);
+    setRightMotor(MAX_PULSE);
+    while (1) {
+        // do nothin
+        asm("nop");
+    }
+   
+
+}
 #endif

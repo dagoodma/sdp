@@ -83,7 +83,7 @@ void Drive_backward(uint8_t speed);
  * @author David Goodman
  * @date 2013.03.30 
  */
-void Drive_forwardHeading(float speed, uint16_t angle);
+void Drive_forwardHeading(uint8_t speed, uint16_t angle);
 
 /**
  * Function: Drive_pivot

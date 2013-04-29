@@ -18,8 +18,8 @@ delete(instrfindall)
 
 % com ports (configure these)
 clear portnums;
-portnums(uno32)=4;
-%portnums(ublox1)={'/dev/tty.usbserial-A1012WFD'};
+%portnums(uno32)=8;
+portnums(uno32)={'/dev/tty.usbserial-A100A9FT'};
 
 % connect to devices
 clear ports;

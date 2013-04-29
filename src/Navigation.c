@@ -33,8 +33,6 @@
 // don't change heading unless calculated is this much away from last
 #define HEADING_TOLERANCE   10 // (deg)
 
-// proportionally scale speed (m/s) for a given distance (m)
-#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.062f + 0.6f) // test speeds
 //#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.065f + 0.22f)
 
 #if defined(DEBUG)
@@ -82,6 +80,7 @@ void startErrorState();
 void startIdleState();
 void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos);
 void updateHeading();
+static uint8_t distanceToSpeed(float dist);
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -260,6 +259,13 @@ BOOL Navigation_isDone() {
  * PRIVATE FUNCTIONS                                                  *
  **********************************************************************/
 
+static uint8_t distanceToSpeed(float dist) {
+    //int speed = (int)dist + 5;
+    int speed = ((int)dist + 3);
+    speed = (speed > 100)? 100 : speed;
+    return (uint8_t)speed;
+}
+
 /**********************************************************************
  * Function: startNavigateState
  * @return None
@@ -356,11 +362,11 @@ void updateHeading() {
             course.yaw : lastHeading;
 
 #ifdef USE_DRIVE
-    Drive_forwardHeading(DISTANCE_TO_SPEED(course.d), (uint16_t)newHeading);
+    Drive_forwardHeading(distanceToSpeed(course.d), (uint16_t)newHeading);
 #endif
 #ifdef DEBUG
     sprintf(debug, "\tDriving: speed=%.2f [m/s], heading=%.2f [deg]\n",
-        DISTANCE_TO_SPEED(course.d),newHeading);
+        distanceToSpeed(course.d),newHeading);
     DBPRINT(debug);
 #endif
     lastHeading = newHeading;
@@ -467,7 +473,7 @@ int main() {
 // ---------------------------- Override Test ----------------------------
 // ************************************************************************
 
-//#define NAVIGATION_OVERRIDE_TEST
+#define NAVIGATION_OVERRIDE_TEST
 #ifdef NAVIGATION_OVERRIDE_TEST
 
 #define USE_COMPASS
@@ -484,7 +490,9 @@ int main() {
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  100000 // (Hz)
 
+// Keep atleast 7 decimals on LLA coordinates
 // --------------- Center of west lake -------------
+
 #define ECEF_X_ORIGIN -2706922.0f
 #define ECEF_Y_ORIGIN -4324246.0f
 #define ECEF_Z_ORIGIN 3815364.0f
@@ -494,7 +502,14 @@ int main() {
 
 // --------------- Center of baskin circle ----------
 //..
-
+/*
+#define ECEF_X_ORIGIN -2707534.0f
+#define ECEF_Y_ORIGIN -4322167.0f
+#define ECEF_Z_ORIGIN  3817539.0f
+#define GEO_LAT_ORIGIN  37.000023957f
+#define GEO_LON_ORIGIN -122.06425309f
+#define GEO_ALT_ORIGIN 239.458f
+ * */
 ///
 
 #define DESTINATION_TOLERANCE 3.2f // (m)
@@ -623,6 +638,7 @@ int main() {
                     DBPRINT("At desired point. ");
                     #ifdef USE_OVERRIDE
                     DBPRINT("Giving receiver control.\n");
+                    Navigation_cancel();
                     startOverride();
                     #else
                     DBPRINT("Ending test.\n");
@@ -636,6 +652,14 @@ int main() {
 
                 break;
             case OVERRIDE:
+                GPS_runSM();
+                Navigation_runSM();
+                #ifdef USE_COMPASS
+                TiltCompass_runSM();
+                #endif
+                #ifdef USE_DRIVE
+                Drive_runSM();
+                #endif
                 // Reset timer if we keep seeing the receiver signal
                 if (overrideTriggered) {
                     Timer_new(TIMER_TEST, RECEIVER_TIMEOUT_DELAY);   
@@ -662,8 +686,6 @@ BOOL nearDesiredPoint() {
     // Calculate NED position
     GeocentricCoordinate ecefMine;
     GPS_getPosition(&ecefMine);
-    if (useErrorCorrection)
-        applyGeocentricErrorCorrection(&ecefMine);
 
     LocalCoordinate nedMine;
     convertECEF2NED(&nedMine, &ecefMine, &ecefOrigin, &llaOrigin);
