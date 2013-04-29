@@ -38,7 +38,7 @@
 #define HEADING_TOLERANCE   10 // (deg)
 
 // proportionally scale speed (m/s) for a given distance (m)
-#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.012f + 0.1f) // test speeds
+#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.062f + 0.6f) // test speeds
 //#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.065f + 0.22f)
 
 #if defined(DEBUG)
