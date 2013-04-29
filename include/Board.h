@@ -20,6 +20,11 @@
 #include <xc.h>
 #include <plib.h>
 #include <stdint.h>
+#include "Serial.h"
+
+#ifdef USE_SD_LOGGER
+#include "Logger.h"
+#endif
 
 
 /*******************************************************************************
@@ -27,6 +32,20 @@
  ******************************************************************************/
 
 #define DELAY(ms)   do { int i; for (i = 0; i < (ms << 8); i++) { asm ("nop"); } } while(0);
+
+#define MS_TO_SEC(ms)  ((float)ms/1000)
+
+// Debugging statements over terminal, SD logger, or disabled (respectively)
+#ifdef DEBUG
+#ifndef USE_SD_LOGGER
+#define DBPRINTF(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
+#else
+#define DBPRINTF(...)   printf(__VA_ARGS__)
+#endif
+#else   
+#define DBPRINTF(...)   (int)0
+
+#endif
 
 /*****************************************************************************/
 // Boolean defines for TRUE, FALSE, SUCCESS and ERROR
