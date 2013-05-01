@@ -17,6 +17,7 @@
 #define I2C_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /*******************************************************************************
  * PUBLIC #DEFINES                                                             *

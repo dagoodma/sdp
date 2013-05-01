@@ -20,6 +20,7 @@
 #include <xc.h>
 #include <plib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "Serial.h"
 
 #ifdef USE_SD_LOGGER
@@ -38,12 +39,12 @@
 // Debugging statements over terminal, SD logger, or disabled (respectively)
 #ifdef DEBUG
 #ifndef USE_SD_LOGGER
-#define DBPRINTF(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
+#define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
 #else
-#define DBPRINTF(...)   printf(__VA_ARGS__)
+#define DBPRINT(...)   printf(__VA_ARGS__)
 #endif
 #else   
-#define DBPRINTF(...)   (int)0
+#define DBPRINT(...)   ((int)0)
 
 #endif
 
@@ -82,14 +83,19 @@
 #define TIMER_BUTTONS           6
 #define TIMER_HEARTBEAT         7
 #define TIMER_DRIVE             8
-#define TIMER_TEST2             9
+#define TIMER_OVERRIDE          9
 #define TIMER_TILTCOMPASS       10
 #define TIMER_NAVIGATION        11
 #define TIMER_LOGGER            12
-#define TIMER_BAROMETER2        14 // remove the blocking code!!
-#define TIMER_TEST              15
-#define TIMER_DELAY             16
-#define TIMER_TEST3             17
+#define TIMER_BAROMETER2        13 // remove the blocking code!!
+#define TIMER_DELAY             14
+#define TIMER_MAIN              15
+
+
+// test harness timers
+#define TIMER_TEST              29
+#define TIMER_TEST2             30
+#define TIMER_TEST3             31
 
 
 #ifdef Board_H_PRIVATE_INCLUDE

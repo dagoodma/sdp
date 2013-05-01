@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <math.h>
 #include "GPS.h"
+#include "Error.h"
 
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *
@@ -137,7 +138,7 @@ bool Navigation_hasError();
  *  clears the error. Also, using Navigation_gotoLocalCoordinate will
  *  clear any error codes.
  **********************************************************************/
-int Navigation_getError();
+error_t Navigation_getError();
 
 
 /**********************************************************************

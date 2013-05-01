@@ -213,7 +213,8 @@ void Mavlink_sendBoatPosition(LocalCoordinate *nedPos){
 static void sendGpsNed(bool ack, uint8_t status, LocalCoordinate *nedPos){
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-    mavlink_msg_gps_ned_pack(MAV_NUMBER, COMP_ID, &msg, ack,status, nedPos->n, nedPos->e, nedPos->d);
+    mavlink_msg_gps_ned_pack(MAV_NUMBER, COMP_ID, &msg, ack,status,
+            nedPos->north, nedPos->east, nedPos->down);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
     UART_putString(MAVLINK_UART_ID, buf, length);
 }

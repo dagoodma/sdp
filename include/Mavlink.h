@@ -40,6 +40,7 @@
 #define MAVLINK_RETURN_STATION          0x1
 #define MAVLINK_REINITIALIZE            0x2
 #define MAVLINK_OVERRIDE                0x3
+#define MAVLINK_SAVE_STATION            0x4
 
 // Status And Error (errors defined in Error.h)
 #define MAVLINK_STATUS_START_INITIALIZE 0x1
@@ -58,18 +59,6 @@
 /**********************************************************************
  * PUBLIC VARIABLES                                                   *
  **********************************************************************/
- /*
-typedef struct{
-    uint8_t messageName;
-    uint8_t ACK_status;
-    uint8_t last_buf[MAVLINK_MAX_PACKET_LEN];
-    uint16_t last_length;
-    uint8_t last_uart_id;
-    uint32_t ACK_time;
-}ACK;
-
-ACK start_rescue;
-*/
 
 union MAVLINK_MESSAGE {
     mavlink_mavlink_ack_t       ackData;

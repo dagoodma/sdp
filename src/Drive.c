@@ -65,12 +65,11 @@
 
 // ------------------------- Controller 
 //PD Controller Param Settings for Rudder
-#define KP_Rudder 4.5f
-#define KD_Rudder 0.0f
-#define RUDDER_BANGBANG_SPEED_THRESHOLD 10 // (speed %) turn on bang-bang control
+#define KP_RUDDER 7.0f
+#define KD_RUDDER 0.0f
+#define RUDDER_BANGBANG_SPEED_THRESHOLD 17 // (speed %) motor speed threshold
+#define RUDDER_BANGBANG_THETA_DEADBAND_THRESHOLD 10 // (degrees) heading error threshold
 
-// P Controller param for velocity controller
-#define KP_VELOCITY 0.01f;
 
 
 /***********************************************************************
@@ -84,7 +83,7 @@ static enum {
 } state;
 
 
-typedef enum {
+enum {
     RUDDER_TURN_NONE = 0x0,
     RUDDER_TURN_LEFT,   
     RUDDER_TURN_RIGHT, 
@@ -271,7 +270,7 @@ static void stopMotors() {
  * @remark Sets the left motor to drive at the given speed in percent.
  **********************************************************************/
 static void setLeftMotor(uint8_t speed) {
-    uint16_t rc_time = SPEED_TO_RCPULSE(speed);
+    uint16_t rc_time = MOTOR_PERCENT_TO_RCPULSE(speed);
     // Limit the rc times
     if (rc_time > RC_MOTOR_MAX)
         rc_time = RC_MOTOR_MAX;
@@ -288,7 +287,7 @@ static void setLeftMotor(uint8_t speed) {
  * @remark Sets the right motor to drive at the given speed in percent.
  **********************************************************************/
 static void setRightMotor(uint8_t speed) {
-    uint16_t rc_time = SPEED_TO_RCPULSE(speed);
+    uint16_t rc_time = MOTOR_PERCENT_TO_RCPULSE(speed);
     // Limit the rc times
     if (rc_time > RC_MOTOR_MAX)
         rc_time = RC_MOTOR_MAX;
@@ -345,13 +344,13 @@ static void updateRudder() {
     
     // Bound theta error and determine turn direction
     if (thetaError > 0) {
-        rudderDirection = (thetaError < 180)? RUDDER_RIGHT : RUDDER_LEFT;
+        rudderDirection = (thetaError < 180)? RUDDER_TURN_RIGHT : RUDDER_TURN_LEFT;
         thetaError = (thetaError < 180)? thetaError : (360 - thetaError);
     }
     else {
         // theta error is negative
-        rudderDirection = (thetaError > -180) RUDDER_LEFT : RUDDER_RIGHT;
-        thetaError = (thetaError > -180) -thetaError : (360 + thetaError);
+        rudderDirection = (thetaError > -180)? RUDDER_TURN_LEFT : RUDDER_TURN_RIGHT;
+        thetaError = (thetaError > -180)? -thetaError : (360 + thetaError);
     }
     
     // Initialize or dump derivative if changed directions
@@ -369,10 +368,11 @@ static void updateRudder() {
     
     // Limit percentage from 0 to 100
     uPercent = (uPercent > 100.0)? 100.0f : uPercent;
-    uPercent = (uPercent < 0.0)? 0 .0f: uPercent;
+    uPercent = (uPercent < 0.0)? 0.0f : uPercent;
 
     // Bang-bang control to force rudder all the way if speed is low
-    if (desiredSpeed < RUDDER_BANGBANG_SPEED_THRESHOLD)
+    if (desiredSpeed < RUDDER_BANGBANG_SPEED_THRESHOLD
+            && thetaError > RUDDER_BANGBANG_THETA_DEADBAND_THRESHOLD)
         uPercent = 100.0f;
     
     // Command the rudder and save 
@@ -381,7 +381,7 @@ static void updateRudder() {
     lastRudderDirection = rudderDirection;
         
     #ifdef DEBUG_VERBOSE
-    DBPRINTF(debug,"Rudder control: uDegrees=%.2f, uPercent=%d\n\n", uDegrees, (uint8_t)uPercent);
+    DBPRINT("Rudder control: uDegrees=%.2f, uPercent=%d\n\n", uDegrees, (uint8_t)uPercent);
     #endif
 }
 

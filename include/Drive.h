@@ -17,6 +17,7 @@
 #define Drive_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *

@@ -13,25 +13,30 @@
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
 
-#define ERROR_NONE                  0
-#define ERROR_GPS_DISCONNECTED      1
-#define ERROR_GPS_NOFIX             2
-#define ERROR_INITIALIZE_TIMEDOUT   3
 
-#define GET_ERROR_MESSAGE(code)     ((const char*)errorMessage[code])
+#define GET_ERROR_MESSAGE(code)     ((const char*)ERROR_MESSAGE[code])
 
-typedef uint16_t error_t;
 
 /**********************************************************************
  * PUBLIC VARIABLES                                                   *
  **********************************************************************/
 
-const char ERROR_MESSAGE[][] = { 
+typedef enum {
+    ERROR_NONE = 0x0,
+    ERROR_GPS_DISCONNECTED,
+    ERROR_GPS_NOFIX,
+    ERROR_INITIALIZE_TIMEDOUT,
+} error_t;
+
+//typedef enum error_enum  error_t ;
+
+const char *ERROR_MESSAGE[] = {
     "None",
     "GPS was disconnected",
     "GPS cannot obtain fix",
     "Initialization timed out"
 };
+
 
 
 /**********************************************************************

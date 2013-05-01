@@ -11,6 +11,8 @@
 #include "Serial.h"
 #include "Timer.h"
 #include "Drive.h"
+#include "Ports.h"
+#include "Override.h"
 //#include "Logger.h"
 
 /***********************************************************************
