@@ -18,7 +18,7 @@
 		  <message id="238" name="CMD_OTHER">
 				<description>Command codes.</description>
 				<field type="uint8_t" name="ack">TRUE or FALSE if acknowledgement required.</field>
-				<field type="uint8_t" name="command">Return to station (0x1), reinitialize boat (0x2), start override (0x3)</field>
+				<field type="uint8_t" name="command">Return to station (0x1), reinitialize boat (0x2), start override (0x3), save station (0x4)</field>
           </message>
           <message id="239" name="STATUS_AND_ERROR">
                 <description>Status and error codes used for debugging.</description>
