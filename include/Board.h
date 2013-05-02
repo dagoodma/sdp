@@ -71,6 +71,7 @@
 #define TIMER_TEST              15
 #define TIMER_DELAY             16
 #define TIMER_TEST3             17
+#define TIMER_INTERFACE         18
 
 
 #ifdef Board_H_PRIVATE_INCLUDE

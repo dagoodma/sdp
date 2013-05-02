@@ -19,12 +19,19 @@
 #include <stdint.h>
 #include <ports.h>
 #include "Board.h"
+#include "Timer.h"
 #include <stdbool.h>
 
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
+
+#define WAIT_BETWEEN_CHECKS 200 // [miliseconds]
+#define NUMBER_OF_TIMES_TO_CHECK 10
+#define MINIMUM_POSITIVES 5
+
+
 /* SWITCHES */
 #define OKAY_TRIS               PORTY07_TRIS // pin 33 J6-16
 #define CANCEL_TRIS             PORTY08_TRIS // pin 7 J6-15
@@ -56,6 +63,21 @@
  * PRIVATE VARIABLES                                                  *
  **********************************************************************/
 
+struct button_count{
+    uint8_t okay;
+    uint8_t cancel;
+    uint8_t stop;
+    uint8_t rescue;
+    uint8_t setStationKeep;
+};
+
+struct button_pressed{
+    bool okay;
+    bool cancel;
+    bool stop;
+    bool rescue;
+    bool setStationKeep;
+};
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
@@ -69,46 +91,90 @@ void Interface_init(){
     READY_TRIS = 0;
     WAIT_TRIS = 0;
     ERROR_TRIS = 0;
+
+    button_count.okay = 0;
+    button_count.cancel = 0;
+    button_count.stop = 0;
+    button_count.rescue = 0;
+    button_count.setStationKeep = 0;
+
+    Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
 }
 
 void Interface_runSM(){
+    static int count;
+    if(Timer_isExpired(TIMER_INTERFACE)){
+        if(count > NUMBER_OF_TIMES_TO_CHECK){
+            count = 0;
+
+            button_pressed.cancel = false;
+            button_pressed.okay = false;
+            button_pressed.rescue = false;
+            button_pressed.setStationKeep = false;
+            button_pressed.stop = false;
+
+            if(button_count.okay > MINIMUM_POSITIVES){
+                button_pressed.okay = true;
+            }
+            button_count.okay = 0;
+            button_count.cancel = 0;
+            button_count.stop = 0;
+            button_count.rescue = 0;
+            button_count.setStationKeep = 0;
+        }
+
+        if(READ_OKAY)
+            button_count.okay++;
+        if(READ_CANCEL)
+            button_count.cancel++;
+        if(READ_STOP)
+            button_count.stop++;
+        if(READ_RESCUE)
+            button_count.rescue++;
+        if(READ_SETSTATIONKEEP)
+            button_count.setStationKeep++;
+
+        Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
+        count++;
+    }
+    
     
 }
 
-bool Interface_cancelWasPressed(){
+bool Interface_isCancelPressed(){
 
 }
-bool Interface_okWasPressed(){
+bool Interface_isOkPressed(){
 
 }
-bool Interface_stopWasPressed(){
+bool Interface_isStopPressed(){
 
 }
-bool Interface_rescueWasPessed(){
+bool Interface_isRescuePessed(){
     
 }
-bool Interface_setStationWasPessed(){
+bool Interface_isSetStationPessed(){
 
 }
 
-void Interface_readyLedOn(){
+void Interface_enableReadyLight(){
 
 }
-void Interface_readyLedOff(){
-
-}
-
-void Interface_waitLedOn(){
-
-}
-void Interface_waitLedOff(){
+void Interface_disableReadyLight(){
 
 }
 
-void Interface_errorLedOn(){
+void Interface_enableWaitLight(){
 
 }
-void Interface_errorLedOff(){
+void Interface_disableWaitLight(){
+
+}
+
+void Interface_enableErrorLight(){
+
+}
+void Interface_disableErrorLight(){
 
 }
 
