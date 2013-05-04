@@ -6,6 +6,8 @@
  *
  * Created on March 27, 2013, 12:34 PM
  */
+#define DEBUG
+
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
@@ -25,80 +27,51 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-#define DEBUG
-
-#if defined(DEBUG)
-char debug[255];
-#ifdef USE_LOGGER
-#define DBPRINT(msg) do { Logger_write(msg); } while(0)
-#else
-#define DBPRINT(msg) do { printf(msg); } while(0)
-#endif
-#else
-#define DBPRINT(msg)    ((int)0)
-#endif
-
+// --------------------- Acutator ports -----------------------------
 #define MOTOR_LEFT              RC_PORTY07  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
 #define MOTOR_RIGHT             RC_PORTY06  //RE7,  J6-16            //RC_PORTW07 // RB3 -- J7-02
-// #define RUDDER_TRIS          RC_TRISY06 // RB15 -- J7-12
 #define RUDDER                  RC_PORTV03 //RB2, J7-01
 
+// ---------------------- RC Time Definitions -----------------------
 #define RC_STOP_PULSE            1500
-#define RC_FORWARD_RANGE        (MAXPULSE - RC_STOP_PULSE)
-#define RC_REVERSE_RANGE        (RC_STOP_PULSE - MINPULSE)
-#define RC_ONEWAY_RANGE        500
 
+// Motor limits
 #define RC_MOTOR_MAX            1700
 #define RC_MOTOR_MIN            1300
+#define RC_MOTOR_FORWARD_RANGE  (RC_MOTOR_MAX - RC_STOP_PULSE)
+#define RC_MOTOR_REVERSE_RANGE  (RC_STOP_PULSE - RC_MOTOR_MIN)
 
+// Rudder limits
+#define RUDDER_ANGLE_MAX        45.0f // (degree) max rudder angle in either direction
 #define RC_RUDDER_MAX           2000
 #define RC_RUDDER_MIN           1000
+#define RC_RUDDER_LEFT_MAX      RC_RUDDER_MAX
+#define RC_RUDDER_RIGHT_MAX     RC_RUDDER_MIN
+#define RC_RUDDER_RANGE         (RC_RUDDER_MAX - RC_STOP_PULSE) // left/right dynamic range
 
-#define RC_RUDDER_LEFT_MAX      MAXPULSE
-#define RC_RUDDER_RIGHT_MAX     MINPULSE
+// Convert speed (0 to 100%) to RC time
+#define MOTOR_PERCENT_TO_RCPULSE(s)           (((uint16_t)RC_MOTOR_FORWARD_RANGE/100)*s + RC_STOP_PULSE)
+#define MOTOR_PERCENT_TO_RCPULSE_REVERSE(s)   (((uint16_t)RC_MOTOR_REVERSE_RANGE/100)*s + RC_STOP_PULSE)
 
-#define RC_RUDDER_MIN_PULSE     1600
-#define RUDDER_ERROR_MIN        15
-
-#define PERCENT_TO_RCPULSE(s)      (5*s + RC_STOP_PULSE) // PWM 0-100 to 1500-2000
-#define PERCENT_TO_RCPULSE_BACKWARD(s)      (RC_STOP_PULSE - 5*s) // PWM 0-100 to 1500-2000
-#define SPEED_TO_RCPULSE(s)         ((uint16_t)((100.0*s) + 1500.0))
-
-#define HEADING_UPDATE_DELAY    100 // (ms)
-
-//PD Controller Parameter Settings
-#define KP 1.0f
-#define KD 1.0f
-#define FORWARD_RANGE (11 - 8.18)
-#define BACKWARD_RANGE (8.18 - 5.5)
-#define FULL_FORWARD 11
-#define FULL_BACKWARD 5.5
-#define FULL_STOP 8.18
+// Convert rudder angle to RC time
+#define RUDDER_PERCENT_TO_RCPULSE_LEFT(s)     (((uint16_t)RC_RUDDER_RANGE/100)*s + RC_STOP_PULSE)
+#define RUDDER_PERCENT_TO_RCPULSE_RIGHT(s)    (-((uint16_t)RC_RUDDER_RANGE/100)*s + RC_STOP_PULSE)
 
 
+// Delays for control system updating
+#define TRACK_UPDATE_DELAY    100 // (ms)
+
+#define DEBUG_PRINT_DELAY   1000 // (ms)
+
+// ------------------------- Controller 
 //PD Controller Param Settings for Rudder
-#define KP_Rudder 4.5f
-#define KD_Rudder 0.0f
-#define K_VELOCITY_RUDDER 0.00f // how much velocity effects rudder changes
-
-// P Controller param for velocity controller
-#define KP_VELOCITY 0.01f;
-
-//Velocity definitions
-#define VMAX 30 //30 MPH
-#define VMIN 0  //0 MPH
-#define VRANGE (VMAX - VMIN)
+#define KP_RUDDER 7.0f
+#define KD_RUDDER 0.0f
+#define RUDDER_BANGBANG_SPEED_THRESHOLD 17 // (speed %) motor speed threshold
+#define RUDDER_BANGBANG_THETA_DEADBAND_THRESHOLD 10 // (degrees) heading error threshold
 
 
-//defines for Override feature
-#define MICRO_CONTROL            0
-#define RECIEVER_CONTROL         1
 
-#define DEBUG_PRINT_DELAY   1000
-
-//Override test variables
-static uint16_t OVERRIDE_TRIGGERED = FALSE;
-static uint16_t CONTROL_MASTER = MICRO_CONTROL;
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
@@ -106,44 +79,55 @@ static enum {
     STATE_IDLE  = 0x0,      // Motors are stopped
     STATE_DRIVE = 0x1,      // Driving forward.
     STATE_PIVOT = 0x2,      // Pivoting in place.
-    STATE_TRACK = 0x3,      // Tracking a desired  velocity and heading
+    STATE_TRACK = 0x3,      // Tracking desired heading at speed
 } state;
 
-static enum {
-    PIVOT_LEFT  = 0x1,   // Pivot to the left --> Motor Arrangement
-    PIVOT_RIGHT = 0x2, // Pivot to the Right --> Motor Arrangement
-} pivotState;
 
-uint16_t lastPivotState, lastPivotError;
+enum {
+    RUDDER_TURN_NONE = 0x0,
+    RUDDER_TURN_LEFT,   
+    RUDDER_TURN_RIGHT, 
+} rudderDirection, lastRudderDirection;
 
-uint16_t desiredHeading = 0; // (degrees) from North
-float desiredVelocity = 0.0f;  // (m/s) desired velocity
-uint16_t velocityPulse = RC_STOP_PULSE; // (ms) velocity RC servo pulse time
+
+static uint8_t desiredSpeed = 0; // (percent) from 0 to 100%
+
+static uint16_t desiredHeading = 0; // (degrees) from North
+
+
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
-static void updateHeadingPivot();
-static void updateHeadingRudder();
-static void updateVelocity();
-static void setLeftMotor(uint16_t rc_time);
-static void setRightMotor(uint16_t rc_time);
-static void setRudder(uint16_t rc_time);
-static void startPivotState();
 static void startIdleState();
 static void startDriveState();
 static void startTrackState();
-static uint16_t getVelocityPulse();
+static void stopMotors();
+static void setLeftMotor(uint8_t speed);
+static void setRightMotor(uint8_t speed);
+static void setRudder(char direction, uint8_t percentAngle);
+static void updateRudder();
+
+
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 
-BOOL Drive_init() {
+/**********************************************************************
+ * Function: Drive_init
+ * @return SUCCESS or FAILURE.
+ * @remark Initializes the drive system state machine.
+ * @author David Goodman
+ * @date 2013.03.27 
+ **********************************************************************/
+bool Drive_init() {
 
 
     uint16_t RC_pins = MOTOR_LEFT  | MOTOR_RIGHT | RUDDER;
     RC_init(RC_pins);
     Timer_new(TIMER_DRIVE, 1);
+
 #ifdef DEBUG
+    // Timers for debug print statements
     Timer_new(TIMER_TEST2,1);
     Timer_new(TIMER_TEST3,1);
 #endif
@@ -151,8 +135,14 @@ BOOL Drive_init() {
     state = STATE_IDLE;
 }
 
-
    
+/**********************************************************************
+ * Function: Drive_runSM
+ * @return None.
+ * @remark Executes a cycle of the drive system state machine.
+ * @author David Goodman
+ * @date 2013.03.27 
+ **********************************************************************/
 void Drive_runSM() {
     switch (state) {
         case STATE_IDLE:
@@ -161,393 +151,245 @@ void Drive_runSM() {
         case STATE_DRIVE:
             // Just driving, do nothing
             break;
-        case STATE_PIVOT:
-            if (Timer_isExpired(TIMER_DRIVE)) {
-                updateHeadingPivot();
-                Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
-            }
-            break;
         case STATE_TRACK:
             if (Timer_isExpired(TIMER_DRIVE)) {
-                //updateVelocity();
-                updateHeadingRudder();
-                Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
+                updateRudder();
+                Timer_new(TIMER_DRIVE, TRACK_UPDATE_DELAY);
             }
             break;
 
     } // switch
 }
 
+/**********************************************************************
+ * Function: Drive_forward
+ * @return None
+ * @param Speed to drive both motors forward in percent, from 0 to 100.
+ * @remark Drives both motors at the given speed.
+ * @author David Goodman
+ * @author Darrel Deo
+ * @date 2013.03.27 
+ **********************************************************************/
 void Drive_forward(uint8_t speed) {
+    desiredSpeed = speed;
+
+    // Start driving the given speed
+    setLeftMotor(speed);
+    setRightMotor(speed);
+
     startDriveState();
-    uint16_t rc_time = PERCENT_TO_RCPULSE(speed);
-    setLeftMotor(rc_time);
-    setRightMotor(rc_time);
 }
 
-void Drive_forwardHeading(float speed, uint16_t angle) {
-    startTrackState();
-    desiredVelocity = speed;
+/**********************************************************************
+ * Function: Drive_forwardHeading
+ * @return None
+ * @param Speed to drive at in meters per second.
+ * @param Heading to hold in degrees from north, from 0 to 359.
+ * @remark Tracks the given speed and heading.
+ * @author David Goodman
+ * @date 2013.03.30 
+  **********************************************************************/
+void Drive_forwardHeading(uint8_t speed, uint16_t angle) {
+    desiredSpeed = speed;
     desiredHeading = angle;
+    
+    // Start driving the given speed
+    setLeftMotor(speed);
+    setRightMotor(speed);
 
-    setLeftMotor(SPEED_TO_RCPULSE(speed));
-    setRightMotor(SPEED_TO_RCPULSE(speed));
+    // Let rudder controller steer us
+    startTrackState();
 }
 
-void Drive_backward(uint8_t speed){
-    startDriveState();
-    uint16_t rc_time = PERCENT_TO_RCPULSE_BACKWARD(speed);
-    setLeftMotor(rc_time);
-    setRightMotor(rc_time);
-}
-
-
+/**********************************************************************
+ * Function: Drive_stop
+ * @return None
+ * @remark Stops both motors from driving.
+ * @author David Goodman
+ * @author Darrel Deo
+ * @date 2013.03.27 
+ **********************************************************************/
 void Drive_stop() {
     startIdleState();
 }
 
-void Drive_pivot(uint16_t angle) {
-    startPivotState();
-    
-    // For now, just stop and pivot in place.
-    //Drive_stop();
-
-    Timer_new(TIMER_DRIVE, HEADING_UPDATE_DELAY);
-    desiredHeading = angle;
-}
 
 /*******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
-static void startPivotState() {
-    state = STATE_PIVOT;
 
-    lastPivotState = 0;
-    lastPivotError = 0;
-}
-
+/**********************************************************************
+ * Function: startIdleState
+ * @return None
+ * @remark Switches into the idle state, which stops the boat.
+ **********************************************************************/
 static void startIdleState() {
     state = STATE_IDLE;
-    velocityPulse = RC_STOP_PULSE;
-    desiredVelocity = 0.0f;
-    setLeftMotor(RC_STOP_PULSE);
-    setRightMotor(RC_STOP_PULSE);
+    desiredSpeed = 0;
+
+    stopMotors();
 }
 
+/**********************************************************************
+ * Function: startDriveState
+ * @return None
+ * @remark Switches into the drive state for driving straight forward.
+ **********************************************************************/
 static void startDriveState() {
     state = STATE_DRIVE;
 }
 
+/**********************************************************************
+ * Function: startTrackState
+ * @return None
+ * @remark Switches into the track state for maintaining a heading
+ *  and driving forward at a given speed.
+ **********************************************************************/
 static void startTrackState() {
     state = STATE_TRACK;
-    setLeftMotor(RC_STOP_PULSE);
-    setRightMotor(RC_STOP_PULSE);
+    stopMotors();
 
-    lastPivotState = 0;
-    lastPivotError = 0;
+    lastRudderDirection = RUDDER_TURN_NONE;
 }
 
-static void setLeftMotor(uint16_t rc_time) {
-    uint16_t rc_time_use = (rc_time > RC_MOTOR_MAX)?
-            RC_MOTOR_MAX : rc_time;
-    rc_time_use = (rc_time_use < RC_MOTOR_MIN)?
-        RC_MOTOR_MIN : rc_time_use;
-    RC_setPulseTime(MOTOR_LEFT, rc_time_use);
-}
-
-static void setRightMotor(uint16_t rc_time) {
-    uint16_t rc_time_use = (rc_time > RC_MOTOR_MAX)?
-            RC_MOTOR_MAX : rc_time;
-    rc_time_use = (rc_time_use < RC_MOTOR_MIN)?
-        RC_MOTOR_MIN : rc_time_use;
-    RC_setPulseTime(MOTOR_RIGHT, rc_time_use);
-}
-
-static void setRudder(uint16_t rc_time) {
-    uint16_t rc_time_use = (rc_time > RC_RUDDER_MAX)?
-            RC_RUDDER_MAX : rc_time;
-    rc_time_use = (rc_time_use < RC_RUDDER_MIN)?
-        RC_RUDDER_MIN : rc_time_use;
-    RC_setPulseTime(RUDDER, rc_time_use);
-}
-
-
-static uint16_t getVelocityPulse(){
-    return velocityPulse;
-}
-/**
- * Function: updateHeadingPivot
+/**********************************************************************
+ * Function: stopMotors
  * @return None
- * @remark Determines the heading error using the magnetometer, and
- *  adjusts the motors/rudder accordingly.
+ * @remark Stops both motors from driving.
+ **********************************************************************/
+static void stopMotors() {
+    setLeftMotor(0);
+    setRightMotor(0);
+}
+
+/**********************************************************************
+ * Function: setLeftMotor
+ * @param Speed in percent from 0 to 100%.
+ * @return None
+ * @remark Sets the left motor to drive at the given speed in percent.
+ **********************************************************************/
+static void setLeftMotor(uint8_t speed) {
+    uint16_t rc_time = MOTOR_PERCENT_TO_RCPULSE(speed);
+    // Limit the rc times
+    if (rc_time > RC_MOTOR_MAX)
+        rc_time = RC_MOTOR_MAX;
+    if (rc_time < RC_MOTOR_MIN)
+        rc_time = RC_MOTOR_MIN;
+
+    RC_setPulseTime(MOTOR_LEFT, rc_time);
+}
+
+/**********************************************************************
+ * Function: setRightMotor
+ * @param Speed in percent from 0 to 100%.
+ * @return None
+ * @remark Sets the right motor to drive at the given speed in percent.
+ **********************************************************************/
+static void setRightMotor(uint8_t speed) {
+    uint16_t rc_time = MOTOR_PERCENT_TO_RCPULSE(speed);
+    // Limit the rc times
+    if (rc_time > RC_MOTOR_MAX)
+        rc_time = RC_MOTOR_MAX;
+    if (rc_time < RC_MOTOR_MIN)
+        rc_time = RC_MOTOR_MIN;
+
+    RC_setPulseTime(MOTOR_RIGHT, rc_time);
+}
+
+/**********************************************************************
+ * Function: setRudder
+ * @param Direction left or right to set the rudder to (0 = LEFT, 1 = RIGHT).
+ * @param Angle in percent of full rudder range to set to (0 to 100%).
+ * @return None
+ * @remark Sets the right motor to drive at the given speed in percent.
+ **********************************************************************/
+static void setRudder(char direction, uint8_t percentAngle) {
+    uint16_t rc_time = (direction == RUDDER_TURN_LEFT)?
+        RUDDER_PERCENT_TO_RCPULSE_LEFT(percentAngle)
+        :
+        RUDDER_PERCENT_TO_RCPULSE_RIGHT(percentAngle);
+
+    // Limit the rc times
+    if (rc_time > RC_RUDDER_MAX)
+        rc_time = RC_RUDDER_MAX;
+    if (rc_time < RC_RUDDER_MIN)
+        rc_time = RC_RUDDER_MIN;
+
+    RC_setPulseTime(RUDDER, rc_time);
+}
+
+// ---------------- Update functions for state machines ---------------
+
+/**********************************************************************
+ * Function: updateHeading
+ * @return None
+ * @remark Determines the heading error using the tilt-compensated compass,
+ *  and adjusts the rudder accordingly. Also, a bang-bang control has been
+ *  implemented to turn the rudder to the maximum value if the boat's motors
+ *  are being driven below some percentage defined above.
+ * @author Darrel Deo
  * @author David Goodman
- * @author Darrel Deo
- * @date 2013.03.27  */
-static void updateHeadingPivot() {
-//Get error and change PWM Signal based on values
+ * @date 2013.03.27 
+ **********************************************************************/
+static void updateRudder() {
 
-    static uint32_t Umax = KP*(180) + KD*(180/HEADING_UPDATE_DELAY);
-    //Obtain the current Heading and error, previous heading and error, and derivative term
-    int16_t currHeading = (int)TiltCompass_getHeading();
-    int16_t thetaError = desiredHeading - currHeading;
-
-    //In the event that our current heading exceeds desired resulting in negative number
+    static int16_t lastThetaError; // used for derivative term
     
-    if ((thetaError > 0) && (thetaError < 180)){            //Desired leads heading and within heading's right hemisphere --> Turn right, theta stays the same
-        pivotState = PIVOT_RIGHT;
-    }else if((thetaError < 0) && (thetaError > -180)){      //Heading leads desired and within desired's right hemisphere --> Turn left, theta gets inverted
-        pivotState = PIVOT_LEFT;
-        thetaError = thetaError*-1;
-    }else if((thetaError > 0)&&(thetaError >= 180)){        //Desired leads heading and within heading's left hemisphere--> Turn left, theta is complement
-        pivotState = PIVOT_LEFT;
-        thetaError = 360 - thetaError;
-    }else if((thetaError < 0)&&(thetaError <= -180)){       //Heading leads desired and within desired's left hemisphere --> Turn right, theta is inverted and complement
-        pivotState = PIVOT_RIGHT;
-        thetaError = 360 - (-1*thetaError);
-    }
-    if (lastPivotState == 0) {
-        lastPivotState = pivotState;
-        lastPivotError = thetaError;
-    }
-
-    if(lastPivotState != pivotState){
-        lastPivotError = 0;
-    }
-    float thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
-    if (thetaErrorDerivative < 0){
-        thetaErrorDerivative = -1*thetaErrorDerivative;
-    }
-
-    //Calculate Compensator's Ucommand
-    float Ucmd = KP*(thetaError) + KD*(thetaErrorDerivative);
-    float Unormalized = Ucmd/Umax;
-    uint16_t forwardScaled = RC_STOP_PULSE + Unormalized*RC_FORWARD_RANGE;
-    uint16_t backwardScaled = RC_STOP_PULSE - Unormalized*RC_REVERSE_RANGE;
-
-
-    //uint16_t pwmSpeed = Ucmd*velocity;
-    //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
-    if(pivotState == PIVOT_RIGHT ){ //Turning Right
-        setRightMotor(backwardScaled);//Give negative duty --> Same scaled range for pwm duty
-        setLeftMotor(forwardScaled);
-    }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
-        setRightMotor(forwardScaled);
-        setLeftMotor(backwardScaled);
-    }
-    #ifdef DEBUG
-    sprintf(debug,"Unorm: %.2f\n\n", Unormalized);
-    DBPRINT(debug);
-    #endif
-    lastPivotError = thetaError;
-    lastPivotState = pivotState;
-
-}
-
-
-/**
- * Function: updateHeadingRudder
- * @return None
- * @remark Determines the heading error using the magnetometer, and
- *  adjusts the rudder accordingly.
- * @author Darrel Deo
- * @date 2013.03.27  */
-static void updateHeadingRudder(){
-static uint32_t Umax = KP_Rudder*(180) + KD_Rudder*(180/HEADING_UPDATE_DELAY);
-static int16_t ErrorFlag = 0;
-//Obtain the current Heading and error, previous heading and error, and derivative term
-    uint16_t currHeading = (uint16_t)(TiltCompass_getHeading());
-    int16_t thetaError = desiredHeading - currHeading;
-    //In the event that our current heading exceeds desired resulting in negative number
+    rudderDirection = RUDDER_TURN_LEFT;
     
-    uint16_t tempThetaError = thetaError;
-    if(tempThetaError <0) {
-        tempThetaError = tempThetaError * -1;
-    }
-    if(tempThetaError < 10){
-        ErrorFlag = 0;
-        setRudder(RC_STOP_PULSE);
-    }
-    if ((thetaError > 0) && (thetaError < 180)){            //Desired leads heading and within heading's right hemisphere --> Turn right, theta stays the same
-        pivotState = PIVOT_RIGHT;
-    }else if((thetaError < 0) && (thetaError > -180)){      //Heading leads desired and within desired's right hemisphere --> Turn left, theta gets inverted
-        pivotState = PIVOT_LEFT;
-        thetaError = thetaError*-1;
-    }else if((thetaError > 0)&&(thetaError >= 180)){        //Desired leads heading and within heading's left hemisphere--> Turn left, theta is complement
-        pivotState = PIVOT_LEFT;
-        thetaError = 360 - thetaError;
-    }else if((thetaError < 0)&&(thetaError <= -180)){       //Heading leads desired and within desired's left hemisphere --> Turn right, theta is inverted and complement
-        pivotState = PIVOT_RIGHT;
-        thetaError = 360 - (-thetaError);
-    }
-    if (lastPivotState == 0) {
-        lastPivotState = pivotState;
-        lastPivotError = thetaError;
-    }
-
-    if(lastPivotState != pivotState){
-//        if(lastPivotError > 100){
-//            ErrorFlag = 1;
-//        }
-        lastPivotError = 0;
-        //implement a hard lock in that direction until desired point is
-    }
-    float thetaErrorDerivative = (thetaError - lastPivotError)/HEADING_UPDATE_DELAY;
-    if (thetaErrorDerivative < 0){
-        thetaErrorDerivative = -1*thetaErrorDerivative;
-    }
-
-    //Calculate Compensator's Ucommand
-    float Ucmd = KP_Rudder*(thetaError) + KD_Rudder*(thetaErrorDerivative);
-    float Unormalized = Ucmd/Umax;
-//    uint16_t leftScaled = (uint16_t)(RC_STOP_PULSE + Unormalized*RC_FORWARD_RANGE);
-//    uint16_t rightScaled = (uint16_t)(RC_STOP_PULSE - Unormalized*RC_REVERSE_RANGE);
-
-    // ---------------- Velocity scaling ----------------------
-    uint16_t leftScaled = (uint16_t)(RC_STOP_PULSE + Unormalized*RC_FORWARD_RANGE);
-    uint16_t rightScaled = (uint16_t)(RC_STOP_PULSE - Unormalized*RC_REVERSE_RANGE);
-    leftScaled = (leftScaled < RC_RUDDER_MIN_PULSE && thetaError > RUDDER_ERROR_MIN)?
-        RC_RUDDER_MIN_PULSE : leftScaled;
-    rightScaled = (rightScaled < RC_RUDDER_MIN_PULSE && thetaError > RUDDER_ERROR_MIN)?
-        RC_RUDDER_MIN_PULSE : rightScaled;
-//Added in to scale rudder for less actuation given how fast we are going
-    uint16_t currVelocity = getVelocityPulse();
-    uint16_t velocityComplement = (MAXPULSE - currVelocity);
-    #ifdef DEBUG_VERBOSE
-    printf("UNORM: %d\n\n",leftScaled);
-    printf("OUR CURRENT VELOCITY: %d\n\n",currVelocity);
-    printf("OUR VELOCITY COMPLEMENT: %d\n\n",velocityComplement);
-    #endif
-
-    float velocityRatio = (float)velocityComplement/RC_ONEWAY_RANGE;
-    velocityRatio = (float)K_VELOCITY_RUDDER*velocityRatio;
-    if(velocityRatio > 1.0f){
-        velocityRatio = 1.0f;
-    }
-
-    #ifdef DEBUG_VERBOSE
-    printf("VELOCITY RATIO: %f\n\n",velocityRatio);
-    #endif
-
-//    leftScaled = (uint16_t)(RC_STOP_PULSE + (float)leftScaled*(velocityRatio));
-//    rightScaled = (uint16_t)(RC_STOP_PULSE - (float)rightScaled*(velocityRatio));
-   
-
-    //In the event that we are pulsing at MAXPULSE for motors we want to turn rudders slightly
-//    if (currVelocity == (MAXPULSE)){
-//        leftScaled = RC_STOP_PULSE + 100;
-//        rightScaled = RC_STOP_PULSE - 100;
-//    }
-    #ifdef DEBUG
-    if (Timer_isExpired(TIMER_TEST2)) {
-        printf("LEFT_SCALED: %d\nRIGHT_SCALED: %d\n\n",leftScaled,rightScaled);
-        Timer_new(TIMER_TEST2,DEBUG_PRINT_DELAY);
-    }
-    #endif
-
-//if(ErrorFlag == 0){
-    //Set PWM's: we have a ratio of 3:1 when Pulsing the motors given a Ucmd
-    if(pivotState == PIVOT_RIGHT ){ //Turning Right
-        setRudder(rightScaled);
-        #ifdef DEBUG_VERBOSE
-        printf("RC TIME RIGHT: %d\n\n",rightScaled);
-        #endif
-    }else if(pivotState ==  PIVOT_LEFT){ //Turning Left
-        setRudder(leftScaled);
-        #ifdef DEBUG_VERBOSE
-        printf("RC TIME LEFT: %d\n\n",leftScaled);
-        #endif
-    }
-
-//}else if(ErrorFlag == 1){
-//    if(lastPivotState == PIVOT_RIGHT){
-//        rightScaled = RC_STOP_PULSE - RC_ONEWAY_RANGE/2;
-//        setRudder(rightScaled);
-//        #ifdef DEBUG_VERBOSE
-//        printf("YOU PASSED 180, TURNING RIGHT UNTIL DESIRED HIT with Pulse %d\n\n",rightScaled);
-//        #endif
-//    }else if(lastPivotState == PIVOT_LEFT){
-//        leftScaled = RC_STOP_PULSE + RC_ONEWAY_RANGE/2;
-//        setRudder(leftScaled);
-//        #ifdef DEBUG_VERBOSE
-//        printf("YOU PASSED 180, TURNING LEFT UNTIL DESIRED HIT with Pulse  %d\n\n",leftScaled);
-//        #endif
-//    }
-//    pivotState = lastPivotState;// To keep it turning in this direction.
-//}
-
-    #ifdef DEBUG_VERBOSE
-    printf("Unorm: %.2f\n\n", Unormalized);
-    #endif
-    lastPivotError = thetaError;
-    lastPivotState = pivotState;
-
-}
-
-/**
- * Function: updateVelocity()
- * @return None
- * @remark Velocity controller
- * @author Darrel Deo
- * @date 2013.04.06
- * @note Keep track of global variable Velocity. You must set to 1500 if you wish to stop, or macro STOP */
-static void updateVelocity(){
-    //Get velocity, check if it matches the desired
-    //If not, use a propotional ratio to the min/max pulse of the RCServo library
-
-
-    //Obtain current velocity
-    float currentVelocity = GPS_getVelocity();
-    float errorVelocity = desiredVelocity - currentVelocity;
-
-    //Correct the error value incase it is negative
-    if(errorVelocity < 0.0){
-        errorVelocity = -errorVelocity;
-    }
-    float proportionVelocity = errorVelocity/VRANGE;
-    float proportionPulse = proportionVelocity * (RC_ONEWAY_RANGE) * KP_VELOCITY;
-
-    // Here we add the the amount of propotional pulse to the pulse already
-    //We need to get the current pulse width for the motors
+    // Get current heading, determine theta error
+    uint16_t currentHeading = (uint16_t)TiltCompass_getHeading();
+    int16_t thetaError = desiredHeading - currentHeading;
     
-    //If we need to go faster
-    if((desiredVelocity - currentVelocity) > 0.0 ){
-        velocityPulse = (uint16_t)(velocityPulse + proportionPulse);
-    }else if((desiredVelocity - currentVelocity) < 0.0){
-        velocityPulse = (uint16_t)(velocityPulse - proportionPulse);
-    }else if(errorVelocity == 0.0){
-        //velocityPulse = velocityPulse;
+    // Bound theta error and determine turn direction
+    if (thetaError > 0) {
+        rudderDirection = (thetaError < 180)? RUDDER_TURN_RIGHT : RUDDER_TURN_LEFT;
+        thetaError = (thetaError < 180)? thetaError : (360 - thetaError);
     }
+    else {
+        // theta error is negative
+        rudderDirection = (thetaError > -180)? RUDDER_TURN_LEFT : RUDDER_TURN_RIGHT;
+        thetaError = (thetaError > -180)? -thetaError : (360 + thetaError);
+    }
+    
+    // Initialize or dump derivative if changed directions
+    if (lastRudderDirection == RUDDER_TURN_NONE || rudderDirection != lastRudderDirection)
+        lastThetaError = 0;
+        
+    /*    Controller Terms    */
+    // Derivative (scaled by KD_RUDDER)
+    float thetaErrorDerivative = (float)abs(thetaError - 
+        lastThetaError)/MS_TO_SEC(TRACK_UPDATE_DELAY);
+    
+    // Proportional (scaled by KP_RUDDER), convert degrees to percent
+    float uDegrees = KP_RUDDER*(float)thetaError + KD_RUDDER*thetaErrorDerivative;
+    float uPercent = (uDegrees / RUDDER_ANGLE_MAX ) * 100;
+    
+    // Limit percentage from 0 to 100
+    uPercent = (uPercent > 100.0)? 100.0f : uPercent;
+    uPercent = (uPercent < 0.0)? 0.0f : uPercent;
 
-    //Now check if we exceed our maximums and minimums
-    if(velocityPulse > MAXPULSE){
-        velocityPulse = MAXPULSE;
-    }else if(velocityPulse < MINPULSE){
-        velocityPulse =  MINPULSE;
-    }
-
-    if(desiredVelocity == 0.0){
-        velocityPulse = RC_STOP_PULSE;
-    }
-
-#ifdef DEBUG
-    if (Timer_isExpired(TIMER_TEST3)) {
-        printf("Velocity pulse: %d\n",velocityPulse);
-        Timer_new(TIMER_TEST3,DEBUG_PRINT_DELAY);
-    }
-#endif
-    setRightMotor(velocityPulse);
-    setLeftMotor(velocityPulse);
+    // Bang-bang control to force rudder all the way if speed is low
+    if (desiredSpeed < RUDDER_BANGBANG_SPEED_THRESHOLD
+            && thetaError > RUDDER_BANGBANG_THETA_DEADBAND_THRESHOLD)
+        uPercent = 100.0f;
+    
+    // Command the rudder and save 
+    setRudder(rudderDirection, (uint8_t)uPercent);
+    lastThetaError = thetaError;
+    lastRudderDirection = rudderDirection;
+        
+    #ifdef DEBUG_VERBOSE
+    DBPRINT("Rudder control: uDegrees=%.2f, uPercent=%d\n\n", uDegrees, (uint8_t)uPercent);
+    #endif
 }
 
 
 
-
-
-
-/*TEST HARNESSES*/
-
-
+/***********************************************************************
+ * TEST HARNESSES                                                      *
+ ***********************************************************************/
 
 //#define DRIVE_TEST
 #ifdef DRIVE_TEST
@@ -793,6 +635,11 @@ int main(){
 #define MICRO 0
 #define RECIEVER 1
 
+//defines for Override feature
+#define MICRO_CONTROL            0
+#define RECIEVER_CONTROL         1
+
+
 void Override_init();
 
 
@@ -950,8 +797,8 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
 #define MAX_PULSE 1750
 #define MIN_PULSE 1250
 #define STOP_PULSE 1500
-#define MICRO 0
-#define RECIEVER 1
+#define MICRO 1
+#define RECIEVER 0
 
 
 //#define RECIEVE_CONTROL
@@ -1034,7 +881,74 @@ int main(){
 //    printf("\nDone with drive test.\n");
 
 }
+#endif
 
+
+//#define STATE_MACHINE_TEST
+#ifdef STATE_MACHINE_TEST
+
+//Define and enable the Enable pin for override
+#define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
+
+#define STATE_DELAY 2000 //ms
+
+#define MICRO 1
+#define RECIEVER 0
+
+
+//#define RECIEVE_CONTROL
+
+int main(){
+    //Initializations
+    Board_init();
+    Serial_init();
+    Timer_init();
+    Drive_init();
+    ENABLE_OUT_TRIS = OUTPUT;  
+    ENABLE_OUT_LAT = MICRO;
+
+#ifdef RECIEVE_CONTROL
+    ENABLE_OUT_LAT = RECIEVER;
+    while(1){
+        asm("nop");
+    }
+#endif
+
+    printf("State machine test harness.\n\n");
+
+    // Test forward state
+    printf("Forward state. Driving at 5, 10, 20, 40, 60, 80, 100, 125 \%.\n");
+    uint8_t speed[] = {5, 10, 20, 40, 60, 80, 100, 125};
+    int i, len = sizeof(speed);
+    delayMillisecond(STATE_DELAY);
+    for (i = 0; i < len; i++) {
+        Drive_forward(speed[i]);
+        delayMillisecond(STATE_DELAY);
+    }
+    Drive_stop();
+    delayMillisecond(STATE_DELAY);
+
+    setRudder(STOP_PULSE);
+    delayMillisecond(STATE_DELAY);
+
+
+    // Forward with heading
+    printf("Track state. Driving at 5, 10, 25, 50, 100 \% at 0 deg north.\n");
+    uint8_t speed2[] = {5, 10, 25, 50, 100};
+    len = sizeof(speed2);
+    delayMillisecond(STATE_DELAY);
+    for (i = 0; i < len; i++) {
+        Drive_forwardHeading(speed2[i], 0);
+        delayMillisecond(STATE_DELAY);
+    }
+    Drive_stop();
+
+    printf("Finished state machine test.\n\n");
+
+
+    return SUCCESS;
+}
 
 
 #endif
