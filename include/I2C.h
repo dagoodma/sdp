@@ -17,6 +17,7 @@
 #define I2C_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /*******************************************************************************
  * PUBLIC #DEFINES                                                             *
@@ -42,7 +43,7 @@
  * peripherals of an incoming transmission.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart);
+bool I2C_startTransfer(I2C_MODULE I2C_ID, bool restart);
 
 /**
  * Function: I2C_stopTransfer
@@ -61,7 +62,7 @@ void I2C_stopTransfer(I2C_MODULE I2C_ID);
  * @remark Sends a single byte over the I2C bus.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-BOOL I2C_transmitOneByte(I2C_MODULE I2C_ID, uint8_t data);
+bool I2C_transmitOneByte(I2C_MODULE I2C_ID, uint8_t data);
 
 /**
  * Function: I2C_sendData
@@ -72,7 +73,7 @@ BOOL I2C_transmitOneByte(I2C_MODULE I2C_ID, uint8_t data);
  * and checks for an acknowledgement from the slave.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-BOOL I2C_sendData(I2C_MODULE I2C_ID, uint8_t data);
+bool I2C_sendData(I2C_MODULE I2C_ID, uint8_t data);
 
 /**
  * Function: I2C_getData
@@ -102,7 +103,7 @@ void I2C_init(I2C_MODULE I2C_ID, uint32_t I2C_clockFreq);
  * @remark Turns on the I2C bus line specified and sets the frequency on it.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-void I2C_acknowledgeRead(I2C_MODULE I2C_ID, BOOL ack);
+void I2C_acknowledgeRead(I2C_MODULE I2C_ID, bool ack);
 
 /**
  * Function: I2C_hasAcknowledged
@@ -110,7 +111,7 @@ void I2C_acknowledgeRead(I2C_MODULE I2C_ID, BOOL ack);
  * @return Whether an acknowledgement was received.
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
-BOOL I2C_hasAcknowledged(I2C_MODULE I2C_ID);
+bool I2C_hasAcknowledged(I2C_MODULE I2C_ID);
 
 
 #endif // I2C_H

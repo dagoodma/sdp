@@ -22,6 +22,7 @@
 #ifndef Gps_H
 #define Gps_H
 #include <math.h>
+#include <stdbool.h>
 
 
 /***********************************************************************
@@ -51,12 +52,12 @@ typedef struct oGeocentricCoord {
 
 // Local (NED) coordinate
 typedef struct oLocalCoord {
-    float n, e, d;
+    float north, east, down;
 } LocalCoordinate;
 
-// Course vector, where d is distance and yaw is degrees from North
+// Course vector, where d is distance and heading is degrees from North
 typedef struct oCourseVector {
-    float d, yaw;
+    float distance, heading;
 } CourseVector;
 
 
@@ -69,14 +70,14 @@ typedef struct oCourseVector {
  * @return none
  * @remark Initializes the GPS.
  **********************************************************************/
-BOOL GPS_init();
+bool GPS_init();
 
 /**********************************************************************
  * Function: GPS_isInitialized
  * @return Whether the GPS was initialized.
  * @remark none
  **********************************************************************/
-BOOL GPS_isInitialized();
+bool GPS_isInitialized();
 
 /**********************************************************************
  * Function: GPS_runSM
@@ -90,21 +91,21 @@ void GPS_runSM();
  * @return TRUE if a lock has been obtained.
  * @remark
  **********************************************************************/
-BOOL GPS_hasFix();
+bool GPS_hasFix();
 
 /**********************************************************************
  * Function: GPS_hasPosition
  * @return TRUE if a valid position has been obtained.
  * @remark
  **********************************************************************/
-BOOL GPS_hasPosition();
+bool GPS_hasPosition();
 
 /**********************************************************************
  * Function: GPS_isConnected
  * @return Returns true if GPS data seen in last 5 seconds.
  * @remark
  **********************************************************************/
-BOOL GPS_isConnected();
+bool GPS_isConnected();
 
 
 #ifdef USE_GEOCENTRIC_COORDINATES
@@ -193,18 +194,15 @@ void convertGeodetic2ECEF(GeocentricCoordinate *ecef, GeodeticCoordinate *lla);
 
 /**
  * Function: convertECEF2Geodetic
- * @param A pointer to a new geodetic (LLA) coordinate variable to save result into.
- * @param ECEF X position.
- * @param ECEF Y position.
- * @param ECEF Z position.
+ * @param A pointer to a new geodetic position.
+ * @param A pointer to an ECEF coordinate.
  * @return None.
  * @remark Converts the given ECEF coordinates into a geodetic coordinate in degrees.
- *  Note that x=lat, y=lon, z=alt.
  * @author David Goodman
  * @author MATLAB
- * @date 2013.03.10 
-void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ecef_z);
- */
+ * @date 2013.03.10 */
+void convertECEF2Geodetic(GeodeticCoordinate *lla, GeocentricCoordinate *ecef);
+ 
 
 /**
  * Function: projectEulerToNED

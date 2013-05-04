@@ -17,6 +17,7 @@
       <itemPath>../../include/RCServo.h</itemPath>
       <itemPath>../../include/Magnetometer.h</itemPath>
       <itemPath>../../include/Logger.h</itemPath>
+      <itemPath>../../include/Override.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -37,6 +38,7 @@
       <itemPath>../../src/RCServo.c</itemPath>
       <itemPath>../../src/Magnetometer.c</itemPath>
       <itemPath>../../src/Logger.c</itemPath>
+      <itemPath>../../src/Override.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

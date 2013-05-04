@@ -129,7 +129,7 @@ void Thermal_runSM() {
  ******************************************************************************/
 
 void readEeprom(void){
-    BOOL success = FALSE;
+    bool success = FALSE;
     int index;
 
     do {
@@ -190,7 +190,7 @@ void readEeprom(void){
 }
 
 void readConfigReg(void){
-    BOOL Success = TRUE;
+    bool Success = TRUE;
     UINT8 configMSB, configLSB;
     if(!I2C_startTransfer(THERMAL_I2C_ID, FALSE)){
         printf("FAILED initial transfer!\n");
@@ -240,7 +240,7 @@ void readConfigReg(void){
 }
 
 void writeTrimmingValue(void){
-    BOOL Success = TRUE;
+    bool Success = TRUE;
     UINT8 MSByte, LSByte, MSByteCheck, LSByteCheck;
     LSByte = eepromData[247];
     LSByteCheck = LSByte - 0xAA;
@@ -278,7 +278,7 @@ void writeTrimmingValue(void){
 }
 
 void writeConfigReg(void){
-    BOOL Success = TRUE;
+    bool Success = TRUE;
     UINT8 MSByte, LSByte, MSByteCheck, LSByteCheck;
     LSByte = eepromData[245];
     LSByte &= 0xF0;
@@ -354,7 +354,7 @@ void configCalculationData(void){
 }
 
 void readChipTemp(void){
-    BOOL Success = TRUE;
+    bool Success = TRUE;
     UINT8 tempMSB, tempLSB;
     if(!I2C_startTransfer(THERMAL_I2C_ID, FALSE)){
         printf("FAILED initial transfer!\n");
@@ -405,7 +405,7 @@ void readChipTemp(void){
 }
 
 void readCPixelValue(void){
-    BOOL Success = TRUE;
+    bool Success = TRUE;
     UINT8 CPixelMSB, CPixelLSB;
     if(!I2C_startTransfer(THERMAL_I2C_ID, FALSE)){
         printf("FAILED initial transfer!\n");
@@ -460,7 +460,7 @@ void readCPixelValue(void){
 
 void readPixelValue(void){
     int Index = 0;
-    BOOL Success = TRUE;
+    bool Success = TRUE;
     UINT8 pixelMSB, pixelLSB;
     if(!I2C_startTransfer(THERMAL_I2C_ID, FALSE)){
         printf("FAILED initial transfer!\n");

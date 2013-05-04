@@ -16,6 +16,7 @@
       <itemPath>../../include/Magnetometer.h</itemPath>
       <itemPath>../../include/Navigation.h</itemPath>
       <itemPath>../../include/Mavlink.h</itemPath>
+      <itemPath>../../include/Error.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"

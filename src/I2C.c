@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <plib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 
 /***********************************************************************
@@ -30,15 +31,15 @@
  ***********************************************************************/
 
 
-void I2C_acknowledgeRead(I2C_MODULE I2C_ID, BOOL ack) {
+void I2C_acknowledgeRead(I2C_MODULE I2C_ID, bool ack) {
     I2CAcknowledgeByte(I2C_ID, ack);
 }
 
-BOOL I2C_hasAcknowledged(I2C_MODULE I2C_ID) {
+bool I2C_hasAcknowledged(I2C_MODULE I2C_ID) {
     I2CAcknowledgeHasCompleted(I2C_ID);
 }
 
-BOOL I2C_startTransfer(I2C_MODULE I2C_ID, BOOL restart){
+bool I2C_startTransfer(I2C_MODULE I2C_ID, bool restart){
     I2C_STATUS  status;
 
 // Send the Start (or Restart) signal
@@ -82,7 +83,7 @@ void I2C_stopTransfer(I2C_MODULE I2C_ID){
     while (!(status & I2C_STOP));
 }
 
-BOOL I2C_transmitOneByte(I2C_MODULE I2C_ID, uint8_t data) {
+bool I2C_transmitOneByte(I2C_MODULE I2C_ID, uint8_t data) {
 
     // Wait for the transmitter to be ready
     while(!I2CTransmitterIsReady(I2C_ID));
@@ -101,7 +102,7 @@ BOOL I2C_transmitOneByte(I2C_MODULE I2C_ID, uint8_t data) {
     return TRUE;
 }
 
-BOOL I2C_sendData(I2C_MODULE I2C_ID, uint8_t data){
+bool I2C_sendData(I2C_MODULE I2C_ID, uint8_t data){
     // Initiate a single byte transmit over the I2C bus
     if (!I2C_transmitOneByte(I2C_ID,data)){
         return FALSE;
@@ -118,7 +119,7 @@ BOOL I2C_sendData(I2C_MODULE I2C_ID, uint8_t data){
 }
 
 int16_t I2C_getData(I2C_MODULE I2C_ID){
-    BOOL Success = TRUE;
+    bool Success = TRUE;
 
         // Enables the module to receive data from the I2C bus
     if(I2CReceiverEnable(I2C_ID, TRUE) == I2C_RECEIVE_OVERFLOW){
