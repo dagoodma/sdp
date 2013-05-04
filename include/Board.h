@@ -89,9 +89,12 @@
 #define TIMER_LOGGER            12
 #define TIMER_BAROMETER2        13 // remove the blocking code!!
 #define TIMER_DELAY             14
-#define TIMER_MAIN              15
 
-
+// Master state machine timers
+#define TIMER_MAIN              25
+#define TIMER_MAIN2             26
+#define TIMER_BACKGROUND        27
+#define TIMER_BACKGROUND2       28
 // test harness timers
 #define TIMER_TEST              29
 #define TIMER_TEST2             30
