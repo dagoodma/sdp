@@ -37,24 +37,25 @@
 
 //-------------------- Message Status Codes --------------------------
 // Other command
-#define MAVLINK_RETURN_STATION          0x1 // return to station 
-#define MAVLINK_REINITIALIZE            0x2 // reinitialize origin and station
-#define MAVLINK_OVERRIDE                0x3 // force stop/override 
-#define MAVLINK_SAVE_STATION            0x4 // save current position as station
+#define MAVLINK_RETURN_STATION          0x1
+#define MAVLINK_RESET_BOAT              0x2
+#define MAVLINK_OVERRIDE                0x3
+#define MAVLINK_SAVE_STATION            0x4
+#define MAVLINK_REQUEST_ORIGIN          0x5
 
 // Status And Error (errors defined in Error.h)
-#define MAVLINK_STATUS_START_INITIALIZE 0x1 // boat is starting up
-#define MAVLINK_STATUS_START_RESCUE     0x2 // boat is going to rescue
-#define MAVLINK_STATUS_RESCUE_SUCCESS   0x3 // boat has rescued 
-#define MAVLINK_STATUS_RETURN_STATION   0x4 // boat is returning to station
+#define MAVLINK_STATUS_ONLINE           0x1
+#define MAVLINK_STATUS_START_RESCUE     0x2
+#define MAVLINK_STATUS_RESCUE_SUCCESS   0x3
+#define MAVLINK_STATUS_RETURN_STATION   0x4
 
 //  Coordinate commands and data
-#define MAVLINK_GEOCENTRIC_ORIGIN       0x1 // command center's origin
-#define MAVLINK_GEOCENTRIC_ERROR        0x2 // periodic error corrections
+#define MAVLINK_GEOCENTRIC_ORIGIN       0x1
+#define MAVLINK_GEOCENTRIC_ERROR        0x2
 
-#define MAVLINK_LOCAL_SET_STATION       0x1 // use this station location
-#define MAVLINK_LOCAL_START_RESCUE      0x2 // start a rescue at waypoint
-#define MAVLINK_LOCAL_BOAT_POSITION     0x3 // reporting boats position
+#define MAVLINK_LOCAL_SET_STATION       0x1
+#define MAVLINK_LOCAL_START_RESCUE      0x2
+#define MAVLINK_LOCAL_BOAT_POSITION     0x3
 
 /**********************************************************************
  * PUBLIC VARIABLES                                                   *
@@ -93,9 +94,13 @@ void Mavlink_sendHearbeat(uint8_t data);
 
 void Mavlink_sendReturnStation(bool ack);
 
-void Mavlink_sendReinitialize(bool ack);
+void Mavlink_sendResetBoat();
 
 void Mavlink_sendOverride(bool ack);
+
+void Mavlink_sendSaveStation(bool ack);
+
+void Mavlink_sendRequestOrigin();
 
 
 /* --- Status and Error --- */

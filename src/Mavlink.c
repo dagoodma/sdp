@@ -161,13 +161,22 @@ void Mavlink_sendReturnStation(bool ack){
     sendCmdOther(ack, MAVLINK_RETURN_STATION);
 }
 
-void Mavlink_sendReinitialize(bool ack){
-    sendCmdOther(ack, MAVLINK_REINITIALIZE);
+void Mavlink_sendResetBoat(){
+    sendCmdOther(ack, MAVLINK_RESET_BOAT);
 }
 
 void Mavlink_sendOverride(bool ack){
     sendCmdOther(ack, MAVLINK_OVERRIDE);
 }
+
+void Mavlink_sendSaveStation(bool ack) {
+    sendCmdOther(ack, MAVLINK_SAVE_STATION);
+}
+
+void Mavlink_sendRequestOrigin() {
+    sendCmdOther(NO_ACK, MAVLINK_REQUEST_ORIGIN);
+}
+
 
 /* --- Status and Error --- */
 
