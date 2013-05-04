@@ -20,6 +20,7 @@
 #include <xc.h>
 #include <plib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 
 /*******************************************************************************
@@ -29,11 +30,6 @@
 #define DELAY(ms)   do { int i; for (i = 0; i < (ms << 8); i++) { asm ("nop"); } } while(0);
 
 /*****************************************************************************/
-// Boolean defines for TRUE, FALSE, SUCCESS and ERROR
-#ifndef TRUE
-#define FALSE ((int8_t) 0)
-#define TRUE ((int8_t) 1)
-#endif
 
 #ifndef ERROR
 #define ERROR ((int8_t) -1)
@@ -72,6 +68,8 @@
 #define TIMER_DELAY             16
 #define TIMER_TEST3             17
 #define TIMER_INTERFACE         18
+#define TIMER_LIGHT_HOLD        19
+#define TIMER_LCD_HOLD          20
 
 
 #ifdef Board_H_PRIVATE_INCLUDE

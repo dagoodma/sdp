@@ -1,5 +1,5 @@
 /*
- * @file  Xbee.h
+ * @file  Interface.h
  *
  * @author John Ash
  *
@@ -13,71 +13,169 @@
  * @date February 1, 2013 2:59 AM -- created
  *
  */
-#ifndef Xbee_H
-#define Xbee_H
+#ifndef INTERFACE_H
+#define INTERFACE_H
 
-#include "Mavlink.h"
-/***********************************************************************
- * PUBLIC DEFINITIONS                                                  *
- ***********************************************************************/
-//#define XBEE_TEST //used for testing Xbee
-#define XBEE_UART_ID             UART2_ID
+typedef enum {
+    NO_MESSAGE = 0x0,
+    CALIBRATE_SUCCESS_MESSAGE,
+    CALIBRATE_PITCH_MESSAGE
+} message_t;
 
-/**********************************************************************
- * PUBLIC FUNCTIONS                                                   *
- **********************************************************************/
+//typedef enum error_enum  error_t ;
 
-
-/**********************************************************************
- * Function: Xbee_init()
- * @param N/A
- * @return Failure or Success
- * @remark Initializes the Xbee module. Sets up API mode if the flag is
- * enabled. The function than initializes the sendArray.
- * @author John Ash
- * @date February 1st 2013
- **********************************************************************/
-uint8_t Xbee_init();
+const char *INTERFACE_MESSAGE[] = {
+    "You should never see this",
+    "Calibration successful",
+    "CALIBRATE THE PITCH!!! DO IT",
+};
 
 
 /**********************************************************************
- * Function: void Xbee_runSM();
- * @remark This function should be called every iteration of the
- *  statemachine. We load the recieve array with the data bytes, if we
- *  are actually reading a packet and not just noise.
- * @return none
- * @author John Ash
- * @date February 1st 2013
+ * Function: Interface_runSM
+ * @param None.
+ * @return None.
+ * @remark Must be called every cycle of the Command Center, checks the
+ *  timers and reacts.
  **********************************************************************/
-void Xbee_runSM();
+void Interface_runSM();
 
+/**********************************************************************
+ * Function: Interface_isCancelPressed
+ * @param None.
+ * @return True if the button has been presed, false if the button is
+ *  untouched
+ * @remark
+ **********************************************************************/
+bool Interface_isCancelPressed();
+
+/**********************************************************************
+ * Function: Interface_isOkPressed
+ * @param None.
+ * @return True if the button has been presed, false if the button is
+ *  untouched
+ * @remark
+ **********************************************************************/
+bool Interface_isOkPressed();
 
 
 /**********************************************************************
- * Function: void Xbee_message_data_test();
- * @remark This function will be calle once a "data_test" packet has been
- *  recieved. It will send the data back immediatly, and restart the time out
- *  timer.
- * @param The test_data struct from Mavlink
- * @return none
- * @author John Ash
- * @date February 1st 2013
+ * Function: Interface_isStopPressed
+ * @param None.
+ * @return True if the button has been presed, false if the button is
+ *  untouched
+ * @remark
  **********************************************************************/
-void Xbee_recieved_message_heartbeat(mavlink_xbee_heartbeat_t* packet);
-//#define XBEE_TEST
-#ifdef XBEE_TEST
+bool Interface_isStopPressed();
+
 /**********************************************************************
- * Function: void Xbee_message_data_test();
- * @remark This function will be calle once a "data_test" packet has been
- *  recieved. It will send the data back immediatly, and restart the time out
- *  timer.
- * @param The test_data struct from Mavlink
- * @return none
- * @author John Ash
- * @date February 1st 2013
+ * Function: Interface_isRescuePessed
+ * @param None.
+ * @return True if the button has been presed, false if the button is
+ *  untouched
+ * @remark
  **********************************************************************/
-void Xbee_message_data_test(mavlink_test_data_t* packet);
-#endif
+bool Interface_isRescuePessed();
+
+/**********************************************************************
+ * Function: Interface_isSetStationPessed
+ * @param None.
+ * @return True if the button has been presed, false if the button is
+ *  untouched
+ * @remark
+ **********************************************************************/
+bool Interface_isSetStationPessed();
+
+/**********************************************************************
+ * Function: Interface_readyLightOn
+ * @param None.
+ * @return None.
+ * @remark Turns the LED On by
+ **********************************************************************/
+void Interface_readyLightOn();
+
+/**********************************************************************
+ * Function: Interface_readyLightOff
+ * @param None.
+ * @return None.
+ * @remark Turns the LED off by
+ **********************************************************************/
+void Interface_readyLightOff();
+
+
+/**********************************************************************
+ * Function: Interface_waitLightOn
+ * @param None.
+ * @return None.
+ * @remark Turns the LED On by
+ **********************************************************************/
+void Interface_waitLightOn();
+
+/**********************************************************************
+ * Function: Interface_waitLightOff
+ * @param None.
+ * @return None.
+ * @remark Turns the LED off by
+ **********************************************************************/
+void Interface_waitLightOff();
+
+/**********************************************************************
+ * Function: Interface_errorLightOn
+ * @param None.
+ * @return None.
+ * @remark Turns the LED On by
+ **********************************************************************/
+void Interface_errorLightOn();
+
+/**********************************************************************
+ * Function: Interface_errorLightOff
+ * @param None.
+ * @return None.
+ * @remark Turns the LED off by
+ **********************************************************************/
+void Interface_errorLightOff();
+
+/**********************************************************************
+ * Function: Interface_readyLightOnTimer
+ * @param amount of time in ms that you want the light to remain on
+ * @return None.
+ * @remark Turns the LED on for a certain amount of time
+ **********************************************************************/
+void Interface_readyLightOnTimer(uint16_t ms);
+
+/**********************************************************************
+ * Function: Interface_errorLightOnTimer
+ * @param amount of time in ms that you want the light to remain on
+ * @return None.
+ * @remark Turns the LED on for a certain amount of time
+ **********************************************************************/
+void Interface_errorLightOnTimer(uint16_t ms);
+
+/**********************************************************************
+ * Function: Interface_showMessageOnTimer
+ * @param message_t you want to display on a timer
+ * @param amount of time in ms that you want the message to remain on
+ * @return None.
+ * @remark After the timer expires the next message will be displayed
+ **********************************************************************/
+void Interface_showMessageOnTimer(message_t msgCode, uint16_t ms);
+
+/**********************************************************************
+ * Function: Interface_showMessage
+ * @param message_t you want to display
+ * @return None.
+ * @remark Message will be printed out to the screen
+ **********************************************************************/
+void Interface_showMessage(message_t msgCode);
+
+/**********************************************************************
+ * Function: Interface_clearAll
+ * @param None.
+ * @return None.
+ * @remark Clear the LCD and clear all messages on timers
+ **********************************************************************/
+void Interface_clearAll();
+
 
 
 #endif
