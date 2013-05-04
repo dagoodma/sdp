@@ -7,9 +7,12 @@
  *
  * Created on March 3, 2013, 10:27 AM
  */
+#define DEBUG
+#define USE_SD_LOGGER
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
+#include <stdbool.h>
 //#define __XC32
 #include <math.h>
 #include "Serial.h"
@@ -19,38 +22,20 @@
 #include "Navigation.h"
 #include "Drive.h"
 #include "Logger.h"
+#include "Error.h"
+
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-#define DEBUG
 #define USE_DRIVE
-#define USE_LOGGER
 
 #define UPDATE_DELAY        1500 // (ms)
+#define TIMEOUT_DELAY       7000 // (ms)
 
 // don't change heading unless calculated is this much away from last
 #define HEADING_TOLERANCE   10 // (deg)
-
-// proportionally scale speed (m/s) for a given distance (m)
-#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.062f + 0.6f) // test speeds
-//#define DISTANCE_TO_SPEED(dist)    ((float)dist*0.065f + 0.22f)
-
-#if defined(DEBUG)
-#ifdef USE_LOGGER
-#define DBPRINT(msg) do { Logger_write(msg); } while(0)
-#else
-#define DBPRINT(msg) do { printf(msg); } while(0)
-#endif
-#else
-#define DBPRINT(msg)    ((int)0)
-#endif
-
- 
-#ifdef DEBUG
-    char debug[255];
-#endif
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -58,9 +43,10 @@
 
 
 static enum {
-    STATE_IDLE  = 0x0,    // Initializing and obtaining instructions
-    STATE_NAVIGATE = 0x1, // Maintaining station coordinates
-    STATE_ERROR = 0x2,    // Error occured
+    STATE_IDLE  = 0x0,   // Initializing and obtaining instructions
+    STATE_NAVIGATE,      // Maintaining station coordinates
+    STATE_NAVIGATE_WAIT, // Waiting for GPS lock/connection to come back
+    STATE_ERROR,         // Error occured (GPS lost lock or disconnected)
 } state;
 
 LocalCoordinate nedDestination;
@@ -68,30 +54,50 @@ float destinationTolerance = 0.0, lastHeading = 0.0;
 
 GeocentricCoordinate ecefError, ecefOrigin;
 GeodeticCoordinate llaOrigin;
-BOOL isDone = FALSE;
-BOOL hasOrigin = FALSE;
-BOOL hasErrorCorrection = FALSE;
-BOOL useErrorCorrection = FALSE;
+bool isDone = FALSE;
+bool hasOrigin = FALSE;
+bool hasErrorCorrection = FALSE;
+bool useErrorCorrection = FALSE;
+
+error_t lastErrorCode = ERROR_NONE;
 
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
 void startNavigateState();
+void startNavigateWaitState();
 void startErrorState();
 void startIdleState();
 void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos);
 void updateHeading();
+static uint8_t distanceToSpeed(float dist);
+void getLocalPosition(LocalCoordinate *nedVar);
+void setError(error_t errorCode);
+
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
-BOOL Navigation_init() {
+
+/**********************************************************************
+ * Function: Navigation_init
+ * @return TRUE or FALSE whether initialization succeeded.
+ * @remark Initializes the navigation state machine.
+ **********************************************************************/
+bool Navigation_init() {
     startIdleState();
+    lastErrorCode = 0x0;
     Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
     return SUCCESS;
 }
 
+
+/**********************************************************************
+ * Function: Navigation_runSM
+ * @return None
+ * @remark Steps through the navigation state machine by one cycle.
+ **********************************************************************/
 void Navigation_runSM() {
     switch (state) {
         case STATE_IDLE:
@@ -99,7 +105,7 @@ void Navigation_runSM() {
             break;
         case STATE_NAVIGATE:
             if (!Navigation_isReady()) {
-                startErrorState();
+                startNavigateWaitState();
                 break;
             }
             if (Timer_isExpired(TIMER_NAVIGATION)) {
@@ -113,8 +119,20 @@ void Navigation_runSM() {
                 Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
             }
             break;
+        case STATE_NAVIGATE_WAIT:
+            // Lost lock, waiting or timeout to error
+            if (Navigation_isReady())
+                startNavigateState();
+
+            if (Timer_isExpired(TIMER_NAVIGATION)) {
+                // Couldn't recover GPS
+                if (!GPS_hasFix() || !GPS_hasPosition()) 
+                    setError(ERROR_GPS_NOFIX);
+                if (!GPS_isConnected)
+                    setError(ERROR_GPS_DISCONNECTED);
+            }
+            break;
         case STATE_ERROR:
-            // TODO: add functions to check for and clear this
             break;
         default:
             break;
@@ -135,29 +153,58 @@ void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance) {
         return;
     }
 
-    nedDestination.n = ned_des->n;
-    nedDestination.e = ned_des->e;
-    nedDestination.d = ned_des->d;
+    nedDestination.north = ned_des->north;
+    nedDestination.east = ned_des->east;
+    nedDestination.down = ned_des->down;
     destinationTolerance = tolerance;
 
     startNavigateState();
 }
 
 
+/**********************************************************************
+ * Function: Navigation_getLocalDistance
+ * @param A pointer to a local coordinate point.
+ * @return Distance to the point in meters.
+ * @remark Calculates the distance to the given point from the current
+ *  position (in the local frame).
+ **********************************************************************/
+float Navigation_getLocalDistance(LocalCoordinate *nedPoint) {
+    if (!Navigation_isReady()) {
+        startErrorState();
+        return;
+    }
+
+    // Get local position
+    LocalCoordinate nedMine;
+    getLocalPosition(&nedMine);
+
+    // Determine needed course
+    CourseVector course;
+    getCourseVector(&course, &nedMine, nedPoint);
+
+    return course.distance;
+}
+
+
 
 /**********************************************************************
  * Function: Navigation_setOrigin
+ * @param A pointer to geocentric coordinate location.
  * @return None
- * @remark Sets the longitudal error for error corrections.
+ * @remark Sets the geodetic and ECEF origin point (generally the location
+ *  of the command center), by calculating the geodetic from the given
+ *  ECEF coordinate.
  **********************************************************************/
-void Navigation_setOrigin(GeocentricCoordinate *ecefRef,
-    GeodeticCoordinate *llaRef) {
+void Navigation_setOrigin(GeocentricCoordinate *ecefRef) {
+/*, GeodeticCoordinate *llaRef) { */
     ecefOrigin.x = ecefRef->x;
     ecefOrigin.y = ecefRef->y;
     ecefOrigin.z = ecefRef->z;
-    llaOrigin.lat = llaRef->lat;
-    llaOrigin.lon = llaRef->lon;
-    llaOrigin.alt = llaRef->alt;
+
+    // calculate lla origin from ecef
+    convertECEF2Geodetic(&llaOrigin, ecefRef);
+    
 
     hasOrigin = TRUE;
 }
@@ -180,11 +227,13 @@ void Navigation_setGeocentricError(GeocentricCoordinate *error) {
 /**********************************************************************
  * Function: Navigation_cancel
  * @return None
- * @remark Stops navigating and the the mototrs.
+ * @remark Cancels the current mission if navigating to a location.
  **********************************************************************/
 void Navigation_cancel() {
     if (Navigation_isNavigating())
         startIdleState();
+
+    Drive_stop();
 }
 
 
@@ -213,52 +262,79 @@ void Navigation_disablePositionErrorCorrection() {
  * @return True if we are ready to navigate with GPS and have an origin.
  * @remark
  **********************************************************************/
-BOOL Navigation_isReady() {
+bool Navigation_isReady() {
     return GPS_isInitialized() && GPS_isConnected() && GPS_hasFix()
         && GPS_hasPosition() && hasOrigin;
 }
 
 /**********************************************************************
  * Function: Navigation_hasError
- * @return True if an error occured while navigating.
- * @remark
+ * @return TRUE or FALSE if an error occuirred while navigating.
+ * @remark Errors occur if the GPS has lost a fix or become disconnected.
+ *  Error codes are defined in Error.h, and can be obtained with the
+ *  Navigation_getError() function.
  **********************************************************************/
-BOOL Navigation_hasError() {
+bool Navigation_hasError() {
     return state == STATE_ERROR;
 }
 
 /**********************************************************************
- * Function: Navigation_clearError
- * @return None
- * @remark Clears the error if one occured.
+ * Function: Navigation_getError
+ * @return Error code corresponding to the last error experienced
+ *  while navigating.
+ * @remark Error codes are defined in Error.h. Note that this function
+ *  clears the error. Also, using Navigation_gotoLocalCoordinate will
+ *  clear any error codes.
  **********************************************************************/
-BOOL Navigation_clearError() {
-    if (Navigation_hasError())
+error_t Navigation_getError() {
+    error_t result = ERROR_NONE;
+    if (Navigation_hasError()) {
         startIdleState();
+        result = lastErrorCode;
+    }
+
+    return result;
 }
 
 
 /**********************************************************************
  * Function: Navigation_isNavigating
- * @return True if navigating to a point.
+ * @return TRUE or FALSE whether we are navigating to a location.
  * @remark 
  **********************************************************************/
-BOOL Navigation_isNavigating() {
-    return state == STATE_NAVIGATE;
+bool Navigation_isNavigating() {
+    return state == STATE_NAVIGATE || state == STATE_NAVIGATE_WAIT;
 }
 
 /**********************************************************************
  * Function: Navigation_isDone
- * @return True if navigation finished and arrived at the desired point.
+ * @return TRUE or FALSE whether we successfully navigated to a
+ *  desired location.
  * @remark 
  **********************************************************************/
-BOOL Navigation_isDone() {
-    return isDone;
+bool Navigation_isDone() {
+    bool result = isDone;
+    isDone = FALSE;
+    return result;
 }
 
 /**********************************************************************
  * PRIVATE FUNCTIONS                                                  *
  **********************************************************************/
+
+/**********************************************************************
+ * Function: distanceToSpeed
+ * @param Distance in meters.
+ * @return Speed to drive in percent from 0 to 100.
+ * @remark Converts the given distance into a speed in percent for
+ *  commanding the motors.
+ **********************************************************************/
+static uint8_t distanceToSpeed(float dist) {
+    //int speed = (int)dist + 5;
+    uint32_t speed = ((uint32_t)dist + 3);
+    speed = (speed > 100)? 100 : speed;
+    return (uint8_t)speed;
+}
 
 /**********************************************************************
  * Function: startNavigateState
@@ -271,8 +347,28 @@ void startNavigateState() {
 #ifdef USE_DRIVE
     Drive_stop();
 #endif
+    // Clear error
+    (void)Navigation_getError();
+
     Timer_new(TIMER_NAVIGATION, 1); // let expire quickly
 }
+
+/**********************************************************************
+ * Function: startNavigateWaitState
+ * @return None
+ * @remark Begins the navigation  waitstate, for waiting for a GPS
+ *  lock to be recovered during navigation.
+ **********************************************************************/
+void startNavigateWaitState() {
+    state = STATE_NAVIGATE_WAIT;
+
+#ifdef USE_DRIVE
+    Drive_stop();
+#endif
+
+    Timer_new(TIMER_NAVIGATION, TIMEOUT_DELAY);
+}
+
 
 
 /**********************************************************************
@@ -314,6 +410,23 @@ void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
     ecefPos->z += ecefError.z;
 }
 
+
+/**********************************************************************
+ * Function: getLocalPosition
+ * @param Local coordinate variable to save position into.
+ * @return None
+ * @remark Calculates current local position relative to the origin
+ *  using the GPS module.
+ **********************************************************************/
+void getLocalPosition(LocalCoordinate *nedVar) {
+    GeocentricCoordinate ecefMine;
+    GPS_getPosition(&ecefMine);
+    if (useErrorCorrection)
+        applyGeocentricErrorCorrection(&ecefMine);
+
+    convertECEF2NED(nedVar, &ecefMine, &ecefOrigin, &llaOrigin);
+}
+
 /**********************************************************************
  * Function: updateHeading
  * @return None
@@ -322,48 +435,53 @@ void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
  **********************************************************************/
 void updateHeading() {
 
-    // Calculate NED position
-    GeocentricCoordinate ecefMine;
-    GPS_getPosition(&ecefMine);
-    if (useErrorCorrection)
-        applyGeocentricErrorCorrection(&ecefMine);
-
+    // Get local position
     LocalCoordinate nedMine;
-    convertECEF2NED(&nedMine, &ecefMine, &ecefOrigin, &llaOrigin);
-#ifdef DEBUG
-    sprintf(debug, "My position: N=%.2f, E=%.2f, D=%.2f\n",nedMine.n, nedMine.e, nedMine.d);
-    DBPRINT(debug);
-#endif
+    getLocalPosition(&nedMine);
+
+    DBPRINT("My position: N=%.2f, E=%.2f, D=%.2f\n",nedMine.north, nedMine.east, nedMine.down);
 
     // Determine needed course
     CourseVector course;
     getCourseVector(&course, &nedMine, &nedDestination);
-#ifdef DEBUG
-    sprintf(debug, "\tCourse: distance=%.2f, heading=%.2f\n",course.d,course.yaw);
-    DBPRINT(debug);
-#endif
+
+    DBPRINT("\tCourse: distance=%.2f, heading=%.2f\n",course.distance, course.heading);
 
     // Check tolerance
-    if (course.d < destinationTolerance) {
+    if (course.distance < destinationTolerance) {
         isDone = TRUE;
         return;
     }
 
-    /* Drive motors to new heading and speed, but only change heading if
-     it varies enough from the previously calcualted one. */
-    float newHeading = (course.yaw < (lastHeading - HEADING_TOLERANCE)
-        || course.yaw > (lastHeading + HEADING_TOLERANCE))?
-            course.yaw : lastHeading;
+    /* Heading hysteresis: Drive motors to new heading and speed, but only change
+     *  heading if it varies enough from the previously calculated one. */
+    float newHeading = (course.heading < (lastHeading - HEADING_TOLERANCE)
+        || course.heading > (lastHeading + HEADING_TOLERANCE))?
+            course.heading : lastHeading;
 
+    uint8_t speed = distanceToSpeed(course.distance);
 #ifdef USE_DRIVE
-    Drive_forwardHeading(DISTANCE_TO_SPEED(course.d), (uint16_t)newHeading);
+    Drive_forwardHeading(speed, (uint16_t)newHeading);
 #endif
-#ifdef DEBUG
-    sprintf(debug, "\tDriving: speed=%.2f [m/s], heading=%.2f [deg]\n",
-        DISTANCE_TO_SPEED(course.d),newHeading);
-    DBPRINT(debug);
-#endif
+
+    DBPRINT("\tDriving: distance=%.2f [m], speed=%d [\%], heading=%.2f [deg]\n",
+        course.distance, speed, newHeading);
+
     lastHeading = newHeading;
+}
+
+
+/**********************************************************************
+ * Function: setError
+ * @param Error code to trigger.
+ * @return None
+ * @remark Sets the navigation module into the error state and sets the 
+ *  error code to the given code.
+ **********************************************************************/
+void setError(error_t errorCode) {
+    lastErrorCode = errorCode;
+
+    startErrorState();
 }
 
 /*********************************************************************
@@ -467,7 +585,7 @@ int main() {
 // ---------------------------- Override Test ----------------------------
 // ************************************************************************
 
-#define NAVIGATION_OVERRIDE_TEST
+//#define NAVIGATION_OVERRIDE_TEST
 #ifdef NAVIGATION_OVERRIDE_TEST
 
 #define USE_COMPASS
@@ -477,7 +595,7 @@ int main() {
 #include "I2C.h"
 #include "TiltCompass.h"
 #endif
-#include "Ports.h"
+#include "Override.h"
 
 
 // Pick the I2C_MODULE to initialize
@@ -488,13 +606,13 @@ int main() {
 #define ECEF_X_ORIGIN -2706922.0f
 #define ECEF_Y_ORIGIN -4324246.0f
 #define ECEF_Z_ORIGIN 3815364.0f
-#define GEO_LAT_ORIGIN  36.9765781f
-#define GEO_LON_ORIGIN -122.0460341f
-#define GEO_ALT_ORIGIN 78.64f
 
-// --------------- Center of baskin circle ----------
-//..
-
+// ------- In front of GSH parking lot entrance ------
+/*
+#define ECEF_X_ORIGIN -2707534.0f
+#define ECEF_Y_ORIGIN -4322167.0f
+#define ECEF_Z_ORIGIN  3817539.0f
+ * */
 ///
 
 #define DESTINATION_TOLERANCE 3.2f // (m)
@@ -502,13 +620,6 @@ int main() {
 #define HEADING_DELAY   UPDATE_DELAY // delay for compass
 
 #define STARTUP_DELAY   3000 // time for gps to get stable fix
-#define RECEIVER_TIMEOUT_DELAY  1000 // time for receiver to be off for micro to take over
-
-// Override defines
-#define ENABLE_OUT_TRIS PORTX12_TRIS // J5-06
-#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
-#define MICRO       0
-#define RECIEVER    1
 
 // Others
 #define MAX_ERRORS 3 // max nav. errors before receiver has control forever
@@ -521,15 +632,14 @@ void handleError();
 void startInitialize();
 void startNavigate();
 void startOverride();
-BOOL nearDesiredPoint();
+bool nearDesiredPoint();
 
 void initializeOverride();
 void giveMicroControl();
 void giveReceiverControl();
 // -------------------------- Global variables ----------------------------
-static BOOL overrideTriggered = FALSE;
 static uint8_t errorsSeen = 0;
-static BOOL startDelayExpired = FALSE;
+static bool startDelayExpired = FALSE;
 
 static enum {
     INITIALIZE = 0x1, // Waiting for GPS lock
@@ -564,7 +674,7 @@ int main() {
     #endif
     Navigation_init();
     #ifdef USE_OVERRIDE
-    initializeOverride();
+    Override_init();
     #endif
     initializeDestination();
 
@@ -575,49 +685,45 @@ int main() {
 
     // ----------------------------- State machine --------------------------
     while (1) {
+        GPS_runSM();
+        Navigation_runSM();
+
         switch (testState) {
             // Initialize state for waiting for GPS lock
             case INITIALIZE:
-                Navigation_runSM();
-                GPS_runSM();
-                if (overrideTriggered)
+                if (Override_isTriggered())
                     startOverride();
                 if (Navigation_isReady())
                     startNavigate();
                 break;
             // Navigate state for micro navigating to a position
             case NAVIGATE:
-                GPS_runSM();
-                Navigation_runSM();
                 #ifdef USE_COMPASS
                 TiltCompass_runSM();
                 #endif
                 #ifdef USE_DRIVE
                 Drive_runSM();
                 #endif
-                if (overrideTriggered)
+                if (Override_isTriggered())
                     startOverride();
 
                 // Start up delay before navigating for stable fix
                 if (Timer_isExpired(TIMER_TEST) && !startDelayExpired) {
                     startDelayExpired = TRUE;
                     // Send navigate command
-                    #ifdef DEBUG
-                    sprintf(debug, "Navigating to desired point to within %.2f m.\n",
-                        DESTINATION_TOLERANCE);
-                    DBPRINT(debug);
+                    DBPRINT("Navigating to desired point to within %.2f m.\n",
+                        DESTINATION_TOLERANCE);;
                     Navigation_gotoLocalCoordinate(&nedDesired, DESTINATION_TOLERANCE);
-                    #endif
                 }
 
                 // Compass heading printing
-                #if  defined(DEBUG) && defined(USE_COMPASS)
+                #ifdef USE_COMPASS
                 if (Timer_isExpired(TIMER_TEST)) {
-                    sprintf(debug, "\tCompass heading: %.1f\n", TiltCompass_getHeading());
-                    DBPRINT(debug);
+                    DBPRINT("\tCompass heading: %.1f\n", TiltCompass_getHeading());
                     Timer_new(TIMER_TEST,HEADING_DELAY);
                 }
                 #endif
+
                 // Did we arrive?
                 if (Navigation_isDone()) {
                     DBPRINT("At desired point. ");
@@ -636,16 +742,10 @@ int main() {
 
                 break;
             case OVERRIDE:
-                // Reset timer if we keep seeing the receiver signal
-                if (overrideTriggered) {
-                    Timer_new(TIMER_TEST, RECEIVER_TIMEOUT_DELAY);   
-                    overrideTriggered = FALSE;
-                }
-
                 /* Did receiver turn off, timeout occured, and we moved away
                    from the desired point? */
-                if (Timer_isExpired(TIMER_TEST) && !nearDesiredPoint()) {
-                    DBPRINTF("Receiver timed out. Restarting test.\n");
+                if (!Override_isTriggered() && !nearDesiredPoint()) {
+                    DBPRINT("Receiver timed out. Restarting test.\n");
                     startInitialize(); // gives micro control
                 }
 
@@ -658,22 +758,9 @@ int main() {
 
 // ---------------- Override test helper functions --------------------------
 
-BOOL nearDesiredPoint() {
-    // Calculate NED position
-    GeocentricCoordinate ecefMine;
-    GPS_getPosition(&ecefMine);
-    if (useErrorCorrection)
-        applyGeocentricErrorCorrection(&ecefMine);
-
-    LocalCoordinate nedMine;
-    convertECEF2NED(&nedMine, &ecefMine, &ecefOrigin, &llaOrigin);
-
-    // Determine needed course
-    CourseVector course;
-    getCourseVector(&course, &nedMine, &nedDestination);
-
+bool nearDesiredPoint() {
     // Check tolerance
-    if (course.d < destinationTolerance) {
+    if (Navigation_getLocalDistance(&nedDestination) < destinationTolerance) {
         return TRUE;
     }
     return FALSE;
@@ -681,40 +768,38 @@ BOOL nearDesiredPoint() {
 
 void initializeDestination() {
     // Set command center reference point coordinates
+    /*
     GeodeticCoordinate geoOrigin;
     geoOrigin.lat = GEO_LAT_ORIGIN;
     geoOrigin.lon = GEO_LON_ORIGIN;
     geoOrigin.alt = GEO_ALT_ORIGIN;
+     **/
     GeocentricCoordinate ecefOrigin;
     ecefOrigin.x = ECEF_X_ORIGIN;
     ecefOrigin.y = ECEF_Y_ORIGIN;
     ecefOrigin.z = ECEF_Z_ORIGIN;
 
     // Make desired point the origin
-    nedDesired.n = 0.0f;
-    nedDesired.e = 0.0f;
-    nedDesired.d = 0.0f;
+    nedDesired.north = 0.0f;
+    nedDesired.east = 0.0f;
+    nedDesired.down = 0.0f;
 
-    Navigation_setOrigin(&ecefOrigin, &geoOrigin);
+    Navigation_setOrigin(&ecefOrigin);
 }
 
 void handleError() {
     // An error occured, try and reinit to regain lock
-    DBPRINT("An error occured navigating... ");
     errorsSeen++;
-    Navigation_clearError();
+    uint8_t errorCode = Navigation_getError();
+    DBPRINT("An error occured navigating: %s.\n",GET_ERROR_MESSAGE(errorCode));
     if (errorsSeen > MAX_ERRORS) {
         // Go into override state and do nothing
         startOverride();
-        DBPRINT("going into override.\n");
+        DBPRINT("\tGoing into override.\n");
     }
     else {
         startInitialize();
-        #ifdef DEBUG
-        char *lockStr = (GPS_hasFix())? "" : " to regain lock";
-        sprintf(debug,"reinitializing%s.\n",lockStr);
-        DBPRINT(debug);
-        #endif
+        DBPRINT("\tTrying again...\n");
     }
 }
 
@@ -722,7 +807,7 @@ void handleError() {
 // -------------------------- Start test states ---------------------------
 void startInitialize() {
     testState = INITIALIZE;
-    giveMicroControl();
+    Override_giveMicroControl();
 }
 
 void startNavigate() {
@@ -737,85 +822,7 @@ void startOverride() {
     Navigation_cancel();
     Navigation_runSM();
     Drive_runSM();
-    giveReceiverControl();
-    Timer_new(TIMER_TEST, RECEIVER_TIMEOUT_DELAY);
-}
-
-
-/**
- * Function: initializeOverride()
- * @return None
- * @remark Initializes interrupt for override functionality
- * @author Darrel Deo
- * @date 2013.04.01  */
-void initializeOverride(){
-
-    // Initialize override board pins to give Micro control
-    ENABLE_OUT_TRIS = OUTPUT;  // Set pin to be an output (fed to the AND gates)
-    ENABLE_OUT_LAT = MICRO;    // Initialize control for Microcontroller
-
-    overrideTriggered = FALSE;
-
-    //Enable the interrupt for the override feature
-    mPORTBSetPinsDigitalIn(BIT_0); // CN2
-
-    mCNOpen(CN_ON | CN_IDLE_CON , CN2_ENABLE , CN_PULLUP_DISABLE_ALL);
-    uint16_t value = mPORTDRead(); //?
-    ConfigIntCN(CHANGE_INT_ON | CHANGE_INT_PRI_2);
-    //CN2 J5-15
-    // INTEnableSystemMultiVectoredInt(); // this happens in Board_init()
-    DBPRINT("Override Function has been Initialized\n");
-    //INTEnableInterrupts(); // handled in Board.c
-    INTEnable(INT_CN,1);
-}
-
-/**
- * Function: Interrupt Service Routine
- * @return None
- * @remark ISR that is called when CH3 pings external interrupt
- * @author Darrel Deo
- * @date 2013.04.01  */
-void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
-    mPORTDRead(); //?
-
-    overrideTriggered = TRUE;
-
-    //Clear the interrupt flag that was risen for the external interrupt
-    //might want to set a timer in here
-
-    mCNClearIntFlag();
-    //INTEnable(INT_CN,0);
-}
-
-
-/**
- * Function: giveReceiverControl
- * @return None
- * @remark Passes motor control over to the receiver.
- * @author David Goodman
- * @date 2013.04.01  */
-void giveReceiverControl() {
-    DBPRINT("Reciever has control\n");
-#ifdef USE_DRIVE
-    Drive_stop();
-#endif
-    ENABLE_OUT_LAT = RECIEVER;      //Give control over to Reciever using the enable line
-    //INTEnable(INT_CN,1); // may not need this for now
-}
-
-/**
- * Function: giveMicroControl
- * @return None
- * @remark Passes motor control over to the micro.
- * @author David Goodman
- * @date 2013.04.01  */
-void giveMicroControl() {
-    DBPRINT("Micro has control\n");
-#ifdef USE_DRIVE
-    Drive_stop();
-#endif
-    ENABLE_OUT_LAT = MICRO;      //Give control over to Reciever using the enable line
-    //INTEnable(INT_CN,1); // may not need this for now
+    Override_giveReceiverControl();
 }
 
 

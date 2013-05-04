@@ -40,7 +40,7 @@
 #define XBEE_BAUD_RATE      9600
 
 /*    FOR IFDEFS     */
-//#define XBEE_RESET_FACTORY
+//#define XBEE_REPROGRAM_SETTINGS
 
 //Leave uncommented when programming XBEE_1, comment out when programming XBEE_2
 #define XBEE_1
@@ -51,15 +51,11 @@
 #define DELAY_HEARTBEAT 1000 //Time to wait before send heartbeat
 #endif
 
-
-#define ACK_WAIT_TIME 3000
 /**********************************************************************
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
 
 static uint8_t Xbee_programMode();
-
-void check_ACK(ACK *message);
 
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
@@ -71,7 +67,7 @@ void check_ACK(ACK *message);
 
 uint8_t Xbee_init(){
     UART_init(XBEE_UART_ID,XBEE_BAUD_RATE);
-#ifdef XBEE_RESET_FACTORY
+#ifdef XBEE_REPROGRAM_SETTINGS
     if( Xbee_programMode() == FAILURE){
         while(1);
         return FAILURE;
@@ -103,11 +99,6 @@ void Xbee_runSM(){
         printf("XBEE LOST CONNECTION\n");
     }
 #endif
-    
-    //check ACKS
-    check_ACK(&start_rescue);
-
-
 }
 
 
@@ -132,6 +123,7 @@ void Xbee_recieved_message_heartbeat(mavlink_xbee_heartbeat_t* packet){
  * @author John Ash
  * @date February 10th 2013
  **********************************************************************/
+#ifdef XBEE_REPROGRAM_SETTINGS
 static uint8_t Xbee_programMode(){
     int i = 0;
     char confirm[3];
@@ -170,24 +162,7 @@ static uint8_t Xbee_programMode(){
     UART_putString(XBEE_UART_ID, "ATCN\r", 5);//Leave the menu.
     return SUCCESS;
 }
-
-
-void check_ACK(ACK *message){
-    if(message->ACK_status == ACK_STATUS_WAIT){
-        if(message->ACK_time == 0) {
-            message->ACK_time = get_time();
-
-        }
-        else if((get_time() - message->ACK_time) >= ACK_WAIT_TIME){
-            Mavlink_resend_message(message);
-            message->ACK_time = 0;
-        }
-
-    }else if(message->ACK_status == ACK_STATUS_RECIEVED){
-            message->ACK_status = ACK_STATUS_NO_ACK;
-            message->ACK_time = 0;
-    }
-}
+#endif
 
 
 /*************************************************************

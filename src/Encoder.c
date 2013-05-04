@@ -45,7 +45,7 @@ float yawAngle = 0; // (degrees) calculated angle
 float zeroPitchAngle = 0; // (degrees)
 float zeroYawAngle = 0; // (degrees)
 
-BOOL useZeroAngle = FALSE;
+bool useZeroAngle = FALSE;
 
 // Printing debug messages over serial
 #define DEBUG

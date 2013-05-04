@@ -54,13 +54,9 @@
 // Printing debug messages over serial
 //#define DEBUG
 
-/************************************************************************/
-//#define FAHRENHEIT_TO_CELCIUS(T)    ((T * (9/5)) + 32)
-#define CELCIUS_TO_FAHRENHEIT(T)    (((float)T/10)*1.8 + 32)
-//#define PASCALS_TO_METERS(P)        () // Converts pressure to altitude
-#define METERS_TO_FEET(m)           ((float)m * 3.28084f)
-
+// Reference pressure at sea level (changes with weather)
 #define PRESSURE_P0		102201.209f // (Pa)
+
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -87,7 +83,7 @@ int16_t mc;
 int16_t md;
 
 // Converted readings
-int32_t temperature; // (degrees C)
+int32_t temperature; // (0.1 degrees C)
 int32_t pressure; // (Pascal)
 
 /***********************************************************************
@@ -122,12 +118,12 @@ void Barometer_init() {
 
 }
 
-int32_t Barometer_getTemperature(){
-    return temperature;
+float Barometer_getTemperature() {
+    return (float)temperature/10;
 }
 
 float Barometer_getTemperatureFahrenheit() {
-    return CELCIUS_TO_FAHRENHEIT(temperature);
+    return CELCIUS_TO_FAHRENHEIT(Barometer_getTemperature());
 }
 
 int32_t Barometer_getPressure(){
@@ -142,7 +138,6 @@ void Barometer_runSM() {
 }
 
 float Barometer_getAltitude() {
-    //return 44330.8 - 4946.54 * pow(pressure,0.1902632);
     return (float)((44330.0f*(1.0f - powf(((float)pressure/PRESSURE_P0),0.19029f))));
 }
 
@@ -295,7 +290,7 @@ static int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
  * @author Shehadeh H. Dajani
  * @date 2013.01.21  */
 static int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID) {
-    BOOL success = FALSE;
+    bool success = FALSE;
     int32_t data = 0;
 
     do {

@@ -4,7 +4,7 @@
  *
  * Created on February 4, 2013, 9:19 PM
  */
-
+#define DEBUG
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
@@ -21,7 +21,7 @@
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
-//#define DEBUG
+
 //#define DEBUG_STATE
 
 
@@ -76,18 +76,18 @@
 #define ECC     0.0818191908426f // eccentricity
 #define ECC2    (ECC*ECC)
 #define ECCP2   (ECC2 / (1.0 - ECC2)) // square of second eccentricity
-#define FLATR   (ECC2 / (1.0 + sqrt(1.0 - ECC2))) // flattening ratio
+#define FLATR   (ECC2 / (1.0 + sqrtf(1.0 - ECC2))) // flattening ratio
 
 // Radius of earth's curviture on semi-major and minor axes respectively
 #define R_EN    6378137.0f     // (m) prime vertical radius (semi-major axis)
-#define R_EM    (R_EN * (1 - FLATR)) // meridian radius (semi-minor axis)
+#define R_EM    (R_EN * (1.0f - FLATR)) // meridian radius (semi-minor axis)
 
 
 
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
  **********************************************************************/
-BOOL gpsInitialized = FALSE;
+bool gpsInitialized = FALSE;
 
 static enum {
     STATE_IDLE      = 0x0,
@@ -100,7 +100,7 @@ uint8_t byteIndex = 0, messageLength = LENGTH2_INDEX + 1,
         messageClass = 0, messageId = 0, gpsStatus = NOFIX_STATUS;
 
 
-BOOL hasNewMessage = FALSE, isConnected = FALSE, hasPosition = FALSE;
+bool hasNewMessage = FALSE, isConnected = FALSE, hasPosition = FALSE;
 
 // Variables read from the GPS
 
@@ -126,7 +126,7 @@ struct {
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
 
-static BOOL hasNewByte();
+static bool hasNewByte();
 static void startReadState();
 static void startIdleState();
 static void startParseState();
@@ -143,7 +143,7 @@ static void parsePayloadField();
  * @return none
  * @remark Initializes the GPS.
  **********************************************************************/
-BOOL GPS_init() {
+bool GPS_init() {
 #ifdef DEBUG
     printf("Intializing the GPS on uart %d.\n", GPS_UART_ID);
 #endif
@@ -160,7 +160,7 @@ BOOL GPS_init() {
  * @return Whether the GPS was initialized.
  * @remark none
  **********************************************************************/
-BOOL GPS_isInitialized() {
+bool GPS_isInitialized() {
     return gpsInitialized;
 }
 
@@ -211,7 +211,7 @@ void GPS_runSM() {
  * @return TRUE if a lock has been obtained.
  * @remark
  **********************************************************************/
-BOOL GPS_hasFix() {
+bool GPS_hasFix() {
     return gpsStatus != NOFIX_STATUS;
 }
 
@@ -221,7 +221,7 @@ BOOL GPS_hasFix() {
  * @return TRUE if a valid position has been obtained.
  * @remark
  **********************************************************************/
-BOOL GPS_hasPosition() {
+bool GPS_hasPosition() {
     return hasPosition;
 }
 
@@ -230,7 +230,7 @@ BOOL GPS_hasPosition() {
  * @return Returns true if GPS data seen in last 5 seconds.
  * @remark
  **********************************************************************/
-BOOL GPS_isConnected() {
+bool GPS_isConnected() {
     return isConnected;
 }
 
@@ -316,7 +316,7 @@ float GPS_getHeading() {
  * @return Returns true if a new message is ready to be read
  * @remark 
  **********************************************************************/
-static BOOL hasNewByte() {
+static bool hasNewByte() {
     return !UART_isReceiveEmpty(GPS_UART_ID);
 }
 
@@ -693,40 +693,47 @@ void convertGeodetic2ECEF(GeocentricCoordinate *ecef, GeodeticCoordinate *lla) {
 }
 
 
-/*
-void convertECEF2Geodetic(Coordinate *var, float ecef_x, float ecef_y, float ecef_z) {
-    float lat = 0, lon = 0, alt = 0;
+/**
+ * Function: convertECEF2Geodetic
+ * @param A pointer to a new geodetic position.
+ * @param A pointer to an ECEF coordinate.
+ * @return None.
+ * @remark Converts the given ECEF coordinates into a geodetic coordinate in degrees.
+ * @author David Goodman
+ * @date 2013.03.10 */
+void convertECEF2Geodetic(GeodeticCoordinate *lla, GeocentricCoordinate *ecef) {
+    float x = ecef->x, y = ecef->y, z = ecef->z;
 
-    lon = atan2(ecef_y, ecef_x);
+    lla->lon = atan2f(y, x);
 
-    float rho = hypotf(ecef_x,ecef_y); // distance from z-axis
-    float beta = atan2(ecef_z, (1 - FLATR) * rho);
+    float rho = sqrtf((x*x) + (y*y));
+    if (rho < 0.1) rho = 0.1;
 
-    lat = atan2(ecef_z + R_EM * ECCP2 * sinf(beta)*sinf(beta)*sinf(beta),
-        rho - R_EN * ECC2 * cosf(beta)*cosf(beta)*cosf(beta));
+    float beta = atan2f(z, (1.0 - FLATR) * rho);
 
-    float betaNew = atan2((1 - FLATR)*sinf(lat), cosf(lat));
+    lla->lat = atan2f(z + R_EM * ECCP2 * (sinf(beta)*sinf(beta)*sinf(beta)),
+        rho - R_EN * ECC2 * (cosf(beta)*cosf(beta)*cosf(beta)));
+
+    float betaNew = atan2f((1.0 - FLATR)*sinf(lla->lat), cosf(lla->lat));
     int count = 0;
     while (beta != betaNew && count < 5) {
         beta = betaNew;
-        var->x = atan2(ecef_z  + R_EM * ECCP2 * sinf(beta)*sinf(beta)*sinf(beta),
-            rho - R_EN * ECC2 * cosf(beta)*cosf(beta)*cosf(beta));
+        lla->lat = atan2f(z  + R_EM * ECCP2 * (sinf(beta)*sinf(beta)*sinf(beta)),
+            rho - R_EN * ECC2 * (cosf(beta)*cosf(beta)*cosf(beta)));
 
-        betaNew = atan2((1 - FLATR)*sinf(lat), cosf(lat));
-        count = count + 1;
+        betaNew = atan2f((1.0 - FLATR)*sinf(lla->lat), cosf(lla->lat));
+        count++;
     }
 
-    float sinlat = sinf(lat);
-    float rad_ne = R_EN / sqrt(1.0 - (ECC2 * sinlat * sinlat));
+    float sinlat = sinf(lla->lat);
+    float rad_ne = R_EN / sqrtf(1.0 - (ECC2 * sinlat * sinlat));
 
-    alt = rho * cosf(lat) + (ecef_z + ECC2 * rad_ne * sinlat) * sinlat - rad_ne;
+    lla->alt = rho * cosf(lla->lat) + (z + ECC2 * rad_ne * sinlat) * sinlat - rad_ne;
 
     // Convert radian geodetic to degrees
-    var->x = RADIAN_TO_DEGREE*lat;
-    var->y = RADIAN_TO_DEGREE*lon;
-    var->z = alt;
+    lla->lat = lla->lat * RADIAN_TO_DEGREE;
+    lla->lon = lla->lon * RADIAN_TO_DEGREE;
 }
-*/
 
 
 
@@ -745,10 +752,10 @@ void convertECEF2NED(LocalCoordinate *ned, GeocentricCoordinate *ecef_cur,
     // Offset vector from reference and rotate
     float t =  cosLon * ecef_path.x + sinLon * ecef_path.y;
 
-    ned->n = -sinLat * t + cosLat * ecef_path.z;
-    ned->e = -sinLon * ecef_path.x + cosLon * ecef_path.y;
-    ned->d = -(cosLat * t + sinLat * ecef_path.z);
-    //ned->d = 0;
+    ned->north = -sinLat * t + cosLat * ecef_path.z;
+    ned->east = -sinLon * ecef_path.x + cosLon * ecef_path.y;
+    ned->down = -(cosLat * t + sinLat * ecef_path.z);
+    //ned->down = 0;
 }
 
 
@@ -764,60 +771,60 @@ void projectEulerToNED(LocalCoordinate *ned, float yaw, float pitch, float heigh
 
     if (yaw <= 90.0) {
         //First quadrant
-        ned->n = mag * cosf(yaw*DEGREE_TO_RADIAN);
-        ned->e = mag * sinf(yaw*DEGREE_TO_RADIAN);
+        ned->north = mag * cosf(yaw*DEGREE_TO_RADIAN);
+        ned->east = mag * sinf(yaw*DEGREE_TO_RADIAN);
     }
     else if (yaw > 90.0 && yaw <= 180.0) {
         // Second quadrant
         yaw = yaw - 270.0;
-        ned->n = mag * sinf(yaw*DEGREE_TO_RADIAN);
-        ned->e = -mag * cosf(yaw*DEGREE_TO_RADIAN);
+        ned->north = mag * sinf(yaw*DEGREE_TO_RADIAN);
+        ned->east = -mag * cosf(yaw*DEGREE_TO_RADIAN);
     }
     else if (yaw > 180.0 && yaw <= 270.0) {
         // Third quadrant
         yaw = yaw - 180.0;
-        ned->n = -mag * cosf(yaw*DEGREE_TO_RADIAN);
-        ned->e = -mag * sinf(yaw*DEGREE_TO_RADIAN);
+        ned->north = -mag * cosf(yaw*DEGREE_TO_RADIAN);
+        ned->east = -mag * sinf(yaw*DEGREE_TO_RADIAN);
     }
     else if (yaw > 270 < 360.0) {
         // Fourth quadrant
         yaw = yaw - 90.0;
-        ned->n = -mag * sinf(yaw*DEGREE_TO_RADIAN);
-        ned->e = mag * cosf(yaw*DEGREE_TO_RADIAN);
+        ned->north = -mag * sinf(yaw*DEGREE_TO_RADIAN);
+        ned->east = mag * cosf(yaw*DEGREE_TO_RADIAN);
     }
 
-    ned->d = height;
+    ned->down = height;
     //printf("Desired coordinate -- N:%.2f, E: %.2f, D: %.2f (m)\n",
-    //    ned->n, ned->e, ned->d);
+    //    ned->north, ned->east, ned->down);
 }
 
 
 void getCourseVector(CourseVector *course, LocalCoordinate *ned_cur,
         LocalCoordinate *ned_des) {
     LocalCoordinate ned_path;
-    ned_path.n = ned_des->n - ned_cur->n;
-    ned_path.e = ned_des->e - ned_cur->e;
-    //ned_path.d = ned_des->d - ned_cur->d;
+    ned_path.north = ned_des->north - ned_cur->north;
+    ned_path.east = ned_des->east - ned_cur->east;
+    //ned_path.down = ned_des->down - ned_cur->down;
 
     // Calculate heading (in degrees from North) of path
-    if (ned_path.n > 0.0 && ned_path.e > 0.0) {
-        course->yaw = atanf(fabsf(ned_path.e)/fabsf(ned_path.n))*RADIAN_TO_DEGREE;
+    if (ned_path.north > 0.0 && ned_path.east > 0.0) {
+        course->heading = atanf(fabsf(ned_path.east)/fabsf(ned_path.north))*RADIAN_TO_DEGREE;
     }
-    else if (ned_path.n < 0.0 && ned_path.e > 0.0) {
-        course->yaw = atanf(fabsf(ned_path.n)/fabsf(ned_path.e))*RADIAN_TO_DEGREE;
-        course->yaw += 90.0;
+    else if (ned_path.north < 0.0 && ned_path.east > 0.0) {
+        course->heading = atanf(fabsf(ned_path.north)/fabsf(ned_path.east))*RADIAN_TO_DEGREE;
+        course->heading += 90.0;
     }
-    else if (ned_path.n < 0.0 && ned_path.e < 0.0) {
-        course->yaw = atanf(fabsf(ned_path.e)/fabsf(ned_path.n))*RADIAN_TO_DEGREE;
-        course->yaw += 180.0;
+    else if (ned_path.north < 0.0 && ned_path.east< 0.0) {
+        course->heading = atanf(fabsf(ned_path.east)/fabsf(ned_path.north))*RADIAN_TO_DEGREE;
+        course->heading += 180.0;
     }
-    else if (ned_path.n > 0.0 && ned_path.e < 0.0) {
-        course->yaw = atanf(fabsf(ned_path.n)/fabsf(ned_path.e))*RADIAN_TO_DEGREE;
-        course->yaw += 270.0;
+    else if (ned_path.north > 0.0 && ned_path.east< 0.0) {
+        course->heading = atanf(fabsf(ned_path.north)/fabsf(ned_path.east))*RADIAN_TO_DEGREE;
+        course->heading += 270.0;
     }
 
     // Calculate distance to point
-    course->d = sqrtf((ned_path.n)*(ned_path.n) + (ned_path.e)*(ned_path.e));
+    course->distance = sqrtf((ned_path.north)*(ned_path.north) + (ned_path.east)*(ned_path.east));
 
 }
 
@@ -930,9 +937,7 @@ int main() {
 
 #endif
 
-
 //#define GPS_LIBRARY_TEST
-
 #ifdef GPS_LIBRARY_TEST
 
 int main() {
@@ -964,6 +969,7 @@ int main() {
 
 
     // convertECEF2NED
+    DELAY(10);
     GeocentricCoordinate ecef2_cur, ecef2_ref;
     GeodeticCoordinate lla2_ref;
     LocalCoordinate ned2;
@@ -987,15 +993,47 @@ int main() {
     timer = get_time();
     convertECEF2NED(&ned2, &ecef2_cur, &ecef2_ref, &lla2_ref);
     timer = get_time() - timer;
-    printf("\t N = %.3f, E = %.3f, D = %.3f [m]\n",ned2.n,ned2.e,ned2.d);
-    const char *result2 = ( (ned2.n < (-21.270f + 1.0) && ned2.n > (-21.270f - 1.0))
-        && (ned2.e < (1.821f + 1.0) && ned2.e > (1.821f - 1.0))
-        && (ned2.d < (17.23f + 1.0) && ned2.d > (17.23f - 1.0)))?
+    printf("\t N = %.3f, E = %.3f, D = %.3f [m]\n",ned2.north,ned2.east,ned2.down);
+    const char *result2 = ( (ned2.north < (-21.270f + 1.0) && ned2.north > (-21.270f - 1.0))
+        && (ned2.east< (1.821f + 1.0) && ned2.east> (1.821f - 1.0))
+        && (ned2.down < (17.23f + 1.0) && ned2.down > (17.23f - 1.0)))?
             "Passed" : "Failed";
     printf("\t %s -- Elapsed: %d [ms]\n\n", result2, timer);
 
 
+     // convertECEF2LLA
+    DELAY(10);
+    GeocentricCoordinate ecef3_cur;
+    GeodeticCoordinate lla3_cur, lla3_want;
+    // boat location (m)
+    ecef3_cur.x = -2707517.0f;
+    ecef3_cur.y = -4323806.0f;
+    ecef3_cur.z = 3815467.0f;
+    /* should read: */
+    lla3_want.lat = 36.977624f;
+    lla3_want.lon = -122.054318f;
+    lla3_want.alt = 95.5f;
+
+    printf("Converting ECEF to LLA...\n");
+    printf("\t Current: x = %.2f, y = %.2f, z = %2.f [m]\n",
+        ecef3_cur.x, ecef3_cur.y, ecef3_cur.z );
+    timer = get_time();
+    convertECEF2Geodetic(&lla3_cur, &ecef3_cur);
+    timer = get_time() - timer;
+    printf("\t Transformed: Lat = %.6f, lon = %.6f [deg], alt = %.2f [m]\n",
+        lla3_cur.lat,lla3_cur.lon, lla3_cur.alt );
+    printf("\t Desired:     Lat = %.6f, lon = %.6f [deg], alt = %.2f [m]\n",
+        lla3_want.lat,lla3_want.lon, lla3_want.alt );
+    const char *result3 = ( (fabs(lla3_cur.lat) < (fabs(lla3_want.lat) + 0.00001f) && fabs(lla3_cur.lat) > (fabs(lla3_want.lat) - 0.00001f))
+        && (fabs(lla3_cur.lon) < (fabs(lla3_want.lon) + 0.00002f) && fabs(lla3_cur.lon) > (fabs(lla3_want.lon) - 0.00002f))
+        && (lla3_cur.alt < (lla3_want.alt + 1.0f) && lla3_cur.alt > (lla3_want.alt - 1.0f)))?
+            "Passed" : "Failed";
+    printf("\t %s -- Elapsed: %d [ms]\n\n", result3, timer);
+
+
+    
     // projectEulerToNED
+    DELAY(10);
     LocalCoordinate ned3;
     float yaw = 18.4, pitch = 65.3, height = 5.74; // (m)
     printf("Projecting euler to NED...\n");
@@ -1003,39 +1041,42 @@ int main() {
     timer = get_time();
     projectEulerToNED(&ned3, yaw, pitch, height);
     timer = get_time() - timer;
-    printf("\t N = %.3f, E = %.3f, D = %.3f [m]\n",ned3.n,ned3.e,ned3.d);
-    const char *result3 = ( (ned3.n < (2.505f + 0.05) && ned3.n > (2.505f - 0.05))
-        && (ned3.e < (0.833f + 0.05) && ned3.e > (0.833f - 0.05))
-        && (ned3.d < (5.740f + 0.05) && ned3.d > (5.740f - 0.05)))?
+    printf("\t N = %.3f, E = %.3f, D = %.3f [m]\n",ned3.north,ned3.east,ned3.down);
+    const char *result4 = ( (ned3.north < (2.505f + 0.05) && ned3.north > (2.505f - 0.05))
+        && (ned3.east< (0.833f + 0.05) && ned3.east> (0.833f - 0.05))
+        && (ned3.down < (5.740f + 0.05) && ned3.down > (5.740f - 0.05)))?
             "Passed" : "Failed";
-    printf("\t %s -- Elapsed: %d [ms]\n\n", result3, timer);
+    printf("\t %s -- Elapsed: %d [ms]\n\n", result4, timer);
 
 
     // getCourseVector
+    DELAY(10);
     LocalCoordinate ned4_cur, ned4_des;
     CourseVector desiredCourse;
     // current and desired locations (m)
-    ned4_cur.n = -21.138f;
-    ned4_cur.e = 1.5489f;
-    ned4_cur.d = 17.2288f;
-    ned4_des.n = -56.4f;
-    ned4_des.e = 76.423f;
-    ned4_des.d = 17.2288f;
+    ned4_cur.north = -21.138f;
+    ned4_cur.east= 1.5489f;
+    ned4_cur.down = 17.2288f;
+    ned4_des.north = -56.4f;
+    ned4_des.east= 76.423f;
+    ned4_des.down = 17.2288f;
 
     printf("Calculating course vector...\n");
-    printf("\t Current: N = %.3f, E = %.3f [m]\n", ned4_cur.n, ned4_cur.e);
-    printf("\t Desired: N = %.3f, E = %.3f [m]\n", ned4_des.n, ned4_des.e);
+    printf("\t Current: N = %.3f, E = %.3f [m]\n", ned4_cur.north, ned4_cur.east);
+    printf("\t Desired: N = %.3f, E = %.3f [m]\n", ned4_des.north, ned4_des.east);
     timer = get_time();
     getCourseVector(&desiredCourse, &ned4_cur, &ned4_des);
     timer = get_time() - timer;
+    DELAY(10);
     printf("\t Distance = %.3f [m], Heading = %.3f [deg]\n",
-        desiredCourse.d, desiredCourse.yaw);
-    const char *result4 = ( (desiredCourse.d < (82.761854f + 0.003)
-            && desiredCourse.d > (82.761854f - 0.003))
-        && (desiredCourse.yaw < (154.784f +  0.003)
-            && desiredCourse.yaw > (154.784f -  0.003)) )?
+        desiredCourse.distance, desiredCourse.heading);
+    const char *result5 = ( (desiredCourse.distance < (82.761854f + 0.003)
+            && desiredCourse.distance > (82.761854f - 0.003))
+        && (desiredCourse.heading < (115.218f +  0.003)
+            && desiredCourse.heading > (115.218f -  0.003)) )?
             "Passed" : "Failed";
-    printf("\t %s -- Elapsed: %d [ms]\n\n", result4, timer);
+    DELAY(10);
+    printf("\t %s -- Elapsed: %d [ms]\n\n", result5, timer);
 
     printf("\nFinished testing GPS library functions.\n");
 

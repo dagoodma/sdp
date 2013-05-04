@@ -1,106 +1,135 @@
+/**
+ * @file    Mavlink.h
+ * @author  John Ash
+ * @author  David Goodman
+ *
+ * @brief
+ * Interface for the Mavlink message protocol.
+ *
+ * @details
+ * This module provides an interface for sending and receiving messages
+ * over Mavlink, which is a messaging protocol.
+ *
+ * @date March 10, 2013, 10:03 AM  -- Created
+ */
+
 #ifndef OUR_MAVLINK_H
 #define OUR_MAVLINK_H
 
+#include <stdbool.h>
 #include "mavlink/autoLifeguard/mavlink.h"
 #include "Xbee.h"
-#include "Compas.h"
+#include "Gps.h"
 
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
+// Acknowledgement related
 #define ACK_STATUS_NO_ACK 0
 #define ACK_STATUS_RECIEVED 1
 #define ACK_STATUS_WAIT 2
 #define ACK_STATUS_DEAD 3
 
+#define WANT_ACK    TRUE
+#define NO_ACK      FALSE
+
+#define MAVLINK_UART_ID UART2_ID
+
+//-------------------- Message Status Codes --------------------------
+// Other command
+#define MAVLINK_RETURN_STATION          0x1
+#define MAVLINK_RESET_BOAT              0x2
+#define MAVLINK_OVERRIDE                0x3
+#define MAVLINK_SAVE_STATION            0x4
+#define MAVLINK_REQUEST_ORIGIN          0x5
+
+// Status And Error (errors defined in Error.h)
+#define MAVLINK_STATUS_ONLINE           0x1
+#define MAVLINK_STATUS_START_RESCUE     0x2
+#define MAVLINK_STATUS_RESCUE_SUCCESS   0x3
+#define MAVLINK_STATUS_RETURN_STATION   0x4
+
+//  Coordinate commands and data
+#define MAVLINK_GEOCENTRIC_ORIGIN       0x1
+#define MAVLINK_GEOCENTRIC_ERROR        0x2
+
+#define MAVLINK_LOCAL_SET_STATION       0x1
+#define MAVLINK_LOCAL_START_RESCUE      0x2
+#define MAVLINK_LOCAL_BOAT_POSITION     0x3
 
 /**********************************************************************
  * PUBLIC VARIABLES                                                   *
  **********************************************************************/
-enum Message_names{
-    messageName_test_data = 0,
-    messageName_xbee_heartbeat,
-    messageName_mavlink_ack,
-    messageName_GPS_error,
-    messageName_start_rescue,
-    messageName_stop_rescue
-};
 
-typedef struct{
-    uint8_t messageName;
-    uint8_t ACK_status;
-    uint8_t last_buf[MAVLINK_MAX_PACKET_LEN];
-    uint16_t last_length;
-    uint8_t last_uart_id;
-    uint32_t ACK_time;
-}ACK;
-
-ACK start_rescue;
-
-union message {
-    mavlink_reset_t resetData;
-    mavlink_gps_geo_t gpsGeodeticData;
-    mavlink_gps_ecef_t gpsGeocentricData;
-    mavlink_gps_ned_t gpsLocalData;
-    mavlink_barometer_t barometerData;
-} newMessage;
-
-// Reset message status flags
-#define MAVLINK_RESET_INITIALIZE        0x1
-#define MAVLINK_RESET_RETURN_STATION    0x2
-#define MAVLINK_RESET_BOAT              0x3
-#define MAVLINK_RESET_OVERRIDE          0x4
-
-// GPS ECEF message status flags
-#define MAVLINK_GEOCENTRIC_ORIGIN       0x1
-#define MAVLINK_GEOCENTRIC_ERROR        0x2
-
-// GPS Local message status flags
-#define MAVLINK_LOCAL_SET_STATION       0x1
-#define MAVLINK_LOCAL_START_RESCUE      0x2
-#define MAVLINK_LOCAL_BOAT              0x3
-
-#define WANT_ACK    TRUE
-#define NO_ACK      FALSE
+union MAVLINK_MESSAGE {
+    mavlink_mavlink_ack_t       ackData;
+    mavlink_cmd_other_t         commandOtherData;
+    mavlink_status_and_error_t  statusAndErrorData;
+    mavlink_gps_geo_t           gpsGeodeticData;
+    mavlink_gps_ecef_t          gpsGeocentricData;
+    mavlink_gps_ned_t           gpsLocalData;
+    mavlink_barometer_t         barometerData;
+} Mavlink_newMessage;
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
-void Mavlink_recieve(uint8_t uart_id);
+void Mavlink_recieve();
 
-void Mavlink_resend_message(ACK *message);
+//void Mavlink_resend_message(ACK *message);
 
-/**********************************************************************
- * SEND FUNCTIONS                                                     *
- **********************************************************************/
-void Mavlink_send_ACK(uint8_t uart_id, uint8_t Message_Name);
+bool Mavlink_hasNewMessage();
 
-void Mavlink_send_xbee_heartbeat(uint8_t uart_id, uint8_t data);
+int Mavlink_getNewMessageID();
 
-void Mavlink_send_start_rescue(uint8_t uart_id, uint8_t ack, uint8_t status, float latitude, float longitude);
 
-void Mavlink_send_gps_ned_error(uint8_t uart_id, float north, float east);
+/*------------------------- Send Messages ----------------------------*/
 
-void Mavlink_send_gps_geo_origin(uint8_t uart_id, float latitude, float longitude);
+void Mavlink_sendAck(uint8_t msgID, uint16_t msgStatus);
 
-void Mavlink_send_barometer_data(uint8_t uart_id, int32_t temp_C, float temp_F, int32_t pressure, float altitude);
+void Mavlink_sendHearbeat(uint8_t data);
+
+
+/* --- Command Other --- */
+
+void Mavlink_sendReturnStation(bool ack);
+
+void Mavlink_sendResetBoat();
+
+void Mavlink_sendOverride(bool ack);
+
+void Mavlink_sendSaveStation(bool ack);
+
+void Mavlink_sendRequestOrigin();
+
+
+/* --- Status and Error --- */
+
+void Mavlink_sendStatus(uint16_t status);
+
+void Mavlink_sendError(uint16_t error);
+
+
+/* --- Coordinate Commands --- */
+
+void Mavlink_sendOrigin(bool ack, GeocentricCoordinate *ecefOrigin);
+
+void Mavlink_sendStation(bool ack, LocalCoordinate *nedPos);
+
+void Mavlink_sendStartRescue(bool ack, LocalCoordinate *nedPos);
+
+
+/* --- Coordinate and Sensor Data --- */
+
+void Mavlink_sendGeocentricError(GeocentricCoordinate *ecefError);
+
+void Mavlink_sendBoatPosition(LocalCoordinate *nedPos);
+
+void Mavlink_sendBarometerData(float temperatureCelsius, float altitude);
+
 
 #ifdef XBEE_TEST
 void Mavlink_send_Test_data(uint8_t uart_id, uint8_t data);
 #endif
 
-/**********************************************************************
- * RECIEVE FUNCTIONS                                                  *
- **********************************************************************/
-void Mavlink_recieve_ACK(mavlink_mavlink_ack_t* packet);
-
-
-/*void Compas_recieve_start_rescue(mavlink_start_rescue_t* packet);
-
-void Mavlink_recieve_GPS_geo_origin(mavlink_gps_geo_origin_t* packet);
-
-void Mavlink_recieve_GPS_ned_error(mavlink_gps_ned_error_t* packet);
-
-void Mavlink_recieve_barometer_data(mavlink_barometer_data_t* packet);
- */
 #endif

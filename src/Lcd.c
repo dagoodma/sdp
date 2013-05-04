@@ -1,16 +1,14 @@
-/*****************************************************************************
- * This module configures the LCD for the Explorer16. The function is loosely 
- * based on the original code given as an example with the board. A couple of 
- * large changes. First, this is non-blocking code, and second it runs as a 
- * state-machine driven by Timer2's interrupt.
- * 
- * Timer 2 is used to control the delay between the commands to the LCD which 
- * requires short and long delays. Each interrupt of Timer2 increments the 
- * state-machine's counter. Initially, the LCD is setup, then it falls
- * to a set of states where it simply updates the top and bottom lines.
- *
- * This relies on the PLL being set, so that the Fcy = 16 MIPS
- *****************************************************************************/
+/**********************************************************************
+ Module
+ Lcd.c
+
+ Author: Bryant Mairs, Pavlo ManoviDavid Goodman
+
+ History
+ When                   Who         What/Why
+ --------------         ---         --------
+4/17/2013   10:07 AM    dagoodma    Rewrote from Pavlo's code.
+***********************************************************************/
 
 #include <string.h>
 #include <stdlib.h>
@@ -442,7 +440,7 @@ static void runSM(void)
 
 // ------------------------------ Test Harnesses ------------------------------
 
-#define LCD_TEST
+//#define LCD_TEST
 #ifdef LCD_TEST
 #include "Board.h"
 
