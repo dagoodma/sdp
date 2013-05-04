@@ -16,7 +16,6 @@
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "Board.h"

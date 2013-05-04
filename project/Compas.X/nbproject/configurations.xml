@@ -38,10 +38,11 @@
       <itemPath>../../src/Encoder.c</itemPath>
       <itemPath>../../src/Barometer.c</itemPath>
       <itemPath>../../src/Gps.c</itemPath>
-      <itemPath>../../src/Compas.c</itemPath>
       <itemPath>../../src/Accelerometer.c</itemPath>
       <itemPath>../../src/Magnetometer.c</itemPath>
       <itemPath>../../src/Navigation.c</itemPath>
+      <itemPath>../../src/CompasOld.c</itemPath>
+      <itemPath>Compas.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

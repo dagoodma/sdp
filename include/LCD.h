@@ -5,14 +5,15 @@
  * @author  David Goodman
  *
  * @brief
- * Interface for PIC32 board.
+ * Interface to an LCD display.
  *
  * @details
- * Contains functions and definitions for a PIC32 board.
+ * Contains functions for writing strings to an LCD display. This
+ * deals with a 4x20, TM204JAA7 LCD module paticularly, but is
+ * made as generic as possible to work with an m by n display.
  *
  * 
- * @date January 1, 2013            -- Edited
- * @date December 19, 2012, 2:08 PM -- Created
+ * @date April 17, 2013         -- Created module.
  */
 
 #ifndef LCD_H
