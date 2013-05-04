@@ -46,7 +46,15 @@
       (DeviceIndex "0")))
   (GlobalState
     (FileView
-      (Path "Design Resources"))
+      (Path "Design Resources")
+      (Path "Design Resources"
+         "C:\Users\dagoodma\Documents\sdp\doc\schematics\ComPAS\accelerometer_level.dsn")
+      (Path "Design Resources"
+         "C:\Users\dagoodma\Documents\sdp\doc\schematics\ComPAS\accelerometer_level.dsn"
+         "SCHEMATIC1")
+      (Select "Design Resources"
+         "C:\Users\dagoodma\Documents\sdp\doc\schematics\ComPAS\accelerometer_level.dsn"
+         "SCHEMATIC1" "PAGE1"))
     (HierarchyView)
     (Doc
       (Type "COrCapturePMDoc")
@@ -56,11 +64,11 @@
     (Doc
       (Type "COrSchematicDoc")
       (Frame
-        (Placement "44 2 3 -1 -1 -8 -30 198 729 191 1235")
-        (Scroll "429 -28")
-        (Zoom "202")
+        (Placement "44 0 1 -1 -1 -1 -1 -292 547 778 1833")
+        (Scroll "0 -132")
+        (Zoom "100")
         (Occurrence "/"))
       (Path
-         "C:\USERS\DAGOODMA\DROPBOX\SCHOOL\CE167\LAB2\SCHEMATICS\ACCELEROMETER_LEVEL.DSN")
+         "C:\USERS\DAGOODMA\DOCUMENTS\SDP\DOC\SCHEMATICS\COMPAS\ACCELEROMETER_LEVEL.DSN")
       (Schematic "SCHEMATIC1")
       (Page "PAGE1"))))

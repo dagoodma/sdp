@@ -3,6 +3,34 @@
   (ProjectType "PCB")
   (Folder "Design Resources"
     (Folder "Library")
-    (NoModify))
+    (NoModify)
+    (File ".\ lcd.dsn"
+      (Type "Schematic Design"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x"))
   (Folder "Outputs")
-  (Folder "Referenced Projects"))
+  (Folder "Referenced Projects")
+  (PartMRUSelector
+    (POT
+      (FullPartName "POT.Normal")
+      (LibraryName "C:\CADENCE\SPB_16.5\TOOLS\CAPTURE\LIBRARY\DISCRETE.OLB")
+      (DeviceIndex "0")))
+  (GlobalState
+    (FileView
+      (Path "Design Resources"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -8 -30 0 200 0 1021"))
+      (Tab 0))
+    (Doc
+      (Type "COrSchematicDoc")
+      (Frame
+        (Placement "44 2 3 -1 -1 -8 -30 200 706 200 1259")
+        (Scroll "-9 -392")
+        (Zoom "101")
+        (Occurrence "/"))
+      (Path "C:\USERS\DAGOODMA\DOCUMENTS\SDP\DOC\SCHEMATICS\LCD\ LCD.DSN")
+      (Schematic "SCHEMATIC1")
+      (Page "PAGE1"))))
