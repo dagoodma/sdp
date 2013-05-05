@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "Serial.h"
+#include "Error.h"
 
 #ifdef USE_SD_LOGGER
 #include "Logger.h"

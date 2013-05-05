@@ -162,7 +162,7 @@ void Mavlink_sendReturnStation(bool ack){
 }
 
 void Mavlink_sendResetBoat(){
-    sendCmdOther(ack, MAVLINK_RESET_BOAT);
+    sendCmdOther(NO_ACK, MAVLINK_RESET_BOAT);
 }
 
 void Mavlink_sendOverride(bool ack){

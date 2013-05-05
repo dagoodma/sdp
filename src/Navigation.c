@@ -49,31 +49,31 @@ static enum {
     STATE_ERROR,         // Error occured (GPS lost lock or disconnected)
 } state;
 
-LocalCoordinate nedDestination;
-float destinationTolerance = 0.0, lastHeading = 0.0;
+static LocalCoordinate nedDestination;
+static float destinationTolerance = 0.0, lastHeading = 0.0;
 
-GeocentricCoordinate ecefError, ecefOrigin;
-GeodeticCoordinate llaOrigin;
-bool isDone = FALSE;
-bool hasOrigin = FALSE;
-bool hasErrorCorrection = FALSE;
-bool useErrorCorrection = FALSE;
+static GeocentricCoordinate ecefError, ecefOrigin;
+static GeodeticCoordinate llaOrigin;
+static bool isDone = FALSE;
+static bool hasOrigin = FALSE;
+static bool hasErrorCorrection = FALSE;
+static bool useErrorCorrection = FALSE;
 
-error_t lastErrorCode = ERROR_NONE;
+static error_t lastErrorCode = ERROR_NONE;
 
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
-void startNavigateState();
-void startNavigateWaitState();
-void startErrorState();
-void startIdleState();
-void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos);
-void updateHeading();
+static void startNavigateState();
+static void startNavigateWaitState();
+static void startErrorState();
+static void startIdleState();
+static void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos);
+static void updateHeading();
 static uint8_t distanceToSpeed(float dist);
-void getLocalPosition(LocalCoordinate *nedVar);
-void setError(error_t errorCode);
+static void getLocalPosition(LocalCoordinate *nedVar);
+static void setError(error_t errorCode);
 
 
 /***********************************************************************
@@ -186,6 +186,16 @@ float Navigation_getLocalDistance(LocalCoordinate *nedPoint) {
     return course.distance;
 }
 
+
+/**********************************************************************
+ * Function: Navigation_getLocalPosition
+ * @param A pointer to a local coordinate point.
+ * @return None
+ * @remark Saves the current local (NED) position into the given variable.
+ **********************************************************************/
+float Navigation_getLocalPosition(LocalCoordinate *nedPosition) {
+    getLocalPosition(nedPosition);
+}
 
 
 /**********************************************************************
@@ -350,7 +360,7 @@ static uint8_t distanceToSpeed(float dist) {
  * @return None
  * @remark Begins the navigation state, for navigating to a coordinate.
  **********************************************************************/
-void startNavigateState() {
+static void startNavigateState() {
     state = STATE_NAVIGATE;
     isDone = FALSE;
 #ifdef USE_DRIVE
@@ -368,7 +378,7 @@ void startNavigateState() {
  * @remark Begins the navigation  waitstate, for waiting for a GPS
  *  lock to be recovered during navigation.
  **********************************************************************/
-void startNavigateWaitState() {
+static void startNavigateWaitState() {
     state = STATE_NAVIGATE_WAIT;
 
 #ifdef USE_DRIVE
@@ -387,7 +397,7 @@ void startNavigateWaitState() {
  *  GPS lost the fix, an obstruction was reached, or a person man have
  *  grabbed on.
  **********************************************************************/
-void startErrorState() {
+static void startErrorState() {
     state = STATE_ERROR;
     isDone = FALSE;
 #ifdef USE_DRIVE
@@ -401,7 +411,7 @@ void startErrorState() {
  * @return None
  * @remark Begins the idle state, which stops the motors.
  **********************************************************************/
-void startIdleState() {
+static void startIdleState() {
     state = STATE_IDLE;
 #ifdef USE_DRIVE
     Drive_stop();
@@ -413,7 +423,7 @@ void startIdleState() {
  * @return None
  * @remark Applies the error corrections to the given position (geocentric).
  **********************************************************************/
-void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
+static void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
     ecefPos->x += ecefError.x;
     ecefPos->y += ecefError.y;
     ecefPos->z += ecefError.z;
@@ -427,7 +437,7 @@ void applyGeocentricErrorCorrection(GeocentricCoordinate *ecefPos) {
  * @remark Calculates current local position relative to the origin
  *  using the GPS module.
  **********************************************************************/
-void getLocalPosition(LocalCoordinate *nedVar) {
+static void getLocalPosition(LocalCoordinate *nedVar) {
     GeocentricCoordinate ecefMine;
     GPS_getPosition(&ecefMine);
     if (useErrorCorrection)
@@ -442,7 +452,7 @@ void getLocalPosition(LocalCoordinate *nedVar) {
  * @remark Drives the motors by calculating the needed heading and speed
  *  to reach the desired location when navigating.
  **********************************************************************/
-void updateHeading() {
+static void updateHeading() {
 
     // Get local position
     LocalCoordinate nedMine;
@@ -487,7 +497,7 @@ void updateHeading() {
  * @remark Sets the navigation module into the error state and sets the 
  *  error code to the given code.
  **********************************************************************/
-void setError(error_t errorCode) {
+static void setError(error_t errorCode) {
     lastErrorCode = errorCode;
 
     startErrorState();

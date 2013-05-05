@@ -27,7 +27,7 @@
 #include "Drive.h"
 #include "Mavlink.h"
 #include "Override.h"
-#include "Error.h"
+#include "Barometer.h"
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
@@ -110,7 +110,7 @@ static enum {
 } subState;
 
 
-union EVENTS {
+static union EVENTS {
     struct {
         /* - Mavlink message flags - */
         // Acknowledgements
@@ -145,53 +145,45 @@ union EVENTS {
 } event;
 
 
-bool overrideShutdown = FALSE; //  whether to force override
-bool haveStation = FALSE;
-bool haveOrigin = FALSE;
-bool wantSaveStation = FALSE;
-bool wantOverride = FALSE;
+static bool overrideShutdown = FALSE; //  whether to force override
+static bool haveStation = FALSE;
+static bool haveOrigin = FALSE;
+static bool wantSaveStation = FALSE;
+static bool wantOverride = FALSE;
 
-LocalCoordinate nedStation; // NED coordinate with station location
-LocalCoordinate nedRescue; // NED coordinate of drowning person
+static LocalCoordinate nedStation; // NED coordinate with station location
+static LocalCoordinate nedRescue; // NED coordinate of drowning person
 
-int lastMavlinkMessageID; // ID of most recently received Mavlink message
-int lastMavlinkCommandID; // Command code of last message (for ACK)
-char lastMavlinkMessageWantsAck;
-uint8_t resendMessageCount;
+static int lastMavlinkMessageID; // ID of most recently received Mavlink message
+static int lastMavlinkCommandID; // Command code of last message (for ACK)
+static char lastMavlinkMessageWantsAck;
+static uint8_t resendMessageCount;
 
-error_t lastErroCode = ERROR_NONE;
+static error_t lastErrorCode = ERROR_NONE;
 
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
-void checkEvents();
-void doSetStationSM();
-void doSetOriginSM();
-void doStationKeepSM();
-void doOverrideSM();
-void doRescueSM();
-void doMasterSM();
-void startSetStationSM();
-void startSetOrignSM();
-void startStationKeepSM();
-void startOverrideSM();
-void startRescueSM();
-void initializeAtlas();
-void resetAtlas();
-void handleAcknowledgement();
-void setError(error_t errorCode);
-void gpsCorrectionUpdate();
+static void checkEvents();
+static void doSetStationSM();
+static void doSetOriginSM();
+static void doStationKeepSM();
+static void doOverrideSM();
+static void doRescueSM();
+static void doMasterSM();
+static void startSetStationSM();
+static void startSetOriginSM();
+static void startStationKeepSM();
+static void startOverrideSM();
+static void startRescueSM();
+static void initializeAtlas();
+static void resetAtlas();
+static void handleAcknowledgement();
+static void setError(error_t errorCode);
+static void gpsCorrectionUpdate();
+static void doBarometerUpdate();
 
-
-/**********************************************************************
- * Function: resetAtlas
- * @return None.
- * @remark Resets the boat and reinitalizes.
- * @author David Goodman
- * @date 2013.05.04
- **********************************************************************/
-void resetAtlas() {
 
 /***********************************************************************
  * PRIVATE FUNCTIONS                                                   *
@@ -203,7 +195,7 @@ void resetAtlas() {
  * @remark Checks for various events that can occur, and sets the 
  *  appropriate flags for handling later.
  **********************************************************************/
-void checkEvents() {
+static void checkEvents() {
     // Clear all event flags
     int i;
     for (i=0; i < EVENT_BYTE_SIZE; i++)
@@ -229,7 +221,7 @@ void checkEvents() {
         lastMavlinkMessageWantsAck = FALSE;
         switch (lastMavlinkMessageID) {
             // -------------------------- Acknowledgements ------------------------
-            case MAVLINK_ACK:
+            case MAVLINK_MSG_ID_MAVLINK_ACK:
                 // No ACKS from ComPAS to AtLAs
                 break;
             
@@ -306,7 +298,7 @@ void checkEvents() {
  * @return None
  * @remark Steps into the set origin state machine.
  **********************************************************************/
-void doSetOriginSM() {
+static void doSetOriginSM() {
     // Waiting for origin message from command center 
     if (event.flags.haveSetOriginMessage) {
         GeocentricCoordinate ecefOrigin;
@@ -347,12 +339,12 @@ void doSetOriginSM() {
  * @return None
  * @remark Steps into the set station state machine.
  **********************************************************************/
- void doSetStationSM() {
+ static void doSetStationSM() {
     /* Decide whether to save the current postion as a station, or
         a given position. */
     if (wantSaveStation) {
         // Save current position as station
-        Navigation_getCurrentPosition(&nedStation);
+        Navigation_getLocalPosition(&nedStation);
 
         handleAcknowledgement();
         haveStation = TRUE;
@@ -382,7 +374,7 @@ void doSetOriginSM() {
  * @return None
  * @remark Steps into the station keeping state machine.
  **********************************************************************/
-void doStationKeepSM() {
+static void doStationKeepSM() {
     switch (subState) {
         case STATE_STATIONKEEP_RETURN:
             // Driving to the station
@@ -417,7 +409,7 @@ void doStationKeepSM() {
  * @return None
  * @remark Executes one cycle of the boat's override state machine.
  **********************************************************************/
-void doOverrideSM() {
+static void doOverrideSM() {
     // Do nothing
 }
 
@@ -427,7 +419,7 @@ void doOverrideSM() {
  * @return None
  * @remark Executes one cycle of the boat's rescue state machine.
  **********************************************************************/
-void doRescueSM() {
+static void doRescueSM() {
     switch (subState) {
         case STATE_RESCUE_GOTO:
             if (event.flags.navigationDone) {
@@ -458,7 +450,7 @@ void doRescueSM() {
  * @author David Goodman
  * @date 2013.03.28 
  **********************************************************************/
-void doMasterSM() {
+static void doMasterSM() {
     checkEvents();
 
     #ifdef USE_TILTCOMPASS
@@ -534,7 +526,7 @@ void doMasterSM() {
                 
                 // Use autonomous controls
                 if (haveOrigin && (haveStation
-                    || event.flag.haveStartRescueMessage)) {
+                    || event.flags.haveStartRescueMessage)) {
                     Override_giveMicroControl();
                     DBPRINT("Micro has control.\n");
                     #ifdef USE_SIREN
@@ -594,7 +586,7 @@ void doMasterSM() {
  * @author David Goodman
  * @date 2013.05.04  
  **********************************************************************/
-void startSetOriginSM() {
+static void startSetOriginSM() {
     state = STATE_SETORIGIN;
     subState = STATE_NONE;
 
@@ -613,7 +605,7 @@ void startSetOriginSM() {
  * @author David Goodman
  * @date 2013.05.04  
  **********************************************************************/
-void startSetStationSM() {
+static void startSetStationSM() {
     state = STATE_SETSTATION;
     subState = STATE_NONE;
     Navigation_cancel();
@@ -626,7 +618,7 @@ void startSetStationSM() {
  * @author David Goodman
  * @date 2013.04.26  
  **********************************************************************/
-void startStationKeepSM() {
+static void startStationKeepSM() {
     state = STATE_STATIONKEEP;
     subState = STATE_STATIONKEEP_RETURN;
 
@@ -645,7 +637,7 @@ void startStationKeepSM() {
  * @author David Goodman
  * @date 2013.04.26  
  **********************************************************************/
-void startOverrideSM() {
+static void startOverrideSM() {
     state = STATE_OVERRIDE;
     subState = STATE_NONE;
 
@@ -665,7 +657,7 @@ void startOverrideSM() {
  * @author David Goodman
  * @date 2013.04.26  
  **********************************************************************/
-void startRescueSM() {
+static void startRescueSM() {
     state = STATE_RESCUE;
     subState = STATE_RESCUE_GOTO;
 
@@ -684,7 +676,7 @@ void startRescueSM() {
     #endif
 
     DBPRINT("Rescuing person at: N=%.2f, E=%.2f, D=%.2f.\n",
-        nedRescue.north, nedRescue.east, nedRescue,down);
+        nedRescue.north, nedRescue.east, nedRescue.down);
 }
 
 
@@ -697,7 +689,7 @@ void startRescueSM() {
  * @author David Goodman
  * @date 2013.04.24  
  **********************************************************************/
-void initializeAtlas() {
+static void initializeAtlas() {
     Board_init();
     Serial_init();
     Timer_init();
@@ -728,7 +720,7 @@ void initializeAtlas() {
 
     #ifdef USE_BAROMETER
     Barometer_init();
-    Timer_new(TIMER_SEND_BAROMETER, BAROMETER_UPDATE_DELAY);
+    Timer_new(TIMER_BAROMETER_SEND, BAROMETER_SEND_DELAY);
     #endif
         
     // Start calibrating before use
@@ -744,7 +736,7 @@ void initializeAtlas() {
  * @author David Goodman
  * @date 2013.05.04
  **********************************************************************/
-void handleAcknowledgement() {
+static void handleAcknowledgement() {
     // Send ACK if desired.
     if (lastMavlinkMessageWantsAck)
         Mavlink_sendAck(lastMavlinkMessageID, lastMavlinkCommandID);
@@ -758,11 +750,11 @@ void handleAcknowledgement() {
  * @author David Goodman
  * @date 2013.05.04
  **********************************************************************/
-void setError(error_t errorCode) {
-    lastErrorCode(errorCode);
+static void setError(error_t errorCode) {
+    lastErrorCode = errorCode;
     event.flags.haveError = TRUE;
     Mavlink_sendError(errorCode);
-    DBPRINT("Error: %s\n", GET_ERROR_MESSAGE(errorCode));
+    DBPRINT("Error: %s\n", getErrorMessage(errorCode));
 }
 
 
@@ -774,8 +766,8 @@ void setError(error_t errorCode) {
  * @author David Goodman
  * @date 2013.05.04
  **********************************************************************/
-void doBarometerUpdate() {
-    if (Timer_isExpired(TIMER_SEND_BAROMETER)) {
+static void doBarometerUpdate() {
+    if (Timer_isExpired(TIMER_BAROMETER_SEND)) {
 
         Mavlink_sendBarometerData(Barometer_getTemperature(),
             Barometer_getAltitude());
@@ -794,7 +786,7 @@ void doBarometerUpdate() {
  * @author David Goodman
  * @date 2013.05.05
  **********************************************************************/
-void gpsCorrectionUpdate() {
+static void gpsCorrectionUpdate() {
     if (event.flags.haveGeocentricErrorMessage) {
         GeocentricCoordinate ecefError;
         ecefError.x = Mavlink_newMessage.gpsGeocentricData.x;
@@ -823,7 +815,7 @@ void gpsCorrectionUpdate() {
  * @author David Goodman
  * @date 2013.05.04
  **********************************************************************/
-void resetAtlas() {
+static void resetAtlas() {
     SoftReset();
 }
 

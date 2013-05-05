@@ -69,6 +69,15 @@ float Navigation_getLocalDistance(LocalCoordinate *nedPoint);
 
 
 /**********************************************************************
+ * Function: Navigation_getLocalPosition
+ * @param A pointer to a local coordinate point.
+ * @return None
+ * @remark Saves the current local (NED) position into the given variable.
+ **********************************************************************/
+float Navigation_getLocalPosition(LocalCoordinate *nedPosition);
+
+
+/**********************************************************************
  * Function: Navigation_setOrigin
  * @param A pointer to geocentric coordinate location.
  * @return None
