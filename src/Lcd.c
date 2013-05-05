@@ -440,7 +440,7 @@ static void runSM(void)
 
 // ------------------------------ Test Harnesses ------------------------------
 
-#define LCD_TEST
+//#define LCD_TEST
 #ifdef LCD_TEST
 #include "Board.h"
 

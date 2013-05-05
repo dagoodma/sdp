@@ -49,11 +49,6 @@
 #endif
 
 /*****************************************************************************/
-// Boolean defines for TRUE, FALSE, SUCCESS and ERROR
-#ifndef TRUE
-#define FALSE ((int8_t) 0)
-#define TRUE ((int8_t) 1)
-#endif
 
 #ifndef ERROR
 #define ERROR ((int8_t) -1)
@@ -89,6 +84,9 @@
 #define TIMER_LOGGER            12
 #define TIMER_BAROMETER2        13 // remove the blocking code!!
 #define TIMER_DELAY             14
+#define TIMER_INTERFACE         18
+#define TIMER_LIGHT_HOLD        19
+#define TIMER_LCD_HOLD          20
 
 // Master state machine timers
 #define TIMER_MAIN              25
