@@ -36,26 +36,30 @@
 #define MAVLINK_UART_ID UART2_ID
 
 //-------------------- Message Status Codes --------------------------
-// Other command
-#define MAVLINK_RETURN_STATION          0x1
-#define MAVLINK_RESET_BOAT              0x2
-#define MAVLINK_OVERRIDE                0x3
-#define MAVLINK_SAVE_STATION            0x4
-#define MAVLINK_REQUEST_ORIGIN          0x5
+// Protocol commands
+#define MAVLINK_NO_COMMAND              0x0 // no status code for message
+#define MAVLINK_RETURN_STATION          0x1 // cc->boat: return to station keep point *
+#define MAVLINK_RESET_BOAT              0x2 // cc->boat: reset PIC32
+#define MAVLINK_OVERRIDE                0x3 // cc->boat: forces boat to stop *
+#define MAVLINK_SAVE_STATION            0x4 // cc->boat: save pos. as station keep point *
+#define MAVLINK_REQUEST_ORIGIN          0x5 // boat->cc: please send cc location 
 
-// Status And Error (errors defined in Error.h)
-#define MAVLINK_STATUS_ONLINE           0x1
-#define MAVLINK_STATUS_START_RESCUE     0x2
-#define MAVLINK_STATUS_RESCUE_SUCCESS   0x3
-#define MAVLINK_STATUS_RETURN_STATION   0x4
+// Status And Error (errors defined in Error.h) messages from boat
+#define MAVLINK_STATUS_ONLINE           0x1 // The boat has come online
+#define MAVLINK_STATUS_START_RESCUE     0x2 // The boat is on a rescue
+#define MAVLINK_STATUS_RESCUE_SUCCESS   0x3 // The boat has rescued the person
+#define MAVLINK_STATUS_RETURN_STATION   0x4 // The boat is headed to the station.
 
-//  Coordinate commands and data
-#define MAVLINK_GEOCENTRIC_ORIGIN       0x1
-#define MAVLINK_GEOCENTRIC_ERROR        0x2
+// ECEF coordinate related
+#define MAVLINK_GEOCENTRIC_ORIGIN       0x1 // cc->boat: sends cc position (origin) *
+#define MAVLINK_GEOCENTRIC_ERROR        0x2 // cc->boat: local error coordinate correction
 
-#define MAVLINK_LOCAL_SET_STATION       0x1
-#define MAVLINK_LOCAL_START_RESCUE      0x2
-#define MAVLINK_LOCAL_BOAT_POSITION     0x3
+// Local coordinate related
+#define MAVLINK_LOCAL_SET_STATION       0x1 // cc->boat: use this station keep point
+#define MAVLINK_LOCAL_START_RESCUE      0x2 // cc->boat: rescue person at this point
+#define MAVLINK_LOCAL_BOAT_POSITION     0x3 // boat->cc: current boat position
+
+// * at end denotes WANT_ACK
 
 /**********************************************************************
  * PUBLIC VARIABLES                                                   *

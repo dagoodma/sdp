@@ -42,18 +42,20 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
  
-#DEFINE MESSAGE_LINGER_DELAY	5000 // (ms) to prevent the display from changing
+#define MESSAGE_LINGER_DELAY	5000 // (ms) to prevent the display from changing
 
 
 // Timer allocation
-#DEFINE TIMER_CALIBRATE					TIMER_MAIN
-#DEFINE TIMER_RESCUE					TIMER_MAIN
-#DEFINE TIMER_CANCEL					TIMER_MAIN2
+#define TIMER_CALIBRATE					TIMER_MAIN
+#define TIMER_RESCUE					TIMER_MAIN
+#define TIMER_CANCEL					TIMER_MAIN2
 
-#DEFINE TIMER_BAROMETER_DATA_TIMEOUT	TIMER_BACKGROUND2
+#define TIMER_BAROMETER_LOST            TIMER_BACKGROUND
+#define TIMER_HEARTBEAT_LOST            TIMER_BACKGROUND2
 
 // Timer delays
-#define BAROMETER_DATA_TIMEOUT_DELAY	20000 // (ms) time before error
+#define BAROMETER_LOST_TIMEOUT_DELAY	    20000 // (ms) time before error
+#define HEARBEAT_LOST_TIMEOUT_DELAY         10000// (ms) before error
  
 
 /***********************************************************************
@@ -155,6 +157,7 @@ union EVENTS
 		unsigned int haveHeartbeatMessage :1; // talking to boat
 		unsigned int haveRescueSuccessMessage :1; // boat rescued drownee
 		unsigned int haveReturnStationMessage :1; // boat is heading to station
+        unsigned int haveRequestOriginMessage :1;
 		unsigned int haveOverrideMessage :1; // boat is in override state
 		unsigned int readyToPrintMessage :1; // display hold for Ready state expired
 		
@@ -555,6 +558,33 @@ void doSetOriginSM() {
  * @remark Executes one cycle of the ComPAS's master state machine.
  **********************************************************************/
 void doMasterSM() {
+    checkEvents();
+
+    #ifdef USE_TILTCOMPASS
+    TiltCompass_runSM();
+    #endif
+
+    #ifdef USE_GPS
+    GPS_runSM();
+    #endif
+
+    #ifdef USE_NAVIGATION
+    Navigation_runSM();
+    #endif
+
+    #ifdef USE_DRIVE
+    Drive_runSM();
+    #endif
+
+    #ifdef USE_XBEE
+    Xbee_runSM();
+    #endif
+
+    #ifdef USE_BAROMETER
+    Barometer_runSM();
+    doBarometerUpdate(); // send barometer data
+    #endif
+
 	switch (state) {
 		case STATE_CALIBRATE:
 			doCalibrateSM();
@@ -724,6 +754,7 @@ void startRescueSM() {
 	Interface_showMessage(STARTING_RESCUE_MESSAGE);
 }
 
+void doSetStationSM() {
 
 /**********************************************************************
  * Function: startStopSM
@@ -754,10 +785,6 @@ void initializeCompas() {
     Serial_init();
     Timer_init();
 
-    #ifdef USE_DRIVE
-    Drive_init();
-    #endif
-
     // I2C bus
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
 
@@ -775,6 +802,14 @@ void initializeCompas() {
 
     #ifdef USE_OVERRIDE
     Override_init();
+    #endif
+
+    #ifdef USE_XBEE
+    Xbee_init();
+    #endif
+
+    #ifdef USE_BAROMETER
+    Barometer_init();
     #endif
         
     // Start calibrating before use
@@ -804,6 +839,25 @@ void setError(error_t errorCode) {
 }
 
 /**********************************************************************
+ * Function: doBarometerUpdate
+ * @return None.
+ * @remark Handles a barometer message by calculating differential height.
+ * @author David Goodman
+ * @date 2013.05.04
+ **********************************************************************/
+void doBarometerUpdate() {
+    if (event.flags.haveBarometerDataMessage) {
+        compasHeight = Barometer_getAlitudeMavlink_newMessage.barometerData.altitude
+
+        Timer_new(TIMER_BAROMETER_LOST, BAROMETER_SEND_DELAY); 
+    }
+    else if (Timer_isExpired(TIMER_BAROMETER_LOST)) {
+        setError(ERROR_NO_ALTITUDE);
+    }
+}
+
+
+/**********************************************************************
  * Function: getTargetLocation
  * @param A pointer to a ned coordinate variable to save the result into.
  * @return None
@@ -820,7 +874,6 @@ void getTargetLocation(LocalCoordinate *targetNed) {
 int main() {
 	initializeCompas();
 	while (1) {
-		checkEvents();
 		doMasterSM();
 	}
 
