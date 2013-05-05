@@ -102,14 +102,14 @@ void Navigation_cancel();
  * @return None
  * @remark Enables error correction for retreived coordinates.
  **********************************************************************/
-void Navigation_enablePositionErrorCorrection();
+void Navigation_enableErrorCorrection();
 
 /**********************************************************************
  * Function: Navigation_disableErrorCorrection
  * @return None
  * @remark Disables error correction for retreived coordinates.
  **********************************************************************/
-void Navigation_disablePositionErrorCorrection();
+void Navigation_disableErrorCorrection();
 
 
 /**********************************************************************
@@ -156,6 +156,13 @@ bool Navigation_isDone();
  * @remark 
  **********************************************************************/
 bool Navigation_isNavigating();
+
+/**********************************************************************
+ * Function: Navigation_isUsingErrorCorrection
+ * @return TRUE or FALSE whether error correction is enabled.
+ * @remark 
+ **********************************************************************/
+bool Navigation_isUsingErrorCorrection();
 
 
 #endif // Navigation_H

@@ -128,7 +128,9 @@ void startSetStationSM();
 void startStopSM();
 void initializeCompas();
 
-void holdDisplay(uint32_t ms);
+void setError(error_t errorCode);
+void doBarometerUpdate();
+void gpsCorrectionUpdate();
 
 /***********************************************************************
  * PRIVATE FUNCTIONS                                                   *
@@ -564,16 +566,25 @@ void doMasterSM() {
     TiltCompass_runSM();
     #endif
 
+    #ifdef USE_MAGNETOMETER
+    Magnetometer_runSM();
+    #endif
+
+
+    #ifdef USE_ENCODER
+    Encoder_runSM();
+    #endif
+
+    #ifdef USE_ACCELEROMETER
+    Accelerometer_runSM();
+    #endif
+
     #ifdef USE_GPS
     GPS_runSM();
     #endif
 
-    #ifdef USE_NAVIGATION
-    Navigation_runSM();
-    #endif
-
-    #ifdef USE_DRIVE
-    Drive_runSM();
+    #ifdef USE_ERROR_CORRECTION
+    gpsCorrectionUpdate();
     #endif
 
     #ifdef USE_XBEE
@@ -792,16 +803,16 @@ void initializeCompas() {
     Magnetometer_init();
     #endif
 
+    #ifdef USE_ENCODER
+    Encoder_init();
+    #endif
+
     #ifdef USE_ACCELEROMETER
     Accelerometer_init();
     #endif
 
     #ifdef USE_GPS
     GPS_init();
-    #endif
-
-    #ifdef USE_OVERRIDE
-    Override_init();
     #endif
 
     #ifdef USE_XBEE
@@ -816,15 +827,6 @@ void initializeCompas() {
     startCalibrateSM();
 	resendMessageCount = 0;
 }
-
-/**********************************************************************
- * Function: 
- * @param Error code for error to set.
- * @return None
- * @remark Triggers an error and sets the current error to the error 
- *  code provided. Note that this function does not start the Error state.
- **********************************************************************/
-void setError(error_t errorCode) {
 
 /**********************************************************************
  * Function: setError
@@ -857,19 +859,29 @@ void doBarometerUpdate() {
 }
 
 /**********************************************************************
- * Function: doGpsErrorUpdate
+ * Function: doGpsCorrectionUpdate
  * @return None.
  * @remark Calculates and sends the current GPS error correction data.
  * @author David Goodman
- * @date 2013.05.04
+ * @date 2013.05.05
  **********************************************************************/
-void doGpsErrorUpdate() {
-    if (Timer_isExpired(TIMER_BAROMETER_LOST)) {
-        setError(ERROR_NO_ALTITUDE);
-        Timer_new(TIMER_BAROMETER_LOST, BAROMETER_SEND_DELAY); 
+void gpsCorrectionUpdate() {
+    if (Timer_isExpired(TIMER_GPS_CORRECTION) && Gps_hasPosition()) {
+        // Calculate error corrections
+        GeoceontricCoordinate ecefMeasured;
+        GPS_getPosition(&ecefMeasured);
+
+        GeocentricCoordinate ecefError;
+        ecefError.x = ECEF_ORIGIN_X - ecefMeasured.x;
+        ecefError.y = ECEF_ORIGIN_Y - ecefMeasured.y;
+        ecefError.z = ECEF_ORIGIN_Z - ecefMeasured.z;
+
+        // Send error corrections
+        Mavink_sendGeocentricError(&ecefError);
+
+        Timer_new(TIMER_GPS_CORRECTION, GPS_CORRECTION_SEND_DELAY);
     }
 }
-
 
 
 /**********************************************************************

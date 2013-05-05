@@ -242,7 +242,7 @@ void Navigation_cancel() {
  * @return None
  * @remark Enables error correction for retreived coordinates.
  **********************************************************************/
-void Navigation_enablePositionErrorCorrection() {
+void Navigation_enableErrorCorrection() {
     if (hasErrorCorrection)
         useErrorCorrection = TRUE;
 }
@@ -252,7 +252,7 @@ void Navigation_enablePositionErrorCorrection() {
  * @return None
  * @remark Disables error correction for retreived coordinates.
  **********************************************************************/
-void Navigation_disablePositionErrorCorrection() {
+void Navigation_disableErrorCorrection() {
     useErrorCorrection = FALSE;
 }
 
@@ -316,6 +316,15 @@ bool Navigation_isDone() {
     bool result = isDone;
     isDone = FALSE;
     return result;
+}
+
+/**********************************************************************
+ * Function: Navigation_isUsingErrorCorrection
+ * @return TRUE or FALSE whether error correction is enabled.
+ * @remark 
+ **********************************************************************/
+bool Navigation_isUsingErrorCorrection() {
+    return useErrorCorrection;
 }
 
 /**********************************************************************

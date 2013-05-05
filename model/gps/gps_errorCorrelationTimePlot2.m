@@ -130,6 +130,10 @@ timestamp2=coords2(:,TIME_INDEX);
 ned2_n = interp1(timestamp2,ned2_n,timestamp1);
 ned2_e = interp1(timestamp2,ned2_e,timestamp1);
 ned2_d = interp1(timestamp2,ned2_d,timestamp1);
+% remove NAN
+ned2_n(any(isnan(ned2_n), 2), :) = 0;
+ned2_e(any(isnan(ned2_e), 2), :) = 0;
+ned2_d(any(isnan(ned2_d), 2), :) = 0;
 timestamp2 = timestamp1;
 
 northError1 = 0 - ned1_n;
@@ -153,9 +157,11 @@ isequal(timestamp1,timestamp2)
 clf;
 subplot(2,1,1)
 % plot(x,ylat)
-plot(timestamp1,northError1,timestamp2,northError2);%,time,latErrorDiff);
+scatter(timestamp1,northError1,1,'+')%,time,latErrorDiff);
 hold on;
-plot(timestamp3, northError3,'--r');
+scatter(timestamp2,northError2,1,'+');
+plot(timestamp3, northError3,'-r');
+plot([timestamp1(1) timestamp1(end)], [0 0],'k');
 %hold on; plot([xlim(1) xlim(2)],[0 0],'k'); hold off;
  title(sprintf('GPS Error Comparison vs. Time'))
 ylabel(sprintf('North error [%s]',unit));
@@ -164,18 +170,31 @@ hold off;
 
 subplot(2,1,2)
 % plot(x,ylon)
-plot(timestamp1,eastError1,timestamp2,eastError2);
+scatter(timestamp1,eastError1,1,'+');
 hold on;
-plot(timestamp3, eastError3,'--r');
+scatter(timestamp2,eastError2,1,'+');
+plot(timestamp3, eastError3,'-r');
+plot([timestamp1(1) timestamp1(end)], [0 0],'k');
 ylabel(sprintf('East error [%s]',unit));
 xlabel(sprintf('Time (s)'));
 legend('Ublox1','Ublox2')
 %% Labeling
 
+% DC averages
+disp('DC averages:');
+disp('--With error correction:');
+
+eastError3Avg = sum(eastError3)/length(eastError3)
+northError3Avg = sum(northError3)/length(northError3)
+
+disp('--Without error correction:');
+eastError2Avg = sum(eastError2)/length(eastError2)
+northError2Avg = sum(northError2)/length(northError2)
+
 % latitude
 % longitude
 
 hold off;
-disp(sprintf('Compared %d data points.\n',length(time1)));
+disp(sprintf('Compared %d data points.\n',length(timestamp1)));
 
 end

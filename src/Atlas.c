@@ -48,15 +48,17 @@
 #define TIMER_STATIONKEEP   TIMER_MAIN
 #define TIMER_SETORIGIN     TIMER_MAIN
 
-#define TIMER_BAROMETER_SEND    TIMER_BACKGROUND
+#define TIMER_BAROMETER_SEND        TIMER_BACKGROUND
+#define TIMER_GPS_CORRECTION_LOST   TIMER_BACKGROUND2
 
 // --------------------- Timer delays -----------------------
 #define STARTUP_DELAY               2500 // (ms) time to wait before starting up
 #define STATION_KEEP_DELAY          3000 // (ms) to check if drifted away
 #define BAROMETER_SEND_DELAY        10000 // (ms) time between sending barometer data
-#define RESEND_MESSAGE_DELAY        4000
+#define RESEND_MESSAGE_DELAY        4000 // (ms) resend a message
+#define GPS_CORRECTION_LOST_DELAY   5000 // (ms) throw out gps error corrections now
 
-#define RESEND_MESSAGE_LIMIT        5
+#define RESEND_MESSAGE_LIMIT        5 // times to resend before failing
 
 // Maximum substate errors before failing (fall into override)
 #define INITIALIZE_ERROR_MAX            5
@@ -179,6 +181,7 @@ void initializeAtlas();
 void resetAtlas();
 void handleAcknowledgement();
 void setError(error_t errorCode);
+void gpsCorrectionUpdate();
 
 
 /**********************************************************************
@@ -468,6 +471,9 @@ void doMasterSM() {
 
     #ifdef USE_NAVIGATION
     Navigation_runSM();
+    #ifdef USE_ERROR_CORRECTION
+    gpsCorrectionUpdate();
+    #endif
     #endif
 
     #ifdef USE_DRIVE
@@ -713,6 +719,7 @@ void initializeAtlas() {
 
     #ifdef USE_NAVIGATION
     Navigation_init();
+
     #endif
 
     #ifdef USE_OVERRIDE
@@ -777,6 +784,36 @@ void doBarometerUpdate() {
     }
 }
 
+
+
+/**********************************************************************
+ * Function: doGpsCorrectionUpdate
+ * @return None.
+ * @remark Receives GPS correction data and applies it to the navigation
+ *  module, or turns it off if no new message were received.
+ * @author David Goodman
+ * @date 2013.05.05
+ **********************************************************************/
+void gpsCorrectionUpdate() {
+    if (event.flags.haveGeocentricErrorMessage) {
+        GeocentricCoordinate ecefError;
+        ecefError.x = Mavlink_newMessage.gpsGeocentricData.x;
+        ecefError.y = Mavlink_newMessage.gpsGeocentricData.y;
+        ecefError.z = Mavlink_newMessage.gpsGeocentricData.z;
+        Navigation_setGeocentricError(&ecefError);
+        if (!Navigation_isUsingErrorCorrection())
+            DBPRINT("Error corrections enabled.\n");
+
+        Navigation_enableErrorCorrection();
+
+        Timer_new(TIMER_GPS_CORRECTION_LOST, GPS_CORRECTION_LOST_DELAY);
+    }
+    else if (Timer_isExpired(TIMER_GPS_CORRECTION_LOST)) {
+        // Disable error corrections
+        Navigation_disableErrorCorrection();
+        DBPRINT("Error corrections disabled due to telemetry timeout.\n");
+    }
+}
 
 
 /**********************************************************************
