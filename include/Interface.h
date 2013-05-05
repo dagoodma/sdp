@@ -19,15 +19,46 @@
 typedef enum {
     NO_MESSAGE = 0x0,
     CALIBRATE_SUCCESS_MESSAGE,
-    CALIBRATE_PITCH_MESSAGE
+    CALIBRATE_PITCH_MESSAGE,
+    CALIBRATE_YAW_MESSAGE,
+    READY_MESSAGE,
+    START_RESCUE_MESSAGE,
+    RESCUING_MESSAGE,
+    RESCUE_SUCCESS_MESSAGE,
+    CANCEL_RESCUE_MESSAGE,
+    START_RETURN_MESSAGE,
+    RETURNING_MESSAGE,
+    STOPPING_BOAT_MESSAGE,
+    STOPPED_BOAT_MESSAGE,
+    CANCEL_STOP_MESSAGE,
+    SAVING_STATION_MESSAGE,
+    SAVED_STATION_MESSAGE,
+    SET_STATION_MESSAGE,
+    SETTING_ORIGIN_MESSAGE,
+    SET_ORIGIN_MESSAGE,
+
 } message_t;
 
-//typedef enum error_enum  error_t ;
-
 const char *INTERFACE_MESSAGE[] = {
-    "You should never see this",
-    "Calibration successful",
-    "CALIBRATE THE PITCH!!! DO IT",
+    "Blank message.",
+    "Calibration success.",
+    "Please calibrate the\npitch by leveling\nwith horizon, until\nboth top lights on.",
+    "Please calibrate the\nyaw by being\nlevel and north,\nuntil both lights on.",
+    "Command center ready",
+    "Send boat to\nrescue person.",
+    "Boat started rescue.",
+    "Boat rescued person.",
+    "Are you sure you\nwant to cancel the\nrescue?",
+    "Sending boat to\nstation.",
+    "Boat is headed\nto station.",
+    "Stopping the boat.\n",
+    "Boat has stopped.\n",
+    "Are you sure you\nwant to cancel the\nstop?",
+    "Saving boat's posit-\nion as new station.",
+    "Saved new station.",
+    "Set new station.",
+    "Setting boat origin.",
+    "Set new origin."
 };
 
 

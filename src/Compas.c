@@ -546,7 +546,7 @@ void doSetStationSM() {
  **********************************************************************/
 void doSetOriginSM() {
     if (event.flags.haveSetOriginAck) {
-        Interface_showMessageOnTimer(INITALIZED_BOAT_MESSAGE);
+        Interface_showMessageOnTimer(SET_ORIGIN_MESSAGE);
         event.flags.setOriginDone = TRUE;
     }
 }
@@ -731,7 +731,7 @@ void startSetOriginSM() {
 
 	Interface_clearAll();
     Interface_waitLightOn();
-    Interface_showMessage(INITIALIZING_BOAT_MESSAGE);
+    Interface_showMessage(SETTING_ORIGIN_MESSAGE);
 }
 
 /**********************************************************************
@@ -855,6 +855,21 @@ void doBarometerUpdate() {
         setError(ERROR_NO_ALTITUDE);
     }
 }
+
+/**********************************************************************
+ * Function: doGpsErrorUpdate
+ * @return None.
+ * @remark Calculates and sends the current GPS error correction data.
+ * @author David Goodman
+ * @date 2013.05.04
+ **********************************************************************/
+void doGpsErrorUpdate() {
+    if (Timer_isExpired(TIMER_BAROMETER_LOST)) {
+        setError(ERROR_NO_ALTITUDE);
+        Timer_new(TIMER_BAROMETER_LOST, BAROMETER_SEND_DELAY); 
+    }
+}
+
 
 
 /**********************************************************************

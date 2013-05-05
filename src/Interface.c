@@ -24,6 +24,7 @@
 #include "Board.h"
 #include "Timer.h"
 #include "Interface.h"
+#include "Lcd.h"
 
 
 
