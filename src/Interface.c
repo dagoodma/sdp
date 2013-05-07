@@ -18,13 +18,14 @@
 #include <xc.h>
 #include <stdint.h>
 #include <stdio.h>
-#include<stdlib.h>
-#include<plib.h>
+#include <stdlib.h>
+#include <plib.h>
 #include <ports.h>
 #include "Board.h"
 #include "Timer.h"
 #include "Interface.h"
 #include "Lcd.h"
+#include "Error.h"
 
 
 
@@ -87,6 +88,29 @@ union button_pressed{
     unsigned char bytes[BUTTON_BYTE_COUNT];
 }buttonPressed;
 void (*timerLightOffFunction)();
+
+
+const char *INTERFACE_MESSAGE[] = {
+    "Blank message.",
+    "Calibration success.",
+    "Please calibrate the\npitch by leveling\nwith horizon, until\nboth top lights on.",
+    "Please calibrate the\nyaw by being\nlevel and north,\nuntil both lights on.",
+    "Command center ready",
+    "Sending boat to\nrescue person.",
+    "Boat started rescue.",
+    "Boat rescued person.",
+    "Are you sure you\nwant to cancel the\nrescue?",
+    "Sending boat to\nstation.",
+    "Boat is headed\nto station.",
+    "Stopping the boat.\n",
+    "Boat has stopped.\n",
+    "Are you sure you\nwant to cancel the\nstop?",
+    "Saving boat's posit-\nion as new station.",
+    "Saved new station.",
+    "Set new station.",
+    "Setting boat origin.",
+    "Set new origin."
+};
 
 message_t currentMsgCode, nextMsgCode;
 /**********************************************************************
@@ -217,23 +241,23 @@ bool Interface_isStopPressed(){
     return buttonPressed.flags.stop;
 }
 /**********************************************************************
- * Function: Interface_isRescuePessed
+ * Function: Interface_isRescuePressed
  * @param None.
  * @return True if the button has been presed, false if the button is
  *  untouched
  * @remark
  **********************************************************************/
-bool Interface_isRescuePessed(){
+bool Interface_isRescuePressed(){
     return buttonPressed.flags.rescue;
 }
 /**********************************************************************
- * Function: Interface_isSetStationPessed
+ * Function: Interface_isSetStationPressed
  * @param None.
  * @return True if the button has been presed, false if the button is
  *  untouched
  * @remark
  **********************************************************************/
-bool Interface_isSetStationPessed(){
+bool Interface_isSetStationPressed(){
     return buttonPressed.flags.setStationKeep;
 
 }
@@ -318,6 +342,46 @@ void Interface_errorLightOnTimer(uint16_t ms){
     timerLightOffFunction = &Interface_errorLightOff;
     Interface_errorLightOn();
 }
+/**********************************************************************
+ * Function: Interface_pitchLightsOff
+ * @return None.
+ * @remark Turns pitch calibration lights off.
+ **********************************************************************/
+void Interface_pitchLightsOff() {
+    // Does nothing yet
+}
+
+/**********************************************************************
+ * Function: Interface_yawLightsOff
+ * @return None.
+ * @remark Turns yaw calibration lights off.
+ **********************************************************************/
+void Interface_yawLightsOff() {
+    // Does nothing yet
+}
+
+/**********************************************************************
+ * Function: Interface_pitchLightsOn
+ * @return None.
+ * @remark Turns pitch calibration lights on, which will use both
+ *  top calibration LEDs to signal to the user when the scope is level
+ *  by lighting both lights. If the scope is not level, the lights
+ *  will indicate which way the scope should be pitched.
+ **********************************************************************/
+void Interface_pitchLightsOn() {
+    // Does nothing yet
+}
+
+/**********************************************************************
+ * Function: Interface_yawLightsOn
+ * @return None.
+ * @remark Turns yaw calibration lights on, which will use both
+ *  top calibration LEDs to signal to the user when the scope is facing
+ *  true North, by turning both LEDs on.
+ **********************************************************************/
+void Interface_yawLightsOn() {
+    // Does nothing yet
+}
 
 /**********************************************************************
  * Function: Interface_showMessageOnTimer
@@ -345,6 +409,21 @@ void Interface_showMessage(message_t msgCode){
         showMessage(msgCode);
     else
         nextMsgCode = msgCode;
+}
+
+/**********************************************************************
+ * Function: Interface_showErrorMessage
+ * @param Error code for the error message to print.
+ * @return None.
+ * @remark Prints an error code to the LCD screen, and turns on the
+ *  error LED, while clearing all other lights and messages.
+ **********************************************************************/
+void Interface_showErrorMessage(error_t errorCode) {
+    Interface_clearAll();
+    Interface_errorLightOn();
+    LCD_setPosition(0,0);
+    LCD_writeString(getErrorMessage(errorCode));
+    currentMsgCode = errorCode;
 }
 
 /**********************************************************************

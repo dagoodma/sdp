@@ -38,4 +38,13 @@ void Magnetometer_init();
  * @date 2013.03.10  */
 float Magnetometer_getDegree();
 
+/**
+ * Function: Magnetometer_getDegree
+ * @return Returns TRUE or FALSE if the Magnetometer is pointed very near
+ *  North.
+ * @remark
+ * @author David Goodman
+ * @date 2013.03.10  */
+bool Magnetometer_isNorth();
+
 #endif

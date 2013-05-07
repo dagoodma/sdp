@@ -25,6 +25,7 @@
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
+#include "Accelerometer.h"
 #include "I2C.h"
 #include "Serial.h"
 #include "Board.h"
@@ -34,9 +35,10 @@
 #include "Xbee.h"
 #include "UART.h"
 #include "Gps.h"
-#include "Navigation.h"
 #include "Barometer.h"
 #include "Override.h"
+#include "Error.h"
+#include "Interface.h"
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
@@ -46,17 +48,46 @@
 
 
 // Timer allocation
-#define TIMER_CALIBRATE					TIMER_MAIN
-#define TIMER_RESCUE					TIMER_MAIN
-#define TIMER_CANCEL					TIMER_MAIN2
+#define TIMER_CALIBRATE     TIMER_MAIN
+#define TIMER_RESCUE        TIMER_MAIN
+#define TIMER_STOP          TIMER_MAIN
+#define TIMER_SETORIGIN     TIMER_MAIN
+#define TIMER_SETSTATION    TIMER_MAIN
+#define TIMER_CANCEL        TIMER_MAIN2
+
 
 #define TIMER_BAROMETER_LOST            TIMER_BACKGROUND
 #define TIMER_HEARTBEAT_LOST            TIMER_BACKGROUND2
+#define TIMER_GPS_CORRECTION            TIMER_BACKGROUND3
 
 // Timer delays
-#define BAROMETER_LOST_TIMEOUT_DELAY	    20000 // (ms) time before error
-#define HEARBEAT_LOST_TIMEOUT_DELAY         10000// (ms) before error
- 
+#define BAROMETER_LOST_DELAY	    20000 // (ms) time before timeout error
+#define HEARBEAT_LOST_DELAY         10000// (ms) before timeout error
+#define RESEND_MESSAGE_DELAY        4000 // (ms) resend a message
+#define GPS_CORRECTION_SEND_DELAY   3750
+#define LCD_HOLD_DELAY              4000 // (ms) time for lcd message to linger
+#define LED_HOLD_DELAY              1000 // (ms) time for led to stay lit
+#define CANCEL_TIMEOUT_DELAY       3500 // (ms) for cancel msg to linger
+
+#define RESEND_MESSAGE_LIMIT        5 // times to resend before failing
+
+#define EVENT_BYTE_COUNT 10
+
+// Hard-coded geocentric origin location // TODO replace this
+// --------------- Center of west lake -------------
+/*
+#define ECEF_X_ORIGIN -2706922.0f
+#define ECEF_Y_ORIGIN -4324246.0f
+#define ECEF_Z_ORIGIN 3815364.0f
+ * */
+
+// ------- In front of GSH parking lot entrance ------
+
+#define ECEF_X_ORIGIN -2707534.0f
+#define ECEF_Y_ORIGIN -4322167.0f
+#define ECEF_Z_ORIGIN  3817539.0f
+
+#define I2C_CLOCK_FREQ  100000 // (Hz)
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -65,48 +96,107 @@
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
-static enum {
-	STATE_CALIBRATE,
-	STATE_SETSTATION,
-	STATE_READY,
-	STATE_STOP,
-	STATE_RESCUE,
-	STATE_ERROR,
-}
+I2C_MODULE I2C_BUS_ID   = I2C1;
 
 static enum {
-	STATE_NONE = 0x0,
+    STATE_CALIBRATE,
+    STATE_SETSTATION,
+    STATE_SETORIGIN,
+    STATE_READY,
+    STATE_STOP,
+    STATE_RESCUE,
+    STATE_ERROR
+} state, lastState;
 
-	/* - Calibrate SM - */
-	STATE_CALIBRATE_PITCH,
-	STATE_CALIBRATE_YAW,
+static enum {
+    STATE_NONE = 0x0,
 
-	/* - Ready SM - */
-	// N/A
-	
-	/* - SetStation SM - */
-	// N/A
+    /* - Calibrate SM - */
+    STATE_CALIBRATE_PITCH,
+    STATE_CALIBRATE_YAW,
 
-	/* - Error SM - */
-	// N/A
-	
-	/* - Stop SM - */
-	STATE_STOP_SEND,
-	STATE_STOP_IDLE,
-	STATE_STOP_CONFIRMCANCEL,
+    /* - Ready SM - */
+    // N/A
+
+    /* - SetStation SM - */
+    // N/A
+
+    /* - Error SM - */
+    // N/A
+
+    /* - Stop SM - */
+    STATE_STOP_SEND,
+    STATE_STOP_IDLE,
+    STATE_STOP_CONFIRMCANCEL,
     STATE_STOP_RETURN,
+
+    /* - Rescue SM - */
+    STATE_RESCUE_SEND,
+    STATE_RESCUE_WAIT,
+    STATE_RESCUE_CONFIRMCANCEL,
+    STATE_RESCUE_RETURN
 	
-	/* - Rescue SM - */
-	STATE_RESCUE_SEND,
-	STATE_RESCUE_WAIT,
-	STATE_RESCUE_CONFIRMCANCEL,
-    STATE_RESCUE_RETURN,
-	
-}
+} subState;
+
+union EVENTS {
+    struct {
+        /* - Interface flags - */
+        unsigned int rescueButtonPressed :1;
+        unsigned int stopButtonPressed :1;
+        unsigned int setStationButtonPressed :1;
+        unsigned int okButtonPressed :1;
+        unsigned int cancelButtonPressed :1;
+        /* - Mavlink message flags - */
+        unsigned int haveInitializeMessage :1; // boat starting up
+        unsigned int haveErrorMessage :1; // boat had error
+        unsigned int haveStartRescueAck :1; // going to rescue
+        unsigned int haveSetOriginAck :1; // received origin coordinate
+        unsigned int haveSetStationAck :1; // received station coordinate
+        unsigned int haveReturnStationAck :1; // boat is returning to station
+        unsigned int haveStopAck :1; // received stop command
+        unsigned int haveSaveStationAck :1; // boat saved station
+        unsigned int haveBarometerMessage :1; // boat's altitude data
+        unsigned int haveStatusMessage :1; // used for debug
+        unsigned int haveUnknownMessage :1;
+        unsigned int haveHeartbeatMessage :1; // talking to boat
+        unsigned int haveRescueSuccessMessage :1; // boat rescued drownee
+        unsigned int haveReturnStationMessage :1; // boat is heading to station
+        unsigned int haveRequestOriginMessage :1;
+        unsigned int haveOverrideMessage :1; // boat is in override state
+        unsigned int readyToPrintMessage :1; // display hold for Ready state expired
+        /* - Boat error messages - */
+        unsigned int haveBoatGpsDisconnectedError :1;
+        unsigned int haveBoatGpsFixError :1;
+        unsigned int haveBoatNoOriginError :1;
+        unsigned int haveBoatNoStationError :1;
+        unsigned int haveBoatOnlineMessage  :1;
+        unsigned int haveBoatPositionMessage :1;
+
+        /* - Calibrate events - */
+        unsigned int scopeIsLevel :1;
+        unsigned int scopeIsNorth :1;
+
+        /* State transition events */
+        unsigned int wantCancel :1;
+        unsigned int calibrateDone :1;
+        unsigned int setStationDone :1;
+        unsigned int rescueDone :1;
+        unsigned int stopDone :1;
+        unsigned int setOriginDone :1;
+        unsigned int lastStateWasReady :1;
+        unsigned int haveError :1;
+        unsigned int haveBoatError :1;
+    } flags;
+    unsigned char bytes[EVENT_BYTE_COUNT];
+} event;
+
+static GeocentricCoordinate ecefPosition; // TODO consider adding position averaging
 
 LocalCoordinate nedRescueTarget;
 uint8_t resendMessageCount;
 float compasHeight;
+int lastMessageID;
+error_t lastErrorCode;
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -125,61 +215,19 @@ void startReadySM();
 void startErrorSM();
 void startRescueSM();
 void startSetStationSM();
+void startSetOriginSM();
 void startStopSM();
 void initializeCompas();
 
 void setError(error_t errorCode);
 void doBarometerUpdate();
 void gpsCorrectionUpdate();
+void getTargetLocation(LocalCoordinate *targetNed);
+
 
 /***********************************************************************
  * PRIVATE FUNCTIONS                                                   *
  ***********************************************************************/
-
-union EVENTS
-    struct {
-		/* - Interface flags - */
-		unsigned int rescueButtonPressed :1;
-		unsigned int stopButtonPressed :1;
-		unsigned int setStationButtonPressed :1;
-		unsigned int okButtonPressed :1;
-		unsigned int cancelButtonPressed :1;
-        /* - Mavlink message flags - */
-        unsigned int haveInitializeMessage :1; // boat starting up
-		unsigned int haveErrorMessage :1; // boat had error
-		unsigned int haveStartRescueAck :1; // going to rescue
-		unsigned int haveSetOriginAck :1; // received origin coordinate
-		unsigned int haveSetStationAck :1; // received station coordinate
-        unsigned int haveReturnStationAck :1; // boat is returning to station
-        unsigned int haveStopAck :1; // received stop command
-		unsigned int haveSaveStationAck :1; // boat saved station
-		unsigned int haveBarometerMessage :1; // boat's altitude data
-		unsigned int haveStatusMessage :1; // used for debug
-		unsigned int haveUnknownMessage :1; 
-		unsigned int haveHeartbeatMessage :1; // talking to boat
-		unsigned int haveRescueSuccessMessage :1; // boat rescued drownee
-		unsigned int haveReturnStationMessage :1; // boat is heading to station
-        unsigned int haveRequestOriginMessage :1;
-		unsigned int haveOverrideMessage :1; // boat is in override state
-		unsigned int readyToPrintMessage :1; // display hold for Ready state expired
-		
-		/* - Calibrate events - */
-		unsigned int scopeIsLevel
-		unsigned int scopeIsNorth
-		
-		/* State transition events */
-		unsigned int wantCancel :1;
-		unsigned int calibrateDone :1;
-		unsigned int setStationDone :1;
-		unsigned int rescueDone :1;
-		unsigned int lastStateWasReady :1;
-        unsigned int haveError :1;
-    } flags;
-    unsigned char bytes[EVENT_BYTE_COUNT];
-} event;
-
-static GeocentricCoordinate ecefPosition; // TODO consider adding position averaging
-
 
 /**********************************************************************
  * Function: checkEvents
@@ -190,24 +238,21 @@ static GeocentricCoordinate ecefPosition; // TODO consider adding position avera
 void checkEvents() {
     // Clear all event flags
     int i;
-    for (i=0; i < EVENT_BYTE_SIZE; i++)
+    for (i=0; i < EVENT_BYTE_COUNT; i++)
         event.bytes[i] = 0x0;     
 
-  	// Calibration flags
-	if (state == STATE_CALIBRATE) {
-		if (Accelerometer_isLevel())
-			event.flags.scopeIsLevel = TRUE;
-		if (Magnetometer_isNorth())
-			event.flags.scopeIsNorth = TRUE;
-	}
-		
-	// Display holds last text with timer
-	if (Timer_isExpired(TIMER_DISPLAY_HOLD))
-		event.flags.readyToPrintMessage = TRUE;
-		
-	// Canceling out of the error state chooses Ready or Stop
-	if (lastState == STATE_READY)
-		event.flags.lastStateWasReady;
+    // Calibration flags
+    if (state == STATE_CALIBRATE) {
+        if (Accelerometer_isLevel())
+            event.flags.scopeIsLevel = TRUE;
+        if (Magnetometer_isNorth())
+            event.flags.scopeIsNorth = TRUE;
+    }
+
+
+    // Canceling out of the error state chooses Ready or Stop
+    if (lastState == STATE_READY)
+        event.flags.lastStateWasReady;
 
     // Check interface
     if (Interface_isOkPressed())
@@ -225,60 +270,73 @@ void checkEvents() {
     if (Mavlink_hasNewMessage()) {
         lastMessageID = Mavlink_getNewMessageID();
         switch (lastMessageID) {
-			/*--------------------  Acknowledgement messages ------------------ */
-            case MAVLINK_ACK:
-				// CMD_OTHER
-                if (newMessage.ackData.msgID == MAVLINK_MSG_ID_CMD_OTHER) {
-					// Responding to a return to station request
-					if (newMessage.ackData.msgStatus == MAVLINK_RETURN_STATION)
-						event.flags.haveReturnStationAck = TRUE;
-					// Boat is in override state
-					if (newMessage.ackData.msgStatus == MAVLINK_OVERRIDE)
-						event.flags.haveStopAck = TRUE;
-					// Boat saved station
-					if (newMessage.ackData.msgStatus == MAVLINK_SAVE_STATION)
-						event.flags.haveSetStationAck = TRUE;
-				}
-				// GPS_NED
-				if (newMessage.ackData.msgID == MAVLINK_MSG_ID_GPS_NED) {
-					// Responding to a rescue 
-					if (newMessage.ackData.msgStatus == MAVLINK_LOCAL_START_RESCUE)
-						event.flags.haveStartRescueAck = TRUE;
-					if (newMessage.ackData.msgStatus == MAVLINK_LOCAL_SET_STATION)
-						event.flags.haveSetStationAck = TRUE;
-				}
-				// GPS_ECEF
-				if (newMessage.ackData.msgID == MAVLINK_ID_GPS_ECEF) {
-					if (newMessage.ackData.msgStatus == MAVLINK_LOCAL_SET_ORIGIN)
-						event.flags.haveSetOriginAck = TRUE;
-				}
+            /*--------------------  Acknowledgement messages ------------------ */
+            case MAVLINK_MSG_ID_MAVLINK_ACK:
+		// CMD_OTHER
+                if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_CMD_OTHER) {
+                    // Responding to a return to station request
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_RETURN_STATION)
+                        event.flags.haveReturnStationAck = TRUE;
+                    // Boat is in override state
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_OVERRIDE)
+                        event.flags.haveStopAck = TRUE;
+                    // Boat saved station
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_SAVE_STATION)
+                        event.flags.haveSetStationAck = TRUE;
+                }
+                // GPS_NED
+                if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_GPS_NED) {
+                    // Responding to a rescue
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_LOCAL_START_RESCUE)
+                        event.flags.haveStartRescueAck = TRUE;
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_LOCAL_SET_STATION)
+                        event.flags.haveSetStationAck = TRUE;
+                }
+                // GPS_ECEF
+                if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_GPS_ECEF) {
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_GEOCENTRIC_ORIGIN)
+                        event.flags.haveSetOriginAck = TRUE;
+                }
                 break;
-			/*------------------ CMD_OTHER messages --------------- */
+            /*------------------ CMD_OTHER messages --------------- */
             case MAVLINK_MSG_ID_CMD_OTHER:
-                if (newMessage.cmdOtherData.msgStatus == MAVLINK_REQUEST_ORIGIN)
+                if (Mavlink_newMessage.commandOtherData.command == MAVLINK_REQUEST_ORIGIN)
                     event.flags.haveRequestOriginMessage = TRUE;
                 break;
-			/*--------------------  GPS messages ------------------ */
+            /*--------------------  GPS messages ------------------ */
             case MAVLINK_MSG_ID_GPS_ECEF:
                 // Nothing
                 break;
             case MAVLINK_MSG_ID_GPS_NED:	
-				// Boat sent position info
-				if (newMessage.gpsLocalData.msgStatus == MAVLINK_LOCAL_BOAT_POSITION)
-					event.flags.haveBoatPositionMessage = TRUE;
+                // Boat sent position info
+                if (Mavlink_newMessage.gpsLocalData.status == MAVLINK_LOCAL_BOAT_POSITION)
+                    event.flags.haveBoatPositionMessage = TRUE;
                 break;
-			/*---------------- Status and Error messages ---------- */
-			case MAVLINK_STATUS_AND_ERROR:
-				// ---------- Boat error messages ------------------
-				if (newMessage.statusAndError.status == ERROR_GPS_DISCONNECTED)
-					event.flags.haveBoatGpsDisconnectedError = TRUE;
-				if (newMessage.statusAndError.status == ERROR_GPS_NOFIX)
-					event.flags.haveBoatGpsFixError = TRUE;
-				if (newMessage.statusAndError.status == ERROR_INITIALIZE_TIMEDOUT)
-					event.flags.haveBoatInitTimeoutError = TRUE;
-				// ---------- Boat status messages -----------------
-				if (newMessage.statusAndError.status == MAVLINK_STATUS_ONLINE)
-					event.flags.haveBoatOnlineMessage = TRUE;
+            /*---------------- Status and Error messages ---------- */
+            case MAVLINK_MSG_ID_STATUS_AND_ERROR:
+                // ---------- Boat error messages ------------------
+                if (Mavlink_newMessage.statusAndErrorData.status == ERROR_GPS_DISCONNECTED) {
+                    event.flags.haveBoatGpsDisconnectedError = TRUE;
+                    event.flags.haveBoatError = TRUE;
+                }
+                if (Mavlink_newMessage.statusAndErrorData.status == ERROR_GPS_NOFIX) {
+                    event.flags.haveBoatGpsFixError = TRUE;
+                    event.flags.haveBoatError = TRUE;
+                }
+                if (Mavlink_newMessage.statusAndErrorData.status == ERROR_NO_ORIGIN) {
+                    event.flags.haveBoatNoOriginError = TRUE;
+                    event.flags.haveBoatError = TRUE;
+                }
+                if (Mavlink_newMessage.statusAndErrorData.status == ERROR_NO_STATION) {
+                    event.flags.haveBoatNoStationError = TRUE;
+                    event.flags.haveBoatError = TRUE;
+                }
+                // ---------- Boat status messages -----------------
+                if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_ONLINE)
+                    event.flags.haveBoatOnlineMessage = TRUE;
+            /*----------------  Barometer altitude message ----------------*/
+            case MAVLINK_MSG_ID_BAROMETER:
+                event.flags.haveBarometerMessage = TRUE;
             default:
                 // Unknown message ID
                 event.flags.haveUnknownMessage = TRUE;
@@ -301,46 +359,46 @@ void checkEvents() {
  *  the pitch is also level.
  **********************************************************************/
 void doCalibrateSM() {
-	switch(subState) {
-		case STATE_CALIBRATE_PITCH:
-			// Start timer if scope is level
-			if (event.flags.scopeIsLevel) {
-				if (Timer_isExpired(TIMER_CALIBRATE)) {
-					// Progress to yaw calibration
-					Encoder_setZeroPitch();
-					subState = STATE_CALIBRATE_YAW;
-					Interface_showMessage(CALIBRATE_YAW_MESSAGE);
-					Interface_pitchLightsOff(); 
-					Interface_yawLightsOn(); // turn both lights on when North
-					Timer_clear(TIMER_CALIBRATE);
-				}
-				else if (!Timer_isActive(TIMER_CALIBRATE))
-					Timer_new(TIMER_CALIBRATE)
-			}
-			else {
-				Timer_stop(TIMER_CALIBRATE);
-			}
-					
-			break;
-		case STATE_CALIBRATE_YAW:
-			// Start timer if scope is pointed north
-			if (event.flags.scopeIsNorth && event.flags.scopeIsLevel) {
-				if (Timer_isExpired(TIMER_CALIBRATE)) {
-					// Finished calibrating
-					Encoder_setZeroYaw();
-					Interface_showMessageOnTimer(CALIBRATE_SUCCESS_MESSAGE);
-					Interface_readyLightOnTimer(CALIBRATE_SUCCESS_MESSAGE);
-					Interface_yawLightsOff();
-					event.flags.calibrateDone = TRUE;
-				}
-				else if (!Timer_isActive(TIMER_CALIBRATE))
-					Timer_new(TIMER_CALIBRATE)
-			}
-			else {
-				Timer_stop(TIMER_CALIBRATE);
-			}
-			break;
-	} // switch
+    switch(subState) {
+        case STATE_CALIBRATE_PITCH:
+            // Start timer if scope is level
+            if (event.flags.scopeIsLevel) {
+                if (Timer_isExpired(TIMER_CALIBRATE)) {
+                    // Progress to yaw calibration
+                    Encoder_setZeroPitch();
+                    subState = STATE_CALIBRATE_YAW;
+                    Interface_showMessage(CALIBRATE_YAW_MESSAGE);
+                    Interface_pitchLightsOff();
+                    Interface_yawLightsOn(); // turn both lights on when North
+                    Timer_clear(TIMER_CALIBRATE);
+                }
+                else if (!Timer_isActive(TIMER_CALIBRATE))
+                    Timer_new(TIMER_CALIBRATE);
+            }
+            else {
+                    Timer_stop(TIMER_CALIBRATE);
+            }
+
+            break;
+        case STATE_CALIBRATE_YAW:
+            // Start timer if scope is pointed north
+            if (event.flags.scopeIsNorth && event.flags.scopeIsLevel) {
+                if (Timer_isExpired(TIMER_CALIBRATE)) {
+                    // Finished calibrating
+                    Encoder_setZeroYaw();
+                    Interface_showMessageOnTimer(CALIBRATE_SUCCESS_MESSAGE,LCD_HOLD_DELAY);
+                    Interface_readyLightOnTimer(LED_HOLD_DELAY);
+                    Interface_yawLightsOff();
+                    event.flags.calibrateDone = TRUE;
+                }
+                else if (!Timer_isActive(TIMER_CALIBRATE))
+                    Timer_new(TIMER_CALIBRATE);
+            }
+            else {
+                Timer_stop(TIMER_CALIBRATE);
+            }
+            break;
+} // switch
 }
 
 
@@ -350,59 +408,59 @@ void doCalibrateSM() {
  * @remark Executes one cycle of the Rescue state machine.
  **********************************************************************/
 void doRescueSM() {
-	switch (subState) {
-		case STATE_RESCUE_SEND:
+    switch (subState) {
+        case STATE_RESCUE_SEND:
             // Tell boat to rescue someone
-			if (event.flags.haveRescueAck) {
+            if (event.flags.haveStartRescueAck) {
                 // Transition to wait substate
-				subState = STATE_RESCUE_WAIT;
-				Interface_showMessage(RESCUING_MESSAGE);
-				Interface_waitLightOff();
-				Interface_readyLightOn();
-				resendMessageCount = 0;
-			}
-			else if (Timer_isExpired(TIMER_RESCUE)) {
-			    // Resend start rescue message on timer
-				if (resendMessageCount >= RESEND_MESSAGE_LIMIT) {
-					// Sent too many times
-					setError(ERROR_NO_ACKNOWLEDGEMENT);
-					return;
-				}
-				else {
-					Mavlink_sendStartRescue(WANT_ACK, &nedRescueTarget);
-					Timer_new(TIMER_RESCUE, RESEND_MESSAGE_DELAY);
-					resendMessageCount++;
-				}
-			}
-			break;
-		case STATE_RESCUE_WAIT:
+                subState = STATE_RESCUE_WAIT;
+                Interface_showMessage(STARTED_RESCUE_MESSAGE);
+                Interface_waitLightOff();
+                resendMessageCount = 0;
+                Interface_readyLightOn();
+            }
+            else if (Timer_isExpired(TIMER_RESCUE)) {
+                // Resend start rescue message on timer
+                if (resendMessageCount >= RESEND_MESSAGE_LIMIT) {
+                    // Sent too many times
+                    setError(ERROR_NO_ACKNOWLEDGEMENT);
+                    return;
+                }
+                else {
+                    Mavlink_sendStartRescue(WANT_ACK, &nedRescueTarget);
+                    Timer_new(TIMER_RESCUE, RESEND_MESSAGE_DELAY);
+                    resendMessageCount++;
+                }
+            }
+            break;
+        case STATE_RESCUE_WAIT:
             // Wait for boat to rescue someone
             if (event.flags.haveRescueSuccessMessage) {
                 // Person was found! Exit to ready
                 event.flags.rescueDone = TRUE;
-                Interface_showMessageOnTimer(RESCUE_SUCCESS_MESSAGE);
+                Interface_showMessageOnTimer(RESCUE_SUCCESS_MESSAGE, LCD_HOLD_DELAY);
             }
-			else if (event.flags.cancelButtonPressed) {
+            else if (event.flags.cancelButtonPressed) {
                 // Transition to confirmcancel substate
                 subState = STATE_RESCUE_CONFIRMCANCEL;
                 Timer_new(TIMER_RESCUE, CANCEL_TIMEOUT_DELAY);
                 Interface_showMessage(CANCEL_RESCUE_MESSAGE);
             }
-			break;
-		case STATE_RESCUE_CONFIRMCANCEL:
+            break;
+        case STATE_RESCUE_CONFIRMCANCEL:
             // Ask user if they want to cancel rescue
             if (event.flags.haveRescueSuccessMessage) {
-                // Person was found! Exit to ready 
+                // Person was found! Exit to ready
                 event.flags.rescueDone = TRUE;
-                Interface_showMessageOnTimer(RESCUE_SUCCESS_MESSAGE);
+                Interface_showMessageOnTimer(RESCUE_SUCCESS_MESSAGE, LCD_HOLD_DELAY);
             }
             else if (event.flags.okButtonPressed) {
                 // Transition to return substate
                 subState = STATE_RESCUE_RETURN;
-				Interface_showMessage(START_RETURN_MESSAGE);
-				Interface_readyLightOff();
-				Interface_waitLightOn();
-				resendMessageCount = 0;
+                Interface_showMessage(START_RETURN_MESSAGE);
+                Interface_readyLightOff();
+                Interface_waitLightOn();
+                resendMessageCount = 0;
                 Mavlink_sendReturnStation(WANT_ACK);
                 Timer_new(TIMER_RESCUE, RESEND_MESSAGE_DELAY);
             }
@@ -410,35 +468,35 @@ void doRescueSM() {
                 || event.flags.cancelButtonPressed) {
                 // Transition to wait substate
                 Timer_clear(TIMER_RESCUE);
-				subState = STATE_RESCUE_WAIT;
-				Interface_showMessage(RESCUING_MESSAGE);
+                subState = STATE_RESCUE_WAIT;
+                Interface_showMessage(STARTED_RESCUE_MESSAGE);
             }
-			break;
-		case STATE_RESCUE_RETURN:
-            // Tell boat to return to station    
-			if (event.flags.haveReturnStationAck) {
+            break;
+        case STATE_RESCUE_RETURN:
+            // Tell boat to return to station
+            if (event.flags.haveReturnStationAck) {
                 // Boat is headed to station, exits to ready
                 event.flags.rescueDone = TRUE;
-				Interface_showMessageOnTimer(RETURNING_MESSAGE);
-				Interface_waitLightOff();
-				Interface_readyLightOn();
-				resendMessageCount = 0;
-			}
-			else if (Timer_isExpired(TIMER_RESCUE)) {
-			    // Resend return to station message on timer
-				if (resendMessageCount >= RESEND_MESSAGE_LIMIT) {
-					// Sent too many times
-					setError(ERROR_NO_ACKNOWLEDGEMENT);
-					return;
-				}
-				else {
+                Interface_showMessageOnTimer(RETURNING_MESSAGE,LCD_HOLD_DELAY);
+                Interface_waitLightOff();
+                Interface_readyLightOn();
+                resendMessageCount = 0;
+            }
+            else if (Timer_isExpired(TIMER_RESCUE)) {
+                // Resend return to station message on timer
+                if (resendMessageCount >= RESEND_MESSAGE_LIMIT) {
+                    // Sent too many times
+                    setError(ERROR_NO_ACKNOWLEDGEMENT);
+                    return;
+                }
+                else {
                     Mavlink_sendReturnStation(WANT_ACK);
-					Timer_new(TIMER_RESCUE, RESEND_MESSAGE_DELAY);
-					resendMessageCount++;
-				}
-			}
-			break;
-	}
+                    Timer_new(TIMER_RESCUE, RESEND_MESSAGE_DELAY);
+                    resendMessageCount++;
+                }
+            }
+            break;
+    }
 } // doRescueSM
 
 /**********************************************************************
@@ -447,49 +505,49 @@ void doRescueSM() {
  * @remark Executes one cycle of the Stop state machine.
  **********************************************************************/
 void doStopSM() {
-	switch(subState) {
-		case STATE_STOP_SEND:
+    switch(subState) {
+        case STATE_STOP_SEND:
             // Tell boat to stop
-			if (event.flags.haveStopAck) {
+            if (event.flags.haveStopAck) {
                 // Transition to wait substate
-				subState = STATE_STOP_IDLE;
-				Interface_showMessage(STOPPED_BOAT_MESSAGE);
-				Interface_waitLightOff();
-				Interface_readyLightOn();
-				resendMessageCount = 0;
-			}
-			else if (Timer_isExpired(TIMER_STOP)) {
-			    // Resend start rescue message on timer
-				if (resendMessageCount >= RESEND_MESSAGE_LIMIT) {
-					// Sent too many times
-					setError(ERROR_NO_ACKNOWLEDGEMENT);
-					return;
-				}
-				else {
-					Mavlink_sendOverride(WANT_ACK)
-					Timer_new(TIMER_STOP, RESEND_MESSAGE_DELAY);
-					resendMessageCount++;
-				}
-			}
-			break;
+                subState = STATE_STOP_IDLE;
+                Interface_showMessage(STOPPED_BOAT_MESSAGE);
+                Interface_waitLightOff();
+                Interface_readyLightOn();
+                resendMessageCount = 0;
+            }
+            else if (Timer_isExpired(TIMER_STOP)) {
+                // Resend start rescue message on timer
+                if (resendMessageCount >= RESEND_MESSAGE_LIMIT) {
+                    // Sent too many times
+                    setError(ERROR_NO_ACKNOWLEDGEMENT);
+                    return;
+                }
+                else {
+                    Mavlink_sendOverride(WANT_ACK);
+                    Timer_new(TIMER_STOP, RESEND_MESSAGE_DELAY);
+                    resendMessageCount++;
+                }
+            }
+            break;
         case STATE_STOP_IDLE:
             // Wait for something
-			if (event.flags.cancelButtonPressed) {
+            if (event.flags.cancelButtonPressed) {
                 // Transition to confirmcancel substate
                 subState = STATE_STOP_CONFIRMCANCEL;
                 Timer_new(TIMER_STOP, CANCEL_TIMEOUT_DELAY);
                 Interface_showMessage(CANCEL_STOP_MESSAGE);
             }
             break;
-        case STATE_STOP_CANCELCONFIRM:
+        case STATE_STOP_CONFIRMCANCEL:
             // Ask user if they want to cancel stop
             if (event.flags.okButtonPressed) {
                 // Transition to return substate
                 subState = STATE_STOP_RETURN;
-				Interface_showMessage(START_RETURN_MESSAGE);
-				Interface_readyLightOff();
-				Interface_waitLightOn();
-				resendMessageCount = 0;
+                Interface_showMessage(START_RETURN_MESSAGE);
+                Interface_readyLightOff();
+                Interface_waitLightOn();
+                resendMessageCount = 0;
                 Mavlink_sendReturnStation(WANT_ACK);
                 Timer_new(TIMER_STOP, RESEND_MESSAGE_DELAY);
             }
@@ -497,35 +555,35 @@ void doStopSM() {
                 || event.flags.cancelButtonPressed) {
                 // Transition to wait substate
                 Timer_clear(TIMER_STOP);
-				subState = STATE_STOP_IDLE;
-				Interface_showMessage(STOPPED_BOAT_MESSAGE);
+                subState = STATE_STOP_IDLE;
+                Interface_showMessage(STOPPED_BOAT_MESSAGE);
             }
-			break;
+            break;
         case STATE_STOP_RETURN:
-            // Tell boat to return to station    
-			if (event.flags.haveReturnStationAck) {
+            // Tell boat to return to station
+            if (event.flags.haveReturnStationAck) {
                 // Boat is headed to station, exits to ready
                 event.flags.stopDone = TRUE;
-				Interface_showMessageOnTimer(RETURNING_MESSAGE);
-				Interface_waitLightOff();
-				Interface_readyLightOn();
-				resendMessageCount = 0;
-			}
-			else if (Timer_isExpired(TIMER_STOP)) {
-			    // Resend return to station message on timer
-				if (resendMessageCount >= RESEND_MESSAGE_LIMIT) {
-					// Sent too many times
-					setError(ERROR_NO_ACKNOWLEDGEMENT);
-					return;
-				}
-				else {
+                Interface_showMessageOnTimer(RETURNING_MESSAGE, LCD_HOLD_DELAY);
+                Interface_waitLightOff();
+                Interface_readyLightOn();
+                resendMessageCount = 0;
+            }
+            else if (Timer_isExpired(TIMER_STOP)) {
+                // Resend return to station message on timer
+                if (resendMessageCount >= RESEND_MESSAGE_LIMIT) {
+                    // Sent too many times
+                    setError(ERROR_NO_ACKNOWLEDGEMENT);
+                    return;
+                }
+                else {
                     Mavlink_sendReturnStation(WANT_ACK);
-					Timer_new(TIMER_STOP, RESEND_MESSAGE_DELAY);
-					resendMessageCount++;
-				}
-			}
-			break;
-    }  // switch      
+                    Timer_new(TIMER_STOP, RESEND_MESSAGE_DELAY);
+                    resendMessageCount++;
+                }
+            }
+            break;
+    }  // switch
 
 }
 
@@ -536,7 +594,7 @@ void doStopSM() {
  **********************************************************************/
 void doSetStationSM() {
     if (event.flags.haveSetStationAck) {
-        Interface_showMessageOnTimer(SAVED_STATION_MESSAGE);
+        Interface_showMessageOnTimer(SAVED_STATION_MESSAGE, LCD_HOLD_DELAY);
         event.flags.setStationDone = TRUE;
     }
 }
@@ -548,7 +606,7 @@ void doSetStationSM() {
  **********************************************************************/
 void doSetOriginSM() {
     if (event.flags.haveSetOriginAck) {
-        Interface_showMessageOnTimer(SET_ORIGIN_MESSAGE);
+        Interface_showMessageOnTimer(SET_ORIGIN_MESSAGE, LCD_HOLD_DELAY);
         event.flags.setOriginDone = TRUE;
     }
 }
@@ -567,7 +625,8 @@ void doMasterSM() {
     #endif
 
     #ifdef USE_MAGNETOMETER
-    Magnetometer_runSM();
+    if (state = STATE_CALIBRATE)
+        Magnetometer_runSM();
     #endif
 
 
@@ -576,7 +635,8 @@ void doMasterSM() {
     #endif
 
     #ifdef USE_ACCELEROMETER
-    Accelerometer_runSM();
+    if (state = STATE_CALIBRATE)
+        Accelerometer_runSM();
     #endif
 
     #ifdef USE_GPS
@@ -596,17 +656,17 @@ void doMasterSM() {
     doBarometerUpdate(); // send barometer data
     #endif
 
-	switch (state) {
-		case STATE_CALIBRATE:
-			doCalibrateSM();
-			
-			if (event.flags.calibrateDone)
-				startReadySM();
-				
-			break;
-		case STATE_READY:
-			// Do nothing special
-			
+    switch (state) {
+        case STATE_CALIBRATE:
+            doCalibrateSM();
+
+            if (event.flags.calibrateDone)
+                startReadySM();
+
+            break;
+        case STATE_READY:
+            // Do nothing special
+
             break;
         case STATE_ERROR:
             if (event.flags.okButtonPressed) {
@@ -616,16 +676,15 @@ void doMasterSM() {
                 else
                     startStopSM();
             }
-
             break;
         case STATE_SETSTATION:
-            doSetStationState();
+            doSetStationSM();
             if (event.flags.setStationDone)
                 startReadySM();
 
             break;
         case STATE_SETORIGIN:
-            doSetOriginState();
+            doSetOriginSM();
             if (event.flags.setOriginDone)
                 startReadySM();
 
@@ -635,28 +694,28 @@ void doMasterSM() {
             if (event.flags.stopDone)
                 startReadySM();
             break;
-                
-		case STATE_RESCUE:
+
+        case STATE_RESCUE:
             doRescueSM();
             if (event.flags.rescueDone)
                 startReadySM();
             break;
 
-	} // switch
-	// Transition out of any state as long as not calibrating..
-	if (state != STATE_CALIBRATE) {
-        if (event.flags.haveError) {
-            startErrorSM(); 
-        }
-        if (state != STATE_SETORIGIN) {
-            if (event.flags.stopButtonPressed)
-                startStopSM();
-            else if (event.flags.haveRequestOriginMessage)
-                startSetOriginSM();
-            else if (event.flags.rescueButtonPressed)
-                startRescueSM();
-            else if (event.flags.setStationButtonPressed)
-                startSetStationSM();
+    } // switch
+    // Transition out of any state as long as not calibrating..
+    if (state != STATE_CALIBRATE) {
+    if (event.flags.haveError) {
+        startErrorSM();
+    }
+    if (state != STATE_SETORIGIN) {
+        if (event.flags.stopButtonPressed)
+            startStopSM();
+        else if (event.flags.haveRequestOriginMessage)
+            startSetOriginSM();
+        else if (event.flags.rescueButtonPressed)
+            startRescueSM();
+        else if (event.flags.setStationButtonPressed)
+            startSetStationSM();
         }
     }
 }
@@ -673,7 +732,7 @@ void startCalibrateSM() {
 	resendMessageCount = 0;
 	Interface_clearAll();
 	Interface_showMessage(CALIBRATE_PITCH_MESSAGE);
-	Interface_pitchLightsOn():
+	Interface_pitchLightsOn();
 }
 
 /**********************************************************************
@@ -702,9 +761,6 @@ void startErrorSM() {
     if (lastErrorCode == ERROR_NONE)
         lastErrorCode = ERROR_UNKNOWN;
 
-    Interface_readyLightOff();
-    Interface_waitLightOff();
-    Interface_errorLightOn();
     Interface_showErrorMessage(lastErrorCode);
 }
 
@@ -718,10 +774,10 @@ void startSetStationSM() {
     subState = STATE_NONE;
  
     Mavlink_sendSaveStation(WANT_ACK);
-	Timer_new(TIMER_SETSTATION, RESEND_MESSAGE_DELAY);
-	resendMessageCount = 0;
+    Timer_new(TIMER_SETSTATION, RESEND_MESSAGE_DELAY);
+    resendMessageCount = 0;
 
-	Interface_clearAll();
+    Interface_clearAll();
     Interface_waitLightOn();
     Interface_showMessage(SAVING_STATION_MESSAGE);
 }
@@ -735,12 +791,12 @@ void startSetOriginSM() {
     state = STATE_SETORIGIN;
     subState = STATE_NONE;
  
-    GPS_getOrigin(&ecefPosition);
+    GPS_getPosition(&ecefPosition);
     Mavlink_sendOrigin(WANT_ACK, &ecefPosition);
-	Timer_new(TIMER_SETORIGIN, RESEND_MESSAGE_DELAY);
-	resendMessageCount = 0;
+    Timer_new(TIMER_SETORIGIN, RESEND_MESSAGE_DELAY);
+    resendMessageCount = 0;
 
-	Interface_clearAll();
+    Interface_clearAll();
     Interface_waitLightOn();
     Interface_showMessage(SETTING_ORIGIN_MESSAGE);
 }
@@ -751,21 +807,20 @@ void startSetOriginSM() {
  * @remark Start the Rescue state machine.
  **********************************************************************/
 void startRescueSM() {
-	state = STATE_RESCUE;
-	subState = STATE_RESCUE_SEND;
-	
-	// Send the target location to the boat and start the resend timer
-	getTargetLocation(&nedRescueTarget);
-	Mavlink_sendStartRescue(WANT_ACK, &nedRescueTarget);
-	Timer_new(TIMER_RESCUE, RESEND_MESSAGE_DELAY);
-	resendMessageCount = 0;
+    state = STATE_RESCUE;
+    subState = STATE_RESCUE_SEND;
 
-	Interface_clearAll();
-	Interface_waitLightOn();
-	Interface_showMessage(STARTING_RESCUE_MESSAGE);
+    // Send the target location to the boat and start the resend timer
+    getTargetLocation(&nedRescueTarget);
+    Mavlink_sendStartRescue(WANT_ACK, &nedRescueTarget);
+    Timer_new(TIMER_RESCUE, RESEND_MESSAGE_DELAY);
+    resendMessageCount = 0;
+
+    Interface_clearAll();
+    Interface_waitLightOn();
+    Interface_showMessage(STARTING_RESCUE_MESSAGE);
 }
 
-void doSetStationSM() {
 
 /**********************************************************************
  * Function: startStopSM
@@ -777,11 +832,11 @@ void startStopSM() {
     subState = STATE_STOP_SEND;
 
     // Send a stop message and resend on timer
-    Mavlink_sendOveride(WANT_ACK);
+    Mavlink_sendOverride(WANT_ACK);
     Timer_new(TIMER_STOP, RESEND_MESSAGE_DELAY);
-	resendMessageCount = 0;
+    resendMessageCount = 0;
 
-	Interface_clearAll();
+    Interface_clearAll();
     Interface_waitLightOn();
     Interface_showMessage(STOPPING_BOAT_MESSAGE);
 }
@@ -848,10 +903,11 @@ void setError(error_t errorCode) {
  * @date 2013.05.04
  **********************************************************************/
 void doBarometerUpdate() {
-    if (event.flags.haveBarometerDataMessage) {
-        compasHeight = Barometer_getAlitudeMavlink_newMessage.barometerData.altitude
+    if (event.flags.haveBarometerMessage) {
+        compasHeight = Barometer_getAltitude()
+            - Mavlink_newMessage.barometerData.altitude;
 
-        Timer_new(TIMER_BAROMETER_LOST, BAROMETER_SEND_DELAY); 
+        Timer_new(TIMER_BAROMETER_LOST, BAROMETER_LOST_DELAY);
     }
     else if (Timer_isExpired(TIMER_BAROMETER_LOST)) {
         setError(ERROR_NO_ALTITUDE);
@@ -866,18 +922,18 @@ void doBarometerUpdate() {
  * @date 2013.05.05
  **********************************************************************/
 void gpsCorrectionUpdate() {
-    if (Timer_isExpired(TIMER_GPS_CORRECTION) && Gps_hasPosition()) {
+    if (Timer_isExpired(TIMER_GPS_CORRECTION) && GPS_hasPosition()) {
         // Calculate error corrections
-        GeoceontricCoordinate ecefMeasured;
+        GeocentricCoordinate ecefMeasured;
         GPS_getPosition(&ecefMeasured);
 
         GeocentricCoordinate ecefError;
-        ecefError.x = ECEF_ORIGIN_X - ecefMeasured.x;
-        ecefError.y = ECEF_ORIGIN_Y - ecefMeasured.y;
-        ecefError.z = ECEF_ORIGIN_Z - ecefMeasured.z;
+        ecefError.x = ECEF_X_ORIGIN - ecefMeasured.x;
+        ecefError.y = ECEF_Y_ORIGIN - ecefMeasured.y;
+        ecefError.z = ECEF_Z_ORIGIN - ecefMeasured.z;
 
         // Send error corrections
-        Mavink_sendGeocentricError(&ecefError);
+        Mavlink_sendGeocentricError(&ecefError);
 
         Timer_new(TIMER_GPS_CORRECTION, GPS_CORRECTION_SEND_DELAY);
     }
@@ -893,16 +949,17 @@ void gpsCorrectionUpdate() {
  **********************************************************************/
 void getTargetLocation(LocalCoordinate *targetNed) {
 
-	Navigation_getProjectedCoordinate(&ned, Encoder_getYaw(),
-		Encoder_getPitch(), compasHeight); 
+    projectEulerToNED(targetNed, Encoder_getYaw(),
+        Encoder_getPitch(), compasHeight);
 }
 
 
 int main() {
-	initializeCompas();
-	while (1) {
-		doMasterSM();
-	}
+    initializeCompas();
+    while (1) {
+        doMasterSM();
+    }
 
-
+    return SUCCESS;
+}
 

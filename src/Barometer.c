@@ -1,6 +1,6 @@
 /* 
  * File:   Barometer.c
- * Author: Shehadeh
+ * Author: Shehadeh, David Goodman
  *
  * Created on January 21, 2013, 11:52 AM
  */
@@ -70,21 +70,21 @@ I2C_MODULE      BAROMETER_COMPAS_I2C_ID = I2C1;
 #define I2C_CLOCK_FREQ  100000 // (Hz)
 
 // Calibration values
-int16_t ac1;
-int16_t ac2;
-int16_t ac3;
-uint16_t ac4;
-uint16_t ac5;
-uint16_t ac6;
-int16_t b1;
-int16_t b2;
-int16_t mb;
-int16_t mc;
-int16_t md;
+static int16_t ac1;
+static int16_t ac2;
+static int16_t ac3;
+static uint16_t ac4;
+static uint16_t ac5;
+static uint16_t ac6;
+static int16_t b1;
+static int16_t b2;
+static int16_t mb;
+static int16_t mc;
+static int16_t md;
 
 // Converted readings
-int32_t temperature; // (0.1 degrees C)
-int32_t pressure; // (Pascal)
+static int32_t temperature; // (0.1 degrees C)
+static int32_t pressure; // (Pascal)
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -441,7 +441,7 @@ int main(void) {
 #endif
 
 
-#define BAROMETER_TEST_2
+//#define BAROMETER_TEST_2
 #ifdef BAROMETER_TEST_2
 
 #define PRINT_DELAY     100 // (ms)

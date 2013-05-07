@@ -18,6 +18,8 @@
       <itemPath>../../include/Mavlink.h</itemPath>
       <itemPath>../../include/Error.h</itemPath>
       <itemPath>/Users/dagoodma/Dropbox/Projects/sdp/sdp/include/Barometer.h</itemPath>
+      <itemPath>../../include/Override.h</itemPath>
+      <itemPath>../../include/TiltCompass.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -41,6 +43,9 @@
       <itemPath>../../src/Mavlink.c</itemPath>
       <itemPath>../../src/Xbee.c</itemPath>
       <itemPath>/Users/dagoodma/Dropbox/Projects/sdp/sdp/src/Barometer.c</itemPath>
+      <itemPath>../../src/Override.c</itemPath>
+      <itemPath>../../src/TiltCompass.c</itemPath>
+      <itemPath>../../src/Error.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -59,7 +64,7 @@
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC32</languageToolchain>
         <languageToolchainVersion>1.20</languageToolchainVersion>
-        <platform>4</platform>
+        <platform>3</platform>
       </toolsSet>
       <compileType>
         <linkerTool>

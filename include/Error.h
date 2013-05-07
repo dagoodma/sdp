@@ -31,27 +31,13 @@ typedef enum {
 } error_t;
 
 
-const char *ERROR_MESSAGE[] = {
-    "None",
-    "An unknown error occured",
-    "Never received acknowledgment from boat",
-    "GPS was disconnected",
-    "GPS cannot obtain fix",
-    "Never received origin from command center",
-    "Never received station from command center",
-    "Stopped receiving altitude data from boat",
-    "Lost connection to boat"
-};
-
 
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
 
-inline const char *getErrorMessage(error_t error_code) {
-    return ERROR_MESSAGE[error_code];
-}
+const char *getErrorMessage(error_t errorCode);
 
 #endif
 

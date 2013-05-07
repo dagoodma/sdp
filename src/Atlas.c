@@ -28,6 +28,9 @@
 #include "Mavlink.h"
 #include "Override.h"
 #include "Barometer.h"
+#include "Interface.h"
+#include "Error.h"
+#include "TiltCompass.h"
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
@@ -320,7 +323,7 @@ static void doSetOriginSM() {
             // Resend request origin if timed out
             if (resendMessageCount >= RESEND_MESSAGE_LIMIT) {
                 // Sent too many times
-                setError(ERROR_NO_ACKNOWLEDGEMENT);
+                setError(ERROR_NO_ORIGIN);
                 return;
             }
             else {

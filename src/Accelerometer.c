@@ -42,6 +42,8 @@
 #define ACCUMULATOR_LENGTH      2 // use a power of 2 and update shift too
 #define ACCUMULATOR_SHIFT       1 // 2^shift = length
 
+#define MINIMUM_LEVEL_ERROR     2 // (1e-1 G-counts)
+
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
@@ -128,6 +130,10 @@ void Accelerometer_runSM() {
         updateReadings();
         Timer_new(TIMER_ACCELEROMETER, UPDATE_DELAY);
     }
+}
+
+bool Accelerometer_isLevel() {
+    return abs(gCount.x - gCount.y) <= MINIMUM_LEVEL_ERROR;
 }
 
 

@@ -214,6 +214,13 @@ void Mavlink_sendBoatPosition(LocalCoordinate *nedPos){
     sendGpsNed(NO_ACK, MAVLINK_LOCAL_BOAT_POSITION, nedPos);
 }
 
+void Mavlink_sendBarometerData(float temperatureCelsius, float altitude){
+    mavlink_message_t msg;
+    uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+    mavlink_msg_barometer_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, temperatureCelsius, altitude);
+    uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
+    UART_putString(MAVLINK_UART_ID, buf, length);
+}
 
 /************************************************************************
  * PRIVATE FUNCTIONS                                                    *
@@ -252,10 +259,3 @@ static void sendGpsEcef(bool ack, uint8_t status, GeocentricCoordinate *ecef){
     UART_putString(MAVLINK_UART_ID, buf, length);
 }
 
-static void Mavlink_sendBarometer(float temperatureCelsius, float altitude){
-    mavlink_message_t msg;
-    uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-    mavlink_msg_barometer_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, temperatureCelsius, altitude);
-    uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
-    UART_putString(MAVLINK_UART_ID, buf, length);
-}

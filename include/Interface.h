@@ -13,8 +13,15 @@
  * @date February 1, 2013 2:59 AM -- created
  *
  */
+#include "Error.h"
+
 #ifndef INTERFACE_H
 #define INTERFACE_H
+
+
+/**********************************************************************
+ * PUBLIC VARIABLES                                                   *
+ **********************************************************************/
 
 typedef enum {
     NO_MESSAGE = 0x0,
@@ -22,8 +29,8 @@ typedef enum {
     CALIBRATE_PITCH_MESSAGE,
     CALIBRATE_YAW_MESSAGE,
     READY_MESSAGE,
-    START_RESCUE_MESSAGE,
-    RESCUING_MESSAGE,
+    STARTING_RESCUE_MESSAGE,
+    STARTED_RESCUE_MESSAGE,
     RESCUE_SUCCESS_MESSAGE,
     CANCEL_RESCUE_MESSAGE,
     START_RETURN_MESSAGE,
@@ -39,27 +46,11 @@ typedef enum {
 
 } message_t;
 
-const char *INTERFACE_MESSAGE[] = {
-    "Blank message.",
-    "Calibration success.",
-    "Please calibrate the\npitch by leveling\nwith horizon, until\nboth top lights on.",
-    "Please calibrate the\nyaw by being\nlevel and north,\nuntil both lights on.",
-    "Command center ready",
-    "Send boat to\nrescue person.",
-    "Boat started rescue.",
-    "Boat rescued person.",
-    "Are you sure you\nwant to cancel the\nrescue?",
-    "Sending boat to\nstation.",
-    "Boat is headed\nto station.",
-    "Stopping the boat.\n",
-    "Boat has stopped.\n",
-    "Are you sure you\nwant to cancel the\nstop?",
-    "Saving boat's posit-\nion as new station.",
-    "Saved new station.",
-    "Set new station.",
-    "Setting boat origin.",
-    "Set new origin."
-};
+
+
+/**********************************************************************
+ * PUBLIC FUNCTIONS                                                   *
+ **********************************************************************/
 
 
 /**********************************************************************
@@ -106,7 +97,7 @@ bool Interface_isStopPressed();
  *  untouched
  * @remark
  **********************************************************************/
-bool Interface_isRescuePessed();
+bool Interface_isRescuePressed();
 
 /**********************************************************************
  * Function: Interface_isSetStationPessed
@@ -115,7 +106,7 @@ bool Interface_isRescuePessed();
  *  untouched
  * @remark
  **********************************************************************/
-bool Interface_isSetStationPessed();
+bool Interface_isSetStationPressed();
 
 /**********************************************************************
  * Function: Interface_readyLightOn
@@ -183,6 +174,39 @@ void Interface_readyLightOnTimer(uint16_t ms);
 void Interface_errorLightOnTimer(uint16_t ms);
 
 /**********************************************************************
+ * Function: Interface_pitchLightsOff
+ * @return None.
+ * @remark Turns pitch calibration lights off.
+ **********************************************************************/
+void Interface_pitchLightsOff();
+
+/**********************************************************************
+ * Function: Interface_yawLightsOff
+ * @return None.
+ * @remark Turns yaw calibration lights off.
+ **********************************************************************/
+void Interface_yawLightsOff();
+
+/**********************************************************************
+ * Function: Interface_pitchLightsOn
+ * @return None.
+ * @remark Turns pitch calibration lights on, which will use both
+ *  top calibration LEDs to signal to the user when the scope is level
+ *  by lighting both lights. If the scope is not level, the lights
+ *  will indicate which way the scope should be pitched.
+ **********************************************************************/
+void Interface_pitchLightsOn();
+
+/**********************************************************************
+ * Function: Interface_yawLightsOn
+ * @return None.
+ * @remark Turns yaw calibration lights on, which will use both
+ *  top calibration LEDs to signal to the user when the scope is facing
+ *  true North, by turning both LEDs on.
+ **********************************************************************/
+void Interface_yawLightsOn();
+
+/**********************************************************************
  * Function: Interface_showMessageOnTimer
  * @param message_t you want to display on a timer
  * @param amount of time in ms that you want the message to remain on
@@ -198,6 +222,15 @@ void Interface_showMessageOnTimer(message_t msgCode, uint16_t ms);
  * @remark Message will be printed out to the screen
  **********************************************************************/
 void Interface_showMessage(message_t msgCode);
+
+/**********************************************************************
+ * Function: Interface_showErrorMessage
+ * @param Error code for the error message to print.
+ * @return None.
+ * @remark Prints an error code to the LCD screen, and turns on the
+ *  error LED, while clearing all other lights and messages.
+ **********************************************************************/
+void Interface_showErrorMessage(error_t errorCode);
 
 /**********************************************************************
  * Function: Interface_clearAll
