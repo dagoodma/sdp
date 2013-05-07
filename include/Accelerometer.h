@@ -16,6 +16,7 @@
 #define Accelerometer_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *
@@ -66,5 +67,13 @@ int16_t Accelerometer_getY();
  * @date 2013.01.23  */
 int16_t Accelerometer_getZ();
 
+
+/**
+ * Function: Accelerometer_isLevel
+ * @return Returns TRUE or FALSE if the accelerometer is level.
+ * @remark Level occurs when both the X and Y axises are equal.
+ * @author David Goodman
+ * @date 2013.05.07  */
+bool Accelerometer_isLevel();
 
 #endif // Accelerometer_H

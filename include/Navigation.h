@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <math.h>
 #include "GPS.h"
+#include "Error.h"
 
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *
@@ -30,8 +31,20 @@
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
-BOOL Navigation_init();
 
+/**********************************************************************
+ * Function: Navigation_init
+ * @return TRUE or FALSE whether initialization succeeded.
+ * @remark Initializes the navigation state machine.
+ **********************************************************************/
+bool Navigation_init();
+
+
+/**********************************************************************
+ * Function: Navigation_runSM
+ * @return None
+ * @remark Steps through the navigation state machine by one cycle.
+ **********************************************************************/
 void Navigation_runSM();
 
 
@@ -44,13 +57,36 @@ void Navigation_runSM();
  **********************************************************************/
 void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance);
 
+
+/**********************************************************************
+ * Function: Navigation_getLocalDistance
+ * @param A pointer to a local coordinate point.
+ * @return Distance to the point in meters.
+ * @remark Calculates the distance to the given point from the current
+ *  position (in the local frame).
+ **********************************************************************/
+float Navigation_getLocalDistance(LocalCoordinate *nedPoint);
+
+
+/**********************************************************************
+ * Function: Navigation_getLocalPosition
+ * @param A pointer to a local coordinate point.
+ * @return None
+ * @remark Saves the current local (NED) position into the given variable.
+ **********************************************************************/
+float Navigation_getLocalPosition(LocalCoordinate *nedPosition);
+
+
 /**********************************************************************
  * Function: Navigation_setOrigin
+ * @param A pointer to geocentric coordinate location.
  * @return None
- * @remark Sets the longitudal error for error corrections.
+ * @remark Sets the geodetic and ECEF origin point (generally the location
+ *  of the command center), by calculating the geodetic from the given
+ *  ECEF coordinate.
  **********************************************************************/
-void Navigation_setOrigin(GeocentricCoordinate *ecefRef,
-    GeodeticCoordinate *llaRef);
+void Navigation_setOrigin(GeocentricCoordinate *ecefRef);
+
 
 /**********************************************************************
  * Function: Navigation_setGeocentricError
@@ -60,6 +96,13 @@ void Navigation_setOrigin(GeocentricCoordinate *ecefRef,
  **********************************************************************/
 void Navigation_setGeocentricError(GeocentricCoordinate *error);
 
+
+/**********************************************************************
+ * Function: Navigation_cancel
+ * @return None
+ * @remark Cancels the current mission ,if navigating to a location,
+ *  and stops the motors and centers the rudder.
+ **********************************************************************/
 void Navigation_cancel();
 
 
@@ -68,14 +111,14 @@ void Navigation_cancel();
  * @return None
  * @remark Enables error correction for retreived coordinates.
  **********************************************************************/
-void Navigation_enablePositionErrorCorrection();
+void Navigation_enableErrorCorrection();
 
 /**********************************************************************
  * Function: Navigation_disableErrorCorrection
  * @return None
  * @remark Disables error correction for retreived coordinates.
  **********************************************************************/
-void Navigation_disablePositionErrorCorrection();
+void Navigation_disableErrorCorrection();
 
 
 /**********************************************************************
@@ -83,15 +126,52 @@ void Navigation_disablePositionErrorCorrection();
  * @return True if we are ready to navigate with GPS and have an origin.
  * @remark
  **********************************************************************/
-BOOL Navigation_isReady();
+bool Navigation_isReady();
 
-BOOL Navigation_hasError();
 
-BOOL Navigation_clearError();
+/**********************************************************************
+ * Function: Navigation_hasError
+ * @return TRUE or FALSE if an error occuirred while navigating.
+ * @remark Errors occur if the GPS has lost a fix or become disconnected.
+ *  Error codes are defined in Error.h, and can be obtained with the
+ *  Navigation_getError() function.
+ **********************************************************************/
+bool Navigation_hasError();
 
-BOOL Navigation_isNavigating();
 
-BOOL Navigation_isDone();
+/**********************************************************************
+ * Function: Navigation_getError
+ * @return Error code corresponding to the last error experienced
+ *  while navigating.
+ * @remark Error codes are defined in Error.h. Note that this function
+ *  clears the error. Also, using Navigation_gotoLocalCoordinate will
+ *  clear any error codes.
+ **********************************************************************/
+error_t Navigation_getError();
+
+
+/**********************************************************************
+ * Function: Navigation_isDone
+ * @return TRUE or FALSE whether we successfully navigated to a
+ *  desired location.
+ * @remark 
+ **********************************************************************/
+bool Navigation_isDone();
+
+
+/**********************************************************************
+ * Function: Navigation_isNavigating
+ * @return TRUE or FALSE whether we are navigating to a location.
+ * @remark 
+ **********************************************************************/
+bool Navigation_isNavigating();
+
+/**********************************************************************
+ * Function: Navigation_isUsingErrorCorrection
+ * @return TRUE or FALSE whether error correction is enabled.
+ * @remark 
+ **********************************************************************/
+bool Navigation_isUsingErrorCorrection();
 
 
 #endif // Navigation_H

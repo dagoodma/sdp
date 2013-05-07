@@ -45,7 +45,7 @@
 /*******************************************************************************
  * PRIVATE VARIABLES                                                           *
  ******************************************************************************/
-static BOOL canBlock = TRUE;
+static bool canBlock = TRUE;
 const char *buffer;
 static uint16_t bufferIndex = 0;
 
