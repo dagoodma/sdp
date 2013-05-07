@@ -23,6 +23,10 @@
 #define SLAVE_DEGREE_ADDRESS        0x41
 #define ACCUMULATOR_LENGTH          1
 
+#define MAGNETIC_NORTH_OFFSET       13.7275f // (deg) offset eastward from true north
+
+#define MINIMUM_NORTH_ERROR         0.75 // (degrees) minimum error from North
+
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
@@ -69,7 +73,14 @@ void Magnetometer_runSM(){
         finalDegree -= 360;
     if(finalDegree < 0.5 || finalDegree > 359.5)
         finalDegree = 0;
+
+
+    finalDegree -= MAGNETIC_NORTH_OFFSET;
  }
+
+bool Magnetometer_isNorth() {
+    return finalDegree <= MINIMUM_NORTH_ERROR;
+}
 
 /******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
