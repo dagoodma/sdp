@@ -19,7 +19,9 @@
       <itemPath>../../include/Accelerometer.h</itemPath>
       <itemPath>../../include/Ports.h</itemPath>
       <itemPath>../../include/Magnetometer.h</itemPath>
-      <itemPath>../../include/Navigation.h</itemPath>
+      <itemPath>../../include/Error.h</itemPath>
+      <itemPath>../../include/Interface.h</itemPath>
+      <itemPath>../../include/LCD.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -38,10 +40,12 @@
       <itemPath>../../src/Encoder.c</itemPath>
       <itemPath>../../src/Barometer.c</itemPath>
       <itemPath>../../src/Gps.c</itemPath>
-      <itemPath>../../src/Compas.c</itemPath>
       <itemPath>../../src/Accelerometer.c</itemPath>
       <itemPath>../../src/Magnetometer.c</itemPath>
-      <itemPath>../../src/Navigation.c</itemPath>
+      <itemPath>../../src/Compas.c</itemPath>
+      <itemPath>../../src/Error.c</itemPath>
+      <itemPath>../../src/Interface.c</itemPath>
+      <itemPath>../../src/Lcd.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

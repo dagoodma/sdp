@@ -20,6 +20,13 @@
 #include <xc.h>
 #include <plib.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include "Serial.h"
+#include "Error.h"
+
+#ifdef USE_SD_LOGGER
+#include "Logger.h"
+#endif
 
 
 /*******************************************************************************
@@ -27,6 +34,20 @@
  ******************************************************************************/
 
 #define DELAY(ms)   do { int i; for (i = 0; i < (ms << 8); i++) { asm ("nop"); } } while(0);
+
+#define MS_TO_SEC(ms)  ((float)ms/1000)
+
+// Debugging statements over terminal, SD logger, or disabled (respectively)
+#ifdef DEBUG
+#ifndef USE_SD_LOGGER
+#define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
+#else
+#define DBPRINT(...)   printf(__VA_ARGS__)
+#endif
+#else   
+#define DBPRINT(...)   ((int)0)
+
+#endif
 
 /*****************************************************************************/
 // Boolean defines for TRUE, FALSE, SUCCESS and ERROR
@@ -63,14 +84,26 @@
 #define TIMER_BUTTONS           6
 #define TIMER_HEARTBEAT         7
 #define TIMER_DRIVE             8
-#define TIMER_TEST2             9
+#define TIMER_OVERRIDE          9
 #define TIMER_TILTCOMPASS       10
 #define TIMER_NAVIGATION        11
 #define TIMER_LOGGER            12
-#define TIMER_BAROMETER2        14 // remove the blocking code!!
-#define TIMER_TEST              15
-#define TIMER_DELAY             16
-#define TIMER_TEST3             17
+#define TIMER_BAROMETER2        13 // remove the blocking code!!
+#define TIMER_DELAY             14
+#define TIMER_INTERFACE         15
+#define TIMER_LIGHT_HOLD        16
+#define TIMER_LCD_HOLD          17
+
+// Master state machine timers
+#define TIMER_MAIN              24
+#define TIMER_MAIN2             25
+#define TIMER_BACKGROUND        26
+#define TIMER_BACKGROUND2       27
+#define TIMER_BACKGROUND3       28
+// test harness timers
+#define TIMER_TEST              29
+#define TIMER_TEST2             30
+#define TIMER_TEST3             31
 
 
 #ifdef Board_H_PRIVATE_INCLUDE

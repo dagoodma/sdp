@@ -47,7 +47,7 @@ void Timer_init(void);
  * @return Whether the timer was initialized.
  * @remark none
  **********************************************************************/
-BOOL Timer_isInitialized();
+bool Timer_isInitialized();
 
 /**********************************************************************
  * Function: Timer_new()
@@ -89,7 +89,7 @@ int8_t Timer_set(uint8_t timerNumber, uint16_t newTime);
  * @return TRUE if the specified timer is active and counting down.
  * @remark none
  **********************************************************************/
-BOOL Timer_isActive(uint8_t timerNumber);
+bool Timer_isActive(uint8_t timerNumber);
 
 /**********************************************************************
  * Function: Timer_isExpired()
@@ -97,7 +97,7 @@ BOOL Timer_isActive(uint8_t timerNumber);
  * @return TRUE if the specified timer is active and counting down.
  * @remark none
  **********************************************************************/
-BOOL Timer_isExpired(uint8_t timerNumber);
+bool Timer_isExpired(uint8_t timerNumber);
 
 /**********************************************************************
  * Function: Timer_clear()

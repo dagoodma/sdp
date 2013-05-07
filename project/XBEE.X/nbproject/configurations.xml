@@ -11,6 +11,7 @@
       <itemPath>../../include/Mavlink.h</itemPath>
       <itemPath>../../include/Serial.h</itemPath>
       <itemPath>../../include/mavlink/protocol.h</itemPath>
+      <itemPath>../../include/Gps.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -25,6 +26,7 @@
       <itemPath>../../src/Timer.c</itemPath>
       <itemPath>../../src/Mavlink.c</itemPath>
       <itemPath>../../src/Serial.c</itemPath>
+      <itemPath>../../src/Gps.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

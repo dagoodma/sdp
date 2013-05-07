@@ -22,58 +22,74 @@
  * PUBLIC #DEFINES                                                             *
  ******************************************************************************/
 
+#define FAHRENHEIT_TO_CELCIUS(T)    (((float)T * (9/5)) + 32.0)
+#define CELCIUS_TO_FAHRENHEIT(T)    (((float)T/10)*1.8 + 32.0)
+#define METERS_TO_FEET(m)           ((float)m * 3.28084f)
 
 /*******************************************************************************
  * PUBLIC FUNCTION PROTOTYPES                                                  *
  ******************************************************************************/
 
-/**
+/**********************************************************************
  * Function: Barometer_init
  * @return None
  * @remark Intializes the Barometer and state machine.
  * @author David Goodman
- * @date 2013.02.01  */
+ * @date 2013.02.01 
+ **********************************************************************/
 void Barometer_init();
 
-/**
- * Function: Barometer_getTemperature
- * @return Temperature in 1E1 celcius.
- * @remark Returns the temperature measured by the barometer in 10's of
- *      degerees C.
- * @author Shehadeh H. Dajani
- * @date 2013.01.21  */
-float Barometer_getTemperatureFahrenheit();
 
-/**
- * Function: Barometer_getTemperatureFahrenheit
- * @return Temperature in fahrenheit.
- * @remark Returns the temperature measured by the barometer in degrees
- *      fahrenheit.
+/**********************************************************************
+ * Function: Barometer_runSM
+ * @return None
+ * @remark Steps into the barometer's state machine, which updates the 
+ *  temperature and pressure/altitude data.
  * @author David Goodman
- * @date 2013.02.01  */
+ * @date 2013.01.22 
+ **********************************************************************/
+void Barometer_runSM();
+
+
+/**********************************************************************
+ * Function: Barometer_getTemperature
+ * @return Temperature in Celcius.
+ * @remark Returns the temperature measured by the barometer in degerees Celsius.
+ * @author Shehadeh H. Dajani
+ * @author David Goodman
+ * @date 2013.01.21  
+ **********************************************************************/
+float Barometer_getTemperature();
+
+
+/**********************************************************************
+ * Function: Barometer_getTemperatureFahrenheit
+ * @return Temperature in Fahrenheit.
+ * @remark Returns the temperature measured by the barometer in degrees Fahrenheit.
+ * @author Shehadeh H. Dajani
+ * @author David Goodman
+ * @date 2013.02.01 
+ **********************************************************************/
 float Barometer_getTemperatureFahrenheit();
 
-/**
+
+/**********************************************************************
  * Function: Barometer_getPressure
  * @return Pressure in pascals.
- * @remark Returns the pre-converted temperature data.
  * @author Shehadeh H. Dajani
- * @date 2013.01.21  */
+ * @date 2013.01.21 
+ **********************************************************************/
 int32_t Barometer_getPressure();
 
-/**
+
+/**********************************************************************
  * Function: Barometer_getAltitude
  * @return Returns the altitude in meters.
- * @remark Converts pressure from altitude above sea level in meters. 
+ * @remark Converts pressure into altitude above sea level in meters 
+ *  using a hard-coded reference pressure, P_0.
  * @author David Goodman
- * @date 2013.02.01  */
+ * @date 2013.02.01 
+ **********************************************************************/
 float Barometer_getAltitude();
-/**
- * Function: Barometer_getPressureData
- * @return Data, (long) 16-bit temperature data
- * @remark Updates the barometer's temperature.
- * @author David Goodman
- * @date 2013.01.22  */
-void Barometer_runSM();
 
 #endif // Barometer_H

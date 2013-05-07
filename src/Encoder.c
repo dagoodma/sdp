@@ -45,7 +45,8 @@ float yawAngle = 0; // (degrees) calculated angle
 float zeroPitchAngle = 0; // (degrees)
 float zeroYawAngle = 0; // (degrees)
 
-BOOL useZeroAngle = FALSE;
+bool useZeroAngle = FALSE;
+bool haveZeroPitch = FALSE;
 
 // Printing debug messages over serial
 #define DEBUG
@@ -75,12 +76,18 @@ void Encoder_init() {
     // Do nothing
 }
 
-void Encoder_setZeroAngle(){
+void Encoder_setZeroPitch() {
     zeroPitchAngle = pitchAngle;
-    zeroYawAngle = yawAngle;
+    haveZeroPitch = TRUE;
 }
 
 
+void Encoder_setZeroYaw() {
+    zeroYawAngle = yawAngle;
+    if (haveZeroPitch)
+        Encoder_enableZeroAngle();
+}
+    
 float Encoder_getPitch() {
     return pitchAngle;
 }

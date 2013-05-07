@@ -34,18 +34,26 @@ void Encoder_init();
 void Encoder_runSM();
 
 /**
- * Function: Encoder_setZeroAngle
+ * Function: Encoder_setZeroPitch
  * @return None.
- * @remark Zeros both encoders at the current positions.
+ * @remark Zeros the pitch encoder at the current angle.
  * @author David Goodman
  * @date 2013.02.10  */
-void Encoder_setZeroAngle();
+void Encoder_setZeroPitch();
 
+/**
+ * Function: Encoder_setZeroYaw
+ * @return None.
+ * @remark Zeros the yaw encoder at the current angle.
+ * @author David Goodman
+ * @date 2013.02.10  */
+void Encoder_setZeroYaw();
 
 /**
  * Function: Encoder_enableZeroAngle
  * @return 
- * @remark Uses zero angle when calculating encoder angles.
+ * @remark Uses zero angle when calculating encoder angles, and is
+ *  enabled by default once each are set.
  * @author David Goodman
  * @date 2013.03.14  */
 void Encoder_enableZeroAngle();

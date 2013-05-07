@@ -1,79 +1,48 @@
-/**********************************************************************
- Module
-   Error.c
-
- Revision
-   1.0.0
-
- Description
-   Error handling module.
-   
- Notes
-
- History
- When           Who         What/Why
- -------------- ---         --------
- 12-28-12 12:33 dagoodma    Created file.
-***********************************************************************/
-
+/*
+ * File:   Error.c
+ * Author: David Goodman
+ *
+ * Created on May 6, 2013, 1:31 AM
+ */
+#include <xc.h>
+#include "Board.h"
 #include "Error.h"
-#include "Util.h"
-
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-static uint8_t errorCode = 0;
+/***********************************************************************
+ * PRIVATE VARIABLES                                                   *
+ ***********************************************************************/
+
+const char *ERROR_MESSAGE[] = {
+    "None",
+    "An unknown error occured",
+    "Never received acknowledgment from boat",
+    "GPS was disconnected",
+    "GPS cannot obtain fix",
+    "Never received origin from command center",
+    "Never received station from command center",
+    "Stopped receiving altitude data from boat",
+    "Lost connection to boat"
+};
+
+/***********************************************************************
+ * PRIVATE PROTOTYPES                                                  *
+ ***********************************************************************/
+
+/***********************************************************************
+ * PUBLIC FUNCTIONS                                                    *
+ ***********************************************************************/
 
 /**********************************************************************
- * PRIVATE FUNCTIONS                                                  *
+ * Function: getErrorMessage
+ * @param Error code to retrieve the message for.
+ * @return String representing error message.
+ * @remark 
  **********************************************************************/
-
-
-/**********************************************************************
- * PUBLIC FUNCTIONS                                                   *
- **********************************************************************/
-
-/**********************************************************************
- * Function: error()
- * @param An error code to set.
- * @return none
- * @remark none
- **********************************************************************/
-void error(uint8_t code) {
-    errorCode = code;
+const char *getErrorMessage(error_t errorCode) {
+    return ERROR_MESSAGE[errorCode];
 }
-
-/**********************************************************************
- * Function: get_error()
- * @return The currently set error code, clearing it.
- * @remark none
- **********************************************************************/
-uint8_t get_error() {
-    uint8_t code = errorCode;
-    errorCode = 0;
-
-    return code;
-}
-
-/**********************************************************************
- * Function: clear_error()
- * @return none
- * @remark Clears the error code.
- **********************************************************************/
-void clear_error() {
-    errorCode = 0;
-}
-
-
-/**********************************************************************
- * Function: has_error()
- * @return Returns a true value if an error code has been set.
- * @remark none
- **********************************************************************/
-uint8_t has_error() {
-    return errorCode != 0;
-}
-
 
