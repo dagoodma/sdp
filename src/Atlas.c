@@ -53,6 +53,7 @@
 
 #define TIMER_BAROMETER_SEND        TIMER_BACKGROUND
 #define TIMER_GPS_CORRECTION_LOST   TIMER_BACKGROUND2
+#define TIMER_HEARTBEAT             TIMER_BACKGROUND3
 
 // --------------------- Timer delays -----------------------
 #define STARTUP_DELAY               2500 // (ms) time to wait before starting up
@@ -60,6 +61,7 @@
 #define BAROMETER_SEND_DELAY        10000 // (ms) time between sending barometer data
 #define RESEND_MESSAGE_DELAY        4000 // (ms) resend a message
 #define GPS_CORRECTION_LOST_DELAY   5000 // (ms) throw out gps error corrections now
+#define HEARTBEAT_SEND_DELAY        3000 // (ms) between heart being sent to CC
 
 #define RESEND_MESSAGE_LIMIT        5 // times to resend before failing
 
@@ -186,6 +188,7 @@ static void handleAcknowledgement();
 static void setError(error_t errorCode);
 static void gpsCorrectionUpdate();
 static void doBarometerUpdate();
+static void doHeartbeatMessage();
 
 
 /***********************************************************************
@@ -729,6 +732,8 @@ static void initializeAtlas() {
     // Start calibrating before use
     startSetOriginSM();
 
+    Timer_new(TIMER_HEARTBEAT, HEARTBEAT_SEND_DELAY);
+
     Mavlink_sendStatus(MAVLINK_STATUS_ONLINE);
 }
 
@@ -779,6 +784,21 @@ static void doBarometerUpdate() {
     }
 }
 
+/**********************************************************************
+ * Function: doHeartbeatMessage
+ * @return None.
+ * @remark Occasionally sends a heartbeat message to the ComPAS.
+ * @author David Goodman
+ * @date 2013.05.04
+ **********************************************************************/
+static void doHeartbeatMessage() {
+    if (Timer_isExpired(TIMER_HEARTBEAT)) {
+
+        Mavlink_sendHeartbeat();
+
+        Timer_new(TIMER_HEARTBEAT, HEARTBEAT_SEND_DELAY);
+    }
+}
 
 
 /**********************************************************************

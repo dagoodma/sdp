@@ -19,6 +19,8 @@ static mavlink_status_t status;
 static uint8_t newMsgID = 0;
 static BOOL hasNewMsg = FALSE;
 
+static BOOL hasHeartbeat = FALSE;
+
 #define MAV_NUMBER 15 // defines the MAV number, arbitrary
 #define COMP_ID 15
 
@@ -44,10 +46,9 @@ void Mavlink_recieve(){
             switch(msg.msgid) {
                 case MAVLINK_MSG_ID_XBEE_HEARTBEAT:
                 {
-                    mavlink_xbee_heartbeat_t data;
-                    mavlink_msg_xbee_heartbeat_decode(&msg, &data);
-                    //call outside function to handle data
-                    Xbee_recieved_message_heartbeat(&data);
+                    mavlink_msg_xbee_heartbeat_decode(&msg, &Mavlink_heartbeatData);
+                    hasHeartbeat = TRUE;
+
                     break;
                 }
                 #ifdef XBEE_TEST
@@ -122,6 +123,12 @@ int Mavlink_getNewMessageID() {
     return newMsgID;
 }
 
+bool Mavlink_hasHeartbeat() {
+    BOOL result = hasHeartbeat;
+    hasHeartbeat = FALSE;
+    return result;
+}
+
 
 /*------------------------- Send Messages ----------------------------*/
 
@@ -132,7 +139,8 @@ void Mavlink_sendAck(uint8_t msgID, uint16_t msgStatus){
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
     UART_putString(MAVLINK_UART_ID, buf, length);
 }
-void Mavlink_sendHearbeat(uint8_t data){
+void Mavlink_sendHeartbeat(){
+    uint8_t data = 0x1;
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_xbee_heartbeat_pack(MAV_NUMBER, COMP_ID, &msg, TRUE, data);

@@ -75,23 +75,26 @@ union MAVLINK_MESSAGE {
     mavlink_barometer_t         barometerData;
 } Mavlink_newMessage;
 
+mavlink_xbee_heartbeat_t Mavlink_heartbeatData;
+
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
 void Mavlink_recieve();
-
-//void Mavlink_resend_message(ACK *message);
 
 bool Mavlink_hasNewMessage();
 
 int Mavlink_getNewMessageID();
 
 
+bool Mavlink_hasHeartbeat();
+
+
 /*------------------------- Send Messages ----------------------------*/
 
 void Mavlink_sendAck(uint8_t msgID, uint16_t msgStatus);
 
-void Mavlink_sendHearbeat(uint8_t data);
+void Mavlink_sendHeartbeat();
 
 
 /* --- Command Other --- */
