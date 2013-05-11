@@ -36,7 +36,7 @@ I2C_MODULE      MAGNETOMETER_I2C_ID = I2C1;
 #define I2C_CLOCK_FREQ  100000 // (Hz)
 
 uint16_t Degree;
-float finalDegree; // (degrees)
+float finalHeading; // (degrees)
 
 // Printing debug messages over serial
 #define DEBUG
@@ -56,7 +56,7 @@ void Magnetometer_init() {
 }
 
 float Magnetometer_getDegree(){
-    return finalDegree;
+    return finalHeading;
 }
 
 void Magnetometer_runSM(){
@@ -68,18 +68,20 @@ void Magnetometer_runSM(){
             Degree += 3600;
         accumulator += Degree;
     }
-    finalDegree = (float)(accumulator/(ACCUMULATOR_LENGTH*10));
-    if(finalDegree > 360)
-        finalDegree -= 360;
-    if(finalDegree < 0.5 || finalDegree > 359.5)
-        finalDegree = 0;
+    finalHeading = (float)(accumulator/(ACCUMULATOR_LENGTH*10));
+    if(finalHeading > 360)
+        finalHeading -= 360;
+    if(finalHeading < 0.5 || finalHeading > 359.5)
+        finalHeading = 0;
 
 
-    finalDegree -= MAGNETIC_NORTH_OFFSET;
+    finalHeading -= MAGNETIC_NORTH_OFFSET;
+    if (finalHeading < 0.0f)
+        finalHeading += 360.0f;
  }
 
 bool Magnetometer_isNorth() {
-    return finalDegree <= MINIMUM_NORTH_ERROR;
+    return finalHeading <= MINIMUM_NORTH_ERROR;
 }
 
 /******************************************************************************
