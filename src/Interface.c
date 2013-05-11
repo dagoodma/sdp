@@ -34,8 +34,8 @@
  ***********************************************************************/
 
 #define WAIT_BETWEEN_CHECKS 200 // [miliseconds]
-#define NUMBER_OF_TIMES_TO_CHECK 10
-#define MINIMUM_POSITIVES 5
+#define NUMBER_OF_TIMES_TO_CHECK 1
+#define MINIMUM_POSITIVES 1
 #define BUTTON_BYTE_COUNT 1
 
 /* SWITCHES */
@@ -60,6 +60,8 @@
 #define SET_READY               PORTZ08_LAT // pin 2 J6-5
 #define SET_WAIT                PORTZ06_LAT // pin 3 J6-7
 #define SET_ERROR               PORTZ04_LAT // pin 4 J6-09
+
+#define PRESSED                 0 // buttons active low
 /**********************************************************************
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
@@ -155,23 +157,38 @@ void Interface_init(){
 void Interface_runSM(){
     static int count;
 
-   if (!Timer_isExpired(TIMER_LIGHT_HOLD)) {
+   if (Timer_isExpired(TIMER_LIGHT_HOLD)) {
         timerLightOffFunction();
         Timer_clear(TIMER_LIGHT_HOLD);
     }
 
-    if ( Timer_isExpired(TIMER_LCD_HOLD)) {
-            if (nextMsgCode != NO_MESSAGE) {
-                showMessage(nextMsgCode);
-                nextMsgCode = NO_MESSAGE;
-            }
-            Timer_clear(TIMER_LCD_HOLD);
+    if (Timer_isExpired(TIMER_LCD_HOLD)) {
+        if (nextMsgCode != NO_MESSAGE) {
+            showMessage(nextMsgCode);
+            nextMsgCode = NO_MESSAGE;
         }
+        Timer_clear(TIMER_LCD_HOLD);
+    }
 
-    if(!Timer_isExpired(TIMER_INTERFACE)){
+    if(Timer_isExpired(TIMER_INTERFACE)) {
+
+        if(READ_OKAY == PRESSED)
+            (buttonCount.okay)++;
+        if(READ_CANCEL == PRESSED)
+            (buttonCount.cancel)++;
+        if(READ_STOP == PRESSED)
+            (buttonCount.stop)++;
+        if(READ_RESCUE == PRESSED)
+            (buttonCount.rescue)++;
+        if(READ_SETSTATION == PRESSED)
+            (buttonCount.setStationKeep)++;
+        
+        count++;
+
         if(count > NUMBER_OF_TIMES_TO_CHECK){
             count = 0;
 
+            // Clear button flags
             buttonPressed.flags.cancel = false;
             buttonPressed.flags.okay = false;
             buttonPressed.flags.rescue = false;
@@ -189,6 +206,7 @@ void Interface_runSM(){
             if(buttonCount.setStationKeep > MINIMUM_POSITIVES)
                 buttonPressed.flags.setStationKeep = true;
 
+            // Reset button counts
             buttonCount.okay = 0;
             buttonCount.cancel = 0;
             buttonCount.stop = 0;
@@ -196,19 +214,7 @@ void Interface_runSM(){
             buttonCount.setStationKeep = 0;
         }
 
-        if(READ_OKAY)
-            buttonCount.okay++;
-        if(READ_CANCEL)
-            buttonCount.cancel++;
-        if(READ_STOP)
-            buttonCount.stop++;
-        if(READ_RESCUE)
-            buttonCount.rescue++;
-        if(READ_SETSTATION)
-            buttonCount.setStationKeep++;
-
         Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
-        count++;
     }
     
     
@@ -479,7 +485,7 @@ static void showMessage(message_t msgCode){
 //TEST MODULES
 
 
-#define TEST_PUSHBUTTONS
+//#define TEST_PUSHBUTTONS
 #ifdef TEST_PUSHBUTTONS
 int main(void) {
     //initializations
@@ -487,15 +493,16 @@ int main(void) {
     Serial_init();
     Timer_init();
     Interface_init();
+
     printf("INITIALIZATIONS COMPLETE\n");
-    enum{
+    enum {
         CANCEL  = 0x01,
         OK      = 0x02,
         STOP    = 0x03,
         RESCUE  = 0x04,
         SET_STATION = 0x05,
         IDLE        = 0x06,
-    }push_state;
+    } push_state;
 
     uint16_t onTime = 3000;
 
@@ -566,6 +573,64 @@ int main(void) {
     }
 
 
+}
+
+#endif
+
+
+#define TEST_INTERFACE
+#ifdef TEST_INTERFACE
+int main(void) {
+    //initializations
+    Board_init();
+    Serial_init();
+    LCD_init();
+    Timer_init();
+    Interface_init();
+    
+    printf("INITIALIZATIONS COMPLETE\n");
+    LCD_writeString("Interface online.\n");
+
+    enum {
+        CANCEL  = 0x01,
+        OK      = 0x02,
+        STOP    = 0x03,
+        RESCUE  = 0x04,
+        SETSTATION = 0x05,
+        IDLE        = 0x06,
+    } state;
+
+    //cycle and check if buttons are pressed, if so, turn light on for 3 seconds
+    while(1) {
+        //check to see which button is pressed
+        if(Interface_isCancelPressed() && state != CANCEL){
+            state = CANCEL;
+            LCD_setPosition(0,0);
+            LCD_writeString("Cancel.\n");
+        }else if(Interface_isOkPressed() && state != OK){
+            state = OK;
+            LCD_setPosition(0,0);
+            LCD_writeString("Ok.\n");
+        }else if(Interface_isStopPressed() && state != STOP){
+            state = STOP;
+            LCD_setPosition(0,0);
+            LCD_writeString("Stop.\n");
+        }else if(Interface_isRescuePressed() && state != RESCUE){
+            state = RESCUE;
+            LCD_setPosition(0,0);
+            LCD_writeString("Rescue.\n");
+        }else if(Interface_isSetStationPressed() && state != SETSTATION){
+            state = SETSTATION;
+            LCD_setPosition(0,0);
+            LCD_writeString("Set station.\n");
+        }else{
+            // Nothing
+        }
+
+        Interface_runSM();
+    }
+
+    return SUCCESS;
 }
 
 #endif
