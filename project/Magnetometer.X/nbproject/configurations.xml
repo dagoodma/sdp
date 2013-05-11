@@ -7,6 +7,9 @@
       <itemPath>../../include/Board.h</itemPath>
       <itemPath>../../include/I2C.h</itemPath>
       <itemPath>../../include/Serial.h</itemPath>
+      <itemPath>../../include/Timer.h</itemPath>
+      <itemPath>../../include/Magnetometer.h</itemPath>
+      <itemPath>../../include/Uart.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -20,6 +23,7 @@
       <itemPath>../../src/Serial.c</itemPath>
       <itemPath>../../src/Uart.c</itemPath>
       <itemPath>../../src/I2C.c</itemPath>
+      <itemPath>../../src/Timer.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -66,8 +70,7 @@
         <property key="enable-symbols" value="true"/>
         <property key="enable-unroll-loops" value="false"/>
         <property key="exclude-floating-point" value="false"/>
-        <property key="extra-include-directories"
-                  value="C:\Users\Shehadeh\Documents\GitHub\sdp\include"/>
+        <property key="extra-include-directories" value="../../include"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
         <property key="make-warnings-into-errors" value="false"/>

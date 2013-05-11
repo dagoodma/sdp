@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <plib.h>
+#include <stdbool.h>
 #include "I2C.h"
 #include "Serial.h"
 #include "Board.h"
@@ -142,7 +143,7 @@ uint16_t Magnetometer_readSensor() {
     return data;
 }
 
-//#define MAGNETOMETER_TEST
+#define MAGNETOMETER_TEST
 #ifdef MAGNETOMETER_TEST
 
 int main(void) {
