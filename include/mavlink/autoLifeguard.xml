@@ -5,7 +5,7 @@
 				<description>This message will send a single byte of data for debugging.</description>
 				<field type="uint8_t" name="data">Holds raw data for use in testing</field>
           </message>
-          <message id="236" name="XBEE_HEARTBEAT">
+          <message id="236" name="HEARTBEAT">
 				<description>This message will send a single byte that will count and check that xbee is alive.</description>
 				<field type="uint8_t" name="ack">TRUE or FALSE if acknowledgement required.</field>
 				<field type="uint8_t" name="data">Holds raw data for use in testing</field>

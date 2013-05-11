@@ -44,9 +44,6 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
  
-#define MESSAGE_LINGER_DELAY	5000 // (ms) to prevent the display from changing
-
-
 // Timer allocation
 #define TIMER_CALIBRATE     TIMER_MAIN
 #define TIMER_RESCUE        TIMER_MAIN
@@ -57,12 +54,13 @@
 
 
 #define TIMER_BAROMETER_LOST            TIMER_BACKGROUND
-#define TIMER_HEARTBEAT_LOST            TIMER_BACKGROUND2
+#define TIMER_HEARTBEAT_CHECK           TIMER_BACKGROUND2
 #define TIMER_GPS_CORRECTION            TIMER_BACKGROUND3
 
 // Timer delays
+#define CALIBRATE_HOLD_DELAY        3000 // (ms) time to hold calibration
 #define BAROMETER_LOST_DELAY	    20000 // (ms) time before timeout error
-#define HEARBEAT_LOST_DELAY         10000// (ms) before timeout error
+#define HEARTBEAT_LOST_DELAY         10000// (ms) before timeout error
 #define RESEND_MESSAGE_DELAY        4000 // (ms) resend a message
 #define GPS_CORRECTION_SEND_DELAY   3750
 #define LCD_HOLD_DELAY              4000 // (ms) time for lcd message to linger
@@ -163,13 +161,10 @@ union EVENTS {
         unsigned int haveReturnStationMessage :1; // boat is heading to station
         unsigned int haveRequestOriginMessage :1;
         unsigned int haveOverrideMessage :1; // boat is in override state
-        unsigned int readyToPrintMessage :1; // display hold for Ready state expired
-        /* - Boat error messages - */
-        unsigned int haveBoatGpsDisconnectedError :1;
-        unsigned int haveBoatGpsFixError :1;
-        unsigned int haveBoatNoOriginError :1;
-        unsigned int haveBoatNoStationError :1;
         unsigned int haveBoatOnlineMessage  :1;
+        unsigned int readyToPrintMessage :1; // display hold for Ready state expired
+        /* - Boat status and error messages - */
+        unsigned int lostBoatHeartbeat :1;
         unsigned int haveBoatPositionMessage :1;
 
         /* - Calibrate events - */
@@ -197,6 +192,8 @@ uint8_t resendMessageCount;
 float compasHeight;
 int lastMessageID;
 error_t lastErrorCode;
+error_t lastBoatErrorCode;
+bool isConnectedWithBoat;
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -223,6 +220,7 @@ void setError(error_t errorCode);
 void doBarometerUpdate();
 void gpsCorrectionUpdate();
 void getTargetLocation(LocalCoordinate *targetNed);
+void checkBoatConnection();
 
 
 /***********************************************************************
@@ -239,7 +237,13 @@ void checkEvents() {
     // Clear all event flags
     int i;
     for (i=0; i < EVENT_BYTE_COUNT; i++)
-        event.bytes[i] = 0x0;     
+        event.bytes[i] = 0x0;
+
+    // Check for hearbeat
+    if (Timer_isExpired(TIMER_HEARTBEAT_CHECK) && isConnectedWithBoat) {
+        if (!Mavlink_hasHeartbeat())
+            event.flags.lostBoatHeartbeat = TRUE;
+    }
 
     // Calibration flags
     if (state == STATE_CALIBRATE) {
@@ -315,28 +319,22 @@ void checkEvents() {
             /*---------------- Status and Error messages ---------- */
             case MAVLINK_MSG_ID_STATUS_AND_ERROR:
                 // ---------- Boat error messages ------------------
-                if (Mavlink_newMessage.statusAndErrorData.status == ERROR_GPS_DISCONNECTED) {
-                    event.flags.haveBoatGpsDisconnectedError = TRUE;
+                if (Mavlink_newMessage.statusAndErrorData.error != ERROR_NONE) {
                     event.flags.haveBoatError = TRUE;
+                    lastBoatErrorCode = Mavlink_newMessage.statusAndErrorData.error;
                 }
-                if (Mavlink_newMessage.statusAndErrorData.status == ERROR_GPS_NOFIX) {
-                    event.flags.haveBoatGpsFixError = TRUE;
-                    event.flags.haveBoatError = TRUE;
+                else {
+                    // ---------- Boat status messages -----------------
+                    if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_ONLINE)
+                        event.flags.haveBoatOnlineMessage = TRUE;
                 }
-                if (Mavlink_newMessage.statusAndErrorData.status == ERROR_NO_ORIGIN) {
-                    event.flags.haveBoatNoOriginError = TRUE;
-                    event.flags.haveBoatError = TRUE;
-                }
-                if (Mavlink_newMessage.statusAndErrorData.status == ERROR_NO_STATION) {
-                    event.flags.haveBoatNoStationError = TRUE;
-                    event.flags.haveBoatError = TRUE;
-                }
-                // ---------- Boat status messages -----------------
-                if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_ONLINE)
-                    event.flags.haveBoatOnlineMessage = TRUE;
+                break;
+            /*----------------  Heartbeat message -------------------------*/
+                // This is handled in checkHeartbeat() below
             /*----------------  Barometer altitude message ----------------*/
             case MAVLINK_MSG_ID_BAROMETER:
                 event.flags.haveBarometerMessage = TRUE;
+                break;
             default:
                 // Unknown message ID
                 event.flags.haveUnknownMessage = TRUE;
@@ -373,7 +371,7 @@ void doCalibrateSM() {
                     Timer_clear(TIMER_CALIBRATE);
                 }
                 else if (!Timer_isActive(TIMER_CALIBRATE))
-                    Timer_new(TIMER_CALIBRATE);
+                    Timer_new(TIMER_CALIBRATE,CALIBRATE_HOLD_DELAY);
             }
             else {
                     Timer_stop(TIMER_CALIBRATE);
@@ -392,7 +390,7 @@ void doCalibrateSM() {
                     event.flags.calibrateDone = TRUE;
                 }
                 else if (!Timer_isActive(TIMER_CALIBRATE))
-                    Timer_new(TIMER_CALIBRATE);
+                    Timer_new(TIMER_CALIBRATE,CALIBRATE_HOLD_DELAY);
             }
             else {
                 Timer_stop(TIMER_CALIBRATE);
@@ -702,23 +700,27 @@ void doMasterSM() {
             break;
 
     } // switch
+    // Check if boat came online or if we lost connection
+    checkBoatConnection();
+
     // Transition out of any state as long as not calibrating..
     if (state != STATE_CALIBRATE) {
-    if (event.flags.haveError) {
-        startErrorSM();
-    }
-    if (state != STATE_SETORIGIN) {
-        if (event.flags.stopButtonPressed)
-            startStopSM();
-        else if (event.flags.haveRequestOriginMessage)
-            startSetOriginSM();
-        else if (event.flags.rescueButtonPressed)
-            startRescueSM();
-        else if (event.flags.setStationButtonPressed)
-            startSetStationSM();
+        if (event.flags.haveError) {
+            startErrorSM();
+        }
+        if (state != STATE_SETORIGIN) {
+            if (event.flags.stopButtonPressed)
+                startStopSM();
+            else if (event.flags.haveRequestOriginMessage)
+                startSetOriginSM();
+            else if (event.flags.rescueButtonPressed)
+                startRescueSM();
+            else if (event.flags.setStationButtonPressed)
+                startSetStationSM();
         }
     }
-}
+
+} // doMasterSM()
 
 
 /**********************************************************************
@@ -758,10 +760,18 @@ void startReadySM() {
 void startErrorSM() {
     state = STATE_ERROR;
     subState = STATE_NONE;
-    if (lastErrorCode == ERROR_NONE)
-        lastErrorCode = ERROR_UNKNOWN;
+    error_t showErrorCode = ERROR_NONE;
+    /* Determine whether the error was from the boat or the compas,
+       but display the ComPAS errors over the boat's. */
+    if (event.flags.haveBoatError)
+        showErrorCode = lastBoatErrorCode;
+    if (event.flags.haveError)
+        showErrorCode = lastErrorCode;
 
-    Interface_showErrorMessage(lastErrorCode);
+    if (showErrorCode == ERROR_NONE)
+        showErrorCode = ERROR_UNKNOWN;
+
+    Interface_showErrorMessage(showErrorCode);
 }
 
 /**********************************************************************
@@ -877,10 +887,14 @@ void initializeCompas() {
     #ifdef USE_BAROMETER
     Barometer_init();
     #endif
+
+    // Connection related
+    isConnectedWithBoat  = FALSE;
         
     // Start calibrating before use
     startCalibrateSM();
-	resendMessageCount = 0;
+    resendMessageCount = 0;
+
 }
 
 /**********************************************************************
@@ -953,7 +967,30 @@ void getTargetLocation(LocalCoordinate *targetNed) {
         Encoder_getPitch(), compasHeight);
 }
 
+/**********************************************************************
+ * Function: checkBoatConnection
+ * @return None
+ * @remark Checks the connection to be boat and sets an error if the con-
+ *  nection was lost.
+ **********************************************************************/
+void checkBoatConnection() {
+    if (event.flags.lostBoatHeartbeat) {
+        // Lost connection to boat
+        setError(ERROR_NO_HEARTBEAT);
+    }
+    else if (event.flags.haveBoatOnlineMessage && !isConnectedWithBoat) {
+        // Boat just came online
+        isConnectedWithBoat = TRUE;
+        Timer_new(TIMER_HEARTBEAT_CHECK, HEARTBEAT_LOST_DELAY);
+        Interface_showMessageOnTimer(BOAT_ONLINE_MESSAGE,LCD_HOLD_DELAY);
+    }
+    else if (isConnectedWithBoat && Timer_isExpired(TIMER_HEARTBEAT_CHECK)) {
+        // Got boat heartbeat, restart timer
+        Timer_new(TIMER_HEARTBEAT_CHECK, HEARTBEAT_LOST_DELAY);
+    }
+}
 
+// ---------------------------- Main entry pont --------------------------
 int main() {
     initializeCompas();
     while (1) {

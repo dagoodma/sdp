@@ -82,17 +82,16 @@
 #define TIMER_GPS               4
 #define TIMER_ENCODER           5
 #define TIMER_BUTTONS           6
-#define TIMER_HEARTBEAT         7
-#define TIMER_DRIVE             8
-#define TIMER_OVERRIDE          9
-#define TIMER_TILTCOMPASS       10
-#define TIMER_NAVIGATION        11
-#define TIMER_LOGGER            12
-#define TIMER_BAROMETER2        13 // remove the blocking code!!
-#define TIMER_DELAY             14
-#define TIMER_INTERFACE         15
-#define TIMER_LIGHT_HOLD        16
-#define TIMER_LCD_HOLD          17
+#define TIMER_DRIVE             7
+#define TIMER_OVERRIDE          8
+#define TIMER_TILTCOMPASS       9
+#define TIMER_NAVIGATION        10
+#define TIMER_LOGGER            11
+#define TIMER_BAROMETER2        12 // remove the blocking code!!
+#define TIMER_DELAY             13
+#define TIMER_INTERFACE         14
+#define TIMER_LIGHT_HOLD        15
+#define TIMER_LCD_HOLD          16
 
 // Master state machine timers
 #define TIMER_MAIN              24

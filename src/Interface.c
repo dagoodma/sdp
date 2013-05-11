@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <plib.h>
-#include <ports.h>
+#include "ports.h"
 #include "Board.h"
 #include "Timer.h"
 #include "Interface.h"
@@ -91,6 +91,7 @@ void (*timerLightOffFunction)();
 
 
 const char *INTERFACE_MESSAGE[] = {
+  //"....................\n"  <- maxiumum line length
     "Blank message.",
     "Calibration success.",
     "Please calibrate the\npitch by leveling\nwith horizon, until\nboth top lights on.",
@@ -109,10 +110,12 @@ const char *INTERFACE_MESSAGE[] = {
     "Saved new station.",
     "Set new station.",
     "Setting boat origin.",
-    "Set new origin."
+    "Set new origin.",
+    "Boat is now online.\n"
 };
 
 message_t currentMsgCode, nextMsgCode;
+
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
@@ -210,6 +213,7 @@ void Interface_runSM(){
     
     
 }
+
 /**********************************************************************
  * Function: Interface_isCancelPressed
  * @param None.
@@ -342,6 +346,22 @@ void Interface_errorLightOnTimer(uint16_t ms){
     timerLightOffFunction = &Interface_errorLightOff;
     Interface_errorLightOn();
 }
+
+
+
+/**********************************************************************
+ * Function: Interface_waitLightOnTimer
+ * @param amount of time in ms that you want the light to remain on
+ * @return None.
+ * @remark Turns the LED on for a certain amount of time
+ **********************************************************************/
+void Interface_waitLightOnTimer(uint16_t ms){
+    Timer_new(TIMER_LIGHT_HOLD, ms);
+    timerLightOffFunction = &Interface_waitLightOff;
+    Interface_waitLightOn();
+}
+
+
 /**********************************************************************
  * Function: Interface_pitchLightsOff
  * @return None.
@@ -454,3 +474,99 @@ static void showMessage(message_t msgCode){
         LCD_writeString(INTERFACE_MESSAGE[msgCode]);
         currentMsgCode = msgCode;
 }
+
+
+//TEST MODULES
+
+
+#define TEST_PUSHBUTTONS
+#ifdef TEST_PUSHBUTTONS
+int main(void) {
+    //initializations
+    Board_init();
+    Serial_init();
+    Timer_init();
+    Interface_init();
+    printf("INITIALIZATIONS COMPLETE\n");
+    enum{
+        CANCEL  = 0x01,
+        OK      = 0x02,
+        STOP    = 0x03,
+        RESCUE  = 0x04,
+        SET_STATION = 0x05,
+        IDLE        = 0x06,
+    }push_state;
+
+    uint16_t onTime = 3000;
+
+    //cycle and check if buttons are pressed, if so, turn light on for 3 seconds
+    while(1){
+        Interface_runSM();
+        //check to see which button is pressed
+        if(Interface_isCancelPressed()){
+            push_state = CANCEL;
+            printf("CANCEL\n");
+        }else if(Interface_isOkPressed()){
+            push_state = OK;
+            printf("OK\n");
+        }else if(Interface_isStopPressed()){
+            push_state = STOP;
+            printf("STOP\n");
+        }else if(Interface_isRescuePressed()){
+            push_state = RESCUE;
+            printf("RESCUE\n");
+        }else if(Interface_isSetStationPressed()){
+            push_state = SET_STATION;
+            printf("SET_STATION\n");
+        }else{
+            push_state = IDLE;
+            //printf("IDLE\n");
+        }
+
+        switch(push_state){
+            case CANCEL:
+                Interface_errorLightOnTimer(onTime);
+                printf("BUTTON PRESSED : CANCEL\n\n");
+                push_state = IDLE;
+                break;
+
+            case OK:
+                Interface_readyLightOnTimer(onTime);
+                printf("BUTTON PRESSED : OK\n\n");
+                push_state = IDLE;
+                break;
+
+            case STOP:
+                Interface_waitLightOnTimer(onTime);
+                printf("BUTTON PRESSED : STOP\n\n");
+                push_state = IDLE;
+                break;
+
+            case RESCUE:
+                Interface_errorLightOnTimer(onTime);
+                Interface_readyLightOnTimer(onTime);
+                Interface_waitLightOnTimer(onTime);
+                printf("BUTTON PRESSED : RESCUE\n\n");
+                push_state = IDLE;
+                break;
+
+            case SET_STATION:
+                Interface_errorLightOnTimer(onTime);
+                Interface_waitLightOnTimer(onTime);
+                printf("BUTTON PRESSED : SET_STATION\n\n");
+                push_state = IDLE;
+                break;
+
+            case IDLE:
+                ;
+                break;
+        }
+
+
+    }
+
+
+}
+
+#endif
+

@@ -25,25 +25,32 @@
 
 typedef enum {
     NO_MESSAGE = 0x0,
+    /* - Calibrate state messages - */
     CALIBRATE_SUCCESS_MESSAGE,
     CALIBRATE_PITCH_MESSAGE,
     CALIBRATE_YAW_MESSAGE,
+    /* - Ready state messages - */
     READY_MESSAGE,
+    /* - Rescue state messages - */
     STARTING_RESCUE_MESSAGE,
     STARTED_RESCUE_MESSAGE,
     RESCUE_SUCCESS_MESSAGE,
     CANCEL_RESCUE_MESSAGE,
-    START_RETURN_MESSAGE,
-    RETURNING_MESSAGE,
+    START_RETURN_MESSAGE, // shared with stop state
+    RETURNING_MESSAGE, // shared with stop state
+    /* - Stop state messages - */
     STOPPING_BOAT_MESSAGE,
     STOPPED_BOAT_MESSAGE,
     CANCEL_STOP_MESSAGE,
+    /* - Set station state messages - */
     SAVING_STATION_MESSAGE,
     SAVED_STATION_MESSAGE,
     SET_STATION_MESSAGE,
+    /* - Set origin state messages - */
     SETTING_ORIGIN_MESSAGE,
     SET_ORIGIN_MESSAGE,
-
+    /* - Other messages - */
+    BOAT_ONLINE_MESSAGE,
 } message_t;
 
 
@@ -51,6 +58,14 @@ typedef enum {
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
+
+/**********************************************************************
+ * Function: Interface_init
+ * @param None.
+ * @return None.
+ * @remark Initialzies the pins used by the buttons and LEDs.
+ **********************************************************************/
+void Interface_init();
 
 
 /**********************************************************************
@@ -172,6 +187,16 @@ void Interface_readyLightOnTimer(uint16_t ms);
  * @remark Turns the LED on for a certain amount of time
  **********************************************************************/
 void Interface_errorLightOnTimer(uint16_t ms);
+
+
+/**********************************************************************
+ * Function: Interface_waitLightOnTimer
+ * @param amount of time in ms that you want the light to remain on
+ * @return None.
+ * @remark Turns the LED on for a certain amount of time
+ **********************************************************************/
+void Interface_waitLightOnTimer(uint16_t ms);
+
 
 /**********************************************************************
  * Function: Interface_pitchLightsOff

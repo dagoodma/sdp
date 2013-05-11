@@ -8,6 +8,7 @@
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
+#include <math.h>
 #include "I2C.h"
 #include "Serial.h"
 #include "Timer.h"
@@ -42,7 +43,7 @@
 #define ACCUMULATOR_LENGTH      2 // use a power of 2 and update shift too
 #define ACCUMULATOR_SHIFT       1 // 2^shift = length
 
-#define MINIMUM_LEVEL_ERROR     2 // (1e-1 G-counts)
+#define MINIMUM_LEVEL_ERROR     10 // (1e-3 G-counts)
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -51,11 +52,11 @@
 I2C_MODULE      I2C_ID = I2C1;
 
 struct {
-    uint16_t x, y , z;
+    int16_t x, y , z;
 } gCount;
 
 struct {
-    uint32_t x , y, z;
+    int32_t x , y, z;
 } gAccumulator;
 
 uint8_t accumulatorIndex = 0;
@@ -133,7 +134,7 @@ void Accelerometer_runSM() {
 }
 
 bool Accelerometer_isLevel() {
-    return abs(gCount.x - gCount.y) <= MINIMUM_LEVEL_ERROR;
+    return abs(gCount.x + gCount.y) <= MINIMUM_LEVEL_ERROR;
 }
 
 
@@ -441,23 +442,10 @@ int main(void) {
 
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  80000 // (Hz)
-#define LED_DELAY     1 // (ms)
 
-#define G_DELTA         20 // (0.001 G) scaled by 1e-3 == 0.02 G
-#define G_X_DESIRED     0
-#define G_Y_DESIRED     0
-#define G_Z_DESIRED     1000 // (0.001 G) scaled by 1e-3 == 1 G
-
-#define LED_N           PORTZ06_LAT // RD0
-#define LED_S           PORTZ04_LAT // RF1
-#define LED_E           PORTY12_LAT // RD1
-#define LED_W           PORTY10_LAT // RD2
-
-#define LED_N_TRIS      PORTZ06_TRIS // RD0
-#define LED_S_TRIS      PORTZ04_TRIS // RF1
-#define LED_E_TRIS      PORTY12_TRIS // RD1
-#define LED_W_TRIS      PORTY10_TRIS // RD2
-
+#define PRINT_DELAY     1000 // (ms)
+#define CALIBRATE_HOLD_DELAY        3000 // (ms) time to hold calibration
+bool calibrating = FALSE;
 int main(void) {
 
     // Initialize the modules
@@ -475,45 +463,42 @@ int main(void) {
     printf("Initialized the accelerometer.\n");
 
     // Configure ports as outputs
+    /*
     LED_N_TRIS = OUTPUT;
     LED_S_TRIS = OUTPUT;
     LED_E_TRIS = OUTPUT;
     LED_W_TRIS = OUTPUT;
     
-    Timer_new(TIMER_TEST, LED_DELAY );
-
-    while(1){
+    */
+    Timer_new(TIMER_TEST,PRINT_DELAY  );
+    while(1) {
     // Convert the raw data to real values
         if (Timer_isExpired(TIMER_TEST)) {
-            // X-Axis
-            if (Accelerometer_getX() <= (G_X_DESIRED - G_DELTA)) {
-                LED_N = ON;
-                LED_S = OFF;
+            if (Accelerometer_isLevel() && !calibrating) {
+                calibrating = TRUE;
+                Timer_new(TIMER_TEST2,CALIBRATE_HOLD_DELAY);
+                printf("Calibrating.");
             }
-            else if (Accelerometer_getX() >= (G_X_DESIRED + G_DELTA)) {
-                LED_N = OFF;
-                LED_S = ON;
+            else if (Accelerometer_isLevel() && calibrating) {
+                 if (!Timer_isExpired(TIMER_TEST2)) {
+                     printf(".");
+                 }
             }
-            else {
-                LED_N = OFF;
-                LED_S = OFF;
+            else if (calibrating && !Accelerometer_isLevel()) {
+                Timer_stop(TIMER_TEST2);
+                Timer_clear(TIMER_TEST2);
+                calibrating = FALSE;
+                printf("! -- Failed.\n");
             }
+            //printf("X=%d, Y=%d, Z=%d level=%X_%d\n",
+            //    Accelerometer_getX(), Accelerometer_getY(), Accelerometer_getZ(), Accelerometer_isLevel(),
+            //        abs(gCount.x + gCount.y));
+            Timer_new(TIMER_TEST, PRINT_DELAY );
+        }
 
-            // Y-Axis
-            if (Accelerometer_getY() <= (G_Y_DESIRED - G_DELTA)) {
-                LED_E = OFF;
-                LED_W = ON;
-            }
-            else if (Accelerometer_getY() >= (G_Y_DESIRED + G_DELTA)) {
-                LED_E = ON;
-                LED_W = OFF;
-            }
-            else {
-                LED_E = OFF;
-                LED_W = OFF;
-            }
-            
-            Timer_new(TIMER_TEST, LED_DELAY );
+        if (Accelerometer_isLevel() && calibrating && Timer_isExpired(TIMER_TEST2)) {
+            printf("! -- Done.\n");
+            return SUCCESS;
         }
 
         Accelerometer_runSM();

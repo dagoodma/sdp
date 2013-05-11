@@ -52,18 +52,6 @@ uint8_t Xbee_init();
 void Xbee_runSM();
 
 
-
-/**********************************************************************
- * Function: void Xbee_message_data_test();
- * @remark This function will be calle once a "data_test" packet has been
- *  recieved. It will send the data back immediatly, and restart the time out
- *  timer.
- * @param The test_data struct from Mavlink
- * @return none
- * @author John Ash
- * @date February 1st 2013
- **********************************************************************/
-void Xbee_recieved_message_heartbeat(mavlink_xbee_heartbeat_t* packet);
 //#define XBEE_TEST
 #ifdef XBEE_TEST
 /**********************************************************************
