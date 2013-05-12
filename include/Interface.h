@@ -51,6 +51,7 @@ typedef enum {
     SET_ORIGIN_MESSAGE,
     /* - Other messages - */
     BOAT_ONLINE_MESSAGE,
+    RESET_BOAT
 } message_t;
 
 
@@ -265,6 +266,13 @@ void Interface_showErrorMessage(error_t errorCode);
  **********************************************************************/
 void Interface_clearAll();
 
+/**********************************************************************
+ * Function: getMessage
+ * @param None.
+ * @return None.
+ * @remark Returns the interface message for the given message code.
+ **********************************************************************/
+char *getMessage(message_t code);
 
 
 #endif

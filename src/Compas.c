@@ -21,6 +21,24 @@
 #define IS_COMPAS
 #define DEBUG
 //#define DEBUG_VERBOSE
+#define USE_MAGNETOMETER
+#define USE_ENCODER
+#define USE_ACCELEROMETER
+#define USE_GPS
+#define USE_XBEE
+#define USE_BAROMETER
+#define USE_INTERFACE
+
+#ifdef DEBUG
+#ifdef USE_SD_LOGGER
+#define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
+#else
+#define DBPRINT(...)   printf(__VA_ARGS__)
+#endif
+#else
+#define DBPRINT(...)   ((int)0)
+#endif
+
 
 #include <xc.h>
 #include <stdio.h>
@@ -32,6 +50,7 @@
 #include "Encoder.h"
 #include "Ports.h"
 #include "TiltCompass.h"
+#include "Timer.h"
 #include "Xbee.h"
 #include "UART.h"
 #include "Gps.h"
@@ -85,7 +104,7 @@
 #define ECEF_Y_ORIGIN -4322167.0f
 #define ECEF_Z_ORIGIN  3817539.0f
 
-#define I2C_CLOCK_FREQ  100000 // (Hz)
+#define I2C_CLOCK_FREQ  50000 // (Hz)
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -858,34 +877,48 @@ void startStopSM() {
  **********************************************************************/
 void initializeCompas() {
     Board_init();
+
+    #ifdef DEBUG
     Serial_init();
+    #endif
     Timer_init();
 
     // I2C bus
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
 
     #ifdef USE_MAGNETOMETER
+    DBPRINT("Initializing magnetomer.\n");
     Magnetometer_init();
     #endif
 
     #ifdef USE_ENCODER
+    DBPRINT("Initializing encoder.\n");
     Encoder_init();
     #endif
 
     #ifdef USE_ACCELEROMETER
+    DBPRINT("Initializing accelerometer.\n");
     Accelerometer_init();
     #endif
 
     #ifdef USE_GPS
+    DBPRINT("Initializing GPS.\n");
     GPS_init();
     #endif
 
     #ifdef USE_XBEE
+    DBPRINT("Initializing XBee.\n");
     Xbee_init();
     #endif
 
     #ifdef USE_BAROMETER
+    DBPRINT("Initializing barometer.\n");
     Barometer_init();
+    #endif
+
+    #ifdef USE_INTERFACE
+    DBPRINT("Initializing interface.\n");
+    Interface_init();
     #endif
 
     // Connection related
@@ -993,6 +1026,7 @@ void checkBoatConnection() {
 // ---------------------------- Main entry pont --------------------------
 int main() {
     initializeCompas();
+    DBPRINT("ComPAS initialized.\n");
     while (1) {
         doMasterSM();
     }

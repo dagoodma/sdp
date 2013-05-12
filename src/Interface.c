@@ -115,7 +115,8 @@ const char *INTERFACE_MESSAGE[] = {
     "Set new station.",
     "Setting boat origin.",
     "Set new origin.",
-    "Boat is now online.\n"
+    "Boat is now online.\n",
+    "Resetting boat.\n"
 };
 
 message_t currentMsgCode, nextMsgCode;
@@ -483,6 +484,15 @@ static void showMessage(message_t msgCode){
         currentMsgCode = msgCode;
 }
 
+/**********************************************************************
+ * Function: getMessage
+ * @param None.
+ * @return None.
+ * @remark Returns the interface message for the given message code.
+ **********************************************************************/
+char *getMessage(message_t code) {
+    return (char*)INTERFACE_MESSAGE[code];
+}
 
 //TEST MODULES
 

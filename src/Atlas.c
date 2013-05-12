@@ -728,6 +728,10 @@ static void initializeAtlas() {
     Barometer_init();
     Timer_new(TIMER_BAROMETER_SEND, BAROMETER_SEND_DELAY);
     #endif
+
+    #ifdef USE_XBEE
+    Xbee_init();
+    #endif
         
     // Start calibrating before use
     startSetOriginSM();
