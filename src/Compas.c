@@ -52,7 +52,7 @@
 #include "TiltCompass.h"
 #include "Timer.h"
 #include "Xbee.h"
-#include "UART.h"
+#include "Uart.h"
 #include "Gps.h"
 #include "Barometer.h"
 #include "Override.h"
@@ -104,7 +104,7 @@
 #define ECEF_Y_ORIGIN -4322167.0f
 #define ECEF_Z_ORIGIN  3817539.0f
 
-#define I2C_CLOCK_FREQ  50000 // (Hz)
+#define I2C_CLOCK_FREQ  80000 // (Hz)
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -1024,6 +1024,8 @@ void checkBoatConnection() {
 }
 
 // ---------------------------- Main entry pont --------------------------
+#define USE_COMPAS
+#ifdef USE_COMPAS
 int main() {
     initializeCompas();
     DBPRINT("ComPAS initialized.\n");
@@ -1034,3 +1036,4 @@ int main() {
     return SUCCESS;
 }
 
+#endif

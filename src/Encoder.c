@@ -14,6 +14,7 @@
 #include "Board.h"
 #include "Ports.h"
 #include "Encoder.h"
+#include "Timer.h"
 
 
 /***********************************************************************
@@ -70,8 +71,8 @@ uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS);
 
      pitchAngle = calculateAngle(zeroPitchAngle,SLAVE_VERTICAL_READ_ADDRESS,
                                    SLAVE_VERTICAL_WRITE_ADDRESS);
-     yawAngle = calculateAngle(zeroYawAngle,SLAVE_HORIZONTAL_READ_ADDRESS,
-                                     SLAVE_HORIZONTAL_WRITE_ADDRESS);
+     //yawAngle = calculateAngle(zeroYawAngle,SLAVE_HORIZONTAL_READ_ADDRESS,
+     //                                SLAVE_HORIZONTAL_WRITE_ADDRESS);
  }
 
 void Encoder_init() {
@@ -195,7 +196,7 @@ uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
     return data;
 }
 
-#define ENCODER_TEST
+//#define ENCODER_TEST
 #ifdef ENCODER_TEST
 
 #define PRINT_DELAY     1000
@@ -205,10 +206,17 @@ int main(void) {
 // Initialize the UART,Timers, and I2C1v
     Board_init();
     Serial_init();
+    Timer_init();
     printf("Starting encoders...\n");
     I2C_init(ENCODER_I2C_ID, I2C_CLOCK_FREQ);
     Encoder_init();
 
+        Encoder_runSM();
+
+        Encoder_runSM();
+
+        Encoder_runSM();
+        
     Encoder_setZeroYaw();
     Encoder_setZeroPitch();
 
