@@ -125,6 +125,15 @@ bool Interface_isRescuePressed();
 bool Interface_isSetStationPressed();
 
 /**********************************************************************
+ * Function: Interface_isDebug
+ * @param None.
+ * @return True if the button has been presed, false if the button is
+ *  untouched
+ * @remark
+ **********************************************************************/
+bool Interface_isDebug();
+
+/**********************************************************************
  * Function: Interface_readyLightOn
  * @param None.
  * @return None.
@@ -172,6 +181,38 @@ void Interface_errorLightOn();
  * @remark Turns the LED off by
  **********************************************************************/
 void Interface_errorLightOff();
+
+/**********************************************************************
+ * Function: Interface_accelBackOn
+ * @param None.
+ * @return None.
+ * @remark Turns the LED On by
+ **********************************************************************/
+void Interface_accelBackOn();
+
+/**********************************************************************
+ * Function: Interface_accelBackOff
+ * @param None.
+ * @return None.
+ * @remark Turns the LED off by
+ **********************************************************************/
+void Interface_accelBackOff();
+
+/**********************************************************************
+ * Function: Interface_accelFrontOn
+ * @param None.
+ * @return None.
+ * @remark Turns the LED On by
+ **********************************************************************/
+void Interface_accelFrontOn();
+
+/**********************************************************************
+ * Function: Interface_accelFrontOff
+ * @param None.
+ * @return None.
+ * @remark Turns the LED off by
+ **********************************************************************/
+void Interface_accelFrontOff();
 
 /**********************************************************************
  * Function: Interface_readyLightOnTimer
