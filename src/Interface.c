@@ -44,22 +44,28 @@
 #define STOP_TRIS               PORTX12_TRIS // pin 36 J5-6
 #define RESCUE_TRIS             PORTX10_TRIS // pin 37 J5-8
 #define SETSTATION_TRIS         PORTX08_TRIS // pin 38 J5-10
+#define DEBUG_TRIS              PORTX11_TRIS // pin 10 J5-05
 
 #define READ_OKAY               PORTY03_BIT // pin 35 J5-4
 #define READ_CANCEL             PORTY04_BIT // pin 9 J5-3
 #define READ_STOP               PORTX12_BIT // pin 36 J5-6
 #define READ_RESCUE             PORTX10_BIT // pin 37 J5-8
 #define READ_SETSTATION         PORTX08_BIT // pin 38 J5-10
+#define READ_DEBUG              PORTX11_BIT // pin 10 J5-05
 
 /* LEDS */
 
 #define READY_TRIS              PORTZ08_TRIS // pin 2 J6-5
 #define WAIT_TRIS               PORTZ06_TRIS // pin 3 J6-7
 #define ERROR_TRIS              PORTZ04_TRIS // pin 4 J6-09
+#define ACCEL_BACK_TRIS         PORTY06_TRIS // pin 8 J5-01
+#define ACCEL_FRONT_TRIS        PORTY05_TRIS // pin 34 J5-02
 
 #define SET_READY               PORTZ08_LAT // pin 2 J6-5
 #define SET_WAIT                PORTZ06_LAT // pin 3 J6-7
 #define SET_ERROR               PORTZ04_LAT // pin 4 J6-09
+#define SET_ACCEL_BACK          PORTY06_LAT // pin 8 J5-01
+#define SET_ACCEL_FRONT         PORTY05_LAT // pin 34 J5-02
 
 #define PRESSED                 0 // buttons active low
 /**********************************************************************
@@ -79,6 +85,7 @@ struct button_count{
     uint8_t stop;
     uint8_t rescue;
     uint8_t setStationKeep;
+    uint8_t debug;
 }buttonCount;
 union button_pressed{
     struct{
@@ -87,6 +94,7 @@ union button_pressed{
         unsigned int stop :1;
         unsigned int rescue :1;
         unsigned int setStationKeep :1;
+        unsigned int debug :1;
     } flags;
     unsigned char bytes[BUTTON_BYTE_COUNT];
 } buttonPressed;
@@ -137,16 +145,20 @@ void Interface_init(){
     STOP_TRIS = 1;
     RESCUE_TRIS = 1;
     SETSTATION_TRIS = 1;
+    DEBUG_TRIS = 1;
 
     READY_TRIS = 0;
     WAIT_TRIS = 0;
     ERROR_TRIS = 0;
+    ACCEL_BACK_TRIS = 0;
+    ACCEL_FRONT_TRIS = 0;
 
     buttonCount.okay = 0;
     buttonCount.cancel = 0;
     buttonCount.stop = 0;
     buttonCount.rescue = 0;
     buttonCount.setStationKeep = 0;
+    buttonCount.debug = 0;
     count = 0;
 
     Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
@@ -185,6 +197,8 @@ void Interface_runSM(){
             buttonCount.rescue += 1;
         if(READ_SETSTATION == PRESSED)
             buttonCount.setStationKeep += 1;
+        if(READ_DEBUG == PRESSED)
+            buttonCount.setStationKeep += 1;
         
         count++;
 
@@ -197,6 +211,7 @@ void Interface_runSM(){
             buttonPressed.flags.rescue = false;
             buttonPressed.flags.setStationKeep = false;
             buttonPressed.flags.stop = false;
+            buttonPressed.flags.debug = false;
 
             if(buttonCount.okay >= MINIMUM_POSITIVES)
                 buttonPressed.flags.okay = true;
@@ -208,6 +223,9 @@ void Interface_runSM(){
                 buttonPressed.flags.rescue = true;
             if(buttonCount.setStationKeep >= MINIMUM_POSITIVES)
                 buttonPressed.flags.setStationKeep = true;
+            if(buttonCount.debug >= MINIMUM_POSITIVES)
+                buttonPressed.flags.debug = true;
+
 
             // Reset button counts
             buttonCount.okay = 0;
@@ -215,6 +233,7 @@ void Interface_runSM(){
             buttonCount.stop = 0;
             buttonCount.rescue = 0;
             buttonCount.setStationKeep = 0;
+            buttonCount.debug = 0;
         }
 
         Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
@@ -272,9 +291,18 @@ bool Interface_isRescuePressed(){
  **********************************************************************/
 bool Interface_isSetStationPressed(){
     return buttonPressed.flags.setStationKeep;
-
 }
 
+/**********************************************************************
+ * Function: Interface_isDebug
+ * @param None.
+ * @return True if the button has been presed, false if the button is
+ *  untouched
+ * @remark
+ **********************************************************************/
+bool Interface_isDebug(){
+    return buttonPressed.flags.debug;
+}
 
 /**********************************************************************
  * Function: Interface_readyLightOn
@@ -330,7 +358,42 @@ void Interface_errorLightOn(){
 void Interface_errorLightOff(){
     SET_ERROR = 0;
 }
-
+/**********************************************************************
+ * Function: Interface_accelBackOn
+ * @param None.
+ * @return None.
+ * @remark Turns the LED On by
+ **********************************************************************/
+void Interface_accelBackOn(){
+    SET_ACCEL_BACK = 1;
+}
+/**********************************************************************
+ * Function: Interface_accelBackOff
+ * @param None.
+ * @return None.
+ * @remark Turns the LED off by
+ **********************************************************************/
+void Interface_accelBackOff(){
+    SET_ACCEL_BACK = 0;
+}
+/**********************************************************************
+ * Function: Interface_accelFrontOn
+ * @param None.
+ * @return None.
+ * @remark Turns the LED On by
+ **********************************************************************/
+void Interface_accelFrontOn(){
+    SET_ACCEL_FRONT = 1;
+}
+/**********************************************************************
+ * Function: Interface_accelFrontOff
+ * @param None.
+ * @return None.
+ * @remark Turns the LED off by
+ **********************************************************************/
+void Interface_accelFrontOff(){
+    SET_ACCEL_FRONT = 0;
+}
 
 /**********************************************************************
  * Function: Interface_readyLightOnTimer
