@@ -14,6 +14,7 @@
 #include "Board.h"
 #include "Ports.h"
 #include "Encoder.h"
+#include "Timer.h"
 
 
 /***********************************************************************
@@ -35,6 +36,8 @@
  ***********************************************************************/
 // Pick the I2C_MODULE to initialize
 I2C_MODULE      ENCODER_I2C_ID = I2C1;
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  50000 // (Hz)
 
 // Set Desired Operation Frequency
 //#define I2C_CLOCK_FREQ  100000 // (Hz)
@@ -68,8 +71,8 @@ uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS);
 
      pitchAngle = calculateAngle(zeroPitchAngle,SLAVE_VERTICAL_READ_ADDRESS,
                                    SLAVE_VERTICAL_WRITE_ADDRESS);
-     yawAngle = calculateAngle(zeroYawAngle,SLAVE_HORIZONTAL_READ_ADDRESS,
-                                     SLAVE_HORIZONTAL_WRITE_ADDRESS);
+     //yawAngle = calculateAngle(zeroYawAngle,SLAVE_HORIZONTAL_READ_ADDRESS,
+     //                                SLAVE_HORIZONTAL_WRITE_ADDRESS);
  }
 
 void Encoder_init() {
@@ -196,27 +199,37 @@ uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
 //#define ENCODER_TEST
 #ifdef ENCODER_TEST
 
+#define PRINT_DELAY     1000
+#include "Timer.h"
+
 int main(void) {
 // Initialize the UART,Timers, and I2C1v
     Board_init();
     Serial_init();
+    Timer_init();
+    printf("Starting encoders...\n");
+    I2C_init(ENCODER_I2C_ID, I2C_CLOCK_FREQ);
     Encoder_init();
-    float angle;
-    while(1){
-        if(Encoder_isLockPressed() || Encoder_isZeroPressed()){
-            Encoder_runSM();
-//            if(useZeroAngle){
-//                angle = Encoder_getAverageAngle();
-//                while(!Serial_isTransmitEmpty());
-//                printf("Angle: %.2f\n", angle);
-//            }
-//            else
-//                zeroAngle = Encoder_getZeroAngle();
-//
-//            useZeroAngle = FALSE;
-//            zeroFlag = FALSE;
-        }
+
+        Encoder_runSM();
+
+        Encoder_runSM();
+
+        Encoder_runSM();
         
+    Encoder_setZeroYaw();
+    Encoder_setZeroPitch();
+
+    printf("Encoders initialized.\n");
+    Timer_new(TIMER_TEST, PRINT_DELAY );
+
+    while(1){
+        if (Timer_isExpired(TIMER_TEST)) {
+            printf("Encoders: P=%.1f, Y=%.1f\n",Encoder_getPitch(), Encoder_getYaw());
+            
+            Timer_new(TIMER_TEST, PRINT_DELAY );
+        }
+        Encoder_runSM();
     }
 
     return (SUCCESS);

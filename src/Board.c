@@ -26,6 +26,7 @@
 #include "Board.h"
 #include "Serial.h"
 #include "Uart.h"
+#include "Timer.h"
 //#include <plib.h>
 
 #define SYSTEM_CLOCK    80000000L

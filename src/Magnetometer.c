@@ -145,7 +145,7 @@ uint16_t Magnetometer_readSensor() {
     return data;
 }
 
-#define MAGNETOMETER_TEST
+//#define MAGNETOMETER_TEST
 #ifdef MAGNETOMETER_TEST
 
 int main(void) {

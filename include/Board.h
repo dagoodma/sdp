@@ -23,6 +23,7 @@
 #include <stdbool.h>
 #include "Serial.h"
 #include "Error.h"
+#include "Timer.h"
 
 #ifdef USE_SD_LOGGER
 #include "Logger.h"
@@ -39,14 +40,13 @@
 
 // Debugging statements over terminal, SD logger, or disabled (respectively)
 #ifdef DEBUG
-#ifndef USE_SD_LOGGER
+#ifdef USE_SD_LOGGER
 #define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
 #else
 #define DBPRINT(...)   printf(__VA_ARGS__)
 #endif
 #else   
 #define DBPRINT(...)   ((int)0)
-
 #endif
 
 /*****************************************************************************/
