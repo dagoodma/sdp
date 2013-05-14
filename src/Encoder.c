@@ -21,13 +21,14 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 // List of registers for Encoder
-#define SLAVE_VERTICAL_READ_ADDRESS          0x81
-#define SLAVE_VERTICAL_WRITE_ADDRESS         0x80
-#define SLAVE_HORIZONTAL_READ_ADDRESS        0x87
-#define SLAVE_HORIZONTAL_WRITE_ADDRESS       0x86
+#define SLAVE_PITCH_READ_ADDRESS          0x81
+#define SLAVE_PITCH_WRITE_ADDRESS         0x80
+#define SLAVE_YAW_READ_ADDRESS        0x87
+#define SLAVE_YAW_WRITE_ADDRESS       0x86
 #define SLAVE_ANGLE_ADDRESS                  0xFE
 
-#define PI 3.14159265358979323846
+#define ENCODER_RESOLUTION          14 // (bits)
+#define ENCODER_NUMBER_TO_DEGREE(n) ((float)n*(360.0f /((float)(2<ENCODER_RESOLUTION))))
 
 #define ACCUMULATOR_LENGTH  150
 
@@ -51,6 +52,14 @@ float zeroYawAngle = 0; // (degrees)
 bool useZeroAngle = FALSE;
 bool haveZeroPitch = FALSE;
 
+uint16_t accumulatorIndex;
+bool accumulatePitch;
+
+// Currently selected encoder variables
+float currentZeroAngle;
+uint16_t currentReadAddress;
+uint16_t currentWriteAddress;
+
 // Printing debug messages over serial
 #define DEBUG
 
@@ -58,25 +67,32 @@ bool haveZeroPitch = FALSE;
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
 
-void accumulateAngle(int READ_ADDRESS,int WRITE_ADDRESS);
-float calculateAngle(float zeroAngle,int READ_ADDRESS,int WRITE_ADDRESS);
 uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS);
+void choosePitchEncoder();
+void chooseYawEncoder();
+void accumulateAngle(int READ_ADDRESS,int WRITE_ADDRESS);
+float calculateAngle();
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 
 
- void Encoder_runSM(){
+ void Encoder_runSM() {
 
-     pitchAngle = calculateAngle(zeroPitchAngle,SLAVE_VERTICAL_READ_ADDRESS,
-                                   SLAVE_VERTICAL_WRITE_ADDRESS);
-     //yawAngle = calculateAngle(zeroYawAngle,SLAVE_HORIZONTAL_READ_ADDRESS,
-     //                                SLAVE_HORIZONTAL_WRITE_ADDRESS);
+     if (accumulatorIndex < ACCUMULATOR_LENGTH) {
+        accumulateAngle(currentReadAddress, currentWriteAddress);
+        accumulatorIndex++;
+     }
+     else {
+        // calculate and switch encoder choice, resetting index
+         calculateAngle();
+     }
  }
 
 void Encoder_init() {
     // Do nothing
+    choosePitchEncoder();
 }
 
 void Encoder_setZeroPitch() {
@@ -113,31 +129,49 @@ void Encoder_disableZeroAngle() {
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
+void choosePitchEncoder() {
+    currentZeroAngle = zeroPitchAngle;
+    currentReadAddress = SLAVE_PITCH_READ_ADDRESS;
+    currentWriteAddress = SLAVE_PITCH_WRITE_ADDRESS;
+    accumulatorIndex = 0;
+    accumulatePitch = TRUE;
+}
+
+void chooseYawEncoder() {
+    currentZeroAngle = zeroYawAngle;
+    currentReadAddress = SLAVE_YAW_READ_ADDRESS;
+    currentWriteAddress = SLAVE_YAW_WRITE_ADDRESS;
+    accumulatorIndex = 0;
+    accumulatePitch = FALSE;
+}
 
 void accumulateAngle(int READ_ADDRESS,int WRITE_ADDRESS) {
    uint16_t rawAngle = readSensor(READ_ADDRESS,WRITE_ADDRESS);
-   angleAccumulator += (float)((360/pow(2,14))*rawAngle);
+   angleAccumulator += ENCODER_NUMBER_TO_DEGREE(rawAngle);
 }
 
 
-float calculateAngle(float zeroAngle,int READ_ADDRESS,int WRITE_ADDRESS){
-     int count;
-     angleAccumulator = 0;
-     for(count = 0; count < ACCUMULATOR_LENGTH; count++){
-        accumulateAngle(READ_ADDRESS,WRITE_ADDRESS);
-    }
+float calculateAngle() {
 
     float finalAngle = angleAccumulator/ACCUMULATOR_LENGTH;
     // TODO remove magick numbers
     if(useZeroAngle){
-        if(finalAngle >= zeroAngle)
-            finalAngle = finalAngle - zeroAngle;
+        if(finalAngle >= currentZeroAngle)
+            finalAngle = finalAngle - currentZeroAngle;
         else
-            finalAngle = 360 - (zeroAngle - finalAngle);
-        if(finalAngle > 359.98)
-            finalAngle = 0;
+            finalAngle = 360.0f - (currentZeroAngle - finalAngle);
+        if(finalAngle > 359.98f)
+            finalAngle = 0.0f;
     }
-    return finalAngle;
+
+    if (accumulatePitch) {
+        pitchAngle = finalAngle;
+        chooseYawEncoder(); // switch encoders
+    }
+    else {
+        yawAngle = finalAngle;
+        choosePitchEncoder(); // switch encoders
+    }
  }
 
 
@@ -196,7 +230,7 @@ uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
     return data;
 }
 
-//#define ENCODER_TEST
+#define ENCODER_TEST
 #ifdef ENCODER_TEST
 
 #define PRINT_DELAY     1000

@@ -180,15 +180,16 @@ void GPS_runSM() {
             break;
         // Reading the message in and verifying sync, length, and checksum
         case STATE_READ:
-            if (hasNewByte() && (readMessageByte() != SUCCESS)) {
+            if (hasNewMessage) {
+                startParseState(); // finished reading, start parsing the payload
+            }
+            else if (hasNewByte() && (readMessageByte() != SUCCESS)) {
                 #ifdef DEBUG
                 printf("Failed reading GPS message at byte %d.\n", byteIndex);
                 while (!Serial_isTransmitEmpty()) { asm("nop"); }
                 #endif
                 startIdleState();
             }
-            if (hasNewMessage)
-                startParseState(); // finished reading, start parsing the payload
             break;
         // Parsing the new message's payload
         case STATE_PARSE:
@@ -835,7 +836,7 @@ void getCourseVector(CourseVector *course, LocalCoordinate *ned_cur,
 
 /****************************** TESTS ************************************/
 // Test harness that spits out GPS packets over the serial port
-//#define GPS_TEST
+#define GPS_TEST
 #ifdef GPS_TEST
 int main() {
     Board_init(); // initalize interrupts

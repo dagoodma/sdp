@@ -26,7 +26,8 @@
 #include "Interface.h"
 #include "Lcd.h"
 #include "Error.h"
-
+#include "Accelerometer.h"
+#include "Magnetometer.h"
 
 
 /***********************************************************************
@@ -39,27 +40,31 @@
 #define BUTTON_BYTE_COUNT 1
 
 /* SWITCHES */
-#define OKAY_TRIS               PORTY03_TRIS // pin 35 J5-4
-#define CANCEL_TRIS             PORTY04_TRIS // pin 9 J5-3
-#define STOP_TRIS               PORTX12_TRIS // pin 36 J5-6
-#define RESCUE_TRIS             PORTX10_TRIS // pin 37 J5-8
-#define SETSTATION_TRIS         PORTX08_TRIS // pin 38 J5-10
+#define OKAY_BUTTON_TRIS               PORTY03_TRIS // pin 35 J5-4
+#define CANCEL_BUTTON_TRIS             PORTY04_TRIS // pin 9 J5-3
+#define STOP_BUTTON_TRIS               PORTX12_TRIS // pin 36 J5-6
+#define RESCUE_BUTTON_TRIS             PORTX10_TRIS // pin 37 J5-8
+#define SETSTATION_BUTTON_TRIS         PORTX08_TRIS // pin 38 J5-10
 
-#define READ_OKAY               PORTY03_BIT // pin 35 J5-4
-#define READ_CANCEL             PORTY04_BIT // pin 9 J5-3
-#define READ_STOP               PORTX12_BIT // pin 36 J5-6
-#define READ_RESCUE             PORTX10_BIT // pin 37 J5-8
-#define READ_SETSTATION         PORTX08_BIT // pin 38 J5-10
+#define OKAY_BUTTON               PORTY03_BIT // pin 35 J5-4
+#define CANCEL_BUTTON             PORTY04_BIT // pin 9 J5-3
+#define STOP_BUTTON               PORTX12_BIT // pin 36 J5-6
+#define RESCUE_BUTTON             PORTX10_BIT // pin 37 J5-8
+#define SETSTATION_BUTTON         PORTX08_BIT // pin 38 J5-10
 
 /* LEDS */
 
-#define READY_TRIS              PORTZ08_TRIS // pin 2 J6-5
-#define WAIT_TRIS               PORTZ06_TRIS // pin 3 J6-7
-#define ERROR_TRIS              PORTZ04_TRIS // pin 4 J6-09
+#define READY_LED_TRIS              PORTZ08_TRIS // pin 2 J6-5
+#define WAIT_LED_TRIS               PORTZ06_TRIS // pin 3 J6-7
+#define ERROR_LED_TRIS              PORTZ04_TRIS // pin 4 J6-09
+#define CALIBRATE_BACK_LED_TRIS         PORTY06_TRIS // pin 8 J5-01
+#define CALIBRATE_FRONT_LED_TRIS        PORTY05_TRIS // pin 34 J5-02
 
-#define SET_READY               PORTZ08_LAT // pin 2 J6-5
-#define SET_WAIT                PORTZ06_LAT // pin 3 J6-7
-#define SET_ERROR               PORTZ04_LAT // pin 4 J6-09
+#define READY_LED               PORTZ08_LAT // pin 2 J6-5
+#define WAIT_LED                PORTZ06_LAT // pin 3 J6-7
+#define ERROR_LED               PORTZ04_LAT // pin 4 J6-09
+#define CALIBRATE_BACK_LED          PORTY06_LAT // pin 8 J5-01
+#define CALIBRATE_FRONT_LED         PORTY05_LAT // pin 34 J5-02
 
 #define PRESSED                 0 // buttons active low
 /**********************************************************************
@@ -67,11 +72,14 @@
  **********************************************************************/
 
 static void showMessage(message_t msgCode);
-static int count;
 
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
  **********************************************************************/
+
+static int buttonReadCount;
+bool usingYawLights;
+bool usingPitchLights;
 
 struct button_count{
     uint8_t okay;
@@ -132,22 +140,22 @@ message_t currentMsgCode, nextMsgCode;
  * @remark Initialzies the pins used by the buttons and LEDs.
  **********************************************************************/
 void Interface_init(){
-    OKAY_TRIS = 1;
-    CANCEL_TRIS = 1;
-    STOP_TRIS = 1;
-    RESCUE_TRIS = 1;
-    SETSTATION_TRIS = 1;
+    // Set buttons as inputs
+    OKAY_BUTTON_TRIS = INPUT;
+    CANCEL_BUTTON_TRIS = INPUT;
+    STOP_BUTTON_TRIS = INPUT;
+    RESCUE_BUTTON_TRIS = INPUT;
+    SETSTATION_BUTTON_TRIS = INPUT;
 
-    READY_TRIS = 0;
-    WAIT_TRIS = 0;
-    ERROR_TRIS = 0;
+    // Set LEDs as outputs
+    READY_LED_TRIS = OUTPUT;
+    WAIT_LED_TRIS = OUTPUT;
+    ERROR_LED_TRIS = OUTPUT;
+    CALIBRATE_BACK_LED_TRIS = OUTPUT;
+    CALIBRATE_FRONT_LED_TRIS  = OUTPUT;
 
-    buttonCount.okay = 0;
-    buttonCount.cancel = 0;
-    buttonCount.stop = 0;
-    buttonCount.rescue = 0;
-    buttonCount.setStationKeep = 0;
-    count = 0;
+    // Turn off all LEDs and all buttons
+    Interface_clearAll();
 
     Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
 }
@@ -175,21 +183,21 @@ void Interface_runSM(){
 
     if(Timer_isExpired(TIMER_INTERFACE)) {
 
-        if(READ_OKAY == PRESSED)
+        if(OKAY_BUTTON == PRESSED)
             buttonCount.okay += 1;
-        if(READ_CANCEL == PRESSED)
+        if(CANCEL_BUTTON == PRESSED)
             buttonCount.cancel += 1;
-        if(READ_STOP == PRESSED)
+        if(STOP_BUTTON == PRESSED)
             buttonCount.stop += 1;
-        if(READ_RESCUE == PRESSED)
+        if(RESCUE_BUTTON == PRESSED)
             buttonCount.rescue += 1;
-        if(READ_SETSTATION == PRESSED)
+        if(SETSTATION_BUTTON == PRESSED)
             buttonCount.setStationKeep += 1;
         
-        count++;
+        buttonReadCount++;
 
-        if(count >= NUMBER_OF_TIMES_TO_CHECK){
-            count = 0;
+        if(buttonReadCount >= NUMBER_OF_TIMES_TO_CHECK){
+            buttonReadCount = 0;
 
             // Clear button flags
             buttonPressed.flags.cancel = false;
@@ -218,6 +226,32 @@ void Interface_runSM(){
         }
 
         Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
+    }
+
+    // Calibration lights
+    if (usingPitchLights) {
+        if (Accelerometer_isLevel()) {
+            CALIBRATE_FRONT_LED = ON;
+            CALIBRATE_BACK_LED = ON;
+        }
+        else if (Accelerometer_getX() > Accelerometer_getY()) {
+            CALIBRATE_FRONT_LED = OFF;
+            CALIBRATE_BACK_LED = ON;
+        }
+        else if (Accelerometer_getY() > Accelerometer_getX()) {
+            CALIBRATE_FRONT_LED = ON;
+            CALIBRATE_BACK_LED = OFF;
+        }
+    }
+    else if (usingYawLights) {
+        if (Magnetometer_isNorth()) {
+            CALIBRATE_FRONT_LED = ON;
+            CALIBRATE_BACK_LED = ON;
+        }
+        else {
+            CALIBRATE_FRONT_LED = OFF;
+            CALIBRATE_BACK_LED = OFF;
+        }
     }
     
     
@@ -283,7 +317,7 @@ bool Interface_isSetStationPressed(){
  * @remark Turns the LED On by
  **********************************************************************/
 void Interface_readyLightOn(){
-    SET_READY = 1;
+    READY_LED = ON;
 }
 /**********************************************************************
  * Function: Interface_readyLightOff
@@ -292,7 +326,7 @@ void Interface_readyLightOn(){
  * @remark Turns the LED off by
  **********************************************************************/
 void Interface_readyLightOff(){
-    SET_READY = 0;
+    READY_LED = OFF;
 }
 /**********************************************************************
  * Function: Interface_waitLightOn
@@ -301,7 +335,7 @@ void Interface_readyLightOff(){
  * @remark Turns the LED On by
  **********************************************************************/
 void Interface_waitLightOn(){
-    SET_WAIT = 1;
+    WAIT_LED = ON;
 }
 /**********************************************************************
  * Function: Interface_waitLightOff
@@ -310,7 +344,7 @@ void Interface_waitLightOn(){
  * @remark Turns the LED off by
  **********************************************************************/
 void Interface_waitLightOff(){
-    SET_WAIT = 0;
+    WAIT_LED = OFF;
 }
 /**********************************************************************
  * Function: Interface_errorLightOn
@@ -319,7 +353,7 @@ void Interface_waitLightOff(){
  * @remark Turns the LED On by
  **********************************************************************/
 void Interface_errorLightOn(){
-    SET_ERROR = 1;
+    ERROR_LED = ON;
 }
 /**********************************************************************
  * Function: Interface_errorLightOff
@@ -328,7 +362,7 @@ void Interface_errorLightOn(){
  * @remark Turns the LED off by
  **********************************************************************/
 void Interface_errorLightOff(){
-    SET_ERROR = 0;
+    ERROR_LED = OFF;
 }
 
 
@@ -377,7 +411,9 @@ void Interface_waitLightOnTimer(uint16_t ms){
  * @remark Turns pitch calibration lights off.
  **********************************************************************/
 void Interface_pitchLightsOff() {
-    // Does nothing yet
+    CALIBRATE_FRONT_LED = 0;
+    CALIBRATE_BACK_LED = 0;
+    usingPitchLights = FALSE;
 }
 
 /**********************************************************************
@@ -386,7 +422,9 @@ void Interface_pitchLightsOff() {
  * @remark Turns yaw calibration lights off.
  **********************************************************************/
 void Interface_yawLightsOff() {
-    // Does nothing yet
+    CALIBRATE_FRONT_LED = 0;
+    CALIBRATE_BACK_LED = 0;
+    usingYawLights = FALSE;
 }
 
 /**********************************************************************
@@ -398,7 +436,7 @@ void Interface_yawLightsOff() {
  *  will indicate which way the scope should be pitched.
  **********************************************************************/
 void Interface_pitchLightsOn() {
-    // Does nothing yet
+    usingPitchLights = TRUE;
 }
 
 /**********************************************************************
@@ -409,7 +447,7 @@ void Interface_pitchLightsOn() {
  *  true North, by turning both LEDs on.
  **********************************************************************/
 void Interface_yawLightsOn() {
-    // Does nothing yet
+    usingYawLights = TRUE;
 }
 
 /**********************************************************************
@@ -461,17 +499,36 @@ void Interface_showErrorMessage(error_t errorCode) {
  * @return None.
  * @remark Clear the LCD and clear all messages on timers
  **********************************************************************/
-void Interface_clearAll(){
-    currentMsgCode = NULL;
-    nextMsgCode = NULL;
+void Interface_clearAll() {
+    currentMsgCode = NO_MESSAGE;
+    nextMsgCode = NO_MESSAGE;
     void LCD_clearDisplay();
     Timer_stop(TIMER_LCD_HOLD);
     Timer_stop(TIMER_LIGHT_HOLD);
     Timer_clear(TIMER_LIGHT_HOLD);
     Timer_clear(TIMER_LCD_HOLD);
-    Interface_waitLightOff();
-    Interface_errorLightOff();
-    Interface_readyLightOff();
+
+    // Reset button counts
+    buttonCount.okay = 0;
+    buttonCount.cancel = 0;
+    buttonCount.stop = 0;
+    buttonCount.rescue = 0;
+    buttonCount.setStationKeep = 0;
+    buttonReadCount = 0;
+
+    // Clear button flags
+    buttonPressed.flags.cancel = false;
+    buttonPressed.flags.okay = false;
+    buttonPressed.flags.rescue = false;
+    buttonPressed.flags.setStationKeep = false;
+    buttonPressed.flags.stop = false;
+
+    // Turn off LEDs
+    READY_LED = OFF;
+    WAIT_LED = OFF;
+    ERROR_LED = OFF;
+    CALIBRATE_FRONT_LED = OFF;
+    CALIBRATE_BACK_LED = OFF;
 }
 
 /**********************************************************************
@@ -590,7 +647,7 @@ int main(void) {
 #endif
 
 
-//#define TEST_INTERFACE
+#define TEST_INTERFACE
 #ifdef TEST_INTERFACE
 int main(void) {
     //initializations
@@ -677,3 +734,132 @@ int main(void) {
     }
 }
 #endif
+/*
+#define TEST_CALIBRATE
+#ifdef TEST_CALIBRATE
+
+enum {
+    CALIBRATE_PITCH,
+    CALIBRATE_YAW
+} state;
+bool startedCalibrate;
+
+int main(void) {
+    // Initializations
+    Board_init();
+    Serial_init();
+    Timer_init();
+    LCD_init();
+    Accelerometer_init();
+    Magnetometer_init();
+    Interface_init();
+
+    printf("Initialized calibration test.\nCalibrating...");
+    LCD_setPosition(0,0);
+    LCD_writeString("Calibrating...\n");
+    LCD_pitchLightsOn();
+    LCD_readyLightOn();
+    state = CALIBRATE_PITCH;
+    startedCalibrate = FALSE;
+
+    while (1) {
+        switch (state) {
+            case CALIBRATE_PITCH:
+                if (startedCalibrate && Timer_isExpired(TIMER_TEST)) {
+                    state = CALIBRATE_YAW;
+                    printf("Calibrated pitch.\nCalibrating yaw...\n");
+                    LCD_setPosition(0,0);
+                    LCD_writeString("Calibrated pitch.\nCalibrating yaw...\n");
+                    LCD_pitchLights
+                    LCD_yawLightsOn();
+                    LCD_readyLightOn();
+                    LCD_waitLightOff();
+                }
+                else if (Accelerometer_isNorth() && !startedCalibrate) {
+                    startedCalibrate = TRUE;
+                    printf("Hold.\n");
+                    LCD_setPosition(0,0);
+                    LCD_writeString("Calibrating...\n");
+                    LCD_readyLightOff();
+                    LCD_waitLightOn();
+                }
+                break;
+            case CALIBRATE_YAW:
+                break;
+        }
+        Magnetometer_runSM();
+        Accelerometer_runSM();
+        Interface_runSM();
+    }
+
+    //
+
+     // Initialize the modules
+    Board_init();
+    Timer_init();
+    Serial_init();
+    LCD_init();
+    I2C_init(I2C_ID, I2C_CLOCK_FREQ);
+    Magnetometer_init();
+    Interface_init();
+
+    //printf("Who am I: 0x%X\n", readRegister(WHO_AM_I_ADDRESS));
+
+    if (Accelerometer_init() != SUCCESS) {
+        printf("Failed to initialize the accelerometer.\n");
+        return FAILURE;
+    }
+    printf("Initialized the accelerometer.\n");
+
+    printf("Initialized calibration test.\nCalibrating...");
+    LCD_setPosition(0,0);
+    LCD_writeString("Calibrating...\n");
+    LCD_pitchLightsOn();
+    LCD_readyLightOn();
+    state = CALIBRATE_PITCH;
+    startedCalibrate = FALSE;
+    // Configure ports as outputs
+    /*
+    LED_N_TRIS = OUTPUT;
+    LED_S_TRIS = OUTPUT;
+    LED_E_TRIS = OUTPUT;
+    LED_W_TRIS = OUTPUT;
+
+
+    Timer_new(TIMER_TEST,PRINT_DELAY  );
+    while(1) {
+    // Convert the raw data to real values
+        if (Timer_isExpired(TIMER_TEST)) {
+            if (Accelerometer_isLevel() && !calibrating) {
+                calibrating = TRUE;
+                Timer_new(TIMER_TEST2,CALIBRATE_HOLD_DELAY);
+                printf("Calibrating.");
+            }
+            else if (Accelerometer_isLevel() && calibrating) {
+                 if (!Timer_isExpired(TIMER_TEST2)) {
+                     printf(".");
+                 }
+            }
+            else if (calibrating && !Accelerometer_isLevel()) {
+                Timer_stop(TIMER_TEST2);
+                Timer_clear(TIMER_TEST2);
+                calibrating = FALSE;
+                printf("! -- Failed.\n");
+            }
+            //printf("X=%d, Y=%d, Z=%d level=%X_%d\n",
+            //    Accelerometer_getX(), Accelerometer_getY(), Accelerometer_getZ(), Accelerometer_isLevel(),
+            //        abs(gCount.x + gCount.y));
+            Timer_new(TIMER_TEST, PRINT_DELAY );
+        }
+
+        if (Accelerometer_isLevel() && calibrating && Timer_isExpired(TIMER_TEST2)) {
+            printf("! -- Done.\n");
+            return SUCCESS;
+        }
+
+        Accelerometer_runSM();
+    }
+
+    return (SUCCESS);
+}
+*/
