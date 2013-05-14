@@ -35,8 +35,8 @@
  ***********************************************************************/
 
 #define WAIT_BETWEEN_CHECKS 20 // [miliseconds]
-#define NUMBER_OF_TIMES_TO_CHECK 8
-#define MINIMUM_POSITIVES 6
+#define NUMBER_OF_TIMES_TO_CHECK 1
+#define MINIMUM_POSITIVES 1
 #define BUTTON_BYTE_COUNT 1
 
 /* SWITCHES */
@@ -66,7 +66,7 @@
 #define CALIBRATE_BACK_LED          PORTY06_LAT // pin 8 J5-01
 #define CALIBRATE_FRONT_LED         PORTY05_LAT // pin 34 J5-02
 
-#define PRESSED                 0 // buttons active low
+#define PRESSED                 1 // buttons active low
 /**********************************************************************
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
@@ -658,6 +658,7 @@ int main(void) {
     Interface_init();
     
     printf("INITIALIZATIONS COMPLETE\n");
+    LCD_setPosition(0,0);
     LCD_writeString("Interface online.\n");
 
     enum {
