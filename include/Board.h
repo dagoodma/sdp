@@ -19,6 +19,7 @@
 
 #include <xc.h>
 #include <plib.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "Serial.h"
@@ -125,11 +126,10 @@
 #endif
 
 
-#ifdef DEBUG_VERBOSE
-    #define dbprintf(...) printf(__VA_ARGS__)
-#else
-    #define dbprintf(...)
-#endif
+// Options
+#define USE_SERIAL      0x1
+#define USE_LCD         0x2
+#define USE_TIMER       0x4
 
 /*******************************************************************************
  * Public Functions                                                            *
@@ -141,6 +141,8 @@
  * @author David Goodman
  * @date 2013.01.18  */
 void Board_init();
+
+void Board_configure(uint8_t opts);
 
 /**
  * Function: Board_GetPBClock
@@ -157,6 +159,10 @@ uint32_t Board_GetPBClock();
  * @author David Goodman
  * @date 2013.04.11  */
 void delayMillisecond(int ms);
+
+void dbprint(char *fmt, ...);
+
+
 
 #endif	/* Board_H */
 

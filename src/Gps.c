@@ -4,7 +4,7 @@
  *
  * Created on February 4, 2013, 9:19 PM
  */
-#define DEBUG
+//#define DEBUG
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
@@ -392,7 +392,7 @@ static void setConnected() {
  **********************************************************************/
 static int8_t readMessageByte() {
     // Read a new byte from the UART or return FAILURE
-    if (hasNewByte() && !hasNewMessage)
+    if (hasNewByte())
         rawMessage[byteIndex] = UART_getChar(GPS_UART_ID);
     else
         return FAILURE;
@@ -836,7 +836,7 @@ void getCourseVector(CourseVector *course, LocalCoordinate *ned_cur,
 
 /****************************** TESTS ************************************/
 // Test harness that spits out GPS packets over the serial port
-#define GPS_TEST
+//#define GPS_TEST
 #ifdef GPS_TEST
 int main() {
     Board_init(); // initalize interrupts

@@ -23,25 +23,45 @@
  01-19-13 12:22 dagoodma    Created file.
 ***********************************************************************/
 #define Board_H_PRIVATE_INCLUDE
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 #include "Board.h"
 #include "Serial.h"
 #include "Uart.h"
 #include "Timer.h"
-//#include <plib.h>
+
+#ifdef USE_LCD
+#include "LCD.h"
+#endif
 
 #define SYSTEM_CLOCK    80000000L
 #define PB_CLOCK        SYSTEM_CLOCK/2
 
-#define LED1_
+
+struct {
+    unsigned int useSerial :1;
+    unsigned int useLCD :1;
+    unsigned int useTimer :1;
+} option;
 
 void Board_init()
 {
-    //unsigned int pbclk=PB_CLOCK;
-    //SYSTEMConfig(SYSTEM_CLOCK,SYS_CFG_ALL);
-    //SYSTEMConfigPB(PB_CLOCK);
-    //OSCSetPBDIV(2);
-    //Serial_init();
     INTEnableSystemMultiVectoredInt();
+}
+
+void Board_configure(uint8_t opts) {
+    if (opts & USE_TIMER) {
+        Timer_init();
+    }
+    if (opts & USE_SERIAL) {
+        option.useSerial = TRUE;
+        Serial_init();
+    }
+    if (opts & USE_LCD) {
+        option.useLCD = TRUE;
+        LCD_init();
+    }
 }
 
 unsigned int Board_GetPBClock()
@@ -55,6 +75,22 @@ void delayMillisecond(int ms) {
         asm("nop");
 }
 
+
+void dbprint(char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char msg[255];
+    vsprintf(msg, fmt, args);
+
+    if (option.useSerial)
+        printf(msg);
+    if (option.useLCD)
+        LCD_writeString(msg);
+
+    #ifdef USE_LOGGER
+    Logger_writeString(msg);
+    #endif
+};
 
 
 //#define BOARD_TEST

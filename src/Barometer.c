@@ -4,6 +4,7 @@
  *
  * Created on January 21, 2013, 11:52 AM
  */
+#define DEBUG
 
 #include <p32xxxx.h>
 #include <stdio.h>
@@ -52,7 +53,7 @@
 #define MD_ADDRESS      0xBE
 
 // Printing debug messages over serial
-//#define DEBUG
+#define DEBUG
 
 // Reference pressure at sea level (changes with weather)
 #define PRESSURE_P0		102201.209f // (Pa)
@@ -161,9 +162,7 @@ static int16_t readTwoDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
     do {
         // Send the start bit with the restart flag low
         if(!I2C_startTransfer(BAROMETER_I2C_ID, I2C_WRITE )){
-            #ifdef DEBUG
-            printf("FAILED initial transfer!\n");
-            #endif
+            DBPRINT("Barometer: FAILED initial transfer!\n");
             break;
         }
         // Transmit the slave's address to notify it
@@ -172,17 +171,13 @@ static int16_t readTwoDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
 
         // Tranmit the read address module
         if(!I2C_sendData(BAROMETER_I2C_ID,address)){
-            #ifdef DEBUG
-            printf("Error: Sent byte was not acknowledged\n");
-            #endif
+            DBPRINT("Barometer: Error: Sent byte was not acknowledged\n");
             break;
         }
 
         // Send a Repeated Started condition
         if(!I2C_startTransfer(BAROMETER_I2C_ID,I2C_READ)){
-            #ifdef DEBUG
-            printf("FAILED Repeated start!\n");
-            #endif
+            DBPRINT("Barometer: FAILED Repeated start!\n");
             break;
         }
         // Transmit the address with the READ bit set
@@ -201,9 +196,7 @@ static int16_t readTwoDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
         success = TRUE;
     } while(0);
     if (!success) {
-        #ifdef DEBUG
-        printf("Data transfer unsuccessful.\n");
-        #endif
+        DBPRINT("Barometer: Data transfer unsuccessful.\n");
         return FALSE;
     }
     return data;
@@ -224,9 +217,7 @@ static int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
     do {
         // Send the start bit with the restart flag low
         if(!I2C_startTransfer(BAROMETER_I2C_ID, I2C_WRITE )){
-            #ifdef DEBUG
-            printf("FAILED initial transfer!\n");
-            #endif
+            DBPRINT("Barometer: FAILED initial transfer!\n");
             break;
         }
         // Transmit the slave's address to notify it
@@ -235,17 +226,13 @@ static int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
 
         // Tranmit the read address module
         if(!I2C_sendData(BAROMETER_I2C_ID,address)){
-            #ifdef DEBUG
-            printf("Error: Sent byte was not acknowledged\n");
-            #endif
+            DBPRINT("Barometer: Error: Sent byte was not acknowledged\n");
             break;
         }
 
         // Send a Repeated Started condition
         if(!I2C_startTransfer(BAROMETER_I2C_ID,I2C_READ)){
-            #ifdef DEBUG
-            printf("FAILED Repeated start!\n");
-            #endif
+            DBPRINT("Barometer: FAILED Repeated start!\n");
             break;
         }
         // Transmit the address with the READ bit set
@@ -274,9 +261,7 @@ static int32_t readThreeDataBytes( uint8_t address, int BAROMETER_I2C_ID) {
         success = TRUE;
     } while(0);
     if (!success) {
-        #ifdef DEBUG
-        printf("Data transfer unsuccessful.\n");
-        #endif
+        DBPRINT("Barometer: Data transfer unsuccessful.\n");
         return FALSE;
     }
     return data;
@@ -296,9 +281,7 @@ static int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID) {
     do {
         //Send the start bit to notify that a transmission is starting
         if(!I2C_startTransfer(BAROMETER_I2C_ID, I2C_WRITE)){
-            #ifdef DEBUG
-            printf("FAILED initial transfer!\n");
-            #endif
+            DBPRINT("Barometer: FAILED initial transfer!\n");
             break;
         }
         // Transmit the slave's address to notify it
@@ -307,17 +290,13 @@ static int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID) {
 
         // Designate the sensor select register for writing
         if(!I2C_sendData(BAROMETER_I2C_ID, SENSOR_SELECT_ADDRESS)){
-            #ifdef DEBUG
-            printf("Error: Sent byte was not acknowledged\n");
-            #endif
+            DBPRINT("Barometer: Error: Sent byte was not acknowledged\n");
             break;
         }
 
         // Tranmit the sensor to read's address
         if(!I2C_sendData(BAROMETER_I2C_ID,sensorSelectAddress)){
-            #ifdef DEBUG
-            printf("Error: Sent byte was not acknowledged\n");
-            #endif
+            DBPRINT("Barometer: Error: Sent byte was not acknowledged\n");
             break;
         }
         // End the tranmission
@@ -338,9 +317,7 @@ static int32_t readSensor(uint8_t sensorSelectAddress, int BAROMETER_I2C_ID) {
     } while(0);
 
     if(!success){
-        #ifdef DEBUG
-        printf("Data transfer unsuccessful.\n");
-        #endif
+        DBPRINT("Barometer: Data transfer unsuccessful.\n");
         return ERROR;
     }
         

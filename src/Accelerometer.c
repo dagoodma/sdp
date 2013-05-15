@@ -5,6 +5,9 @@
  * Created on January 22, 2013, 6:19 PM
  */
 
+// Printing debug messages over serial
+#define DEBUG
+
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
@@ -36,8 +39,6 @@
 
 #define UPDATE_DELAY    50 // (ms) delay for reading
 
-// Printing debug messages over serial
-#define DEBUG
 
 //#define USE_ACCUMULATOR         // simple low-pass filter. comment line out to disable
 #define ACCUMULATOR_LENGTH      2 // use a power of 2 and update shift too
@@ -45,21 +46,23 @@
 
 #define MINIMUM_LEVEL_ERROR     10 // (1e-3 G-counts)
 
+
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
 // Pick the I2C_MODULE to initialize
-I2C_MODULE      I2C_ID = I2C1;
+I2C_MODULE      ACCELEROMETER_I2C_ID = I2C1;
 
-struct {
+static struct {
     int16_t x, y , z;
 } gCount;
 
-struct {
+static struct {
     int32_t x , y, z;
 } gAccumulator;
 
-uint8_t accumulatorIndex = 0;
+static uint8_t accumulatorIndex = 0;
+static bool haveReading;
 
 
 
@@ -67,13 +70,13 @@ uint8_t accumulatorIndex = 0;
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
 
-void updateReadings();
-void setActiveMode();
-void setStandbyMode();
-int16_t readRegister( uint8_t address);
-int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest );
-int16_t writeRegister( uint8_t address, uint8_t data );
-void resetAccumulator();
+static void updateReadings();
+static void setActiveMode();
+static void setStandbyMode();
+static int16_t readRegister( uint8_t address);
+static int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest );
+static int16_t writeRegister( uint8_t address, uint8_t data );
+static void resetAccumulator();
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -109,7 +112,8 @@ char Accelerometer_init() {
 #ifdef USE_ACCUMULATOR
     resetAccumulator();
 #endif
-
+    haveReading = FALSE;
+    
     return SUCCESS;
 }
 
@@ -134,7 +138,7 @@ void Accelerometer_runSM() {
 }
 
 bool Accelerometer_isLevel() {
-    return abs(gCount.x + gCount.y) <= MINIMUM_LEVEL_ERROR;
+    return haveReading && abs(gCount.x + gCount.y) <= MINIMUM_LEVEL_ERROR;
 }
 
 
@@ -150,7 +154,7 @@ bool Accelerometer_isLevel() {
  *  filtering will occur if USE_ACCUMULATOR is defined.
  * @author David Goodman
  * @date 2013.01.23  */
-void updateReadings() {
+static void updateReadings() {
     uint8_t rawData[6];  // x/y/z accel register data stored here
 
     readRegisters(OUT_X_MSB_ADDRESS, 6, rawData);  // Read the six raw data registers into data array
@@ -168,7 +172,6 @@ void updateReadings() {
             gCountI = ~gCountI + 1;
             gCountI *= -1;  // Transform into negative 2's complement #
         }
-
         //Record this gCount into the struct or short ints
         switch (i) {
             #ifndef USE_ACCUMULATOR
@@ -194,6 +197,7 @@ void updateReadings() {
             #endif
         }
     }
+    haveReading = TRUE;
     // Update gCounts if accumulating
     #ifdef USE_ACCUMULATOR
     accumulatorIndex++;
@@ -215,7 +219,7 @@ void updateReadings() {
  * @remark Resets the accumulator.
  * @author David Goodman
  * @date 2013.01.23  */
-void resetAccumulator() {
+static void resetAccumulator() {
     gAccumulator.x = 0;
     gAccumulator.y = 0;
     gAccumulator.z = 0;
@@ -229,7 +233,7 @@ void resetAccumulator() {
  *       most register settings.
  * @author David Goodman
  * @date 2013.01.23  */
-void setActiveMode() {
+static void setActiveMode() {
   char c = readRegister(CTRL_REG1_ADDRESS);
   writeRegister(CTRL_REG1_ADDRESS, c | 0x01); //Set the active bit to begin detection
 }
@@ -241,7 +245,7 @@ void setActiveMode() {
  *       most register settings.
  * @author David Goodman
  * @date 2013.01.23  */
-void setStandbyMode() {
+static void setStandbyMode() {
   char c = readRegister(CTRL_REG1_ADDRESS);
   writeRegister(CTRL_REG1_ADDRESS, c & ~(0x01)); //Clear the active bit to go into standby
 }
@@ -253,39 +257,37 @@ void setStandbyMode() {
  * @remark Connects to the device and reads the given register address.
  * @author David Goodman
  * @date 2013.01.22  */
-int16_t readRegister( uint8_t address ) {
+static int16_t readRegister( uint8_t address ) {
     int8_t data = 0, success = FALSE;
 
     do {
         // Send the start bit with the restart flag low
-        if(!I2C_startTransfer(I2C_ID, I2C_WRITE )) {
+        if(!I2C_startTransfer(ACCELEROMETER_I2C_ID, I2C_WRITE )) {
             return ERROR;
         }
         // Transmit the slave's address to notify it
-        if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
+        if (!I2C_sendData(ACCELEROMETER_I2C_ID, SLAVE_WRITE_ADDRESS))
             break;
         // Transmit the read address
-        if(!I2C_sendData(I2C_ID,address))
+        if(!I2C_sendData(ACCELEROMETER_I2C_ID,address))
             break;
         // Send a Repeated Started condition
-        if(!I2C_startTransfer(I2C_ID,I2C_READ))
+        if(!I2C_startTransfer(ACCELEROMETER_I2C_ID,I2C_READ))
             break;
         // Transmit the address with the READ bit set
-        if (!I2C_sendData(I2C_ID, SLAVE_READ_ADDRESS))
+        if (!I2C_sendData(ACCELEROMETER_I2C_ID, SLAVE_READ_ADDRESS))
             break;
 
         // Read the I2C bus 
-        data = I2C_getData(I2C_ID);
+        data = I2C_getData(ACCELEROMETER_I2C_ID);
 
         success = TRUE;
     } while(0);
 
     // Send the stop bit to finidh the transfer
-    I2C_stopTransfer(I2C_ID);
+    I2C_stopTransfer(ACCELEROMETER_I2C_ID);
     if(!success){
-#ifdef DEBUG
-        printf("Failed to read register 0x%X.\n", address);
-#endif
+        DBPRINT("Accelerometer: Failed to read register 0x%X.\n", address);
         return ERROR;
     }
     return data;
@@ -300,24 +302,24 @@ int16_t readRegister( uint8_t address ) {
  * @remark Connects to the device and reads the given register address.
  * @author David Goodman
  * @date 2013.01.22  */
-int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest ) {
+static int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest ) {
     int8_t success = FALSE;
 
     do {
         // Send the start bit with the restart flag low
-        if(!I2C_startTransfer(I2C_ID, I2C_WRITE))
+        if(!I2C_startTransfer(ACCELEROMETER_I2C_ID, I2C_WRITE))
             return ERROR;
         // Transmit the slave's address to notify it
-        if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
+        if (!I2C_sendData(ACCELEROMETER_I2C_ID, SLAVE_WRITE_ADDRESS))
             break;
         // Transmit the read address
-        if(!I2C_sendData(I2C_ID,address))
+        if(!I2C_sendData(ACCELEROMETER_I2C_ID,address))
             break;
         // Send a Repeated Started condition
-        if(!I2C_startTransfer(I2C_ID,I2C_READ))
+        if(!I2C_startTransfer(ACCELEROMETER_I2C_ID,I2C_READ))
             break;
         // Transmit the address with the READ bit set
-        if (!I2C_sendData(I2C_ID, SLAVE_READ_ADDRESS))
+        if (!I2C_sendData(ACCELEROMETER_I2C_ID, SLAVE_READ_ADDRESS))
             break;
 
         int i;
@@ -325,7 +327,7 @@ int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest ) {
         for(
 
                 i = 0 ; i < bytesToRead ; i++) {
-            dest[i] = I2C_getData(I2C_ID);
+            dest[i] = I2C_getData(ACCELEROMETER_I2C_ID);
 
             // Only send and wait for Ack if there's more to read
             if (i < (bytesToRead - 1)) {
@@ -333,18 +335,16 @@ int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest ) {
                 //I2C_acknowledgeRead(I2C1, I2C_ACK);
 
                 //while(!I2C_hasAcknowledged(I2C_ID));
-                while(!I2CAcknowledgeHasCompleted(I2C_ID));
+                while(!I2CAcknowledgeHasCompleted(ACCELEROMETER_I2C_ID));
             }
         }
         success = TRUE;
     } while(0);
 
     // Send the stop bit to finidh the transfer
-    I2C_stopTransfer(I2C_ID);
+    I2C_stopTransfer(ACCELEROMETER_I2C_ID);
     if(!success){
-#ifdef DEBUG
-        printf("Failed to read registers 0x%X.\n", address);
-#endif
+        DBPRINT("Accelerometer: Failed to read registers 0x%X.\n", address);
         return ERROR;
     }
     return SUCCESS;
@@ -357,32 +357,30 @@ int16_t readRegisters( uint8_t address, uint16_t bytesToRead, uint8_t *dest ) {
  * @remark Connects to the device and writes to the given register address.
  * @author David Goodman
  * @date 2013.01.22  */
-int16_t writeRegister( uint8_t address, uint8_t data ) {
+static int16_t writeRegister( uint8_t address, uint8_t data ) {
     int8_t  success = FALSE;
 
 // Send the start bit with the restart flag low
     do {
-        if(!I2C_startTransfer(I2C_ID, I2C_WRITE))
+        if(!I2C_startTransfer(ACCELEROMETER_I2C_ID, I2C_WRITE))
             return ERROR;
     // Transmit the slave's address to notify it
-        if (!I2C_sendData(I2C_ID, SLAVE_WRITE_ADDRESS))
+        if (!I2C_sendData(ACCELEROMETER_I2C_ID, SLAVE_WRITE_ADDRESS))
             break;
     // Tranmit the write address
-        if(!I2C_sendData(I2C_ID,address))
+        if(!I2C_sendData(ACCELEROMETER_I2C_ID,address))
             break;
     // Transmit the data to write
-        if(!I2C_sendData(I2C_ID,data))
+        if(!I2C_sendData(ACCELEROMETER_I2C_ID,data))
             break;
 
         success = TRUE;
     } while(FALSE);
 
     // Send the stop bit to finidh the transfer
-    I2C_stopTransfer(I2C_ID);
+    I2C_stopTransfer(ACCELEROMETER_I2C_ID);
     if(!success){
-#ifdef DEBUG
-        printf("Failed to write to register 0x%X.\n", address);
-#endif
+        DBPRINT("Accelerometer: Failed to write to register 0x%X.\n", address);
         return ERROR;
     }
     return success;
@@ -405,7 +403,7 @@ int main(void) {
     Board_init();
     Timer_init();
     Serial_init();
-    I2C_init(I2C_ID, I2C_CLOCK_FREQ);
+    I2C_init(ACCELEROMETER_I2C_ID, I2C_CLOCK_FREQ);
 
     //printf("Who am I: 0x%X\n", readRegister(WHO_AM_I_ADDRESS));
 
@@ -452,7 +450,7 @@ int main(void) {
     Board_init();
     Timer_init();
     Serial_init();
-    I2C_init(I2C_ID, I2C_CLOCK_FREQ);
+    I2C_init(ACCELEROMETER_I2C_ID, I2C_CLOCK_FREQ);
 
     //printf("Who am I: 0x%X\n", readRegister(WHO_AM_I_ADDRESS));
 

@@ -49,22 +49,6 @@ void Encoder_setZeroPitch();
  * @date 2013.02.10  */
 void Encoder_setZeroYaw();
 
-/**
- * Function: Encoder_enableZeroAngle
- * @return 
- * @remark Uses zero angle when calculating encoder angles, and is
- *  enabled by default once each are set.
- * @author David Goodman
- * @date 2013.03.14  */
-void Encoder_enableZeroAngle();
-
-/**
- * Function: Encoder_disableZeroAngle
- * @return 
- * @remark Disables zero angle when calculating encoder angles.
- * @author David Goodman
- * @date 2013.03.14  */
-void Encoder_disableZeroAngle();
 
 /**
  * Function: Encoder_getPitch

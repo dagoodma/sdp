@@ -112,11 +112,12 @@ static void (*timerCallback)(void);
 
 void LCD_init(void)
 {
-	// First initialize the low-level LCD driver
-	driverInit();
-	// Next configure Timer2 for proper interrupts and initialize it to a SHORT_DELAY period.
-        timer2Init(runSM, SHORT_DELAY);
-	lcdState = initStartState;
+    // First initialize the low-level LCD driver
+    driverInit();
+    // Next configure Timer2 for proper interrupts and initialize it to a SHORT_DELAY period.
+    timer2Init(runSM, SHORT_DELAY);
+    lcdState = initStartState;
+
 }
 
 void LCD_clearDisplay() {

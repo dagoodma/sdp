@@ -8,19 +8,20 @@
  * Created on January 18, 2013, 3:42 PM
  */
 //include <p32xxxx.h>
+// Printing debug messages over serial
+#define DEBUG
+
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "Board.h"
 
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
-
-// Printing debug messages over serial
-#define DEBUG
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -45,9 +46,7 @@ bool I2C_startTransfer(I2C_MODULE I2C_ID, bool restart){
 // Send the Start (or Restart) signal
     if(restart){
         if(I2CRepeatStart(I2C_ID) != I2C_SUCCESS){
-            #ifdef DEBUG
-            printf("Error: Bus collision during transfer Start at Read\n");
-            #endif
+            DBPRINT("Error: Bus collision during transfer start at read.\n");
             return FALSE;
         }
     }
@@ -55,9 +54,7 @@ bool I2C_startTransfer(I2C_MODULE I2C_ID, bool restart){
     // Wait for the bus to be idle, then start the transfer
         while( !I2CBusIsIdle(I2C_ID) );
         if(I2CStart(I2C_ID) != I2C_SUCCESS){
-            #ifdef DEBUG
-            printf("Error: Bus collision during transfer Start at Write\n");
-            #endif
+            DBPRINT("Error: Bus collision during transfer start at write.\n");
             return FALSE;
         }
     }
@@ -90,9 +87,7 @@ bool I2C_transmitOneByte(I2C_MODULE I2C_ID, uint8_t data) {
 
     // Transmit the byte and check for bus collision
     if(I2CSendByte(I2C_ID, data) == I2C_MASTER_BUS_COLLISION){
-        #ifdef DEBUG
-        printf("Error: I2C Master Bus Collision\n");
-        #endif
+        DBPRINT("Error: I2C Master Bus Collision\n");
         return FALSE;
     }
 
@@ -110,9 +105,7 @@ bool I2C_sendData(I2C_MODULE I2C_ID, uint8_t data){
 
     // Verify that the byte was acknowledged
     if(!I2CByteWasAcknowledged(I2C_ID)){
-        #ifdef DEBUG
-        printf("Error: Sent byte was not acknowledged\n");
-        #endif
+        DBPRINT("Error: Sent byte was not acknowledged\n");
         return FALSE;
     }
     return TRUE;
@@ -123,9 +116,7 @@ int16_t I2C_getData(I2C_MODULE I2C_ID){
 
         // Enables the module to receive data from the I2C bus
     if(I2CReceiverEnable(I2C_ID, TRUE) == I2C_RECEIVE_OVERFLOW){
-        #ifdef DEBUG
-        printf("Error: I2C Receive Overflow\n");
-        #endif
+        DBPRINT("Error: I2C Receive Overflow\n");
         Success = FALSE;
     }
     else{

@@ -17,6 +17,7 @@
  * Function: Magnetometer_init
  * @return None.
  * @remark Initializes the Magnetometer interface
+ * @author David Goodman
  * @author Shehadeh H. Dajani
  * @date 2013.03.10  */
 void Magnetometer_init();
@@ -26,20 +27,23 @@ void Magnetometer_init();
  * Function: Magnetometer_runSM
  * @return None.
  * @remark Accumulates angles for Magnetometer calculates degrees.
+ * @author David Goodman
  * @author Shehadeh H. Dajani
  * @date 2013.03.10  */
  void Magnetometer_runSM();
 
 /**
- * Function: Magnetometer_getDegree
+ * Function: Magnetometer_getHeading
  * @return Degree.
- * @remark Returns magnetometer degrees
+ * @remark Returns magnetometer's measured heading in degrees, accurate to
+ *  0.5 degrees.
+ * @author David Goodman
  * @author Shehadeh H. Dajani
  * @date 2013.03.10  */
-float Magnetometer_getDegree();
+float Magnetometer_getHeading();
 
 /**
- * Function: Magnetometer_getDegree
+ * Function: Magnetometer_isNorth
  * @return Returns TRUE or FALSE if the Magnetometer is pointed very near
  *  North.
  * @remark

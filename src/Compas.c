@@ -20,13 +20,14 @@
 ***********************************************************************/
 #define IS_COMPAS
 #define DEBUG
+#define DEBUG_BLINK
 //#define DEBUG_VERBOSE
 #define USE_MAGNETOMETER
 #define USE_ENCODER
 #define USE_ACCELEROMETER
 #define USE_GPS
-#define USE_XBEE
-#define USE_BAROMETER
+//#define USE_XBEE
+//#define USE_BAROMETER
 #define USE_INTERFACE
 
 #ifdef DEBUG
@@ -104,7 +105,10 @@
 #define ECEF_Y_ORIGIN -4322167.0f
 #define ECEF_Z_ORIGIN  3817539.0f
 
-#define I2C_CLOCK_FREQ  80000 // (Hz)
+#define I2C_CLOCK_FREQ  50000 // (Hz)
+
+#define BLINK_DELAY     5000
+#define BLINK_ON_DELAY  1000
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -637,10 +641,6 @@ void doSetOriginSM() {
 void doMasterSM() {
     checkEvents();
 
-    #ifdef USE_TILTCOMPASS
-    TiltCompass_runSM();
-    #endif
-
     #ifdef USE_MAGNETOMETER
     if (state = STATE_CALIBRATE)
         Magnetometer_runSM();
@@ -673,10 +673,21 @@ void doMasterSM() {
     doBarometerUpdate(); // send barometer data
     #endif
 
+    #ifdef USE_INTERFACE
+    Interface_runSM();
+    #endif
+
+    // Blink on timer
+    #ifdef DEBUG_BLINK
+    if (Timer_isExpired(TIMER_TEST2)) {
+        Interface_waitLightOnTimer(BLINK_ON_DELAY);
+        Timer_new(TIMER_TEST2, BLINK_DELAY);
+    }
+    #endif
+
     switch (state) {
         case STATE_CALIBRATE:
             doCalibrateSM();
-
             if (event.flags.calibrateDone)
                 startReadySM();
 
@@ -738,7 +749,7 @@ void doMasterSM() {
                 startSetStationSM();
         }
     }
-
+    //DBPRINT("!\n");
 } // doMasterSM()
 
 
@@ -752,6 +763,7 @@ void startCalibrateSM() {
 	subState = STATE_CALIBRATE_PITCH;
 	resendMessageCount = 0;
 	Interface_clearAll();
+        DELAY(5);
 	Interface_showMessage(CALIBRATE_PITCH_MESSAGE);
 	Interface_pitchLightsOn();
 }
@@ -881,6 +893,7 @@ void initializeCompas() {
     #ifdef DEBUG
     Serial_init();
     #endif
+
     Timer_init();
 
     // I2C bus
@@ -921,6 +934,17 @@ void initializeCompas() {
     Interface_init();
     #endif
 
+    #ifdef USE_LCD
+    DBPRINT("Initializing LCD.\n");
+    LCD_init();
+    #endif
+
+    #ifdef DEBUG_BLINK
+    Interface_waitLightOnTimer(BLINK_ON_DELAY);
+    Interface_runSM();
+    Timer_new(TIMER_TEST2, BLINK_DELAY);
+    #endif
+    
     // Connection related
     isConnectedWithBoat  = FALSE;
         
@@ -1032,6 +1056,7 @@ int main() {
     while (1) {
         doMasterSM();
     }
+    //DBPRINT("HERE!");
 
     return SUCCESS;
 }

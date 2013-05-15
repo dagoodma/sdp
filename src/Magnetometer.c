@@ -1,9 +1,10 @@
 /* 
- * File:   Encoder_I2C.c
- * Author: Shehadeh
+ * File:   Magnetometer.c
+ * Author: David Goodman, Shehadeh
  *
  * Created on January 21, 2013, 11:52 AM
  */
+#define DEBUG
 
 #include <xc.h>
 #include <stdio.h>
@@ -25,8 +26,9 @@
 #define ACCUMULATOR_LENGTH          1
 
 #define MAGNETIC_NORTH_OFFSET       13.7275f // (deg) offset eastward from true north
+#define DEGREE_1E1_TO_DEGREE(d)    ((float)d/10.0f)
 
-#define MINIMUM_NORTH_ERROR         0.75 // (degrees) minimum error from North
+#define MINIMUM_NORTH_ERROR         1.2f // (degrees) minimum error from North
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -36,8 +38,11 @@ I2C_MODULE      MAGNETOMETER_I2C_ID = I2C1;
 // Set Desired Operation Frequency
 #define I2C_CLOCK_FREQ  100000 // (Hz)
 
-uint16_t Degree;
-float finalHeading; // (degrees)
+static uint16_t accumulatorIndex;
+static uint32_t accumulator;
+static float heading; // (degrees)
+
+static bool haveReading;
 
 // Printing debug messages over serial
 #define DEBUG
@@ -46,62 +51,72 @@ float finalHeading; // (degrees)
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
 
-uint16_t Magnetometer_readSensor();
+static uint16_t readSensor();
+static void calculateHeading();
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
  ***********************************************************************/
 
 void Magnetometer_init() {
-    // Do Nothing
+    accumulatorIndex = 0;
+    accumulator = 0.0f;
+    haveReading = FALSE;
 }
 
-float Magnetometer_getDegree(){
-    return finalHeading;
+float Magnetometer_getHeading(){
+    return heading;
 }
 
 void Magnetometer_runSM(){
-     int count;
-     float accumulator = 0;
-     for(count = 0; count < ACCUMULATOR_LENGTH; count++){
-        Degree = Magnetometer_readSensor();
-        if(Degree < 0020)
-            Degree += 3600;
-        accumulator += Degree;
+
+    if (accumulatorIndex < ACCUMULATOR_LENGTH) {
+        accumulator += readSensor();
+        accumulatorIndex++;
     }
-    finalHeading = (float)(accumulator/(ACCUMULATOR_LENGTH*10));
-    if(finalHeading > 360)
-        finalHeading -= 360;
-    if(finalHeading < 0.5 || finalHeading > 359.5)
-        finalHeading = 0;
 
+    if (accumulatorIndex >= ACCUMULATOR_LENGTH) {
+        calculateHeading();
+        accumulatorIndex = 0;
+        accumulator = 0.0f;
+        haveReading = TRUE;
+    }
+}
 
-    finalHeading -= MAGNETIC_NORTH_OFFSET;
-    if (finalHeading < 0.0f)
-        finalHeading += 360.0f;
- }
 
 bool Magnetometer_isNorth() {
-    return finalHeading <= MINIMUM_NORTH_ERROR;
+    return haveReading && (heading <= MINIMUM_NORTH_ERROR
+            || heading >= (360.0 - MINIMUM_NORTH_ERROR));
 }
 
 /******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
+static void calculateHeading() {
+    heading = (float)accumulator/ACCUMULATOR_LENGTH;
+    heading = DEGREE_1E1_TO_DEGREE(heading);
+
+    // Remove magnetic north offset
+    heading -= MAGNETIC_NORTH_OFFSET;
+
+    // Bound heading
+    if (heading > 360.0f)
+        heading -= 360.0f;
+    else if (heading < 0.0f)
+        heading += 360.0f;
+
+}
  
 
-uint16_t Magnetometer_readSensor() {
+static uint16_t readSensor() {
     int8_t success = FALSE;
     uint16_t data = 0;
 
     do {
         // Send the start bit with the restart flag low
         if(!I2C_startTransfer(MAGNETOMETER_I2C_ID, I2C_WRITE )){
-            #ifdef DEBUG
-            printf("FAILED initial transfer!\n");
-            #endif
-            break;
+            DBPRINT("Magnetometer: FAILED initial transfer!\n");
         }
         // Transmit the slave's address to notify it
         if (!I2C_sendData(MAGNETOMETER_I2C_ID, SLAVE_WRITE_ADDRESS))
@@ -109,16 +124,12 @@ uint16_t Magnetometer_readSensor() {
 
         // Tranmit the read address module
         if(!I2C_sendData(MAGNETOMETER_I2C_ID,SLAVE_DEGREE_ADDRESS)){
-            #ifdef DEBUG
-            printf("Error: Sent byte was not acknowledged\n");
-            #endif
+            DBPRINT("Magnetometer: Error: Sent byte was not acknowledged\n");
             break;
         }
         // Send a Repeated Started condition
         if(!I2C_startTransfer(MAGNETOMETER_I2C_ID,I2C_READ)){
-            #ifdef DEBUG
-            printf("FAILED Repeated start!\n");
-            #endif
+            DBPRINT("Magnetometer: FAILED Repeated start!\n");
             break;
         }
         // Transmit the address with the READ bit set
@@ -137,9 +148,7 @@ uint16_t Magnetometer_readSensor() {
         success = TRUE;
     } while(0);
     if (!success) {
-        #ifdef DEBUG
-        printf("Data transfer unsuccessful.\n");
-        #endif
+        DBPRINT("Magnetometer: Data transfer unsuccessful.\n");
         return FALSE;
     }
     return data;

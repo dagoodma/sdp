@@ -9,6 +9,7 @@
       <itemPath>../../include/Serial.h</itemPath>
       <itemPath>../../include/Encoder.h</itemPath>
       <itemPath>../../include/Timer.h</itemPath>
+      <itemPath>../../include/LCD.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -23,6 +24,7 @@
       <itemPath>../../src/Uart.c</itemPath>
       <itemPath>../../src/Encoder.c</itemPath>
       <itemPath>../../src/Timer.c</itemPath>
+      <itemPath>../../src/Lcd.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

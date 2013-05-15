@@ -28,9 +28,19 @@
 #define SLAVE_ANGLE_ADDRESS                  0xFE
 
 #define ENCODER_RESOLUTION          14 // (bits)
-#define ENCODER_NUMBER_TO_DEGREE(n) ((float)n*(360.0f /((float)(2<ENCODER_RESOLUTION))))
+#define MAX_ENCODER_NUMBER          (1<<ENCODER_RESOLUTION) // (encoder counts)
+#define DEGREE_PER_NUMBER           ((float)360.0f / MAX_ENCODER_NUMBER)
+//#define DEGREE_PER_NUMBER           (0.02197265625f)
+
+// Raw angle hysteresis for low/high edge selection
+#define DELTA_DEGREE      2.5f // (degree) width of hysteresis for choosing sides
+#define MIN_DEGREE    0.0f // (degree) minimum measured
+#define MAX_DEGREE    360.0f // (degree) max measured
+
 
 #define ACCUMULATOR_LENGTH  150
+
+#define DEBUG
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -43,35 +53,35 @@ I2C_MODULE      ENCODER_I2C_ID = I2C1;
 // Set Desired Operation Frequency
 //#define I2C_CLOCK_FREQ  100000 // (Hz)
 
-float angleAccumulator = 0; // (degrees) accumlated angles
-float pitchAngle = 0; // (degrees) calculated angle
-float yawAngle = 0; // (degrees) calculated angle
-float zeroPitchAngle = 0; // (degrees)
-float zeroYawAngle = 0; // (degrees)
+// Measured encoder angles
+float pitchAngle = 0.0; // (degrees) calculated angle
+float yawAngle = 0.0; // (degrees) calculated angle
 
-bool useZeroAngle = FALSE;
-bool haveZeroPitch = FALSE;
+// Calibration related
+float zeroPitchAngle = 0.0; // (degrees)
+float zeroYawAngle = 0.0; // (degrees)
+bool useZeroPitchAngle, useZeroYawAngle;
 
-uint16_t accumulatorIndex;
+// Accumulator related
+bool accumulateOnLowEdge;
 bool accumulatePitch;
+uint16_t accumulatorIndex;
+float angleAccumulator = 0.0; // (degrees) accumlated angles
 
 // Currently selected encoder variables
 float currentZeroAngle;
 uint16_t currentReadAddress;
 uint16_t currentWriteAddress;
 
-// Printing debug messages over serial
-#define DEBUG
-
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
 
-uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS);
-void choosePitchEncoder();
-void chooseYawEncoder();
-void accumulateAngle(int READ_ADDRESS,int WRITE_ADDRESS);
-float calculateAngle();
+static uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS);
+static void choosePitchEncoder();
+static void chooseYawEncoder();
+static void accumulateAngle(int READ_ADDRESS,int WRITE_ADDRESS);
+static float calculateAngle();
 
 /***********************************************************************
  * PUBLIC FUNCTIONS                                                    *
@@ -91,20 +101,22 @@ float calculateAngle();
  }
 
 void Encoder_init() {
-    // Do nothing
+
+    useZeroPitchAngle = FALSE;
+    useZeroYawAngle = FALSE;
+
     choosePitchEncoder();
 }
 
 void Encoder_setZeroPitch() {
     zeroPitchAngle = pitchAngle;
-    haveZeroPitch = TRUE;
+    useZeroPitchAngle = TRUE;
 }
 
 
 void Encoder_setZeroYaw() {
     zeroYawAngle = yawAngle;
-    if (haveZeroPitch)
-        Encoder_enableZeroAngle();
+    useZeroYawAngle = TRUE;
 }
     
 float Encoder_getPitch() {
@@ -113,78 +125,103 @@ float Encoder_getPitch() {
 
 float Encoder_getYaw() {
     // Invert yaw direction to be CW from north
-    return 360.0 - yawAngle;
+    return 360.0f - yawAngle;
 }
 
-void Encoder_enableZeroAngle() {
-    useZeroAngle = TRUE;
-}
-
-void Encoder_disableZeroAngle() {
-    useZeroAngle = FALSE;
-}
 
 
 /******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
-void choosePitchEncoder() {
+static void choosePitchEncoder() {
     currentZeroAngle = zeroPitchAngle;
     currentReadAddress = SLAVE_PITCH_READ_ADDRESS;
     currentWriteAddress = SLAVE_PITCH_WRITE_ADDRESS;
+    angleAccumulator = 0.0;
     accumulatorIndex = 0;
     accumulatePitch = TRUE;
 }
 
-void chooseYawEncoder() {
+static void chooseYawEncoder() {
     currentZeroAngle = zeroYawAngle;
     currentReadAddress = SLAVE_YAW_READ_ADDRESS;
     currentWriteAddress = SLAVE_YAW_WRITE_ADDRESS;
+    angleAccumulator = 0.0;
     accumulatorIndex = 0;
     accumulatePitch = FALSE;
 }
 
-void accumulateAngle(int READ_ADDRESS,int WRITE_ADDRESS) {
-   uint16_t rawAngle = readSensor(READ_ADDRESS,WRITE_ADDRESS);
-   angleAccumulator += ENCODER_NUMBER_TO_DEGREE(rawAngle);
+static void accumulateAngle(int READ_ADDRESS,int WRITE_ADDRESS) {
+   float rawAngle = readSensor(READ_ADDRESS,WRITE_ADDRESS) * DEGREE_PER_NUMBER;
+
+   
+   // Decide which edge to stay on
+   if (accumulatorIndex == 0) {
+       accumulateOnLowEdge = (rawAngle <= (MIN_DEGREE + DELTA_DEGREE))?
+           TRUE : FALSE;
+   }
+   
+   // Did we start on 0 side, and teetered over to 360 side?
+   if (accumulateOnLowEdge && (rawAngle >= (MAX_DEGREE - DELTA_DEGREE)))
+       rawAngle -= MAX_DEGREE; // makes it negative
+
+   // Did we start on 360 side and teetered over to the 0 side?
+   if (!accumulateOnLowEdge && (rawAngle <= (MIN_DEGREE + DELTA_DEGREE)))
+       rawAngle += MAX_DEGREE;
+    
+    /*
+   if  (accumulateOnLowEdge && (rawAngle <= MAX_DEGREE && rawAngle >= (MAX_DEGREE - DELTA_DEGREE))
+           || !accumulateOnLowEdge && (rawAngle >=  MIN_DEGREE && rawAngle <= (MIN_DEGREE + DELTA_DEGREE)))
+       rawAngle = 0.0f;
+   */
+   angleAccumulator += rawAngle;
+
 }
 
 
-float calculateAngle() {
+static float calculateAngle() {
 
-    float finalAngle = angleAccumulator/ACCUMULATOR_LENGTH;
-    // TODO remove magick numbers
-    if(useZeroAngle){
+    float finalAngle = (float)angleAccumulator/ACCUMULATOR_LENGTH;
+
+    // Remove negative angles
+    if (finalAngle < 0.0f)
+        finalAngle += 360.0f;
+    else if (finalAngle > 360.0f)
+        finalAngle -= 360.0f;
+
+    // Use zero angle point from calibration
+    if((useZeroPitchAngle && accumulatePitch)
+            || (useZeroYawAngle && !accumulatePitch)) {
         if(finalAngle >= currentZeroAngle)
             finalAngle = finalAngle - currentZeroAngle;
         else
             finalAngle = 360.0f - (currentZeroAngle - finalAngle);
-        if(finalAngle > 359.98f)
-            finalAngle = 0.0f;
+
+        //if(finalAngle > 359.98f)
+        //    finalAngle = 0.0f;
     }
 
+    // Switch encoders for accumulation
     if (accumulatePitch) {
         pitchAngle = finalAngle;
-        chooseYawEncoder(); // switch encoders
+        chooseYawEncoder();
     }
     else {
         yawAngle = finalAngle;
-        choosePitchEncoder(); // switch encoders
+        choosePitchEncoder();
     }
  }
 
 
-uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
+static uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
     int8_t success = FALSE;
     uint16_t data = 0;
 
     do {
         // Send the start bit with the restart flag low
         if(!I2C_startTransfer(ENCODER_I2C_ID, I2C_WRITE )){
-            #ifdef DEBUG
-            printf("FAILED initial transfer!\n");
-            #endif
+            DBPRINT("Encoder: FAILED initial transfer!\n");
             break;
         }
         // Transmit the slave's address to notify it
@@ -193,17 +230,13 @@ uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
 
         // Tranmit the read address module
         if(!I2C_sendData(ENCODER_I2C_ID,SLAVE_ANGLE_ADDRESS)){
-            #ifdef DEBUG
-            printf("Error: Sent byte was not acknowledged\n");
-            #endif
+            DBPRINT("Encoder: Error: Sent byte was not acknowledged\n");
             break;
         }
 
         // Send a Repeated Started condition
         if(!I2C_startTransfer(ENCODER_I2C_ID,I2C_READ)){
-            #ifdef DEBUG
-            printf("FAILED Repeated start!\n");
-            #endif
+            DBPRINT("Encoder: FAILED Repeated start!\n");
             break;
         }
         // Transmit the address with the READ bit set
@@ -222,44 +255,52 @@ uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
         success = TRUE;
     } while(0);
     if (!success) {
-        #ifdef DEBUG
-        printf("Data transfer unsuccessful.\n");
-        #endif
+        DBPRINT("Encoder: Data transfer unsuccessful.\n");
         return FALSE;
     }
     return data;
 }
 
-#define ENCODER_TEST
+//#define ENCODER_TEST
 #ifdef ENCODER_TEST
 
-#define PRINT_DELAY     1000
-#include "Timer.h"
+#define PRINT_DELAY     50
+#define STARTUP_DELAY   2000
 
 int main(void) {
 // Initialize the UART,Timers, and I2C1v
     Board_init();
-    Serial_init();
-    Timer_init();
-    printf("Starting encoders...\n");
+    Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
+    dbprint("Starting encoders...\n");
     I2C_init(ENCODER_I2C_ID, I2C_CLOCK_FREQ);
     Encoder_init();
-
+    Timer_new(TIMER_TEST, PRINT_DELAY );
+    while (!Timer_isExpired(TIMER_TEST)) {
         Encoder_runSM();
+    }
 
-        Encoder_runSM();
+    // Not working?
+    //Encoder_setZeroPitch();
+    //Encoder_setZeroYaw();
 
-        Encoder_runSM();
-        
-    Encoder_setZeroYaw();
-    Encoder_setZeroPitch();
-
-    printf("Encoders initialized.\n");
+    dbprint("Encoders initialized.\n");
+    DELAY(STARTUP_DELAY)
     Timer_new(TIMER_TEST, PRINT_DELAY );
 
+
+    LCD_setPosition(0,0);
+    dbprint("Encoders:\n");
     while(1){
         if (Timer_isExpired(TIMER_TEST)) {
-            printf("Encoders: P=%.1f, Y=%.1f\n",Encoder_getPitch(), Encoder_getYaw());
+            LCD_setPosition(1,0);
+            dbprint(" P=%.1f,\n Y=%.1f\n",Encoder_getPitch(), Encoder_getYaw());
+            /*dbprint("Encoders:\n P=%d,\n Y=%d\n",
+                readSensor(SLAVE_PITCH_READ_ADDRESS,SLAVE_PITCH_WRITE_ADDRESS),
+                readSensor(SLAVE_YAW_READ_ADDRESS,SLAVE_YAW_WRITE_ADDRESS));*/
+            /*dbprint("Encoders:\n P=%.1f,\n Y=%.1f\n",
+                readSensor(SLAVE_PITCH_READ_ADDRESS,SLAVE_PITCH_WRITE_ADDRESS) * DEGREE_PER_NUMBER,
+                readSensor(SLAVE_YAW_READ_ADDRESS,SLAVE_YAW_WRITE_ADDRESS) * DEGREE_PER_NUMBER);*/
+
             
             Timer_new(TIMER_TEST, PRINT_DELAY );
         }

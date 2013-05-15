@@ -14,6 +14,7 @@
  --------------         ---         --------
  5-1-13 2:10  PM      jash        Created file.
 ***********************************************************************/
+#define DEBUG
 
 #include <xc.h>
 #include <stdint.h>
@@ -158,6 +159,7 @@ void Interface_init(){
     Interface_clearAll();
 
     Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
+
 }
 /**********************************************************************
  * Function: Interface_runSM
@@ -230,9 +232,11 @@ void Interface_runSM(){
 
     // Calibration lights
     if (usingPitchLights) {
+        READY_LED = OFF;
         if (Accelerometer_isLevel()) {
             CALIBRATE_FRONT_LED = ON;
             CALIBRATE_BACK_LED = ON;
+            READY_LED = ON;
         }
         else if (Accelerometer_getX() > Accelerometer_getY()) {
             CALIBRATE_FRONT_LED = OFF;
@@ -244,9 +248,11 @@ void Interface_runSM(){
         }
     }
     else if (usingYawLights) {
+        READY_LED = OFF;
         if (Magnetometer_isNorth()) {
             CALIBRATE_FRONT_LED = ON;
             CALIBRATE_BACK_LED = ON;
+            READY_LED = ON;
         }
         else {
             CALIBRATE_FRONT_LED = OFF;
@@ -554,112 +560,17 @@ char *getMessage(message_t code) {
 //TEST MODULES
 
 
-//#define TEST_PUSHBUTTONS
-#ifdef TEST_PUSHBUTTONS
+
+//#define TEST_BUTTONS
+#ifdef TEST_BUTTONS
 int main(void) {
     //initializations
     Board_init();
-    Serial_init();
-    Timer_init();
+    Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
     Interface_init();
 
-    printf("INITIALIZATIONS COMPLETE\n");
-    enum {
-        CANCEL  = 0x01,
-        OK      = 0x02,
-        STOP    = 0x03,
-        RESCUE  = 0x04,
-        SET_STATION = 0x05,
-        IDLE        = 0x06,
-    } push_state;
-
-    uint16_t onTime = 3000;
-
-    //cycle and check if buttons are pressed, if so, turn light on for 3 seconds
-    while(1){
-        Interface_runSM();
-        //check to see which button is pressed
-        if(Interface_isCancelPressed()){
-            push_state = CANCEL;
-            printf("CANCEL\n");
-        }else if(Interface_isOkPressed()){
-            push_state = OK;
-            printf("OK\n");
-        }else if(Interface_isStopPressed()){
-            push_state = STOP;
-            printf("STOP\n");
-        }else if(Interface_isRescuePressed()){
-            push_state = RESCUE;
-            printf("RESCUE\n");
-        }else if(Interface_isSetStationPressed()){
-            push_state = SET_STATION;
-            printf("SET_STATION\n");
-        }else{
-            push_state = IDLE;
-            //printf("IDLE\n");
-        }
-
-        switch(push_state){
-            case CANCEL:
-                Interface_errorLightOnTimer(onTime);
-                printf("BUTTON PRESSED : CANCEL\n\n");
-                push_state = IDLE;
-                break;
-
-            case OK:
-                Interface_readyLightOnTimer(onTime);
-                printf("BUTTON PRESSED : OK\n\n");
-                push_state = IDLE;
-                break;
-
-            case STOP:
-                Interface_waitLightOnTimer(onTime);
-                printf("BUTTON PRESSED : STOP\n\n");
-                push_state = IDLE;
-                break;
-
-            case RESCUE:
-                Interface_errorLightOnTimer(onTime);
-                Interface_readyLightOnTimer(onTime);
-                Interface_waitLightOnTimer(onTime);
-                printf("BUTTON PRESSED : RESCUE\n\n");
-                push_state = IDLE;
-                break;
-
-            case SET_STATION:
-                Interface_errorLightOnTimer(onTime);
-                Interface_waitLightOnTimer(onTime);
-                printf("BUTTON PRESSED : SET_STATION\n\n");
-                push_state = IDLE;
-                break;
-
-            case IDLE:
-                ;
-                break;
-        }
-
-
-    }
-
-
-}
-
-#endif
-
-
-#define TEST_INTERFACE
-#ifdef TEST_INTERFACE
-int main(void) {
-    //initializations
-    Board_init();
-    Serial_init();
-    Timer_init();
-    LCD_init();
-    Interface_init();
-    
-    printf("INITIALIZATIONS COMPLETE\n");
-    LCD_setPosition(0,0);
-    LCD_writeString("Interface online.\n");
+    DELAY(5);
+    dbprint("Interface online.\n");
 
     enum {
         CANCEL  = 0x01,
@@ -676,28 +587,23 @@ int main(void) {
         if(Interface_isCancelPressed() && state != CANCEL){
             state = CANCEL;
             LCD_setPosition(0,0);
-            LCD_writeString("Cancel.\n");
-            printf("Cancel\n");
+            dbprint("Cancel.\n");
         }else if(Interface_isOkPressed()  && state != OK){
             state = OK;
             LCD_setPosition(0,0);
-            LCD_writeString("Ok.\n");
-            printf("Ok\n");
+            dbprint("Ok.\n");
         }else if(Interface_isStopPressed() && state != STOP){
             state = STOP;
             LCD_setPosition(0,0);
-            LCD_writeString("Stop.\n");
-            printf("Stop\n");
+            dbprint("Stop.\n");
         }else if(Interface_isRescuePressed() && state != RESCUE){
             state = RESCUE;
             LCD_setPosition(0,0);
-            LCD_writeString("Rescue.\n");
-            printf("Rescue\n");
+            dbprint("Rescue.\n");
         }else if(Interface_isSetStationPressed() && state != SETSTATION){
             state = SETSTATION;
             LCD_setPosition(0,0);
-            LCD_writeString("Set station.\n");
-            printf("Set cancel\n");
+            dbprint("Set station.\n");
         }else{
             // Nothing
         }
@@ -712,8 +618,8 @@ int main(void) {
 
 
 
-//#define TEST_INTERFACE2
-#ifdef TEST_INTERFACE2
+//#define TEST_QUICK
+#ifdef TEST_QUICK
 int main(void) {
     //initializations
     Board_init();
@@ -735,57 +641,126 @@ int main(void) {
     }
 }
 #endif
-/*
-#define TEST_CALIBRATE
+
+
+//#define TEST_CALIBRATE
 #ifdef TEST_CALIBRATE
+
+#include "I2C.h"
+#include "Accelerometer.h"
+#include "Magnetometer.h"
+
+#define DEBUG_MAGNETOMETER
+
+#define PRINT_DELAY             500
+#define STARTUP_DELAY           2000
+#define CALIBRATE_HOLD_DELAY    3000
+
+// Pick the I2C_MODULE to initialize
+I2C_MODULE      I2C_ID = I2C1;
+
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  80000 // (Hz)
+
+
 
 enum {
     CALIBRATE_PITCH,
     CALIBRATE_YAW
 } state;
-bool startedCalibrate;
 
 int main(void) {
     // Initializations
     Board_init();
-    Serial_init();
-    Timer_init();
-    LCD_init();
-    Accelerometer_init();
+    Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
+    I2C_init(I2C_ID, I2C_CLOCK_FREQ);
     Magnetometer_init();
     Interface_init();
+    DELAY(5);
+    if (Accelerometer_init() != SUCCESS) {
+        Interface_errorLightOn();
+        dbprint("Failed accel. init.\n");
+        return FAILURE;
+    }
+    dbprint("Ready to calibrate.\n");
+    Interface_readyLightOn();
+    DELAY(STARTUP_DELAY);
 
-    printf("Initialized calibration test.\nCalibrating...");
     LCD_setPosition(0,0);
-    LCD_writeString("Calibrating...\n");
-    LCD_pitchLightsOn();
-    LCD_readyLightOn();
+    dbprint("Please level scope.\n");
+    Interface_pitchLightsOn();
     state = CALIBRATE_PITCH;
-    startedCalibrate = FALSE;
+    Timer_new(TIMER_TEST2, PRINT_DELAY);
+    bool holdingCalibrate = FALSE;
 
     while (1) {
         switch (state) {
             case CALIBRATE_PITCH:
-                if (startedCalibrate && Timer_isExpired(TIMER_TEST)) {
-                    state = CALIBRATE_YAW;
-                    printf("Calibrated pitch.\nCalibrating yaw...\n");
-                    LCD_setPosition(0,0);
-                    LCD_writeString("Calibrated pitch.\nCalibrating yaw...\n");
-                    LCD_pitchLights
-                    LCD_yawLightsOn();
-                    LCD_readyLightOn();
-                    LCD_waitLightOff();
+                if (Accelerometer_isLevel() && !holdingCalibrate) {
+                    holdingCalibrate = TRUE;
+                    Timer_new(TIMER_TEST, CALIBRATE_HOLD_DELAY);
+                    Interface_readyLightOff();
+                    Interface_waitLightOn();
+                    LCD_setPosition(1,0);
+                    dbprint("Hold level...\n");
                 }
-                else if (Accelerometer_isNorth() && !startedCalibrate) {
-                    startedCalibrate = TRUE;
-                    printf("Hold.\n");
+                if (Accelerometer_isLevel() && holdingCalibrate && Timer_isExpired(TIMER_TEST)) {
+                    LCD_setPosition(1,0);
+                    dbprint("Pitch done!\n");
+                    Interface_pitchLightsOff();
+                    Interface_readyLightOn();
+                    Interface_waitLightOff();
+                    holdingCalibrate = FALSE;
+                    DELAY(STARTUP_DELAY);
+
+                    state = CALIBRATE_YAW;
                     LCD_setPosition(0,0);
-                    LCD_writeString("Calibrating...\n");
-                    LCD_readyLightOff();
-                    LCD_waitLightOn();
+                    dbprint("Turn scope north.\n                    \n");
+                    Interface_yawLightsOn();
+                }
+                else if (!Accelerometer_isLevel() && holdingCalibrate) {
+                    holdingCalibrate = FALSE;
+                    Timer_stop(TIMER_TEST);
+                    LCD_setPosition(1,0);
+                    dbprint("               \n");
+                    Interface_readyLightOn();
+                    Interface_waitLightOff();
                 }
                 break;
             case CALIBRATE_YAW:
+                if (Magnetometer_isNorth() && !holdingCalibrate) {
+                    holdingCalibrate = TRUE;
+                    Timer_new(TIMER_TEST, CALIBRATE_HOLD_DELAY);
+                    Interface_readyLightOff();
+                    Interface_waitLightOn();
+                    LCD_setPosition(1,0);
+                    dbprint("Hold north + level..\n");
+                }
+                if (Magnetometer_isNorth() && holdingCalibrate && Timer_isExpired(TIMER_TEST)) {
+                    LCD_setPosition(1,0);
+                    dbprint("Yaw done!\n");
+                    Interface_yawLightsOff();
+                    Interface_readyLightOn();
+                    Interface_waitLightOff();
+                    holdingCalibrate = FALSE;
+                    DELAY(STARTUP_DELAY);
+                    return SUCCESS;
+                }
+                else if (!Magnetometer_isNorth() && holdingCalibrate) {
+                    holdingCalibrate = FALSE;
+                    Timer_stop(TIMER_TEST);
+                    LCD_setPosition(1,0);
+                    dbprint("               \n");
+                    Interface_readyLightOn();
+                    Interface_waitLightOff();
+                }
+                #ifdef DEBUG_MAGNETOMETER
+                if (Timer_isExpired(TIMER_TEST2)) {
+                    LCD_setPosition(3,0);
+                    dbprint("Mag: %.2f\n",Magnetometer_getHeading());
+                    Timer_new(TIMER_TEST2, PRINT_DELAY);
+                }
+                #endif
                 break;
         }
         Magnetometer_runSM();
@@ -793,74 +768,86 @@ int main(void) {
         Interface_runSM();
     }
 
-    //
+  
 
-     // Initialize the modules
+    return (SUCCESS);
+}
+
+#endif
+
+//#define ENCODER_ZERO_TEST
+#ifdef ENCODER_ZERO_TEST
+
+#include "I2C.h"
+#include "Encoder.h"
+
+// Pick the I2C_MODULE to initialize
+I2C_MODULE      I2C_ID = I2C1;
+
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  80000 // (Hz)
+
+
+#define PRINT_DELAY     50
+#define STARTUP_DELAY   2000
+#define CALIBRATE_HOLD_DELAY    3000
+
+int main(void) {
+// Initialize the UART,Timers, and I2C1v
     Board_init();
-    Timer_init();
-    Serial_init();
-    LCD_init();
+    Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
+    dbprint("Starting encoders...\n");
     I2C_init(I2C_ID, I2C_CLOCK_FREQ);
-    Magnetometer_init();
+    Encoder_init();
     Interface_init();
-
-    //printf("Who am I: 0x%X\n", readRegister(WHO_AM_I_ADDRESS));
-
-    if (Accelerometer_init() != SUCCESS) {
-        printf("Failed to initialize the accelerometer.\n");
-        return FAILURE;
+    Timer_new(TIMER_TEST, PRINT_DELAY );
+    while (!Timer_isExpired(TIMER_TEST)) {
+        Encoder_runSM();
     }
-    printf("Initialized the accelerometer.\n");
 
-    printf("Initialized calibration test.\nCalibrating...");
+    // Not working?
+    //Encoder_setZeroPitch();
+    //Encoder_setZeroYaw();
+
+    dbprint("Encoders initialized.\n");
+    DELAY(STARTUP_DELAY)
+    Timer_new(TIMER_TEST, PRINT_DELAY );
+
+    bool clearedCalibrateMessage = TRUE;
+    Timer_new(TIMER_TEST2,CALIBRATE_HOLD_DELAY);
+    //Interface_waitLightOnTimer(CALIBRATE_HOLD_DELAY);
+    Interface_waitLightOnTimer(CALIBRATE_HOLD_DELAY);
+
     LCD_setPosition(0,0);
-    LCD_writeString("Calibrating...\n");
-    LCD_pitchLightsOn();
-    LCD_readyLightOn();
-    state = CALIBRATE_PITCH;
-    startedCalibrate = FALSE;
-    // Configure ports as outputs
-    /*
-    LED_N_TRIS = OUTPUT;
-    LED_S_TRIS = OUTPUT;
-    LED_E_TRIS = OUTPUT;
-    LED_W_TRIS = OUTPUT;
-
-
-    Timer_new(TIMER_TEST,PRINT_DELAY  );
+    dbprint("Encoders:\n");
     while(1) {
-    // Convert the raw data to real values
         if (Timer_isExpired(TIMER_TEST)) {
-            if (Accelerometer_isLevel() && !calibrating) {
-                calibrating = TRUE;
-                Timer_new(TIMER_TEST2,CALIBRATE_HOLD_DELAY);
-                printf("Calibrating.");
-            }
-            else if (Accelerometer_isLevel() && calibrating) {
-                 if (!Timer_isExpired(TIMER_TEST2)) {
-                     printf(".");
-                 }
-            }
-            else if (calibrating && !Accelerometer_isLevel()) {
-                Timer_stop(TIMER_TEST2);
-                Timer_clear(TIMER_TEST2);
-                calibrating = FALSE;
-                printf("! -- Failed.\n");
-            }
-            //printf("X=%d, Y=%d, Z=%d level=%X_%d\n",
-            //    Accelerometer_getX(), Accelerometer_getY(), Accelerometer_getZ(), Accelerometer_isLevel(),
-            //        abs(gCount.x + gCount.y));
+            LCD_setPosition(1,0);
+            dbprint(" P=%.1f,\n Y=%.1f\n",Encoder_getPitch(), Encoder_getYaw());
+
             Timer_new(TIMER_TEST, PRINT_DELAY );
         }
-
-        if (Accelerometer_isLevel() && calibrating && Timer_isExpired(TIMER_TEST2)) {
-            printf("! -- Done.\n");
-            return SUCCESS;
+        if (Interface_isOkPressed() && Timer_isExpired(TIMER_TEST2)) {
+            Encoder_setZeroPitch();
+            Encoder_setZeroYaw();
+            LCD_setPosition(3,0);
+            dbprint("Zeroed encoders.\n");
+            clearedCalibrateMessage = FALSE;
+            Interface_waitLightOnTimer(CALIBRATE_HOLD_DELAY);
+            Interface_readyLightOff();
+            Timer_new(TIMER_TEST2,CALIBRATE_HOLD_DELAY);
         }
-
-        Accelerometer_runSM();
+        if (Timer_isExpired(TIMER_TEST2) && !clearedCalibrateMessage) {
+            clearedCalibrateMessage = TRUE;
+            LCD_setPosition(3,0);
+            dbprint("                     ");
+            Interface_readyLightOn();
+        }
+        Encoder_runSM();
+        Interface_runSM();
     }
 
     return (SUCCESS);
 }
-*/
+
+#endif
