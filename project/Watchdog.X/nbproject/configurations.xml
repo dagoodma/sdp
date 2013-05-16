@@ -15,6 +15,9 @@
       <itemPath>../../include/Timer.h</itemPath>
       <itemPath>../../include/Uart.h</itemPath>
       <itemPath>../../include/Xbee.h</itemPath>
+      <itemPath>../../include/Accelerometer.h</itemPath>
+      <itemPath>../../include/Magnetometer.h</itemPath>
+      <itemPath>../../include/I2C.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -33,6 +36,9 @@
       <itemPath>../../src/Uart.c</itemPath>
       <itemPath>../../src/Xbee.c</itemPath>
       <itemPath>Watchdog.c</itemPath>
+      <itemPath>../../src/Accelerometer.c</itemPath>
+      <itemPath>../../src/Magnetometer.c</itemPath>
+      <itemPath>../../src/I2C.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

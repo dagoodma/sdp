@@ -4,6 +4,7 @@
  *
  * Created on January 21, 2013, 11:52 AM
  */
+#define DEBUG
 
 #include <xc.h>
 #include <stdio.h>
@@ -21,11 +22,16 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 // List of registers for Encoder
-#define SLAVE_PITCH_READ_ADDRESS          0x81
-#define SLAVE_PITCH_WRITE_ADDRESS         0x80
+#define SLAVE_PITCH_READ_ADDRESS      0x81
+#define SLAVE_PITCH_WRITE_ADDRESS     0x80
 #define SLAVE_YAW_READ_ADDRESS        0x87
 #define SLAVE_YAW_WRITE_ADDRESS       0x86
-#define SLAVE_ANGLE_ADDRESS                  0xFE
+
+#define READ_SLAVE_ADDRESS            0x15
+#define READ_ANGLE_ADDRESS            0xFE
+#define READ_DIAGNOSTIC_ADDRESS       0xFB
+
+#define IS_OCF_SET(byte)            (0x1 & byte) // should return 1 if calibrated
 
 #define ENCODER_RESOLUTION          14 // (bits)
 #define MAX_ENCODER_NUMBER          (1<<ENCODER_RESOLUTION) // (encoder counts)
@@ -37,10 +43,10 @@
 #define MIN_DEGREE    0.0f // (degree) minimum measured
 #define MAX_DEGREE    360.0f // (degree) max measured
 
+#define STARTUP_STRAP_DELAY        100 //(ms) to finish offset compensation
 
 #define ACCUMULATOR_LENGTH  150
 
-#define DEBUG
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -77,10 +83,10 @@ uint16_t currentWriteAddress;
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
 
-static uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS);
+static uint16_t readDevice(uint8_t deviceReadAddress, uint8_t deviceWriteAddress, uint8_t dataAddress);
 static void choosePitchEncoder();
 static void chooseYawEncoder();
-static void accumulateAngle(int READ_ADDRESS,int WRITE_ADDRESS);
+static void accumulateAngle(uint8_t deviceReadAddress, uint8_t deviceWriteAddress);
 static float calculateAngle();
 
 /***********************************************************************
@@ -100,12 +106,33 @@ static float calculateAngle();
      }
  }
 
-void Encoder_init() {
-
+char Encoder_init() {
     useZeroPitchAngle = FALSE;
     useZeroYawAngle = FALSE;
 
     choosePitchEncoder();
+
+    DELAY(STARTUP_STRAP_DELAY);  // wait for start up compensation straps
+    
+    // Read from encoders to ensure they work
+    /*
+    uint8_t pitchDiagnostics = readDevice(SLAVE_PITCH_READ_ADDRESS, SLAVE_PITCH_WRITE_ADDRESS,
+            READ_DIAGNOSTIC_ADDRESS);
+    if (!IS_OCF_SET(pitchDiagnostics)) {
+        DBPRINT("Encoder: pitch offset compensation failed (0x%X).\n", pitchDiagnostics);
+        return FAILURE;
+    }
+    uint8_t yawDiagnostics = readDevice(SLAVE_YAW_READ_ADDRESS, SLAVE_YAW_WRITE_ADDRESS,
+            READ_DIAGNOSTIC_ADDRESS);
+    if (!IS_OCF_SET(yawDiagnostics)) {
+        DBPRINT("Encoder: yaw offset compensation failed (0x%X).\n", yawDiagnostics);
+        return FAILURE;
+    }
+    */
+    if (I2C_hasError())
+        return FAILURE;
+    
+    return SUCCESS;
 }
 
 void Encoder_setZeroPitch() {
@@ -152,8 +179,8 @@ static void chooseYawEncoder() {
     accumulatePitch = FALSE;
 }
 
-static void accumulateAngle(int READ_ADDRESS,int WRITE_ADDRESS) {
-   float rawAngle = readSensor(READ_ADDRESS,WRITE_ADDRESS) * DEGREE_PER_NUMBER;
+static void accumulateAngle(uint8_t deviceReadAddress, uint8_t deviceWriteAddress) {
+   float rawAngle = readDevice(deviceReadAddress, deviceWriteAddress, READ_ANGLE_ADDRESS) * DEGREE_PER_NUMBER;
 
    
    // Decide which edge to stay on
@@ -214,8 +241,8 @@ static float calculateAngle() {
  }
 
 
-static uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
-    int8_t success = FALSE;
+static uint16_t readDevice(uint8_t deviceReadAddress, uint8_t deviceWriteAddress, uint8_t dataAddress) {
+    char success = FALSE;
     uint16_t data = 0;
 
     do {
@@ -225,11 +252,11 @@ static uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
             break;
         }
         // Transmit the slave's address to notify it
-        if (!I2C_sendData(ENCODER_I2C_ID, SLAVE_WRITE_ADDRESS))
+        if (!I2C_sendData(ENCODER_I2C_ID, deviceWriteAddress))
             break;
 
         // Tranmit the read address module
-        if(!I2C_sendData(ENCODER_I2C_ID,SLAVE_ANGLE_ADDRESS)){
+        if(!I2C_sendData(ENCODER_I2C_ID, dataAddress)){
             DBPRINT("Encoder: Error: Sent byte was not acknowledged\n");
             break;
         }
@@ -240,7 +267,7 @@ static uint16_t readSensor(int SLAVE_READ_ADDRESS,int SLAVE_WRITE_ADDRESS) {
             break;
         }
         // Transmit the address with the READ bit set
-        if (!I2C_sendData(ENCODER_I2C_ID, SLAVE_READ_ADDRESS))
+        if (!I2C_sendData(ENCODER_I2C_ID, deviceReadAddress))
             break;
         
         // Read the I2C bus twice
@@ -273,7 +300,10 @@ int main(void) {
     Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
     dbprint("Starting encoders...\n");
     I2C_init(ENCODER_I2C_ID, I2C_CLOCK_FREQ);
-    Encoder_init();
+    if (Encoder_init() != SUCCESS) {
+        dbprint("Failed init. encoder\n");
+        return FAILURE;
+    }
     Timer_new(TIMER_TEST, PRINT_DELAY );
     while (!Timer_isExpired(TIMER_TEST)) {
         Encoder_runSM();
@@ -284,7 +314,7 @@ int main(void) {
     //Encoder_setZeroYaw();
 
     dbprint("Encoders initialized.\n");
-    DELAY(STARTUP_DELAY)
+    DELAY(STARTUP_DELAY);
     Timer_new(TIMER_TEST, PRINT_DELAY );
 
 
@@ -295,11 +325,11 @@ int main(void) {
             LCD_setPosition(1,0);
             dbprint(" P=%.1f,\n Y=%.1f\n",Encoder_getPitch(), Encoder_getYaw());
             /*dbprint("Encoders:\n P=%d,\n Y=%d\n",
-                readSensor(SLAVE_PITCH_READ_ADDRESS,SLAVE_PITCH_WRITE_ADDRESS),
-                readSensor(SLAVE_YAW_READ_ADDRESS,SLAVE_YAW_WRITE_ADDRESS));*/
+                readDevice(SLAVE_PITCH_READ_ADDRESS,SLAVE_PITCH_WRITE_ADDRESS),
+                readDevice(SLAVE_YAW_READ_ADDRESS,SLAVE_YAW_WRITE_ADDRESS));*/
             /*dbprint("Encoders:\n P=%.1f,\n Y=%.1f\n",
-                readSensor(SLAVE_PITCH_READ_ADDRESS,SLAVE_PITCH_WRITE_ADDRESS) * DEGREE_PER_NUMBER,
-                readSensor(SLAVE_YAW_READ_ADDRESS,SLAVE_YAW_WRITE_ADDRESS) * DEGREE_PER_NUMBER);*/
+                readDevice(SLAVE_PITCH_READ_ADDRESS,SLAVE_PITCH_WRITE_ADDRESS) * DEGREE_PER_NUMBER,
+                readDevice(SLAVE_YAW_READ_ADDRESS,SLAVE_YAW_WRITE_ADDRESS) * DEGREE_PER_NUMBER);*/
 
             
             Timer_new(TIMER_TEST, PRINT_DELAY );
@@ -308,6 +338,29 @@ int main(void) {
     }
 
     return (SUCCESS);
+}
+
+#endif
+
+
+
+//#define ADDRESS_TEST
+#ifdef ADDRESS_TEST
+
+
+int main(void) {
+// Initialize the UART,Timers, and I2C1v
+    Board_init();
+    Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
+    dbprint("Check encoder addr\n");
+    I2C_init(ENCODER_I2C_ID, I2C_CLOCK_FREQ);
+    uint8_t pitchAddress = readDevice(SLAVE_PITCH_READ_ADDRESS,
+            SLAVE_PITCH_WRITE_ADDRESS, READ_DIAGNOSTIC_ADDRESS);
+    uint8_t yawAddress = readDevice(SLAVE_YAW_READ_ADDRESS,
+            SLAVE_YAW_WRITE_ADDRESS, READ_DIAGNOSTIC_ADDRESS);
+    dbprint("Pitch=0x%X\nYaw=0x%X\n",pitchAddress, yawAddress);
+
+    return SUCCESS;
 }
 
 #endif

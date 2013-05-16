@@ -51,7 +51,9 @@ typedef enum {
     SET_ORIGIN_MESSAGE,
     /* - Other messages - */
     BOAT_ONLINE_MESSAGE,
-    RESET_BOAT
+    RESET_BOAT,
+    CANCEL_RETURN_MESSAGE,
+    CANCEL_SETSTATION_MESSAGE
 } message_t;
 
 
@@ -259,12 +261,29 @@ void Interface_showMessage(message_t msgCode);
 void Interface_showErrorMessage(error_t errorCode);
 
 /**********************************************************************
+ * Function: Interface_showBoatErrorMessage
+ * @param Error code for the error message to print.
+ * @return None.
+ * @remark Prints a boat error code to the LCD screen, and turns on the
+ *  error LED, while clearing all other lights and messages.
+ **********************************************************************/
+void Interface_showBoatErrorMessage(error_t errorCode);
+
+/**********************************************************************
  * Function: Interface_clearAll
  * @param None.
  * @return None.
  * @remark Clear the LCD and clear all messages on timers
  **********************************************************************/
 void Interface_clearAll();
+
+/**********************************************************************
+ * Function: Interface_clearDisplay
+ * @param None.
+ * @return None.
+ * @remark Clear the LCD.
+ **********************************************************************/
+void Interface_clearDisplay();
 
 /**********************************************************************
  * Function: getMessage

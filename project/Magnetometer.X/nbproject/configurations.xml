@@ -10,6 +10,7 @@
       <itemPath>../../include/Timer.h</itemPath>
       <itemPath>../../include/Magnetometer.h</itemPath>
       <itemPath>../../include/Uart.h</itemPath>
+      <itemPath>../../include/LCD.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -24,6 +25,7 @@
       <itemPath>../../src/Uart.c</itemPath>
       <itemPath>../../src/I2C.c</itemPath>
       <itemPath>../../src/Timer.c</itemPath>
+      <itemPath>../../src/Lcd.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

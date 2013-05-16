@@ -35,7 +35,7 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-#define WAIT_BETWEEN_CHECKS 20 // [miliseconds]
+#define WAIT_BETWEEN_CHECKS 50 // [miliseconds]
 #define NUMBER_OF_TIMES_TO_CHECK 1
 #define MINIMUM_POSITIVES 1
 #define BUTTON_BYTE_COUNT 1
@@ -79,18 +79,19 @@ static void showMessage(message_t msgCode);
  **********************************************************************/
 
 static int buttonReadCount;
-bool usingYawLights;
-bool usingPitchLights;
+static bool usingYawLights;
+static bool usingPitchLights;
 
-struct button_count{
+static struct button_count {
     uint8_t okay;
     uint8_t cancel;
     uint8_t stop;
     uint8_t rescue;
     uint8_t setStationKeep;
-}buttonCount;
-union button_pressed{
-    struct{
+} buttonCount;
+
+static union button_pressed{
+    struct {
         unsigned int okay :1;
         unsigned int cancel :1;
         unsigned int stop :1;
@@ -100,16 +101,18 @@ union button_pressed{
     unsigned char bytes[BUTTON_BYTE_COUNT];
 } buttonPressed;
 
-void (*timerLightOffFunction)();
+static void (*timerLightOffFunction)();
 
 
 const char *INTERFACE_MESSAGE[] = {
   //"....................\n"  <- maxiumum line length
     "Blank message.",
     "Calibration success.",
-    "Please calibrate the\npitch by leveling\nwith horizon, until\nboth top lights on.",
-    "Please calibrate the\nyaw by being\nlevel and north,\nuntil both lights on.",
-    "Command center ready",
+    "Calibrate system.\nLevel scope with\nhorizon.",
+    "Calibrate system.\nPoint scope north\nand at horizon.",
+   // "Please calibrate the\npitch by leveling\nwith horizon, until\nboth top lights on.",
+    //"Please calibrate the\nyaw by being\nlevel and north,\nuntil both lights on.",
+    "Command center is\nready.",
     "Sending boat to\nrescue person.",
     "Boat started rescue.",
     "Boat rescued person.",
@@ -125,10 +128,12 @@ const char *INTERFACE_MESSAGE[] = {
     "Setting boat origin.",
     "Set new origin.",
     "Boat is now online.\n",
-    "Resetting boat.\n"
+    "Resetting boat.\n",
+    "Are you sure you\nwant to cancel retu-\nrning to station?",
+    "Are you sure you\nwant to cancel sett-\ning station?"
 };
 
-message_t currentMsgCode, nextMsgCode;
+static message_t currentMsgCode, nextMsgCode;
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
@@ -155,6 +160,22 @@ void Interface_init(){
     CALIBRATE_BACK_LED_TRIS = OUTPUT;
     CALIBRATE_FRONT_LED_TRIS  = OUTPUT;
 
+
+    // Reset button counts
+    buttonCount.okay = 0;
+    buttonCount.cancel = 0;
+    buttonCount.stop = 0;
+    buttonCount.rescue = 0;
+    buttonCount.setStationKeep = 0;
+    buttonReadCount = 0;
+    
+    // Clear button flags
+    buttonPressed.flags.cancel = false;
+    buttonPressed.flags.okay = false;
+    buttonPressed.flags.rescue = false;
+    buttonPressed.flags.setStationKeep = false;
+    buttonPressed.flags.stop = false;
+
     // Turn off all LEDs and all buttons
     Interface_clearAll();
 
@@ -176,6 +197,7 @@ void Interface_runSM(){
     }
 
     if (Timer_isExpired(TIMER_LCD_HOLD)) {
+        Interface_clearDisplay();
         if (nextMsgCode != NO_MESSAGE) {
             showMessage(nextMsgCode);
             nextMsgCode = NO_MESSAGE;
@@ -185,6 +207,7 @@ void Interface_runSM(){
 
     if(Timer_isExpired(TIMER_INTERFACE)) {
 
+        #if NUMBER_OF_TIMES_TO_CHECK > 1
         if(OKAY_BUTTON == PRESSED)
             buttonCount.okay += 1;
         if(CANCEL_BUTTON == PRESSED)
@@ -226,6 +249,13 @@ void Interface_runSM(){
             buttonCount.rescue = 0;
             buttonCount.setStationKeep = 0;
         }
+        #else
+        buttonPressed.flags.okay = (OKAY_BUTTON == PRESSED);
+        buttonPressed.flags.cancel = (CANCEL_BUTTON == PRESSED);
+        buttonPressed.flags.stop = (STOP_BUTTON == PRESSED);
+        buttonPressed.flags.rescue = (RESCUE_BUTTON == PRESSED);
+        buttonPressed.flags.setStationKeep = (SETSTATION_BUTTON == PRESSED);
+        #endif
 
         Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
     }
@@ -417,8 +447,8 @@ void Interface_waitLightOnTimer(uint16_t ms){
  * @remark Turns pitch calibration lights off.
  **********************************************************************/
 void Interface_pitchLightsOff() {
-    CALIBRATE_FRONT_LED = 0;
-    CALIBRATE_BACK_LED = 0;
+    CALIBRATE_FRONT_LED = OFF;
+    CALIBRATE_BACK_LED = OFF;
     usingPitchLights = FALSE;
 }
 
@@ -428,8 +458,8 @@ void Interface_pitchLightsOff() {
  * @remark Turns yaw calibration lights off.
  **********************************************************************/
 void Interface_yawLightsOff() {
-    CALIBRATE_FRONT_LED = 0;
-    CALIBRATE_BACK_LED = 0;
+    CALIBRATE_FRONT_LED = OFF;
+    CALIBRATE_BACK_LED = OFF;
     usingYawLights = FALSE;
 }
 
@@ -495,6 +525,23 @@ void Interface_showErrorMessage(error_t errorCode) {
     Interface_clearAll();
     Interface_errorLightOn();
     LCD_setPosition(0,0);
+    LCD_writeString("Error:\n");
+    LCD_writeString(getErrorMessage(errorCode));
+    currentMsgCode = errorCode;
+}
+
+/**********************************************************************
+ * Function: Interface_showBoatErrorMessage
+ * @param Error code for the error message to print.
+ * @return None.
+ * @remark Prints a boat error code to the LCD screen, and turns on the
+ *  error LED, while clearing all other lights and messages.
+ **********************************************************************/
+void Interface_showBoatErrorMessage(error_t errorCode) {
+    Interface_clearAll();
+    Interface_errorLightOn();
+    LCD_setPosition(0,0);
+    LCD_writeString("Boat error:\n");
     LCD_writeString(getErrorMessage(errorCode));
     currentMsgCode = errorCode;
 }
@@ -508,26 +555,11 @@ void Interface_showErrorMessage(error_t errorCode) {
 void Interface_clearAll() {
     currentMsgCode = NO_MESSAGE;
     nextMsgCode = NO_MESSAGE;
-    void LCD_clearDisplay();
+
     Timer_stop(TIMER_LCD_HOLD);
     Timer_stop(TIMER_LIGHT_HOLD);
     Timer_clear(TIMER_LIGHT_HOLD);
     Timer_clear(TIMER_LCD_HOLD);
-
-    // Reset button counts
-    buttonCount.okay = 0;
-    buttonCount.cancel = 0;
-    buttonCount.stop = 0;
-    buttonCount.rescue = 0;
-    buttonCount.setStationKeep = 0;
-    buttonReadCount = 0;
-
-    // Clear button flags
-    buttonPressed.flags.cancel = false;
-    buttonPressed.flags.okay = false;
-    buttonPressed.flags.rescue = false;
-    buttonPressed.flags.setStationKeep = false;
-    buttonPressed.flags.stop = false;
 
     // Turn off LEDs
     READY_LED = OFF;
@@ -535,6 +567,18 @@ void Interface_clearAll() {
     ERROR_LED = OFF;
     CALIBRATE_FRONT_LED = OFF;
     CALIBRATE_BACK_LED = OFF;
+    
+    LCD_clearDisplay();
+}
+
+/**********************************************************************
+ * Function: Interface_clearDisplay
+ * @param None.
+ * @return None.
+ * @remark Clear the LCD.
+ **********************************************************************/
+void Interface_clearDisplay() {
+    LCD_clearDisplay();
 }
 
 /**********************************************************************
@@ -616,6 +660,127 @@ int main(void) {
 
 #endif
 
+
+//#define TEST_LIGHTS
+#ifdef TEST_LIGHTS
+
+#define LIGHT_ON_DELAY      2000
+#define LIGHT_ON_TIMER_DELAY    700
+
+enum {
+    READY_LIGHT  = 0x01,
+    READY_LIGHT_TIMER,
+    WAIT_LIGHT,
+    WAIT_LIGHT_TIMER,
+    ERROR_LIGHT,
+    ERROR_LIGHT_TIMER,
+    FRONT_CALIB_LIGHT,
+    BACK_CALIB_LIGHT
+} state;
+
+int main(void) {
+    //initializations
+    Board_init();
+    Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
+    Interface_init();
+
+    DELAY(5);
+    dbprint("Interface online.\n");
+
+    Timer_new(TIMER_TEST, LIGHT_ON_DELAY);
+    state = 1;
+    //cycle and check if buttons are pressed, if so, turn light on for 3 seconds
+    while(1) {
+        switch (state) {
+            case READY_LIGHT:
+                if (Timer_isExpired(TIMER_TEST)) {
+                    Interface_clearAll();
+                    Interface_readyLightOn();
+                    LCD_setPosition(1,0);
+                    dbprint("Ready light.       \n");
+                    Timer_new(TIMER_TEST, LIGHT_ON_DELAY);
+                    state++;
+                }
+                break;
+            case READY_LIGHT_TIMER:
+                if (Timer_isExpired(TIMER_TEST)) {
+                    Interface_clearAll();
+                    Interface_readyLightOnTimer(LIGHT_ON_TIMER_DELAY);
+                    LCD_setPosition(1,0);
+                    dbprint("Ready light timer.\n");
+                    Timer_new(TIMER_TEST, LIGHT_ON_DELAY);
+                    state++;
+                }
+                break;
+            case WAIT_LIGHT:
+                if (Timer_isExpired(TIMER_TEST)) {
+                    Interface_clearAll();
+                    Interface_waitLightOn();
+                    LCD_setPosition(0,0);
+                    dbprint("Wait light.        \n");
+                    Timer_new(TIMER_TEST, LIGHT_ON_DELAY);
+                    state++;
+                }
+                break;
+            case WAIT_LIGHT_TIMER:
+                if (Timer_isExpired(TIMER_TEST)) {
+                    Interface_clearAll();
+                    Interface_waitLightOnTimer(LIGHT_ON_TIMER_DELAY);
+                    LCD_setPosition(0,0);
+                    dbprint("Wait light timer.   \n");
+                    Timer_new(TIMER_TEST, LIGHT_ON_DELAY);
+                    state++;
+                }
+                break;
+            case ERROR_LIGHT:
+                if (Timer_isExpired(TIMER_TEST)) {
+                    Interface_clearAll();
+                    Interface_errorLightOn();
+                    LCD_setPosition(0,0);
+                    dbprint("Error light.        \n");
+                    Timer_new(TIMER_TEST, LIGHT_ON_DELAY);
+                    state++;
+                }
+                break;
+            case ERROR_LIGHT_TIMER:
+                if (Timer_isExpired(TIMER_TEST)) {
+                    Interface_clearAll();
+                    Interface_errorLightOnTimer(LIGHT_ON_TIMER_DELAY);
+                    LCD_setPosition(0,0);
+                    dbprint("Error light timer.  \n");
+                    Timer_new(TIMER_TEST, LIGHT_ON_DELAY);
+                    state++;
+                }
+                break;
+            case FRONT_CALIB_LIGHT:
+                if (Timer_isExpired(TIMER_TEST)) {
+                    Interface_clearAll();
+                    CALIBRATE_FRONT_LED = ON;
+                    LCD_setPosition(0,0);
+                    dbprint("Front calib. light.   \n");
+                    Timer_new(TIMER_TEST, LIGHT_ON_DELAY);
+                    state++;
+                }
+                break;
+            case BACK_CALIB_LIGHT:
+                if (Timer_isExpired(TIMER_TEST)) {
+                    Interface_clearAll();
+                    CALIBRATE_BACK_LED = ON;
+                    LCD_setPosition(0,0);
+                    dbprint("Back calib. light.   \n");
+                    Timer_new(TIMER_TEST, LIGHT_ON_DELAY);
+                    state = 1;
+                }
+                break;
+        } // switch
+        
+        Interface_runSM();
+    }
+
+    return SUCCESS;
+}
+
+#endif
 
 
 //#define TEST_QUICK

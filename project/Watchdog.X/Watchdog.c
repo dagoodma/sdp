@@ -24,7 +24,7 @@
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
-#define USE_SERIAL
+//#define USE_SERIAL
 //#define USE_LCD
 #define USE_XBEE
 
@@ -37,7 +37,6 @@
  **********************************************************************/
 
 static void Watchdog_init();
-static void dbprint(char *fmt, ...);
 static void doWatchdog();
 
 
@@ -112,23 +111,6 @@ static union EVENTS {
  **********************************************************************/
 
 
-static void dbprint(char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    char msg[255];
-    vsprintf(msg, fmt, args);
-
-    #ifdef USE_SERIAL
-    printf(msg);
-    #endif
-    #ifdef USE_LCD
-    LCD_writeString(msg);
-    #endif
-    #ifdef USE_LOGGER
-    Logger_writeString(msg);
-    #endif
-};
-
 // ---------------- Interface Messages ------------------------
 // (See Interface.c and Interface.h)
 // -------------------------------- Read Mavlink ---------------------------
@@ -185,7 +167,7 @@ static void doWatchdog(void) {
                 if (Mavlink_newMessage.gpsGeocentricData.status == MAVLINK_GEOCENTRIC_ORIGIN) {
                     event.flags.haveSetOriginMessage = TRUE;
                     dbprint("C: %s\n",getMessage(STOPPING_BOAT_MESSAGE));
-                    dbprintf(" X=%.0f, Y=%.0f, Z=%.0f\n", Mavlink_newMessage.gpsGeocentricData.x,
+                    dbprint(" X=%.0f, Y=%.0f, Z=%.0f\n", Mavlink_newMessage.gpsGeocentricData.x,
                      Mavlink_newMessage.gpsGeocentricData.y, Mavlink_newMessage.gpsGeocentricData.z );
                 }
                 else if (Mavlink_newMessage.gpsGeocentricData.status == MAVLINK_GEOCENTRIC_ERROR) {
@@ -265,13 +247,13 @@ static void doWatchdog(void) {
                 // ---------- Boat error messages ------------------
                 if (Mavlink_newMessage.statusAndErrorData.error != ERROR_NONE) {
                     lastBoatErrorCode = Mavlink_newMessage.statusAndErrorData.error;
-                    dbprintf("A: err=%s\n", getErrorMessage());
+                    dbprint("A: err=%s\n", getErrorMessage(lastBoatErrorCode));
                 }
                 else {
                     // ---------- Boat status messages -----------------
                     if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_ONLINE) {
                         event.flags.haveBoatOnlineMessage = TRUE;
-                        dbprintf("A: err=%s\n", getErrorMessage());
+                        dbprint("A: %s\n", getMessage(BOAT_ONLINE_MESSAGE));
                     }
                 }
                 break;
@@ -279,18 +261,19 @@ static void doWatchdog(void) {
                 // This is handled in checkHeartbeat() below
             case MAVLINK_MSG_ID_XBEE_HEARTBEAT:
                 #ifdef SHOW_HEARTBEAT
-                dbprintf("A: heartbeat!\n");
+                dbprint("A: heartbeat!\n");
                 #endif
                 break;
             /*----------------  Barometer altitude message ----------------*/
             case MAVLINK_MSG_ID_BAROMETER:
                 event.flags.haveBarometerMessage = TRUE;
-                dbprintf("A: err=%s\n", getErrorMessage());
+                dbprint("A: barom A=%.2f T=%.2f\n", Mavlink_newMessage.barometerData.altitude,
+                    Mavlink_newMessage.barometerData.temperature);
                 break;
             default:
                 // Unknown message ID
                 event.flags.haveUnknownMessage = TRUE;
-                dbprintf("Unknown: 0x%X\n", lastMavlinkMessageID);
+                dbprint("Unknown: 0x%X\n", lastMavlinkMessageID);
                 break;
         } // switch
     }
@@ -305,14 +288,12 @@ static void doWatchdog(void) {
  **********************************************************************/
 static void Watchdog_init(void) {
     Board_init();
-    Timer_init();
+    Board_configure(USE_SERIAL | USE_TIMER);
+    //Board_configure(USE_LCD | USE_TIMER);
+    DELAY(10);
 
     // I2C bus
     //I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
-
-    #ifdef USE_SERIAL
-    Serial_init();
-    #endif
 
     #ifdef USE_XBEE
     Xbee_init();
@@ -320,10 +301,6 @@ static void Watchdog_init(void) {
 
     #ifdef USE_LOGGER
     Logger_init();
-    #endif
-
-    #ifdef USE_LCD
-    LCD_init();
     #endif
 }
 

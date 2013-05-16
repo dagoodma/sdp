@@ -32,12 +32,12 @@
 
 /**********************************************************************
  * Function: Barometer_init
- * @return None
+ * @return SUCCESS or FAILURE.
  * @remark Intializes the Barometer and state machine.
  * @author David Goodman
  * @date 2013.02.01 
  **********************************************************************/
-void Barometer_init();
+char Barometer_init();
 
 
 /**********************************************************************

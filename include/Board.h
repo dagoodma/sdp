@@ -93,10 +93,12 @@
 #define TIMER_INTERFACE         14
 #define TIMER_LIGHT_HOLD        15
 #define TIMER_LCD_HOLD          16
+#define TIMER_I2C_TIMEOUT       17
 
 // Master state machine timers
-#define TIMER_MAIN              24
-#define TIMER_MAIN2             25
+#define TIMER_MAIN              23
+#define TIMER_MAIN2             24
+#define TIMER_MAIN3             25
 #define TIMER_BACKGROUND        26
 #define TIMER_BACKGROUND2       27
 #define TIMER_BACKGROUND3       28

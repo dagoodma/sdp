@@ -64,6 +64,24 @@ uint8_t Xbee_init(){
         while(1);
         return FAILURE;
     }
+#else
+    /*
+    int i = 0;
+    char confirm[3];
+    DELAY(2000);
+    UART_putString(XBEE_UART_ID, "+++", 3);
+    DELAY(1000);
+    //wait for "OK\r"
+    do {
+        confirm[i] = UART_getChar(XBEE_UART_ID);
+        if (confirm[i] != 0)
+            i++;
+    } while(i < 3);
+
+    if (!(confirm[0] == 0x4F && confirm[1] == 0x4B && confirm[2] == 0x0D)){
+        return FAILURE;
+    }
+     * */
 #endif
     return SUCCESS; 
 }
@@ -244,22 +262,44 @@ int main(){
 
 //#define XBEE_TEST_3
 #ifdef XBEE_TEST_3
+
+#define STARTUP_DELAY   1500
+#define PRINT_DELAY     1000
+
 int main(){
     Board_init();
-    Serial_init();
-    Timer_init();
-    Xbee_init();
-    printf("Xbee Test 2\n");
+    Board_configure(USE_SERIAL | USE_TIMER);
+    //Board_configure(USE_LCD | USE_TIMER);
+    DELAY(10);
+    dbprint("Starting XBee...\n");
+    if (Xbee_init() != SUCCESS) {
+        dbprint("Failed XBee init.\n");
+        return FAILURE;
+    }
+    dbprint("XBee initialized.\n");
+    DELAY(STARTUP_DELAY);
+
+    LCD_setPosition(0,0);
+    Timer_new(TIMER_TEST, PRINT_DELAY);
+    unsigned long int sent = 0;
+    unsigned long int got = 0;
+    LCD_clearDisplay();
+    LCD_setPosition(2,0);
+    dbprint("Received: %ld", got);
     while(1){
         Xbee_runSM();
-        //if(!UART_isTransmitEmpty(UART1_ID));
-        //printf("%d\t",Mavlink_returnACKStatus(messageName_start_rescue));
-        if(!UART_isReceiveEmpty(UART1_ID)){
-            Serial_getChar();
-            Mavlink_send_start_rescue(UART2_ID, TRUE, 0xFF, 0x34FD, 0xAB54);
-            printf("\nSENT\n");
+        if (Timer_isExpired(TIMER_TEST)) {
+            LCD_setPosition(0,0);
+            dbprint("Sent XBee msg.\nSent: %ld\n", ++sent);
+            Mavlink_sendSaveStation(WANT_ACK);
+            Timer_new(TIMER_TEST, PRINT_DELAY);
+        }
+        if (Mavlink_hasNewMessage()) {
+            LCD_setPosition(2,0);
+            dbprint("Received: %ld", ++got);
         }
     }
 
+    return SUCCESS;
 }
 #endif

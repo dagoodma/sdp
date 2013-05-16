@@ -15,12 +15,12 @@
 
 /**
  * Function: Magnetometer_init
- * @return None.
- * @remark Initializes the Magnetometer interface
+ * @return SUCCESS or FAILURE.
+ * @remark Initializes the Magnetometer sensor.
  * @author David Goodman
  * @author Shehadeh H. Dajani
  * @date 2013.03.10  */
-void Magnetometer_init();
+char Magnetometer_init();
 
 
 /**

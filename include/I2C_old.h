@@ -42,7 +42,6 @@
  * @remark Sends a start or restart signal over the I2C bus to alert all
  * peripherals of an incoming transmission.
  * @author Shehadeh H. Dajani
- * @author David Goodman
  * @date 2013.01.21  */
 bool I2C_startTransfer(I2C_MODULE I2C_ID, bool restart);
 
@@ -52,7 +51,6 @@ bool I2C_startTransfer(I2C_MODULE I2C_ID, bool restart);
  * @return None.
  * @remark Sends the stop signal to terminate I2C communication.
  * @author Shehadeh H. Dajani
- * @author David Goodman
  * @date 2013.01.21  */
 void I2C_stopTransfer(I2C_MODULE I2C_ID);
 
@@ -63,7 +61,6 @@ void I2C_stopTransfer(I2C_MODULE I2C_ID);
  * @return Success, TRUE or FALSE
  * @remark Sends a single byte over the I2C bus.
  * @author Shehadeh H. Dajani
- * @author David Goodman
  * @date 2013.01.21  */
 bool I2C_transmitOneByte(I2C_MODULE I2C_ID, uint8_t data);
 
@@ -75,7 +72,6 @@ bool I2C_transmitOneByte(I2C_MODULE I2C_ID, uint8_t data);
  * @remark Uses I2C_transmitOneByte() to send a single byte of the I2C bus
  * and checks for an acknowledgement from the slave.
  * @author Shehadeh H. Dajani
- * @author David Goodman
  * @date 2013.01.21  */
 bool I2C_sendData(I2C_MODULE I2C_ID, uint8_t data);
 
@@ -86,7 +82,6 @@ bool I2C_sendData(I2C_MODULE I2C_ID, uint8_t data);
  * @remark After sending the prerequisites for a read, this function will check
  * if the desired data is on the I2C bus line, read it, and return it.
  * @author Shehadeh H. Dajani
- * @author David Goodman
  * @date 2013.01.21  */
 int16_t I2C_getData(I2C_MODULE I2C_ID);
 
@@ -97,7 +92,6 @@ int16_t I2C_getData(I2C_MODULE I2C_ID);
  * @return None.
  * @remark Turns on the I2C bus line specified and sets the frequency on it.
  * @author Shehadeh H. Dajani
- * @author David Goodman
  * @date 2013.01.21  */
 void I2C_init(I2C_MODULE I2C_ID, uint32_t I2C_clockFreq);
 
@@ -108,7 +102,6 @@ void I2C_init(I2C_MODULE I2C_ID, uint32_t I2C_clockFreq);
  * @return None.
  * @remark Turns on the I2C bus line specified and sets the frequency on it.
  * @author Shehadeh H. Dajani
- * @author David Goodman
  * @date 2013.01.21  */
 void I2C_acknowledgeRead(I2C_MODULE I2C_ID, bool ack);
 
@@ -117,26 +110,8 @@ void I2C_acknowledgeRead(I2C_MODULE I2C_ID, bool ack);
  * @param I2C bus line that will be used.
  * @return Whether an acknowledgement was received.
  * @author Shehadeh H. Dajani
- * @author David Goodman
- * @date 2013.05.15  */
+ * @date 2013.01.21  */
 bool I2C_hasAcknowledged(I2C_MODULE I2C_ID);
 
-/**
- * Function: I2C_waitForAcknowledgement
- * @param I2C bus line that will be used.
- * @return TRUE if an acknowledgement was recieved, or FALSE if not.
- * @remark Polls (blocking) and waits for acknowledgement, unless a
- *  timeout occurs.
- * @author David Goodman
- * @date 2013.01.21  */
-bool I2C_waitForAcknowledgement(I2C_MODULE I2C_ID);
-
-/**
- * Function: I2C_hasError
- * @return TRUE if an error occured.
- * @remark The error flag will be cleared when calling this function.
- * @author David Goodman
- * @date 2013.05.15  */
-bool I2C_hasError();
 
 #endif // I2C_H

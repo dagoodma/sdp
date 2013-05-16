@@ -18,14 +18,19 @@
 
 const char *ERROR_MESSAGE[] = {
     "None",
-    "An unknown error occured",
-    "Never received acknowledgment from boat",
-    "GPS was disconnected",
-    "GPS cannot obtain fix",
-    "Never received origin from command center",
-    "Never received station from command center",
-    "Stopped receiving altitude data from boat",
-    "Lost connection to boat"
+    "Unkown error",
+    "Never got reply from\nboat.",
+    "GPS disconnected",
+    "GPS has no fix", // GPs
+    "Never got origin", // boat didn't receive origin from CC
+    "Never got station", // boat doesn't have a station
+    "Lost boat altitude",
+    "Lost boat connection",
+    "Magnetometer failed",
+    "Barometer failed",
+    "Encoder failed",
+    "Accelerometer failed",
+    "GPS failed init"
 };
 
 /***********************************************************************

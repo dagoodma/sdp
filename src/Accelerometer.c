@@ -44,7 +44,7 @@
 #define ACCUMULATOR_LENGTH      2 // use a power of 2 and update shift too
 #define ACCUMULATOR_SHIFT       1 // 2^shift = length
 
-#define MINIMUM_LEVEL_ERROR     10 // (1e-3 G-counts)
+#define MINIMUM_LEVEL_ERROR     28 // (1e-3 G-counts)
 
 
 /***********************************************************************
@@ -86,15 +86,11 @@ char Accelerometer_init() {
     int16_t c = readRegister(WHO_AM_I_ADDRESS);  // Read WHO_AM_I register
     if (c == WHO_AM_I_VALUE) //c != ERROR ||
     {
-#ifdef DEBUG
-        //printf("Accelerometer is online...\n");
-#endif
+        DBPRINT("Accelerometer is online...\n");
     }
     else
     {
-#ifdef DEBUG
-        printf("Could not connect to Accelerometer: 0x%X\n",c);
-#endif
+        DBPRINT("Accelerometer: Failed to connect (0x%X).\n",(int16_t)c);
         return FAILURE;
     }
 
@@ -262,9 +258,8 @@ static int16_t readRegister( uint8_t address ) {
 
     do {
         // Send the start bit with the restart flag low
-        if(!I2C_startTransfer(ACCELEROMETER_I2C_ID, I2C_WRITE )) {
+        if(!I2C_startTransfer(ACCELEROMETER_I2C_ID, I2C_WRITE ))
             return ERROR;
-        }
         // Transmit the slave's address to notify it
         if (!I2C_sendData(ACCELEROMETER_I2C_ID, SLAVE_WRITE_ADDRESS))
             break;
@@ -280,7 +275,6 @@ static int16_t readRegister( uint8_t address ) {
 
         // Read the I2C bus 
         data = I2C_getData(ACCELEROMETER_I2C_ID);
-
         success = TRUE;
     } while(0);
 
@@ -390,48 +384,6 @@ static int16_t writeRegister( uint8_t address, uint8_t data ) {
 
 
 
-//#define ACCELEROMETER_TEST
-#ifdef ACCELEROMETER_TEST
-
-// Set Desired Operation Frequency
-#define I2C_CLOCK_FREQ  80000 // (Hz)
-#define PRINT_DELAY     250 // (ms)
-
-int main(void) {
-
-    // Initialize the modules
-    Board_init();
-    Timer_init();
-    Serial_init();
-    I2C_init(ACCELEROMETER_I2C_ID, I2C_CLOCK_FREQ);
-
-    //printf("Who am I: 0x%X\n", readRegister(WHO_AM_I_ADDRESS));
-
-    if (Accelerometer_init() != SUCCESS) {
-        printf("Failed to initialize the accelerometer.\n");
-        return FAILURE;
-    }
-    printf("Initialized the accelerometer.\n");
-    Timer_new(TIMER_TEST, PRINT_DELAY );
-
-    while(1){
-    // Convert the raw data to real values
-        if (Timer_isExpired(TIMER_TEST)) {
-            printf("**G-Counts: x=%.2f, y=%.2f, z=%.2f\n\n",
-                (float)Accelerometer_getX()/1000,
-                (float)Accelerometer_getY()/1000,
-                (float)Accelerometer_getZ()/1000);
-            Timer_new(TIMER_TEST, PRINT_DELAY );
-        }
-
-        Accelerometer_runSM();
-    }
-
-    return (SUCCESS);
-
-}
-
-#endif
 
 //#define CC_CALIBRATION_TEST
 #ifdef CC_CALIBRATION_TEST
@@ -443,31 +395,23 @@ int main(void) {
 
 #define PRINT_DELAY     1000 // (ms)
 #define CALIBRATE_HOLD_DELAY        3000 // (ms) time to hold calibration
+#define STARTUP_DELAY   1500
 bool calibrating = FALSE;
 int main(void) {
 
     // Initialize the modules
     Board_init();
-    Timer_init();
-    Serial_init();
+    Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
     I2C_init(ACCELEROMETER_I2C_ID, I2C_CLOCK_FREQ);
 
     //printf("Who am I: 0x%X\n", readRegister(WHO_AM_I_ADDRESS));
 
     if (Accelerometer_init() != SUCCESS) {
-        printf("Failed to initialize the accelerometer.\n");
+        dbprint("Failed accel. init.\n");
         return FAILURE;
     }
-    printf("Initialized the accelerometer.\n");
-
-    // Configure ports as outputs
-    /*
-    LED_N_TRIS = OUTPUT;
-    LED_S_TRIS = OUTPUT;
-    LED_E_TRIS = OUTPUT;
-    LED_W_TRIS = OUTPUT;
-    
-    */
+    dbprint("Accel. initialized.\n");
+    DELAY(STARTUP_DELAY);
     Timer_new(TIMER_TEST,PRINT_DELAY  );
     while(1) {
     // Convert the raw data to real values
@@ -508,3 +452,49 @@ int main(void) {
 
 #endif
 
+
+//#define ACCELEROMETER_TEST
+#ifdef ACCELEROMETER_TEST
+
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  80000 // (Hz)
+#define PRINT_DELAY     250 // (ms)
+#define STARTUP_DELAY   1500
+
+int main(void) {
+
+    // Initialize the modules
+    Board_init();
+    Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
+    I2C_init(ACCELEROMETER_I2C_ID, I2C_CLOCK_FREQ);
+
+    //printf("Who am I: 0x%X\n", readRegister(WHO_AM_I_ADDRESS));
+    dbprint("Initializing accel.\n");
+    if (Accelerometer_init() != SUCCESS) {
+        dbprint("Failed to init accel\n");
+        return FAILURE;
+    }
+    LCD_setPosition(0,0);
+    dbprint("Initialized the accel.\n");
+    DELAY(STARTUP_DELAY);
+    Timer_new(TIMER_TEST, PRINT_DELAY );
+    LCD_clearDisplay();
+    while(1){
+    // Convert the raw data to real values
+        if (Timer_isExpired(TIMER_TEST)) {
+            LCD_setPosition(0,0);
+            dbprint("**G-Counts:\n x=%.2f,\n y=%.2f,\n z=%.2f\n",
+                (float)Accelerometer_getX()/1000,
+                (float)Accelerometer_getY()/1000,
+                (float)Accelerometer_getZ()/1000);
+            Timer_new(TIMER_TEST, PRINT_DELAY );
+        }
+
+        Accelerometer_runSM();
+    }
+
+    return (SUCCESS);
+
+}
+
+#endif

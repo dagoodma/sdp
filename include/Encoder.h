@@ -15,12 +15,13 @@
 
 /**
  * Function: Encoder_init
- * @return None.
+ * @return SUCCESS or FAILURE.
  * @remark Initializes the Encoder interface over I2C. Note that the I2C module
  *  should have already been initialized.
+ * @author David Goodman
  * @author Shehadeh H. Dajani
  * @date 2013.02.10  */
-void Encoder_init();
+char Encoder_init();
 
 
 /**

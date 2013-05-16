@@ -19,16 +19,17 @@
 4/29/2013   3:08PM      dagoodma    Started new Compas module.
 ***********************************************************************/
 #define IS_COMPAS
-#define DEBUG
-#define DEBUG_BLINK
+//#define DEBUG
+#define DEBUG_STATE
+//#define DEBUG_BLINK
 //#define DEBUG_VERBOSE
-#define USE_MAGNETOMETER
+#define USE_INTERFACE
+//#define USE_MAGNETOMETER
 #define USE_ENCODER
 #define USE_ACCELEROMETER
+#define USE_BAROMETER
 #define USE_GPS
-//#define USE_XBEE
-//#define USE_BAROMETER
-#define USE_INTERFACE
+#define USE_XBEE
 
 #ifdef DEBUG
 #ifdef USE_SD_LOGGER
@@ -47,6 +48,7 @@
 #include "Accelerometer.h"
 #include "I2C.h"
 #include "Serial.h"
+
 #include "Board.h"
 #include "Encoder.h"
 #include "Ports.h"
@@ -70,7 +72,8 @@
 #define TIMER_STOP          TIMER_MAIN
 #define TIMER_SETORIGIN     TIMER_MAIN
 #define TIMER_SETSTATION    TIMER_MAIN
-#define TIMER_CANCEL        TIMER_MAIN2
+#define TIMER_DEBOUNCE      TIMER_MAIN2
+#define TIMER_CANCEL        TIMER_MAIN3
 
 
 #define TIMER_BAROMETER_LOST            TIMER_BACKGROUND
@@ -85,7 +88,9 @@
 #define GPS_CORRECTION_SEND_DELAY   3750
 #define LCD_HOLD_DELAY              4000 // (ms) time for lcd message to linger
 #define LED_HOLD_DELAY              1000 // (ms) time for led to stay lit
-#define CANCEL_TIMEOUT_DELAY       3500 // (ms) for cancel msg to linger
+#define CANCEL_TIMEOUT_DELAY       6500 // (ms) for cancel msg to linger
+#define CANCEL_DEBOUNCE_DELAY       500 // (ms) to read cancel button in cancel state
+#define RESCUE_DEBOUNCE_DELAY       500 // (ms) to read rescue button in rescue state
 
 #define RESEND_MESSAGE_LIMIT        5 // times to resend before failing
 
@@ -107,8 +112,9 @@
 
 #define I2C_CLOCK_FREQ  50000 // (Hz)
 
-#define BLINK_DELAY     5000
-#define BLINK_ON_DELAY  1000
+#define BLINK_DELAY     2000
+#define BLINK_ON_DELAY  1500
+#define DEBUG_PRINT     1000
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -120,7 +126,7 @@
 I2C_MODULE I2C_BUS_ID   = I2C1;
 
 static enum {
-    STATE_CALIBRATE,
+    STATE_CALIBRATE = 0x1,
     STATE_SETSTATION,
     STATE_SETORIGIN,
     STATE_READY,
@@ -140,7 +146,8 @@ static enum {
     // N/A
 
     /* - SetStation SM - */
-    // N/A
+    STATE_SETSTATION_SEND,
+    STATE_SETSTATION_CONFIRMCANCEL,
 
     /* - Error SM - */
     // N/A
@@ -157,9 +164,9 @@ static enum {
     STATE_RESCUE_CONFIRMCANCEL,
     STATE_RESCUE_RETURN
 	
-} subState;
+} subState, lastSubState;
 
-union EVENTS {
+static union EVENTS {
     struct {
         /* - Interface flags - */
         unsigned int rescueButtonPressed :1;
@@ -240,6 +247,7 @@ void startStopSM();
 void initializeCompas();
 
 void setError(error_t errorCode);
+void fatal(error_t code);
 void doBarometerUpdate();
 void gpsCorrectionUpdate();
 void getTargetLocation(LocalCoordinate *targetNed);
@@ -272,7 +280,11 @@ void checkEvents() {
     if (state == STATE_CALIBRATE) {
         if (Accelerometer_isLevel())
             event.flags.scopeIsLevel = TRUE;
+        #ifdef USE_MAGNETOMETER
         if (Magnetometer_isNorth())
+        #else
+        if (TRUE)
+        #endif
             event.flags.scopeIsNorth = TRUE;
     }
 
@@ -283,15 +295,15 @@ void checkEvents() {
 
     // Check interface
     if (Interface_isOkPressed())
-        event.flags.okButtonPressed;
+        event.flags.okButtonPressed = TRUE;
     if (Interface_isCancelPressed())
-        event.flags.cancelButtonPressed;
+        event.flags.cancelButtonPressed = TRUE;
     if (Interface_isSetStationPressed())
-        event.flags.setStationButtonPressed;
+        event.flags.setStationButtonPressed = TRUE;
     if (Interface_isStopPressed())
-        event.flags.stopButtonPressed;
+        event.flags.stopButtonPressed = TRUE;
     if (Interface_isRescuePressed())
-        event.flags.rescueButtonPressed;
+        event.flags.rescueButtonPressed = TRUE;
 
     // XBee messages (from command center)
     if (Mavlink_hasNewMessage()) {
@@ -407,8 +419,8 @@ void doCalibrateSM() {
                 if (Timer_isExpired(TIMER_CALIBRATE)) {
                     // Finished calibrating
                     Encoder_setZeroYaw();
+                    Interface_clearDisplay();
                     Interface_showMessageOnTimer(CALIBRATE_SUCCESS_MESSAGE,LCD_HOLD_DELAY);
-                    Interface_readyLightOnTimer(LED_HOLD_DELAY);
                     Interface_yawLightsOff();
                     event.flags.calibrateDone = TRUE;
                 }
@@ -453,44 +465,38 @@ void doRescueSM() {
                     resendMessageCount++;
                 }
             }
+            else if (event.flags.cancelButtonPressed
+                    && Timer_isExpired(TIMER_DEBOUNCE)) {
+                // Transition to confirmcancel substate
+                lastSubState = subState;
+                subState = STATE_RESCUE_CONFIRMCANCEL;
+                Timer_new(TIMER_CANCEL, CANCEL_TIMEOUT_DELAY);
+                Timer_new(TIMER_DEBOUNCE, CANCEL_DEBOUNCE_DELAY);
+                Interface_readyLightOn();
+                Interface_waitLightOff();
+                Interface_clearDisplay();
+                Interface_showMessage(CANCEL_RESCUE_MESSAGE);
+            }
             break;
         case STATE_RESCUE_WAIT:
             // Wait for boat to rescue someone
             if (event.flags.haveRescueSuccessMessage) {
                 // Person was found! Exit to ready
                 event.flags.rescueDone = TRUE;
+                Interface_clearDisplay();
                 Interface_showMessageOnTimer(RESCUE_SUCCESS_MESSAGE, LCD_HOLD_DELAY);
             }
-            else if (event.flags.cancelButtonPressed) {
+            else if (event.flags.cancelButtonPressed
+                    && Timer_isExpired(TIMER_DEBOUNCE)) {
                 // Transition to confirmcancel substate
+                lastSubState = subState;
                 subState = STATE_RESCUE_CONFIRMCANCEL;
-                Timer_new(TIMER_RESCUE, CANCEL_TIMEOUT_DELAY);
+                Timer_new(TIMER_CANCEL, CANCEL_TIMEOUT_DELAY);
+                Timer_new(TIMER_DEBOUNCE, CANCEL_DEBOUNCE_DELAY);
+                Interface_readyLightOn();
+                Interface_waitLightOff();
+                Interface_clearDisplay();
                 Interface_showMessage(CANCEL_RESCUE_MESSAGE);
-            }
-            break;
-        case STATE_RESCUE_CONFIRMCANCEL:
-            // Ask user if they want to cancel rescue
-            if (event.flags.haveRescueSuccessMessage) {
-                // Person was found! Exit to ready
-                event.flags.rescueDone = TRUE;
-                Interface_showMessageOnTimer(RESCUE_SUCCESS_MESSAGE, LCD_HOLD_DELAY);
-            }
-            else if (event.flags.okButtonPressed) {
-                // Transition to return substate
-                subState = STATE_RESCUE_RETURN;
-                Interface_showMessage(START_RETURN_MESSAGE);
-                Interface_readyLightOff();
-                Interface_waitLightOn();
-                resendMessageCount = 0;
-                Mavlink_sendReturnStation(WANT_ACK);
-                Timer_new(TIMER_RESCUE, RESEND_MESSAGE_DELAY);
-            }
-            else if (Timer_isExpired(TIMER_RESCUE)
-                || event.flags.cancelButtonPressed) {
-                // Transition to wait substate
-                Timer_clear(TIMER_RESCUE);
-                subState = STATE_RESCUE_WAIT;
-                Interface_showMessage(STARTED_RESCUE_MESSAGE);
             }
             break;
         case STATE_RESCUE_RETURN:
@@ -515,6 +521,59 @@ void doRescueSM() {
                     Timer_new(TIMER_RESCUE, RESEND_MESSAGE_DELAY);
                     resendMessageCount++;
                 }
+            }
+            else if (event.flags.cancelButtonPressed
+                    && Timer_isExpired(TIMER_DEBOUNCE)) {
+                // Transition to confirmcancel substate
+                lastSubState = subState;
+                subState = STATE_RESCUE_CONFIRMCANCEL;
+                Timer_new(TIMER_CANCEL, CANCEL_TIMEOUT_DELAY);
+                Timer_new(TIMER_DEBOUNCE, CANCEL_DEBOUNCE_DELAY);
+                Interface_readyLightOn();
+                Interface_waitLightOff();
+                Interface_clearDisplay();
+                Interface_showMessage(CANCEL_RETURN_MESSAGE);
+            }
+            break;
+        case STATE_RESCUE_CONFIRMCANCEL:
+            // Ask user if they want to cancel rescue
+            if (event.flags.haveRescueSuccessMessage) {
+                // Person was found! Exit to ready
+                event.flags.rescueDone = TRUE;
+                Interface_showMessageOnTimer(RESCUE_SUCCESS_MESSAGE, LCD_HOLD_DELAY);
+            }
+            else if (event.flags.okButtonPressed) {
+                // Transition to return substate
+                /*
+                subState = STATE_RESCUE_RETURN;
+                Interface_clearDisplay();
+                Interface_showMessage(START_RETURN_MESSAGE);
+                Interface_readyLightOff();
+                Interface_waitLightOn();
+                resendMessageCount = 0;
+                Mavlink_sendReturnStation(WANT_ACK);
+                Timer_new(TIMER_RESCUE, RESEND_MESSAGE_DELAY);
+                 */
+                startStopSM();
+            }
+            else if (Timer_isExpired(TIMER_CANCEL)
+                || (Timer_isExpired(TIMER_DEBOUNCE) && event.flags.cancelButtonPressed)) {
+                // Transition out of cancel and back into the last state
+                Interface_clearDisplay();
+                Interface_readyLightOff();
+                Interface_waitLightOn();
+                Timer_new(TIMER_DEBOUNCE, CANCEL_DEBOUNCE_DELAY);
+                if (lastSubState == STATE_RESCUE_SEND)
+                    Interface_showMessage(STARTING_RESCUE_MESSAGE);
+                else if (lastSubState == STATE_RESCUE_RETURN)
+                    Interface_showMessage(START_RETURN_MESSAGE);
+                else if (lastSubState == STATE_RESCUE_WAIT) {
+                    Interface_showMessage(STARTED_RESCUE_MESSAGE);
+                    Interface_readyLightOn();
+                    Interface_waitLightOff();
+                }
+
+                subState = lastSubState;
             }
             break;
     }
@@ -550,34 +609,30 @@ void doStopSM() {
                     resendMessageCount++;
                 }
             }
-            break;
-        case STATE_STOP_IDLE:
-            // Wait for something
-            if (event.flags.cancelButtonPressed) {
+            else if (event.flags.cancelButtonPressed
+                    && Timer_isExpired(TIMER_DEBOUNCE)) {
                 // Transition to confirmcancel substate
+                lastSubState = subState;
                 subState = STATE_STOP_CONFIRMCANCEL;
-                Timer_new(TIMER_STOP, CANCEL_TIMEOUT_DELAY);
+                Timer_new(TIMER_CANCEL, CANCEL_TIMEOUT_DELAY);
+                Timer_new(TIMER_DEBOUNCE, CANCEL_DEBOUNCE_DELAY);
+                Interface_readyLightOn();
+                Interface_waitLightOff();
+                Interface_clearDisplay();
                 Interface_showMessage(CANCEL_STOP_MESSAGE);
             }
             break;
-        case STATE_STOP_CONFIRMCANCEL:
-            // Ask user if they want to cancel stop
-            if (event.flags.okButtonPressed) {
-                // Transition to return substate
-                subState = STATE_STOP_RETURN;
-                Interface_showMessage(START_RETURN_MESSAGE);
-                Interface_readyLightOff();
-                Interface_waitLightOn();
-                resendMessageCount = 0;
-                Mavlink_sendReturnStation(WANT_ACK);
-                Timer_new(TIMER_STOP, RESEND_MESSAGE_DELAY);
-            }
-            else if (Timer_isExpired(TIMER_STOP)
-                || event.flags.cancelButtonPressed) {
-                // Transition to wait substate
-                Timer_clear(TIMER_STOP);
-                subState = STATE_STOP_IDLE;
-                Interface_showMessage(STOPPED_BOAT_MESSAGE);
+        case STATE_STOP_IDLE:
+            // Wait for something
+            if (event.flags.cancelButtonPressed
+                    && Timer_isExpired(TIMER_DEBOUNCE)) {
+                // Transition to confirmcancel substate
+                lastSubState = subState;
+                subState = STATE_STOP_CONFIRMCANCEL;
+                Timer_new(TIMER_CANCEL, CANCEL_TIMEOUT_DELAY);
+                Timer_new(TIMER_DEBOUNCE, CANCEL_DEBOUNCE_DELAY);
+                Interface_clearDisplay();
+                Interface_showMessage(CANCEL_STOP_MESSAGE);
             }
             break;
         case STATE_STOP_RETURN:
@@ -585,6 +640,7 @@ void doStopSM() {
             if (event.flags.haveReturnStationAck) {
                 // Boat is headed to station, exits to ready
                 event.flags.stopDone = TRUE;
+                Interface_clearDisplay();
                 Interface_showMessageOnTimer(RETURNING_MESSAGE, LCD_HOLD_DELAY);
                 Interface_waitLightOff();
                 Interface_readyLightOn();
@@ -603,6 +659,56 @@ void doStopSM() {
                     resendMessageCount++;
                 }
             }
+            else if (event.flags.cancelButtonPressed
+                    && Timer_isExpired(TIMER_DEBOUNCE)) {
+                // Transition to confirmcancel substate
+                lastSubState = subState;
+                subState = STATE_STOP_CONFIRMCANCEL;
+                Timer_new(TIMER_CANCEL, CANCEL_TIMEOUT_DELAY);
+                Timer_new(TIMER_DEBOUNCE, CANCEL_DEBOUNCE_DELAY);
+                Interface_readyLightOn();
+                Interface_waitLightOff();
+                Interface_clearDisplay();
+                Interface_showMessage(CANCEL_RETURN_MESSAGE);
+            }
+            break;
+        case STATE_STOP_CONFIRMCANCEL:
+            // Ask user if they want to cancel stop
+            if (event.flags.okButtonPressed) {
+                // Transition out due to cancellation
+                Interface_clearDisplay();
+                if (lastSubState == STATE_STOP_IDLE) {
+                    subState = STATE_STOP_RETURN;
+                    Interface_showMessage(START_RETURN_MESSAGE);
+                    Interface_readyLightOff();
+                    Interface_waitLightOn();
+                    resendMessageCount = 0;
+                    Mavlink_sendReturnStation(WANT_ACK);
+                    Timer_new(TIMER_STOP, RESEND_MESSAGE_DELAY);
+                }
+                else if (lastSubState == STATE_STOP_SEND)
+                    startReadySM();
+                else if (lastSubState == STATE_STOP_RETURN)
+                    startStopSM();
+            }
+            else if (Timer_isExpired(TIMER_CANCEL)
+                 || (Timer_isExpired(TIMER_DEBOUNCE) && event.flags.cancelButtonPressed)) {
+                // Transition out of cancel and back into the last state
+                Interface_clearDisplay();
+                Interface_readyLightOff();
+                Interface_waitLightOn();
+                Timer_new(TIMER_DEBOUNCE, CANCEL_DEBOUNCE_DELAY);
+                if (lastSubState == STATE_STOP_SEND) 
+                    Interface_showMessage(STOPPING_BOAT_MESSAGE);
+                else if (lastSubState == STATE_STOP_RETURN) 
+                    Interface_showMessage(START_RETURN_MESSAGE);
+                else if (lastSubState == STATE_STOP_IDLE) {
+                    Interface_showMessage(STOPPED_BOAT_MESSAGE);
+                    Interface_readyLightOn();
+                    Interface_waitLightOff();
+                }
+                subState = lastSubState;
+            }
             break;
     }  // switch
 
@@ -614,9 +720,36 @@ void doStopSM() {
  * @remark Executes one cycle of the Set Station state.
  **********************************************************************/
 void doSetStationSM() {
-    if (event.flags.haveSetStationAck) {
-        Interface_showMessageOnTimer(SAVED_STATION_MESSAGE, LCD_HOLD_DELAY);
-        event.flags.setStationDone = TRUE;
+    switch (subState) {
+        case STATE_SETSTATION_SEND:
+            if (event.flags.haveSetStationAck) {
+                Interface_showMessageOnTimer(SAVED_STATION_MESSAGE, LCD_HOLD_DELAY);
+                event.flags.setStationDone = TRUE;
+            }
+            else if (event.flags.cancelButtonPressed
+                    && Timer_isExpired(TIMER_DEBOUNCE)) {
+                // Transition to confirmcancel substate
+                subState = STATE_SETSTATION_CONFIRMCANCEL;
+                Timer_new(TIMER_CANCEL, CANCEL_TIMEOUT_DELAY);
+                Timer_new(TIMER_DEBOUNCE, CANCEL_DEBOUNCE_DELAY);
+                Interface_readyLightOn();
+                Interface_waitLightOff();
+                Interface_clearDisplay();
+                Interface_showMessage(CANCEL_SETSTATION_MESSAGE);
+            }
+            break;
+        case STATE_SETSTATION_CONFIRMCANCEL:
+            // Ask user if they want to cancel stop
+            if (event.flags.okButtonPressed) {
+                // Transition out due to cancellation
+                Interface_clearDisplay();
+                startReadySM();
+            }
+            else if (Timer_isExpired(TIMER_CANCEL)
+                 || (Timer_isExpired(TIMER_DEBOUNCE) && event.flags.cancelButtonPressed)) {
+                startSetStationSM();
+            }
+            break;
     }
 }
 
@@ -652,8 +785,9 @@ void doMasterSM() {
     #endif
 
     #ifdef USE_ACCELEROMETER
-    if (state = STATE_CALIBRATE)
+    if (state == STATE_CALIBRATE) {
         Accelerometer_runSM();
+    }
     #endif
 
     #ifdef USE_GPS
@@ -679,9 +813,19 @@ void doMasterSM() {
 
     // Blink on timer
     #ifdef DEBUG_BLINK
-    if (Timer_isExpired(TIMER_TEST2)) {
+    if (Timer_isExpired(TIMER_TEST)) {
         Interface_waitLightOnTimer(BLINK_ON_DELAY);
-        Timer_new(TIMER_TEST2, BLINK_DELAY);
+        Timer_new(TIMER_TEST, BLINK_DELAY);
+    }
+    #endif
+
+    #ifdef DEBUG_STATE
+    if (Timer_isExpired(TIMER_TEST2)) {
+        DBPRINT("State: %d, %d\n", state, subState);
+        DBPRINT("Ok=%X, Cancel=%X, Rescue=%X, Stop=%X\n",
+            Interface_isOkPressed(), Interface_isCancelPressed(),
+            Interface_isRescuePressed(), Interface_isStopPressed());
+        Timer_new(TIMER_TEST2, DEBUG_PRINT);
     }
     #endif
 
@@ -697,7 +841,8 @@ void doMasterSM() {
 
             break;
         case STATE_ERROR:
-            if (event.flags.okButtonPressed) {
+            if (event.flags.okButtonPressed
+                    || event.flags.cancelButtonPressed) {
                 lastErrorCode = ERROR_NONE;
                 if (event.flags.lastStateWasReady)
                     startReadySM();
@@ -738,14 +883,19 @@ void doMasterSM() {
         if (event.flags.haveError) {
             startErrorSM();
         }
-        if (state != STATE_SETORIGIN) {
-            if (event.flags.stopButtonPressed)
+        else if (state != STATE_SETORIGIN) {
+            if (event.flags.stopButtonPressed
+                    && (state != STATE_STOP || Timer_isExpired(TIMER_DEBOUNCE)))
                 startStopSM();
             else if (event.flags.haveRequestOriginMessage)
                 startSetOriginSM();
-            else if (event.flags.rescueButtonPressed)
+            else if (event.flags.rescueButtonPressed
+                    && (state != STATE_RESCUE || Timer_isExpired(TIMER_DEBOUNCE))) {
+                //DBPRINT("Ready button pressed.\n");
                 startRescueSM();
-            else if (event.flags.setStationButtonPressed)
+            }
+            else if (event.flags.setStationButtonPressed
+                    && (state != STATE_SETSTATION || Timer_isExpired(TIMER_DEBOUNCE)))
                 startSetStationSM();
         }
     }
@@ -791,18 +941,14 @@ void startReadySM() {
 void startErrorSM() {
     state = STATE_ERROR;
     subState = STATE_NONE;
-    error_t showErrorCode = ERROR_NONE;
+
     /* Determine whether the error was from the boat or the compas,
        but display the ComPAS errors over the boat's. */
-    if (event.flags.haveBoatError)
-        showErrorCode = lastBoatErrorCode;
     if (event.flags.haveError)
-        showErrorCode = lastErrorCode;
+        Interface_showErrorMessage(lastErrorCode);
+    else if (event.flags.haveBoatError)
+        Interface_showBoatErrorMessage(lastBoatErrorCode);
 
-    if (showErrorCode == ERROR_NONE)
-        showErrorCode = ERROR_UNKNOWN;
-
-    Interface_showErrorMessage(showErrorCode);
 }
 
 /**********************************************************************
@@ -812,7 +958,8 @@ void startErrorSM() {
  **********************************************************************/
 void startSetStationSM() {
     state = STATE_SETSTATION;
-    subState = STATE_NONE;
+    subState = STATE_SETSTATION_SEND;
+    Timer_new(TIMER_DEBOUNCE, RESCUE_DEBOUNCE_DELAY);
  
     Mavlink_sendSaveStation(WANT_ACK);
     Timer_new(TIMER_SETSTATION, RESEND_MESSAGE_DELAY);
@@ -850,6 +997,7 @@ void startSetOriginSM() {
 void startRescueSM() {
     state = STATE_RESCUE;
     subState = STATE_RESCUE_SEND;
+    Timer_new(TIMER_DEBOUNCE, RESCUE_DEBOUNCE_DELAY);
 
     // Send the target location to the boat and start the resend timer
     getTargetLocation(&nedRescueTarget);
@@ -871,6 +1019,7 @@ void startRescueSM() {
 void startStopSM() {
     state = STATE_STOP;
     subState = STATE_STOP_SEND;
+    Timer_new(TIMER_DEBOUNCE, RESCUE_DEBOUNCE_DELAY);
 
     // Send a stop message and resend on timer
     Mavlink_sendOverride(WANT_ACK);
@@ -896,39 +1045,6 @@ void initializeCompas() {
 
     Timer_init();
 
-    // I2C bus
-    I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
-
-    #ifdef USE_MAGNETOMETER
-    DBPRINT("Initializing magnetomer.\n");
-    Magnetometer_init();
-    #endif
-
-    #ifdef USE_ENCODER
-    DBPRINT("Initializing encoder.\n");
-    Encoder_init();
-    #endif
-
-    #ifdef USE_ACCELEROMETER
-    DBPRINT("Initializing accelerometer.\n");
-    Accelerometer_init();
-    #endif
-
-    #ifdef USE_GPS
-    DBPRINT("Initializing GPS.\n");
-    GPS_init();
-    #endif
-
-    #ifdef USE_XBEE
-    DBPRINT("Initializing XBee.\n");
-    Xbee_init();
-    #endif
-
-    #ifdef USE_BAROMETER
-    DBPRINT("Initializing barometer.\n");
-    Barometer_init();
-    #endif
-
     #ifdef USE_INTERFACE
     DBPRINT("Initializing interface.\n");
     Interface_init();
@@ -939,12 +1055,62 @@ void initializeCompas() {
     LCD_init();
     #endif
 
+    // -------------------- I2C Devices -------------------
+    // I2C bus
+    I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
+
+    #ifdef USE_MAGNETOMETER
+    DBPRINT("Initializing magnetometer.\n");
+    if (Magnetometer_init() != SUCCESS) {
+        fatal(ERROR_MAGNETOMETER);
+    }
+    #endif
+
+    #ifdef USE_ENCODER
+    DBPRINT("Initializing encoders.\n");
+    if (Encoder_init() != SUCCESS) {
+        fatal(ERROR_ENCODER);
+    }
+    #endif
+
+    #ifdef USE_ACCELEROMETER
+    DBPRINT("Initializing accelerometer.\n");
+    if (Accelerometer_init() != SUCCESS) {
+        fatal(ERROR_ACCELEROMETER);
+    }
+    #endif
+
+    #ifdef USE_BAROMETER
+    DBPRINT("Initializing barometer.\n");
+    if (Barometer_init() != SUCCESS) {
+        fatal(ERROR_BAROMETER);
+    }
+    #endif
+
+    // ------------------- UART Devices ------------------
+    #ifdef USE_GPS
+    DBPRINT("Initializing GPS.\n");
+    if (GPS_init() != SUCCESS) {
+        fatal(ERROR_GPS);
+    }
+    #endif
+
+    #ifdef USE_XBEE
+    DBPRINT("Initializing XBee.\n");
+    Xbee_init();
+    #endif
+
     #ifdef DEBUG_BLINK
     Interface_waitLightOnTimer(BLINK_ON_DELAY);
     Interface_runSM();
-    Timer_new(TIMER_TEST2, BLINK_DELAY);
+    Timer_new(TIMER_TEST, BLINK_DELAY);
     #endif
-    
+
+
+    #ifdef DEBUG_STATE
+    Timer_new(TIMER_TEST2, DEBUG_PRINT);
+    #endif
+
     // Connection related
     isConnectedWithBoat  = FALSE;
         
@@ -964,6 +1130,17 @@ void initializeCompas() {
 void setError(error_t errorCode) {
     event.flags.haveError = TRUE;
     lastErrorCode = errorCode;
+}
+
+void fatal(error_t code) {
+
+    Interface_showErrorMessage(code);
+    Interface_errorLightOn();
+
+    while(1) {
+        // Lock up
+        asm("nop");
+    }
 }
 
 /**********************************************************************
