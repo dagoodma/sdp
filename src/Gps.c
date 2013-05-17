@@ -1085,3 +1085,41 @@ int main() {
 }
 
 #endif
+
+
+//#define GPS_ATLAS_TEST
+#ifdef GPS_ATLAS_TEST
+int main() {
+    Board_init(); // initalize interrupts
+    Serial_init(); // init serial port for printing messages
+    GPS_init();
+    Timer_init();
+    printf("GPS initialized.\n");
+
+    Timer_new(TIMER_TEST,1000);
+    while(1) {
+        if (Timer_isExpired(TIMER_TEST)) {
+            if (!GPS_isConnected()) {
+                printf("GPS not connected.\n");
+            }
+            else if (GPS_hasFix() && GPS_hasPosition()) {
+                GeocentricCoordinate ecefPos;
+                GPS_getPosition(&ecefPos);
+                printf("Position: x=%.2f, y=%.2f, z=%.2f (m)\n", ecefPos.x,
+                    ecefPos.y, ecefPos.z);
+
+                printf("Velocity: %.2f (m/s), Heading: %.2f (deg)\n",
+                    GPS_getVelocity(), GPS_getHeading());
+            }
+            else {
+                printf("No fix!\n");
+            }
+
+            Timer_new(TIMER_TEST,1000);
+        }
+        GPS_runSM();
+
+    }
+}
+
+#endif

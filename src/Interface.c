@@ -35,7 +35,7 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-#define WAIT_BETWEEN_CHECKS 50 // [miliseconds]
+#define WAIT_BETWEEN_CHECKS 20 // [miliseconds]
 #define NUMBER_OF_TIMES_TO_CHECK 1
 #define MINIMUM_POSITIVES 1
 #define BUTTON_BYTE_COUNT 1

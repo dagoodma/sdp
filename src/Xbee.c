@@ -303,3 +303,41 @@ int main(){
     return SUCCESS;
 }
 #endif
+
+
+//#define XBEE_ATLAS_TEST
+#ifdef XBEE_ATLAS_TEST
+
+#define STARTUP_DELAY   1500
+#define PRINT_DELAY     1000
+
+int main(){
+    Board_init();
+    Board_configure(USE_TIMER);
+    DELAY(10);
+    //dbprint("Starting XBee...\n");
+    if (Xbee_init() != SUCCESS) {
+        //dbprint("Failed XBee init.\n");
+        return FAILURE;
+    }
+    //dbprint("XBee initialized.\n");
+    DELAY(STARTUP_DELAY);
+
+    Timer_new(TIMER_TEST, PRINT_DELAY);
+    unsigned long int sent = 0;
+    unsigned long int got = 0;
+    while(1){
+        Xbee_runSM();
+        if (Timer_isExpired(TIMER_TEST)) {
+            //dbprint("XBee: Sent=%ld, Got=%ld\n", ++sent, got);
+            Mavlink_sendRequestOrigin();
+            Timer_new(TIMER_TEST, PRINT_DELAY);
+        }
+        if (Mavlink_hasNewMessage()) {
+            ++got;
+        }
+    }
+
+    return SUCCESS;
+}
+#endif

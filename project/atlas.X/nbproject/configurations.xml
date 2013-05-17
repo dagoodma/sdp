@@ -17,9 +17,10 @@
       <itemPath>../../include/Navigation.h</itemPath>
       <itemPath>../../include/Mavlink.h</itemPath>
       <itemPath>../../include/Error.h</itemPath>
-      <itemPath>/Users/dagoodma/Dropbox/Projects/sdp/sdp/include/Barometer.h</itemPath>
       <itemPath>../../include/Override.h</itemPath>
       <itemPath>../../include/TiltCompass.h</itemPath>
+      <itemPath>../../include/LCD.h</itemPath>
+      <itemPath>../../include/Barometer.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -42,10 +43,11 @@
       <itemPath>../../src/Navigation.c</itemPath>
       <itemPath>../../src/Mavlink.c</itemPath>
       <itemPath>../../src/Xbee.c</itemPath>
-      <itemPath>/Users/dagoodma/Dropbox/Projects/sdp/sdp/src/Barometer.c</itemPath>
       <itemPath>../../src/Override.c</itemPath>
       <itemPath>../../src/TiltCompass.c</itemPath>
       <itemPath>../../src/Error.c</itemPath>
+      <itemPath>../../src/Lcd.c</itemPath>
+      <itemPath>../../src/Barometer.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

@@ -58,17 +58,19 @@ uint16_t readSensor();
  
 /**********************************************************************
  * Function: TiltCompass_init
- * @return None
+ * @return SUCCESS or FAILURE.
  * @remark Waits for a startup delay. Note, I2C bus should have already
  *	 been initialized.
  **********************************************************************/
-void TiltCompass_init() {
+bool TiltCompass_init() {
     Timer_new(TIMER_TILTCOMPASS,STARTUP_DELAY);
 	
     while(!Timer_isExpired(TIMER_TILTCOMPASS)) {
         // Do nothing
         asm("nop");
     }
+
+    return SUCCESS;
 }
  
 /**********************************************************************
@@ -190,8 +192,8 @@ uint16_t readSensor() {
     return data;
 }
 
-//#define TILT_COMPASS_TEST
-#ifdef TILT_COMPASS_TEST
+//#define TILT_COMPASS_ATLAS_TEST
+#ifdef TILT_COMPASS_ATLAS_TEST
 
 #define PRINT_DELAY		REFRESH_DELAY
 

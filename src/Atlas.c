@@ -41,9 +41,20 @@
 #define USE_GPS
 #define USE_DRIVE
 #define USE_TILTCOMPASS
-#define USE_XBEE
+//#define USE_XBEE
 //#define USE_SIREN
 #define USE_BAROMETER
+
+#ifdef DEBUG
+#ifdef USE_SD_LOGGER
+#define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
+#else
+#define DBPRINT(...)   printf(__VA_ARGS__)
+#endif
+#else
+#define DBPRINT(...)   ((int)0)
+#endif
+
 
 #define EVENT_BYTE_SIZE     10 // provides 80 event bits
 
@@ -155,6 +166,7 @@ static bool haveStation = FALSE;
 static bool haveOrigin = FALSE;
 static bool wantSaveStation = FALSE;
 static bool wantOverride = FALSE;
+static bool haveXbee = FALSE;
 
 static LocalCoordinate nedStation; // NED coordinate with station location
 static LocalCoordinate nedRescue; // NED coordinate of drowning person
@@ -189,6 +201,7 @@ static void setError(error_t errorCode);
 static void gpsCorrectionUpdate();
 static void doBarometerUpdate();
 static void doHeartbeatMessage();
+void fatal(error_t code);
 
 
 /***********************************************************************
@@ -689,59 +702,6 @@ static void startRescueSM() {
 
 
 /**********************************************************************
- * Function: initializeAtlas
- * @return None.
- * @remark Initializes the boat's master state machine and all modules.
- * @author David Goodman
- * @date 2013.04.24  
- **********************************************************************/
-static void initializeAtlas() {
-    Board_init();
-    Serial_init();
-    Timer_init();
-
-    #ifdef USE_DRIVE
-    Drive_init();
-    #endif
-
-    // I2C bus
-    I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
-
-    #ifdef USE_TILTCOMPASS
-    TiltCompass_init();
-    #endif
-
-    #ifdef USE_GPS
-    GPS_init();
-    #endif
-
-    #ifdef USE_NAVIGATION
-    Navigation_init();
-
-    #endif
-
-    #ifdef USE_OVERRIDE
-    Override_init();
-    #endif
-
-    #ifdef USE_BAROMETER
-    Barometer_init();
-    Timer_new(TIMER_BAROMETER_SEND, BAROMETER_SEND_DELAY);
-    #endif
-
-    #ifdef USE_XBEE
-    Xbee_init();
-    #endif
-        
-    // Start calibrating before use
-    startSetOriginSM();
-
-    Timer_new(TIMER_HEARTBEAT, HEARTBEAT_SEND_DELAY);
-
-    Mavlink_sendStatus(MAVLINK_STATUS_ONLINE);
-}
-
-/**********************************************************************
  * Function: handleAcknowledgement
  * @return None.
  * @remark Sends an ACK for the last message that arrived if desired.
@@ -769,6 +729,17 @@ static void setError(error_t errorCode) {
     DBPRINT("Error: %s\n", getErrorMessage(errorCode));
 }
 
+void fatal(error_t code) {
+
+    DBPRINT("Fatal error: %s\n", getErrorMessage(code));
+    if (haveXbee)
+        Mavlink_sendError(code);
+
+    while(1) {
+        // Lock up
+        asm("nop");
+    }
+}
 
 /**********************************************************************
  * Function: doBarometerUpdate
@@ -847,6 +818,89 @@ static void resetAtlas() {
 }
 
 
+/**********************************************************************
+ * Function: initializeAtlas
+ * @return None.
+ * @remark Initializes the boat's master state machine and all modules.
+ * @author David Goodman
+ * @date 2013.04.24
+ **********************************************************************/
+static void initializeAtlas() {
+    Board_init();
+#if defined(DEBUG) && !defined(USE_XBEE)
+    Serial_init();
+    DBPRINT("Initializing serial.\n");
+#endif
+    Timer_init();
+
+    // ----------------- Custom Hardware ------------------
+    #ifdef USE_DRIVE
+    DBPRINT("Initializing drive.\n");
+    Drive_init();
+    #endif
+
+    #ifdef USE_OVERRIDE
+    DBPRINT("Initializing override.\n");
+    Override_init();
+    #endif
+
+    // -------------------- I2C Devices -------------------
+    DBPRINT("Initializing I2C.\n");
+    I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
+    if (I2C_hasError()) {
+        fatal(ERROR_I2C);
+    }
+
+    #ifdef USE_TILTCOMPASS
+    DBPRINT("Initializing tilt compass.\n");
+    if (TiltCompass_init() != SUCCESS) {
+        fatal(ERROR_TILTCOMPASS);
+    }
+    #endif
+
+
+    #ifdef USE_BAROMETER
+    DBPRINT("Initializing barometer.\n");
+    if (Barometer_init() != SUCCESS) {
+        fatal(ERROR_BAROMETER);
+    }
+    Timer_new(TIMER_BAROMETER_SEND, BAROMETER_SEND_DELAY);
+    #endif
+
+
+    haveXbee = FALSE;
+    #ifdef USE_XBEE
+    DBPRINT("Initializing xbee\n");
+    if (Xbee_init() != SUCCESS) {
+        fatal(ERROR_XBEE);
+    }
+    haveXbee = TRUE;
+    #endif
+
+
+    // ------------------- UART Devices ------------------
+    #ifdef USE_GPS
+    DBPRINT("Initializing gps.\n");
+    if (GPS_init() != SUCCESS) {
+        fatal(ERROR_GPS);
+    }
+    #endif
+
+    #ifdef USE_NAVIGATION
+    DBPRINT("Initializing navigation.\n");
+    if (Navigation_init() != SUCCESS) {
+        fatal(ERROR_NAVIGATION);
+    }
+    #endif
+
+
+    // Start calibrating before use
+    startSetOriginSM();
+
+    Timer_new(TIMER_HEARTBEAT, HEARTBEAT_SEND_DELAY);
+    Mavlink_sendStatus(MAVLINK_STATUS_ONLINE);
+}
+
 //---------------------------------MAIN -------------------------------
 
 /**********************************************************************
@@ -856,11 +910,10 @@ static void resetAtlas() {
  * @author David Goodman
  * @date 2013.03.10  
  **********************************************************************/
+#define USE_MAIN
 #ifdef USE_MAIN
 int main(void) {
-    initMasterSM();
-    printf("%.2f",0.00);
-    printf("Atlas ready for use. \n\n");
+    initializeAtlas();
     while(1){
         doMasterSM();
     }

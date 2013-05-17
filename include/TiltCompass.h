@@ -31,11 +31,11 @@
 
 /**********************************************************************
  * Function: TiltCompass_init
- * @return None
+ * @return SUCCESS or FAILURE if device was initialized.
  * @remark Waits for a startup delay. Note, I2C bus should have already
  *	 been initialized.
  **********************************************************************/
-void TiltCompass_init();
+bool TiltCompass_init();
  
 /**********************************************************************
  * Function: TiltCompass_runSM

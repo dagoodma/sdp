@@ -19,10 +19,11 @@
 4/29/2013   3:08PM      dagoodma    Started new Compas module.
 ***********************************************************************/
 #define IS_COMPAS
-//#define DEBUG
+#define DEBUG
 #define DEBUG_STATE
 //#define DEBUG_BLINK
 //#define DEBUG_VERBOSE
+#define DEBUG_RESCUE
 #define USE_INTERFACE
 //#define USE_MAGNETOMETER
 #define USE_ENCODER
@@ -30,6 +31,8 @@
 #define USE_BAROMETER
 #define USE_GPS
 #define USE_XBEE
+
+//#define REQUIRE_RESCUE_HEIGHT // causes an error if altitude unknown and rescue pressed
 
 #ifdef DEBUG
 #ifdef USE_SD_LOGGER
@@ -224,6 +227,7 @@ int lastMessageID;
 error_t lastErrorCode;
 error_t lastBoatErrorCode;
 bool isConnectedWithBoat;
+bool haveCompasHeight;
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -302,8 +306,16 @@ void checkEvents() {
         event.flags.setStationButtonPressed = TRUE;
     if (Interface_isStopPressed())
         event.flags.stopButtonPressed = TRUE;
-    if (Interface_isRescuePressed())
-        event.flags.rescueButtonPressed = TRUE;
+    if (Interface_isRescuePressed()) {
+        #ifdef REQUIRE_RESCUE_HEIGHT
+        if (haveCompasHeight)
+            event.flags.rescueButtonPressed = TRUE;
+        else
+            setError(ERROR_NO_ALTITUDE);
+        #else
+            event.flags.rescueButtonPressed = TRUE;
+        #endif
+    }
 
     // XBee messages (from command center)
     if (Mavlink_hasNewMessage()) {
@@ -447,10 +459,17 @@ void doRescueSM() {
             if (event.flags.haveStartRescueAck) {
                 // Transition to wait substate
                 subState = STATE_RESCUE_WAIT;
+                Interface_clearDisplay();
                 Interface_showMessage(STARTED_RESCUE_MESSAGE);
                 Interface_waitLightOff();
                 resendMessageCount = 0;
                 Interface_readyLightOn();
+                #ifdef DEBUG_RESCUE
+                LCD_setPosition(2,0);
+                LCD_writeString("R: N=%.2f, E=%.2f\nE: Y=%.2f, P=%.2f",
+                    nedRescueTarget.north, nedRescueTarget.east,
+                    Encoder_getYaw(), Encoder_getPitch());
+                #endif
             }
             else if (Timer_isExpired(TIMER_RESCUE)) {
                 // Resend start rescue message on timer
@@ -1008,6 +1027,15 @@ void startRescueSM() {
     Interface_clearAll();
     Interface_waitLightOn();
     Interface_showMessage(STARTING_RESCUE_MESSAGE);
+
+    #ifdef DEBUG_RESCUE
+    LCD_setPosition(2,0);
+    char debug[50];
+    sprintf(debug, "R: N=%.2f, E=%.2f\nE: Y=%.2f, P=%.2f",
+        nedRescueTarget.north, nedRescueTarget.east,
+        Encoder_getYaw(), Encoder_getPitch());
+    LCD_writeString(debug);
+    #endif
 }
 
 
@@ -1058,6 +1086,9 @@ void initializeCompas() {
     // -------------------- I2C Devices -------------------
     // I2C bus
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
+    if (I2C_hasError) {
+        fatal(ERROR_I2C);
+    }
 
     #ifdef USE_MAGNETOMETER
     DBPRINT("Initializing magnetometer.\n");
@@ -1097,7 +1128,8 @@ void initializeCompas() {
 
     #ifdef USE_XBEE
     DBPRINT("Initializing XBee.\n");
-    Xbee_init();
+    if (Xbee_init() != SUCCESS)
+        fatal(ERROR_XBEE);
     #endif
 
     #ifdef DEBUG_BLINK
@@ -1113,7 +1145,9 @@ void initializeCompas() {
 
     // Connection related
     isConnectedWithBoat  = FALSE;
-        
+    compasHeight = 5.3f;
+    haveCompasHeight = FALSE;
+
     // Start calibrating before use
     startCalibrateSM();
     resendMessageCount = 0;
@@ -1134,6 +1168,7 @@ void setError(error_t errorCode) {
 
 void fatal(error_t code) {
 
+    DBPRINT("Fatal error: %s\n", getErrorMessage(errorCode));
     Interface_showErrorMessage(code);
     Interface_errorLightOn();
 
@@ -1155,10 +1190,12 @@ void doBarometerUpdate() {
         compasHeight = Barometer_getAltitude()
             - Mavlink_newMessage.barometerData.altitude;
 
+        haveCompasHeight = TRUE;
         Timer_new(TIMER_BAROMETER_LOST, BAROMETER_LOST_DELAY);
     }
     else if (Timer_isExpired(TIMER_BAROMETER_LOST)) {
         setError(ERROR_NO_ALTITUDE);
+        haveCompasHeight = FALSE;
     }
 }
 

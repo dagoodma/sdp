@@ -395,8 +395,8 @@ static void updateReadings(int BAROMETER_I2C_ID) {
 
 }
 
-//#define BAROMETER_TEST
-#ifdef BAROMETER_TEST
+//#define BAROMETER_TEST_OLD
+#ifdef BAROMETER_TEST_OLD
 
 #define PRINT_DELAY     1 // (ms)
 
@@ -440,8 +440,8 @@ int main(void) {
 #endif
 
 
-//#define BAROMETER_TEST_2
-#ifdef BAROMETER_TEST_2
+//#define BAROMETER_COMPAS_TEST
+#ifdef BAROMETER_COMPAS_TEST
 
 #define PRINT_DELAY     500 // (ms)
 #define STARTUP_DELAY   1500 // (ms)
@@ -464,6 +464,40 @@ int main(void) {
     while(1) {
         if (Timer_isExpired(TIMER_TEST)){
             LCD_setPosition(0,0);
+            dbprint("Alt: %.1f\n", Barometer_getAltitude());
+            Timer_new(TIMER_TEST, PRINT_DELAY );
+        }
+
+        Barometer_runSM();
+    }
+    return (SUCCESS);
+}
+
+#endif
+
+//#define BAROMETER_ATLAS_TEST
+#ifdef BAROMETER_ATLAS_TEST
+// Same as ComPAS test but without LCD
+
+#define PRINT_DELAY     500 // (ms)
+#define STARTUP_DELAY   1500 // (ms)
+
+int main(void) {
+// Initialize the UART,Timers, and I2C1
+    Board_init();
+    Board_configure(USE_SERIAL | USE_TIMER);
+    I2C_init(BAROMETER_I2C_ID, I2C_CLOCK_FREQ);
+    dbprint("Initializing barom\n");
+    if (Barometer_init() != SUCCESS) {
+        dbprint("Failed barom. init\n");
+        return FAILURE;
+    }
+    dbprint("Barom. initialized.\n");
+    DELAY(STARTUP_DELAY);
+
+    Timer_new(TIMER_TEST, PRINT_DELAY);
+    while(1) {
+        if (Timer_isExpired(TIMER_TEST)){
             dbprint("Alt: %.1f\n", Barometer_getAltitude());
             Timer_new(TIMER_TEST, PRINT_DELAY );
         }

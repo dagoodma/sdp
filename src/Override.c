@@ -152,3 +152,34 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
     //INTEnable(INT_CN,0);
 }
 
+
+//#define OVERRIDE_TEST
+#ifdef OVERRIDE_TEST
+
+
+
+bool inOverride = FALSE;
+
+int  main(void) {
+    // Initialize the UART, Timers, and I2C
+    Board_init();
+    Serial_init();
+    Timer_init();
+    Override_init();
+    printf("Override board initialized.\n");
+
+    while(1){
+        if (inOverride && !Override_isTriggered()) {
+            inOverride = FALSE;
+            printf("Override disabled.\n");
+        }
+        else if (!inOverride && Override_isTriggered()) {
+            inOverride = TRUE;
+            printf("Override enabled.\n");
+        }
+    }
+
+    return (SUCCESS);
+}
+
+#endif
