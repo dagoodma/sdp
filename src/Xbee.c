@@ -40,7 +40,9 @@
 #define XBEE_BAUD_RATE      9600
 
 /*    FOR IFDEFS     */
-//#define XBEE_REPROGRAM_SETTINGS
+#define XBEE_REPROGRAM_SETTINGS
+//#define UNICAST_MSG //if not def than MULTICAST
+#define COMPAS_XBEE //if not def than ATLAS_XBEE
 
 
 /**********************************************************************
@@ -130,7 +132,8 @@ static uint8_t Xbee_programMode(){
     DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATDH0\r", 6);
     DELAY(1000);
-   #ifdef XBEE_1
+    #ifdef UNICAST_MSG
+    #ifdef COMPAS_XBEE
     UART_putString(XBEE_UART_ID, "ATDLAAC3\r", 9);
     DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATMYBC64\r", 9);
@@ -140,6 +143,7 @@ static uint8_t Xbee_programMode(){
     UART_putString(XBEE_UART_ID, "ATMYAAC3\r", 9);
     #endif
     DELAY(1000);
+    #endif
     UART_putString(XBEE_UART_ID, "ATWR\r", 5);//Writes the command to memory
     DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATCN\r", 5);//Leave the menu.
