@@ -9,7 +9,7 @@
  */
 //include <p32xxxx.h>
 // Printing debug messages over serial
-#define DEBUG
+//#define DEBUG
 
 #include <xc.h>
 #include <stdio.h>
@@ -23,7 +23,7 @@
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
-#define I2C_TIMEOUT_DELAY   400 // (ms) till fail to start transfer
+#define I2C_TIMEOUT_DELAY   900 // (ms) till fail to start transfer
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/

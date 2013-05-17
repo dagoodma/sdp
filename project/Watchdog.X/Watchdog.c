@@ -4,7 +4,7 @@
  *
  * Created on May 11, 2013, 5:13 PM
  */
-
+#define DEBUG
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -24,8 +24,6 @@
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
-//#define USE_SERIAL
-//#define USE_LCD
 #define USE_XBEE
 
 #define SHOW_HEARTBEAT
@@ -127,9 +125,49 @@ static void doWatchdog(void) {
         lastMavlinkCommandID = MAVLINK_NO_COMMAND;
         lastMavlinkMessageWantsAck = FALSE;
         switch (lastMavlinkMessageID) {
-            // -------------------------- Acknowledgements ------------------------
+            /*--------------------  Acknowledgement messages ------------------ */
+            case MAVLINK_MSG_ID_MAVLINK_ACK:
+                // ----  Messages from AtLAs to ComPAS (from Compas.c) --------
+		// CMD_OTHER
+                if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_CMD_OTHER) {
+                    // Responding to a return to station request
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_RETURN_STATION) {
+                        event.flags.haveReturnStationAck = TRUE;
+                        dbprint("A: ack %s\n", getMessage(RETURNING_MESSAGE));
+                    }
+                    // Boat is in override state
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_OVERRIDE) {
+                        event.flags.haveStopAck = TRUE;
+                        dbprint("A: ack %s\n", getMessage(STOPPING_BOAT_MESSAGE));
+                    }
+                    // Boat saved station
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_SAVE_STATION) {
+                        event.flags.haveSetStationAck = TRUE;
+                        dbprint("A: ack %s\n", getMessage(SAVING_STATION_MESSAGE));
+                    }
+                }
+                // GPS_NED
+                else if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_GPS_NED) {
+                    // Responding to a rescue
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_LOCAL_START_RESCUE) {
+                        event.flags.haveStartRescueAck = TRUE;
+                        dbprint("A: ack %s\n", getMessage(STARTING_RESCUE_MESSAGE));
+                    }
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_LOCAL_SET_STATION) {
+                        event.flags.haveSetStationAck = TRUE;
+                        dbprint("A: ack %s\n", getMessage(SET_STATION_MESSAGE));
+                    }
+                }
+                // GPS_ECEF
+                else if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_GPS_ECEF) {
+                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_GEOCENTRIC_ORIGIN) {
+                        event.flags.haveSetOriginAck = TRUE;
+                        dbprint("A: ack=%s\n", getMessage(SET_ORIGIN_MESSAGE));
+                    }
+                }
+            // --- Messages from ComPAS to AtLAs (from Atlas.c) ---
             // No ACKS from ComPAS to AtLAs
-
+                break;
             /*------------------ CMD_OTHER messages --------------- */
             case MAVLINK_MSG_ID_CMD_OTHER:
                 // --- Messages from ComPAS to AtLAs (from Atlas.c) ---
@@ -146,18 +184,17 @@ static void doWatchdog(void) {
                     event.flags.haveSetStationMessage = TRUE;
                     dbprint("C: %s\n",getMessage(SET_STATION_MESSAGE));
                 }
-                else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_GEOCENTRIC_ORIGIN) {
-                    event.flags.haveSetOriginMessage = TRUE;
-                    dbprint("C: %s\n",getMessage(SET_ORIGIN_MESSAGE));
-                }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_OVERRIDE) {
                     event.flags.haveOverrideMessage = TRUE;
                     dbprint("C: %s\n",getMessage(STOPPING_BOAT_MESSAGE));
                 }
                 // ----  Messages from AtLAs to ComPAS (from Compas.c) --------
-                if (Mavlink_newMessage.commandOtherData.command == MAVLINK_REQUEST_ORIGIN) {
+                else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_REQUEST_ORIGIN) {
                     event.flags.haveRequestOriginMessage = TRUE;
-                    dbprint("A: ack %s\n", getMessage(BOAT_ONLINE_MESSAGE));
+                    dbprint("A: requesting origin.\n");
+                }
+                else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_STATUS_OVERRIDE) {
+                    dbprint("A: in override mode\n");
                 }
                 break;
             /*--------------------  GPS messages ------------------ */
@@ -166,8 +203,8 @@ static void doWatchdog(void) {
                 lastMavlinkMessageWantsAck = Mavlink_newMessage.gpsGeocentricData.ack;
                 if (Mavlink_newMessage.gpsGeocentricData.status == MAVLINK_GEOCENTRIC_ORIGIN) {
                     event.flags.haveSetOriginMessage = TRUE;
-                    dbprint("C: %s\n",getMessage(STOPPING_BOAT_MESSAGE));
-                    dbprint(" X=%.0f, Y=%.0f, Z=%.0f\n", Mavlink_newMessage.gpsGeocentricData.x,
+                    dbprint("C: Sending boat origin.\n");
+                    dbprint("   X=%.0f, Y=%.0f, Z=%.0f\n", Mavlink_newMessage.gpsGeocentricData.x,
                      Mavlink_newMessage.gpsGeocentricData.y, Mavlink_newMessage.gpsGeocentricData.z );
                 }
                 else if (Mavlink_newMessage.gpsGeocentricData.status == MAVLINK_GEOCENTRIC_ERROR) {
@@ -195,51 +232,10 @@ static void doWatchdog(void) {
                      Mavlink_newMessage.gpsLocalData.east);
                 }
                 // ----  Messages from AtLAs to ComPAS (from Compas.c) -------- // Boat sent position info
-                if (Mavlink_newMessage.gpsLocalData.status == MAVLINK_LOCAL_BOAT_POSITION) {
+                else if (Mavlink_newMessage.gpsLocalData.status == MAVLINK_LOCAL_BOAT_POSITION) {
                     event.flags.haveBoatPositionMessage = TRUE;
                     dbprint("A: pos N=%.1f, E=$.1f\n", Mavlink_newMessage.gpsLocalData.north,
                         Mavlink_newMessage.gpsLocalData.east);
-                }
-                break;
-            /*--------------------  Acknowledgement messages ------------------ */
-            case MAVLINK_MSG_ID_MAVLINK_ACK:
-                // ----  Messages from AtLAs to ComPAS (from Compas.c) --------
-		// CMD_OTHER
-                if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_CMD_OTHER) {
-                    // Responding to a return to station request
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_RETURN_STATION) {
-                        event.flags.haveReturnStationAck = TRUE;
-                        dbprint("A: ack %s\n", getMessage(RETURNING_MESSAGE));
-                    }
-                    // Boat is in override state
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_OVERRIDE) {
-                        event.flags.haveStopAck = TRUE;
-                        dbprint("A: ack %s\n", getMessage(STOPPING_BOAT_MESSAGE));
-                    }
-                    // Boat saved station
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_SAVE_STATION) {
-                        event.flags.haveSetStationAck = TRUE;
-                        dbprint("A: ack %s\n", getMessage(SAVING_STATION_MESSAGE));
-                    }
-                }
-                // GPS_NED
-                if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_GPS_NED) {
-                    // Responding to a rescue
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_LOCAL_START_RESCUE) {
-                        event.flags.haveStartRescueAck = TRUE;
-                        dbprint("A: ack %s\n", getMessage(STARTING_RESCUE_MESSAGE));
-                    }
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_LOCAL_SET_STATION) {
-                        event.flags.haveSetStationAck = TRUE;
-                        dbprint("A: ack %s\n", getMessage(SET_STATION_MESSAGE));
-                    }
-                }
-                // GPS_ECEF
-                if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_GPS_ECEF) {
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_GEOCENTRIC_ORIGIN) {
-                        event.flags.haveSetOriginAck = TRUE;
-                        dbprint("A: ack %s\n", getMessage(SET_ORIGIN_MESSAGE));
-                    }
                 }
                 break;
             /*---------------- Status and Error messages ---------- */
@@ -258,11 +254,11 @@ static void doWatchdog(void) {
                 }
                 break;
             /*----------------  Heartbeat message -------------------------*/
-                // This is handled in checkHeartbeat() below
             case MAVLINK_MSG_ID_XBEE_HEARTBEAT:
                 #ifdef SHOW_HEARTBEAT
                 dbprint("A: heartbeat!\n");
                 #endif
+                DBPRINT("HERE!\n");
                 break;
             /*----------------  Barometer altitude message ----------------*/
             case MAVLINK_MSG_ID_BAROMETER:

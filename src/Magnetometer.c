@@ -4,7 +4,7 @@
  *
  * Created on January 21, 2013, 11:52 AM
  */
-#define DEBUG
+//#define DEBUG
 
 #include <xc.h>
 #include <stdio.h>
@@ -28,7 +28,7 @@
 #define READ_SLAVE_ADDRESS          0x00
 #define READ_DEGREE_ADDRESS         0x41
 
-#define ACCUMULATOR_LENGTH          1
+#define ACCUMULATOR_LENGTH          15
 
 #define MAGNETIC_NORTH_OFFSET       13.7275f // (deg) offset eastward from true north
 #define DEGREE_1E1_TO_DEGREE(d)    ((float)d/10.0f)
@@ -49,8 +49,6 @@ static float heading; // (degrees)
 
 static bool haveReading;
 
-// Printing debug messages over serial
-#define DEBUG
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -69,11 +67,13 @@ char Magnetometer_init() {
     accumulator = 0.0f;
     haveReading = FALSE;
 
+    (void)readDevice(READ_DEGREE_ADDRESS);
+    /*
     uint8_t readAddress = readDeviceEEPROM(READ_SLAVE_ADDRESS);
     if (readAddress  != SLAVE_WRITE_ADDRESS) {
         DBPRINT("Magnetometer: Failed to read EEPROM address (0x%X)\n", readAddress );
         return FAILURE;
-    }
+    }*/
 
     if (I2C_hasError())
         return FAILURE;
@@ -202,9 +202,10 @@ static uint16_t readDeviceEEPROM(uint8_t eeAddress) {
         }
 
         // Wait for slave's ack
+        /*
         if (I2C_waitForAcknowledgement(MAGNETOMETER_I2C_ID) != TRUE)
             break;
-        
+        */
         // Transmit the address of EEPROM data
         if(!I2C_sendData(MAGNETOMETER_I2C_ID, eeAddress)){
             DBPRINT("Magnetometer: Second sent byte was not acknowledged.\n");
@@ -212,9 +213,10 @@ static uint16_t readDeviceEEPROM(uint8_t eeAddress) {
         }
 
         // Wait for slave's ack
+        /*
         if (I2C_waitForAcknowledgement(MAGNETOMETER_I2C_ID) != TRUE)
             break;
-
+        */
         // Start a read from device EEPROM
         if(!I2C_startTransfer(MAGNETOMETER_I2C_ID,I2C_READ)){
             DBPRINT("Magnetometer: Failed repeated start condition.\n");
@@ -227,6 +229,8 @@ static uint16_t readDeviceEEPROM(uint8_t eeAddress) {
 
         // Read the I2C bus twice
         data = I2C_getData(MAGNETOMETER_I2C_ID);
+        I2C_stopTransfer(MAGNETOMETER_I2C_ID);
+
         success = TRUE;
 
     } while(0);
@@ -251,7 +255,7 @@ int main(void) {
     dbprint("Initializing mag.\n");
     if (Magnetometer_init() != SUCCESS) {
         dbprint("Failed mag. init\n");
-        return FAILURE;
+        //return FAILURE;
     }
     dbprint("Mag. initialized.\n");
     DELAY(STARTUP_DELAY);

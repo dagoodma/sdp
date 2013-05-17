@@ -6,7 +6,7 @@
  *
  * Created on March 27, 2013, 12:34 PM
  */
-#define DEBUG
+//#define DEBUG
 
 #include <xc.h>
 #include <stdio.h>

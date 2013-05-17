@@ -10,7 +10,7 @@
 3/27/2013   11:10PM     dagoodma    Created project.
 ***********************************************************************/
 #define IS_ATLAS
-#define DEBUG
+//#define DEBUG
 //#define DEBUG_VERBOSE
 
 #include <xc.h>
@@ -41,9 +41,10 @@
 #define USE_GPS
 #define USE_DRIVE
 #define USE_TILTCOMPASS
-//#define USE_XBEE
+#define USE_XBEE
 //#define USE_SIREN
 #define USE_BAROMETER
+#define DO_HEARTBEAT
 
 #ifdef DEBUG
 #ifdef USE_SD_LOGGER
@@ -500,6 +501,10 @@ static void doMasterSM() {
     doBarometerUpdate(); // send barometer data
     #endif
 
+    #ifdef DO_HEARTBEAT
+    doHeartbeatMessage();
+    #endif
+
     switch (state) {
         case STATE_SETSTATION:
             doSetStationSM();
@@ -662,6 +667,7 @@ static void startOverrideSM() {
 
     Override_giveReceiverControl();
     DBPRINT("Reciever has control.\n");
+    Mavlink_sendStatus(MAVLINK_STATUS_OVERRIDE);
     Navigation_cancel();
 
     #ifdef USE_SIREN

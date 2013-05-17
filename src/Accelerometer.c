@@ -6,7 +6,7 @@
  */
 
 // Printing debug messages over serial
-#define DEBUG
+//#define DEBUG
 
 #include <xc.h>
 #include <stdio.h>

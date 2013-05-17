@@ -5,6 +5,9 @@
  * Created on April 5, 2013, 9:32 PM
  */
 
+// Printing debug messages over serial
+//#define DEBUG
+
 #include <xc.h>
 #include <stdio.h>
 #include <math.h>
@@ -42,9 +45,6 @@ static I2C_MODULE      TILT_COMPASS_I2C_ID = I2C1;
 static uint16_t accumulatorIndex = 0;
 static float headingAccumulator = 0;
 static float finalHeading = 0; // (degrees)
-
-// Printing debug messages over serial
-#define DEBUG
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *

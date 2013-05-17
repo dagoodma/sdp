@@ -4,7 +4,7 @@
  *
  * Created on January 21, 2013, 11:52 AM
  */
-#define DEBUG
+//#define DEBUG
 
 #include <xc.h>
 #include <stdio.h>

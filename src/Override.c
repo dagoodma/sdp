@@ -4,6 +4,8 @@
  *
  * Created on April 25, 2013, 3:27 PM
  */
+//#define DEBUG
+
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
@@ -19,7 +21,6 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
-#define DEBUG
 #define USE_DRIVE
 
 

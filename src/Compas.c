@@ -30,7 +30,7 @@
 #define USE_ACCELEROMETER
 #define USE_BAROMETER
 #define USE_GPS
-#define USE_XBEE
+//#define USE_XBEE
 
 //#define REQUIRE_RESCUE_HEIGHT // causes an error if altitude unknown and rescue pressed
 
@@ -89,11 +89,15 @@
 #define HEARTBEAT_LOST_DELAY         10000// (ms) before timeout error
 #define RESEND_MESSAGE_DELAY        4000 // (ms) resend a message
 #define GPS_CORRECTION_SEND_DELAY   3750
-#define LCD_HOLD_DELAY              4000 // (ms) time for lcd message to linger
+#define LCD_HOLD_DELAY              3000 // (ms) time for lcd message to linger
 #define LED_HOLD_DELAY              1000 // (ms) time for led to stay lit
 #define CANCEL_TIMEOUT_DELAY       6500 // (ms) for cancel msg to linger
 #define CANCEL_DEBOUNCE_DELAY       500 // (ms) to read cancel button in cancel state
 #define RESCUE_DEBOUNCE_DELAY       500 // (ms) to read rescue button in rescue state
+
+#define BLINK_DELAY     2000
+#define BLINK_ON_DELAY  1500
+#define DEBUG_PRINT_DELAY     1000
 
 #define RESEND_MESSAGE_LIMIT        5 // times to resend before failing
 
@@ -115,9 +119,6 @@
 
 #define I2C_CLOCK_FREQ  50000 // (Hz)
 
-#define BLINK_DELAY     2000
-#define BLINK_ON_DELAY  1500
-#define DEBUG_PRINT     1000
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -220,42 +221,43 @@ static union EVENTS {
 
 static GeocentricCoordinate ecefPosition; // TODO consider adding position averaging
 
-LocalCoordinate nedRescueTarget;
-uint8_t resendMessageCount;
-float compasHeight;
-int lastMessageID;
-error_t lastErrorCode;
-error_t lastBoatErrorCode;
-bool isConnectedWithBoat;
-bool haveCompasHeight;
+static LocalCoordinate nedRescueTarget;
+static uint8_t resendMessageCount;
+static float compasHeight;
+static int lastMessageID;
+static error_t lastErrorCode;
+static error_t lastBoatErrorCode;
+static bool isConnectedWithBoat;
+static bool haveCompasHeight;
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
  ***********************************************************************/
-void checkEvents();
-void doCalibrateSM();
-void doReadySM();
-void doErrorSM();
-void doRescueSM();
-void doSetStationSM();
-void doStopSM();
-void doMasterSM();
+static void checkEvents();
+static void doCalibrateSM();
+static void doReadySM();
+static void doErrorSM();
+static void doRescueSM();
+static void doSetStationSM();
+static void doStopSM();
+static void doMasterSM();
 
-void startCalibrateSM();
-void startReadySM();
-void startErrorSM();
-void startRescueSM();
-void startSetStationSM();
-void startSetOriginSM();
-void startStopSM();
-void initializeCompas();
+static void startCalibrateSM();
+static void startReadySM();
+static void startErrorSM();
+static void startRescueSM();
+static void startSetStationSM();
+static void startSetOriginSM();
+static void startStopSM();
+static void initializeCompas();
 
-void setError(error_t errorCode);
-void fatal(error_t code);
-void doBarometerUpdate();
-void gpsCorrectionUpdate();
-void getTargetLocation(LocalCoordinate *targetNed);
-void checkBoatConnection();
+static void setError(error_t errorCode);
+static void fatal(error_t code);
+static void doBarometerUpdate();
+static void gpsCorrectionUpdate();
+static void getTargetLocation(LocalCoordinate *targetNed);
+static void checkBoatConnection();
+static void updatePosition();
 
 
 /***********************************************************************
@@ -268,7 +270,7 @@ void checkBoatConnection();
  * @remark Checks for various events that can occur, and sets the 
  *  appropriate flags for handling later.
  **********************************************************************/
-void checkEvents() {
+static void checkEvents() {
     // Clear all event flags
     int i;
     for (i=0; i < EVENT_BYTE_COUNT; i++)
@@ -403,7 +405,7 @@ void checkEvents() {
  *  pivoting the scope to face true north, until both lights turn on if
  *  the pitch is also level.
  **********************************************************************/
-void doCalibrateSM() {
+static void doCalibrateSM() {
     switch(subState) {
         case STATE_CALIBRATE_PITCH:
             // Start timer if scope is level
@@ -452,7 +454,7 @@ void doCalibrateSM() {
  * @return None
  * @remark Executes one cycle of the Rescue state machine.
  **********************************************************************/
-void doRescueSM() {
+static void doRescueSM() {
     switch (subState) {
         case STATE_RESCUE_SEND:
             // Tell boat to rescue someone
@@ -603,7 +605,7 @@ void doRescueSM() {
  * @return None
  * @remark Executes one cycle of the Stop state machine.
  **********************************************************************/
-void doStopSM() {
+static void doStopSM() {
     switch(subState) {
         case STATE_STOP_SEND:
             // Tell boat to stop
@@ -738,7 +740,7 @@ void doStopSM() {
  * @return None
  * @remark Executes one cycle of the Set Station state.
  **********************************************************************/
-void doSetStationSM() {
+static void doSetStationSM() {
     switch (subState) {
         case STATE_SETSTATION_SEND:
             if (event.flags.haveSetStationAck) {
@@ -777,7 +779,7 @@ void doSetStationSM() {
  * @return None
  * @remark Executes one cycle of the Set Origin state.
  **********************************************************************/
-void doSetOriginSM() {
+static void doSetOriginSM() {
     if (event.flags.haveSetOriginAck) {
         Interface_showMessageOnTimer(SET_ORIGIN_MESSAGE, LCD_HOLD_DELAY);
         event.flags.setOriginDone = TRUE;
@@ -790,7 +792,7 @@ void doSetOriginSM() {
  * @return None
  * @remark Executes one cycle of the ComPAS's master state machine.
  **********************************************************************/
-void doMasterSM() {
+static void doMasterSM() {
     checkEvents();
 
     #ifdef USE_MAGNETOMETER
@@ -844,7 +846,7 @@ void doMasterSM() {
         DBPRINT("Ok=%X, Cancel=%X, Rescue=%X, Stop=%X\n",
             Interface_isOkPressed(), Interface_isCancelPressed(),
             Interface_isRescuePressed(), Interface_isStopPressed());
-        Timer_new(TIMER_TEST2, DEBUG_PRINT);
+        Timer_new(TIMER_TEST2, DEBUG_PRINT_DELAY);
     }
     #endif
 
@@ -927,7 +929,7 @@ void doMasterSM() {
  * @return None
  * @remark Executes one cycle of the Stop state machine.
  **********************************************************************/
-void startCalibrateSM() {
+static void startCalibrateSM() {
 	state = STATE_CALIBRATE;
 	subState = STATE_CALIBRATE_PITCH;
 	resendMessageCount = 0;
@@ -942,7 +944,7 @@ void startCalibrateSM() {
  * @return None
  * @remark Starts the Ready state.
  **********************************************************************/
-void startReadySM() {
+static void startReadySM() {
 	state = STATE_READY;
 	subState = STATE_NONE; // no sub-states in Ready
 	resendMessageCount = 0;
@@ -957,7 +959,7 @@ void startReadySM() {
  * @return None
  * @remark Start Error state.
  **********************************************************************/
-void startErrorSM() {
+static void startErrorSM() {
     state = STATE_ERROR;
     subState = STATE_NONE;
 
@@ -975,7 +977,7 @@ void startErrorSM() {
  * @return None
  * @return Transitions into the Set Station state.
  **********************************************************************/
-void startSetStationSM() {
+static void startSetStationSM() {
     state = STATE_SETSTATION;
     subState = STATE_SETSTATION_SEND;
     Timer_new(TIMER_DEBOUNCE, RESCUE_DEBOUNCE_DELAY);
@@ -994,11 +996,11 @@ void startSetStationSM() {
  * @return None
  * @return Transitions into the Set Origin state.
  **********************************************************************/
-void startSetOriginSM() {
+static void startSetOriginSM() {
     state = STATE_SETORIGIN;
     subState = STATE_NONE;
- 
-    GPS_getPosition(&ecefPosition);
+
+    updatePosition();
     Mavlink_sendOrigin(WANT_ACK, &ecefPosition);
     Timer_new(TIMER_SETORIGIN, RESEND_MESSAGE_DELAY);
     resendMessageCount = 0;
@@ -1013,7 +1015,7 @@ void startSetOriginSM() {
  * @return None
  * @remark Start the Rescue state machine.
  **********************************************************************/
-void startRescueSM() {
+static void startRescueSM() {
     state = STATE_RESCUE;
     subState = STATE_RESCUE_SEND;
     Timer_new(TIMER_DEBOUNCE, RESCUE_DEBOUNCE_DELAY);
@@ -1044,7 +1046,7 @@ void startRescueSM() {
  * @return None
  * @remark Transitions into the Stop state machine.
  **********************************************************************/
-void startStopSM() {
+static void startStopSM() {
     state = STATE_STOP;
     subState = STATE_STOP_SEND;
     Timer_new(TIMER_DEBOUNCE, RESCUE_DEBOUNCE_DELAY);
@@ -1059,12 +1061,130 @@ void startStopSM() {
     Interface_showMessage(STOPPING_BOAT_MESSAGE);
 }
 
+static void updatePosition() {
+    #ifdef USE_GPS_ORIGIN
+    GPS_getPosition(&ecefPosition);
+    #else
+    ecefPosition.x = ECEF_X_ORIGIN;
+    ecefPosition.y = ECEF_Y_ORIGIN;
+    ecefPosition.z = ECEF_Z_ORIGIN;
+    #endif
+}
+
+/**********************************************************************
+ * Function: setError
+ * @param Error code for error to set.
+ * @return None
+ * @remark Triggers an error and sets the current error to the error 
+ *  code provided. Note that this function does not start the Error state.
+ **********************************************************************/
+static void setError(error_t errorCode) {
+    event.flags.haveError = TRUE;
+    lastErrorCode = errorCode;
+}
+
+static void fatal(error_t code) {
+
+    DBPRINT("Fatal error: %s\n", getErrorMessage(code));
+    Interface_showErrorMessage(code);
+    Interface_errorLightOn();
+
+    while(1) {
+        // Lock up
+        asm("nop");
+    }
+}
+
+/**********************************************************************
+ * Function: doBarometerUpdate
+ * @return None.
+ * @remark Handles a barometer message by calculating differential height.
+ * @author David Goodman
+ * @date 2013.05.04
+ **********************************************************************/
+static void doBarometerUpdate() {
+    if (event.flags.haveBarometerMessage) {
+        compasHeight = Barometer_getAltitude()
+            - Mavlink_newMessage.barometerData.altitude;
+
+        haveCompasHeight = TRUE;
+        Timer_new(TIMER_BAROMETER_LOST, BAROMETER_LOST_DELAY);
+    }
+    else if (haveCompasHeight && Timer_isExpired(TIMER_BAROMETER_LOST)) {
+        setError(ERROR_NO_ALTITUDE);
+        haveCompasHeight = FALSE;
+    }
+}
+
+/**********************************************************************
+ * Function: doGpsCorrectionUpdate
+ * @return None.
+ * @remark Calculates and sends the current GPS error correction data.
+ * @author David Goodman
+ * @date 2013.05.05
+ **********************************************************************/
+static void gpsCorrectionUpdate() {
+    if (Timer_isExpired(TIMER_GPS_CORRECTION) && GPS_hasPosition()) {
+        // Calculate error corrections
+        GeocentricCoordinate ecefMeasured;
+        GPS_getPosition(&ecefMeasured);
+
+        GeocentricCoordinate ecefError;
+        ecefError.x = ECEF_X_ORIGIN - ecefMeasured.x;
+        ecefError.y = ECEF_Y_ORIGIN - ecefMeasured.y;
+        ecefError.z = ECEF_Z_ORIGIN - ecefMeasured.z;
+
+        // Send error corrections
+        Mavlink_sendGeocentricError(&ecefError);
+
+        Timer_new(TIMER_GPS_CORRECTION, GPS_CORRECTION_SEND_DELAY);
+    }
+}
+
+
+/**********************************************************************
+ * Function: getTargetLocation
+ * @param A pointer to a ned coordinate variable to save the result into.
+ * @return None
+ * @remark Calculates and saves the local coordinate location of target 
+ *	in the scope into the given variable.
+ **********************************************************************/
+static void getTargetLocation(LocalCoordinate *targetNed) {
+
+    projectEulerToNED(targetNed, Encoder_getYaw(),
+        Encoder_getPitch(), compasHeight);
+}
+
+/**********************************************************************
+ * Function: checkBoatConnection
+ * @return None
+ * @remark Checks the connection to be boat and sets an error if the con-
+ *  nection was lost.
+ **********************************************************************/
+static void checkBoatConnection() {
+    if (event.flags.lostBoatHeartbeat) {
+        // Lost connection to boat
+        setError(ERROR_NO_HEARTBEAT);
+    }
+    else if (event.flags.haveBoatOnlineMessage && !isConnectedWithBoat) {
+        // Boat just came online
+        isConnectedWithBoat = TRUE;
+        Timer_new(TIMER_HEARTBEAT_CHECK, HEARTBEAT_LOST_DELAY);
+        Interface_clearDisplay();
+        Interface_showMessageOnTimer(BOAT_ONLINE_MESSAGE,LCD_HOLD_DELAY);
+    }
+    else if (isConnectedWithBoat && Timer_isExpired(TIMER_HEARTBEAT_CHECK)) {
+        // Got boat heartbeat, restart timer
+        Timer_new(TIMER_HEARTBEAT_CHECK, HEARTBEAT_LOST_DELAY);
+    }
+}
+
 /**********************************************************************
  * Function: initializeCompas
  * @return None
  * @remark Initializes the ComPAS and all modules.
  **********************************************************************/
-void initializeCompas() {
+static void initializeCompas() {
     Board_init();
 
     #ifdef DEBUG
@@ -1140,7 +1260,7 @@ void initializeCompas() {
 
 
     #ifdef DEBUG_STATE
-    Timer_new(TIMER_TEST2, DEBUG_PRINT);
+    Timer_new(TIMER_TEST2, DEBUG_PRINT_DELAY);
     #endif
 
     // Connection related
@@ -1152,113 +1272,6 @@ void initializeCompas() {
     startCalibrateSM();
     resendMessageCount = 0;
 
-}
-
-/**********************************************************************
- * Function: setError
- * @param Error code for error to set.
- * @return None
- * @remark Triggers an error and sets the current error to the error 
- *  code provided. Note that this function does not start the Error state.
- **********************************************************************/
-void setError(error_t errorCode) {
-    event.flags.haveError = TRUE;
-    lastErrorCode = errorCode;
-}
-
-void fatal(error_t code) {
-
-    DBPRINT("Fatal error: %s\n", getErrorMessage(errorCode));
-    Interface_showErrorMessage(code);
-    Interface_errorLightOn();
-
-    while(1) {
-        // Lock up
-        asm("nop");
-    }
-}
-
-/**********************************************************************
- * Function: doBarometerUpdate
- * @return None.
- * @remark Handles a barometer message by calculating differential height.
- * @author David Goodman
- * @date 2013.05.04
- **********************************************************************/
-void doBarometerUpdate() {
-    if (event.flags.haveBarometerMessage) {
-        compasHeight = Barometer_getAltitude()
-            - Mavlink_newMessage.barometerData.altitude;
-
-        haveCompasHeight = TRUE;
-        Timer_new(TIMER_BAROMETER_LOST, BAROMETER_LOST_DELAY);
-    }
-    else if (Timer_isExpired(TIMER_BAROMETER_LOST)) {
-        setError(ERROR_NO_ALTITUDE);
-        haveCompasHeight = FALSE;
-    }
-}
-
-/**********************************************************************
- * Function: doGpsCorrectionUpdate
- * @return None.
- * @remark Calculates and sends the current GPS error correction data.
- * @author David Goodman
- * @date 2013.05.05
- **********************************************************************/
-void gpsCorrectionUpdate() {
-    if (Timer_isExpired(TIMER_GPS_CORRECTION) && GPS_hasPosition()) {
-        // Calculate error corrections
-        GeocentricCoordinate ecefMeasured;
-        GPS_getPosition(&ecefMeasured);
-
-        GeocentricCoordinate ecefError;
-        ecefError.x = ECEF_X_ORIGIN - ecefMeasured.x;
-        ecefError.y = ECEF_Y_ORIGIN - ecefMeasured.y;
-        ecefError.z = ECEF_Z_ORIGIN - ecefMeasured.z;
-
-        // Send error corrections
-        Mavlink_sendGeocentricError(&ecefError);
-
-        Timer_new(TIMER_GPS_CORRECTION, GPS_CORRECTION_SEND_DELAY);
-    }
-}
-
-
-/**********************************************************************
- * Function: getTargetLocation
- * @param A pointer to a ned coordinate variable to save the result into.
- * @return None
- * @remark Calculates and saves the local coordinate location of target 
- *	in the scope into the given variable.
- **********************************************************************/
-void getTargetLocation(LocalCoordinate *targetNed) {
-
-    projectEulerToNED(targetNed, Encoder_getYaw(),
-        Encoder_getPitch(), compasHeight);
-}
-
-/**********************************************************************
- * Function: checkBoatConnection
- * @return None
- * @remark Checks the connection to be boat and sets an error if the con-
- *  nection was lost.
- **********************************************************************/
-void checkBoatConnection() {
-    if (event.flags.lostBoatHeartbeat) {
-        // Lost connection to boat
-        setError(ERROR_NO_HEARTBEAT);
-    }
-    else if (event.flags.haveBoatOnlineMessage && !isConnectedWithBoat) {
-        // Boat just came online
-        isConnectedWithBoat = TRUE;
-        Timer_new(TIMER_HEARTBEAT_CHECK, HEARTBEAT_LOST_DELAY);
-        Interface_showMessageOnTimer(BOAT_ONLINE_MESSAGE,LCD_HOLD_DELAY);
-    }
-    else if (isConnectedWithBoat && Timer_isExpired(TIMER_HEARTBEAT_CHECK)) {
-        // Got boat heartbeat, restart timer
-        Timer_new(TIMER_HEARTBEAT_CHECK, HEARTBEAT_LOST_DELAY);
-    }
 }
 
 // ---------------------------- Main entry pont --------------------------

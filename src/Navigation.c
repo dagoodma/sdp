@@ -7,7 +7,7 @@
  *
  * Created on March 3, 2013, 10:27 AM
  */
-#define DEBUG
+//#define DEBUG
 #define USE_SD_LOGGER
 #include <xc.h>
 #include <stdio.h>
