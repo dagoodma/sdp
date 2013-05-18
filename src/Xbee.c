@@ -41,13 +41,14 @@
 
 /*    FOR IFDEFS     */
 //#define XBEE_REPROGRAM_SETTINGS
+//#define UNICAST_MSG
 
 
 /**********************************************************************
  * PRIVATE PROTOTYPES                                                 *
  **********************************************************************/
 
-static uint8_t Xbee_programMode();
+static uint8_t programMode();
 
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
@@ -60,7 +61,7 @@ static uint8_t Xbee_programMode();
 uint8_t Xbee_init(){
     UART_init(XBEE_UART_ID,XBEE_BAUD_RATE);
 #ifdef XBEE_REPROGRAM_SETTINGS
-    if( Xbee_programMode() == FAILURE){
+    if( programMode() == FAILURE){
         while(1);
         return FAILURE;
     }
@@ -100,14 +101,14 @@ void Xbee_runSM(){
  **********************************************************************/
 
 /**********************************************************************
- * Function: Xbee_programMode()
+ * Function: programMode()
  * @return Success or Failure based on weather the mode could be set.
  * @remark Currently restores the XBEE to factory setting
  * @author John Ash
  * @date February 10th 2013
  **********************************************************************/
 #ifdef XBEE_REPROGRAM_SETTINGS
-static uint8_t Xbee_programMode(){
+static uint8_t programMode(){
     int i = 0;
     char confirm[3];
     DELAY(2000);
@@ -130,7 +131,8 @@ static uint8_t Xbee_programMode(){
     DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATDH0\r", 6);
     DELAY(1000);
-   #ifdef XBEE_1
+    #ifdef UNICAST_MSG
+    #ifdef IS_COMPAS
     UART_putString(XBEE_UART_ID, "ATDLAAC3\r", 9);
     DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATMYBC64\r", 9);
@@ -140,6 +142,7 @@ static uint8_t Xbee_programMode(){
     UART_putString(XBEE_UART_ID, "ATMYAAC3\r", 9);
     #endif
     DELAY(1000);
+    #endif
     UART_putString(XBEE_UART_ID, "ATWR\r", 5);//Writes the command to memory
     DELAY(1000);
     UART_putString(XBEE_UART_ID, "ATCN\r", 5);//Leave the menu.
