@@ -46,12 +46,14 @@
 #define STOP_BUTTON_TRIS               PORTX12_TRIS // pin 36 J5-6
 #define RESCUE_BUTTON_TRIS             PORTX10_TRIS // pin 37 J5-8
 #define SETSTATION_BUTTON_TRIS         PORTX08_TRIS // pin 38 J5-10
+#define RESET_BUTTON_TRIS              PORTX11_TRIS // pin 10 J5-05 (select JP4)
 
 #define OKAY_BUTTON               PORTY03_BIT // pin 35 J5-4
 #define CANCEL_BUTTON             PORTY04_BIT // pin 9 J5-3
 #define STOP_BUTTON               PORTX12_BIT // pin 36 J5-6
 #define RESCUE_BUTTON             PORTX10_BIT // pin 37 J5-8
 #define SETSTATION_BUTTON         PORTX08_BIT // pin 38 J5-10
+#define RESET_BUTTON              PORTX11_BIT // pin 10 J5-05 (select JP4)
 
 /* LEDS */
 
@@ -87,7 +89,8 @@ static struct button_count {
     uint8_t cancel;
     uint8_t stop;
     uint8_t rescue;
-    uint8_t setStationKeep;
+    uint8_t setStation;
+    uint8_t reset;
 } buttonCount;
 
 static union button_pressed{
@@ -96,7 +99,8 @@ static union button_pressed{
         unsigned int cancel :1;
         unsigned int stop :1;
         unsigned int rescue :1;
-        unsigned int setStationKeep :1;
+        unsigned int setStation :1;
+        unsigned int reset :1;
     } flags;
     unsigned char bytes[BUTTON_BYTE_COUNT];
 } buttonPressed;
@@ -129,8 +133,9 @@ const char *INTERFACE_MESSAGE[] = {
     "Set new origin.",
     "Boat is now online.",
     "Resetting boat.",
+    "Resetting system."
     "Are you sure you\nwant to cancel retu-\nrning to station?",
-    "Are you sure you\nwant to cancel sett-\ning station?"
+    "Are you sure you\nwant to cancel sett-\ning station?",
 };
 
 static message_t currentMsgCode, nextMsgCode;
@@ -162,19 +167,17 @@ void Interface_init(){
 
 
     // Reset button counts
+    buttonCount.bytes
     buttonCount.okay = 0;
     buttonCount.cancel = 0;
     buttonCount.stop = 0;
     buttonCount.rescue = 0;
-    buttonCount.setStationKeep = 0;
+    buttonCount.setStation = 0;
+    buttonCount.reset = 0;
     buttonReadCount = 0;
     
     // Clear button flags
-    buttonPressed.flags.cancel = false;
-    buttonPressed.flags.okay = false;
-    buttonPressed.flags.rescue = false;
-    buttonPressed.flags.setStationKeep = false;
-    buttonPressed.flags.stop = false;
+    buttonPressed.bytes[0] = false;
 
     // Turn off all LEDs and all buttons
     Interface_clearAll();
@@ -217,44 +220,46 @@ void Interface_runSM(){
         if(RESCUE_BUTTON == PRESSED)
             buttonCount.rescue += 1;
         if(SETSTATION_BUTTON == PRESSED)
-            buttonCount.setStationKeep += 1;
+            buttonCount.setStation += 1;
+        if (RESET_BUTTON == PRESSED)
+            buttonCount.reset += 1;
         
         buttonReadCount++;
 
         if(buttonReadCount >= NUMBER_OF_TIMES_TO_CHECK){
             buttonReadCount = 0;
 
-            // Clear button flags
-            buttonPressed.flags.cancel = false;
-            buttonPressed.flags.okay = false;
-            buttonPressed.flags.rescue = false;
-            buttonPressed.flags.setStationKeep = false;
-            buttonPressed.flags.stop = false;
+            // Clear button flag
+            buttonPressed.bytes[0] = false;
 
             if(buttonCount.okay >= MINIMUM_POSITIVES)
-                buttonPressed.flags.okay = true;
+                buttonPressed.flag.okay = true;
             if(buttonCount.cancel >= MINIMUM_POSITIVES)
-                buttonPressed.flags.cancel = true;
+                buttonPressed.flag.cancel = true;
             if(buttonCount.stop >= MINIMUM_POSITIVES)
-                buttonPressed.flags.stop = true;
+                buttonPressed.flag.stop = true;
             if(buttonCount.rescue >= MINIMUM_POSITIVES)
-                buttonPressed.flags.rescue = true;
-            if(buttonCount.setStationKeep >= MINIMUM_POSITIVES)
-                buttonPressed.flags.setStationKeep = true;
+                buttonPressed.flag.rescue = true;
+            if(buttonCount.setStation >= MINIMUM_POSITIVES)
+                buttonPressed.flag.setStation = true;
+            if (buttonCount.reset >= MINIMUM_POSITIVES)
+                buttonPressed.flag.reset = TRUE;
 
             // Reset button counts
             buttonCount.okay = 0;
             buttonCount.cancel = 0;
             buttonCount.stop = 0;
             buttonCount.rescue = 0;
-            buttonCount.setStationKeep = 0;
+            buttonCount.setStation = 0;
+            buttonCount.reset = 0;
         }
         #else
-        buttonPressed.flags.okay = (OKAY_BUTTON == PRESSED);
+        buttonPressed.flag.okay = (OKAY_BUTTON == PRESSED);
         buttonPressed.flags.cancel = (CANCEL_BUTTON == PRESSED);
         buttonPressed.flags.stop = (STOP_BUTTON == PRESSED);
         buttonPressed.flags.rescue = (RESCUE_BUTTON == PRESSED);
-        buttonPressed.flags.setStationKeep = (SETSTATION_BUTTON == PRESSED);
+        buttonPressed.flags.setStation = (SETSTATION_BUTTON == PRESSED);
+        buttonPressed.flags.reset = (RESET_BUTTON == PRESSED);
         #endif
 
         Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
@@ -296,8 +301,7 @@ void Interface_runSM(){
 /**********************************************************************
  * Function: Interface_isCancelPressed
  * @param None.
- * @return True if the button has been presed, false if the button is
- *  untouched
+ * @return TRUE if the cancel button was pressed.
  * @remark
  **********************************************************************/
 bool Interface_isCancelPressed(){
@@ -306,8 +310,7 @@ bool Interface_isCancelPressed(){
 /**********************************************************************
  * Function: Interface_isOkPressed
  * @param None.
- * @return True if the button has been presed, false if the button is
- *  untouched
+ * @return TRUE if the ok button was pressed.
  * @remark
  **********************************************************************/
 bool Interface_isOkPressed(){
@@ -316,35 +319,44 @@ bool Interface_isOkPressed(){
 /**********************************************************************
  * Function: Interface_isStopPressed
  * @param None.
- * @return True if the button has been presed, false if the button is
- *  untouched
+ * @return TRUE if the stop button was pressed.
  * @remark
  **********************************************************************/
 bool Interface_isStopPressed(){
     return buttonPressed.flags.stop;
 }
+
 /**********************************************************************
  * Function: Interface_isRescuePressed
  * @param None.
- * @return True if the button has been presed, false if the button is
- *  untouched
+ * @return TRUE if the rescue button was pressed.
  * @remark
  **********************************************************************/
 bool Interface_isRescuePressed(){
     return buttonPressed.flags.rescue;
 }
+
 /**********************************************************************
  * Function: Interface_isSetStationPressed
  * @param None.
- * @return True if the button has been presed, false if the button is
- *  untouched
+ * @return TRUE if the set station button was pressed.
  * @remark
  **********************************************************************/
 bool Interface_isSetStationPressed(){
-    return buttonPressed.flags.setStationKeep;
+    return buttonPressed.flags.setStation;
 
 }
 
+/**********************************************************************
+ * Function: Interface_isResetPressed
+ * @param None.
+ * @return TRUE if the reset button was pressed.
+ * @remark
+ **********************************************************************/
+bool Interface_isResetPressed(){
+    return buttonPressed.flags.reset;
+
+}
 
 /**********************************************************************
  * Function: Interface_readyLightOn
@@ -617,12 +629,13 @@ int main(void) {
     dbprint("Interface online.\n");
 
     enum {
-        CANCEL  = 0x01,
-        OK      = 0x02,
-        STOP    = 0x03,
-        RESCUE  = 0x04,
-        SETSTATION = 0x05,
-        IDLE        = 0x06,
+        CANCEL  = 1,
+        OK,
+        STOP,
+        RESCUE,
+        SETSTATION,
+        IDLE,
+        RESET
     } state;
 
     //cycle and check if buttons are pressed, if so, turn light on for 3 seconds
@@ -648,6 +661,10 @@ int main(void) {
             state = SETSTATION;
             LCD_setPosition(0,0);
             dbprint("Set station.\n");
+        }else if(Interface_isResetPressed() && state != RESET){
+            state = RESET;
+            LCD_setPosition(0,0);
+            dbprint("Reset.\n");
         }else{
             // Nothing
         }

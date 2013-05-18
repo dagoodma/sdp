@@ -31,6 +31,7 @@
 #define USE_BAROMETER
 #define USE_GPS
 //#define USE_XBEE
+#define ENABLE_RESET
 
 //#define REQUIRE_RESCUE_HEIGHT // causes an error if altitude unknown and rescue pressed
 
@@ -95,13 +96,16 @@
 #define CANCEL_DEBOUNCE_DELAY       500 // (ms) to read cancel button in cancel state
 #define RESCUE_DEBOUNCE_DELAY       500 // (ms) to read rescue button in rescue state
 
-#define BLINK_DELAY     2000
-#define BLINK_ON_DELAY  1500
-#define DEBUG_PRINT_DELAY     1000
+#define RESET_HOLD_DELAY            2000 // (ms) to hold before CC reset
+#define RESET_LONG_HOLD_DELAY        5000 // (ms) to hold before CC and boat reset
+
+#define BLINK_DELAY                 2000
+#define BLINK_ON_DELAY              1500
+#define DEBUG_PRINT_DELAY           1000
 
 #define RESEND_MESSAGE_LIMIT        5 // times to resend before failing
 
-#define EVENT_BYTE_COUNT 10
+#define EVENT_BYTE_COUNT 10 // total number of bytes in event flag union
 
 // Hard-coded geocentric origin location // TODO replace this
 // --------------- Center of west lake -------------
@@ -178,6 +182,7 @@ static union EVENTS {
         unsigned int setStationButtonPressed :1;
         unsigned int okButtonPressed :1;
         unsigned int cancelButtonPressed :1;
+        unsigned int resetButtonPressed :1;
         /* - Mavlink message flags - */
         unsigned int haveInitializeMessage :1; // boat starting up
         unsigned int haveErrorMessage :1; // boat had error
@@ -229,6 +234,7 @@ static error_t lastErrorCode;
 static error_t lastBoatErrorCode;
 static bool isConnectedWithBoat;
 static bool haveCompasHeight;
+static bool resetPressedShort;
 
 /***********************************************************************
  * PRIVATE PROTOTYPES                                                  *
@@ -258,7 +264,9 @@ static void gpsCorrectionUpdate();
 static void getTargetLocation(LocalCoordinate *targetNed);
 static void checkBoatConnection();
 static void updatePosition();
-
+static void resetCompas();
+static void resetAll();
+static void checkReset();
 
 /***********************************************************************
  * PRIVATE FUNCTIONS                                                   *
@@ -318,6 +326,8 @@ static void checkEvents() {
             event.flags.rescueButtonPressed = TRUE;
         #endif
     }
+    if (Interface_isResetPressed())
+        event.flags.resetButtonPressed = TRUE;
 
     // XBee messages (from command center)
     if (Mavlink_hasNewMessage()) {
@@ -850,6 +860,10 @@ static void doMasterSM() {
     }
     #endif
 
+    #ifdef ENABLE_RESET
+    checkReset();
+    #endif
+
     switch (state) {
         case STATE_CALIBRATE:
             doCalibrateSM();
@@ -1180,6 +1194,68 @@ static void checkBoatConnection() {
 }
 
 /**********************************************************************
+ * Function: restartCompas
+ * @return None
+ * @remark Resets the command center.
+ **********************************************************************/
+ void resetCompas() {
+    Interface_clearDisplay();
+    Interface_showMessage(RESET_SYSTEM_MESSAGE);
+    Interface_readyLightOff();
+    Interface_waitLightOn();
+    delay(RESET_HOLD_DELAY);
+    SoftReset();
+}
+
+
+/**********************************************************************
+ * Function: restartAll
+ * @return None
+ * @remark Sends a message to reset the boat, then resets the command center.
+ **********************************************************************/
+ void resetAll() {
+    Mavlink_sendResetBoat();
+    Interface_clearDisplay();
+    Interface_showMessage(RESET_BOAT_MESSAGE);
+    Interface_readyLightOff();
+    Interface_waitLightOn();
+    DELAY(RESET_HOLD_DELAY);
+    resetCompas();
+ }
+
+/**********************************************************************
+ * Function: checkReset
+ * @return None
+ * @remark Decide if reset is desired, and which type.
+ **********************************************************************/
+ void checkReset() {
+     if (!resetPressedShort) {
+         // Haven't triggered any type of reset yet
+         if (event.flags.resetButtonPressed && Timer_isExpired(TIMER_RESET)) {
+            // Held reset button for short timer at least
+            resetPressedShort = TRUE;
+            Timer_new(TIMER_RESET, RESET_LONG_HOLD_DELAY);
+         }
+         else if (event.flags.resetButtonPressed) {
+            // Just pressed reset, start timer and wait
+            Timer_new(TIMER_RESET, RESET_HOLD_DELAY);
+         }
+     }
+     else  {
+         // A reset is desired, determine which type
+         if (!event.flags.resetButtonPressed) {
+             // want a soft reset
+             resetCompas();
+         }
+         else if (event.flags.resetButtonPressed && Timer_isExpired(TIMER_RESET)) {
+             // want a full reset
+             resetAll();
+         }
+     }
+ }
+
+
+/**********************************************************************
  * Function: initializeCompas
  * @return None
  * @remark Initializes the ComPAS and all modules.
@@ -1283,7 +1359,6 @@ int main() {
     while (1) {
         doMasterSM();
     }
-    //DBPRINT("HERE!");
 
     return SUCCESS;
 }

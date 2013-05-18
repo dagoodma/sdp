@@ -30,10 +30,7 @@
 #include "Serial.h"
 #include "Uart.h"
 #include "Timer.h"
-
-#ifdef USE_LCD
 #include "LCD.h"
-#endif
 
 #define SYSTEM_CLOCK    80000000L
 #define PB_CLOCK        SYSTEM_CLOCK/2
@@ -86,7 +83,6 @@ void dbprint(char *fmt, ...) {
         printf(msg);
     if (option.useLCD)
         LCD_writeString(msg);
-
     #ifdef USE_LOGGER
     Logger_writeString(msg);
     #endif
@@ -100,7 +96,7 @@ void dbprint(char *fmt, ...) {
 int main(void)
 {
     Board_init();
-        
+    Serial_init();
     printf("If you can see this it worked");
 }
 

@@ -94,6 +94,7 @@
 #define TIMER_LIGHT_HOLD        15
 #define TIMER_LCD_HOLD          16
 #define TIMER_I2C_TIMEOUT       17
+#define TIMER_RESET             18 
 
 // Master state machine timers
 #define TIMER_MAIN              23
@@ -102,6 +103,7 @@
 #define TIMER_BACKGROUND        26
 #define TIMER_BACKGROUND2       27
 #define TIMER_BACKGROUND3       28
+
 // test harness timers
 #define TIMER_TEST              29
 #define TIMER_TEST2             30

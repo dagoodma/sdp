@@ -51,7 +51,8 @@ typedef enum {
     SET_ORIGIN_MESSAGE,
     /* - Other messages - */
     BOAT_ONLINE_MESSAGE,
-    RESET_BOAT,
+    RESET_BOAT_MESSAGE,
+    RESET_SYSTEM_MESSAGE,
     CANCEL_RETURN_MESSAGE,
     CANCEL_SETSTATION_MESSAGE
 } message_t;
@@ -83,8 +84,7 @@ void Interface_runSM();
 /**********************************************************************
  * Function: Interface_isCancelPressed
  * @param None.
- * @return True if the button has been presed, false if the button is
- *  untouched
+ * @return TRUE if the cancel button was pressed.
  * @remark
  **********************************************************************/
 bool Interface_isCancelPressed();
@@ -92,8 +92,7 @@ bool Interface_isCancelPressed();
 /**********************************************************************
  * Function: Interface_isOkPressed
  * @param None.
- * @return True if the button has been presed, false if the button is
- *  untouched
+ * @return TRUE if the ok button was pressed.
  * @remark
  **********************************************************************/
 bool Interface_isOkPressed();
@@ -102,8 +101,7 @@ bool Interface_isOkPressed();
 /**********************************************************************
  * Function: Interface_isStopPressed
  * @param None.
- * @return True if the button has been presed, false if the button is
- *  untouched
+ * @return TRUE if the stop button was pressed.
  * @remark
  **********************************************************************/
 bool Interface_isStopPressed();
@@ -111,8 +109,7 @@ bool Interface_isStopPressed();
 /**********************************************************************
  * Function: Interface_isRescuePessed
  * @param None.
- * @return True if the button has been presed, false if the button is
- *  untouched
+ * @return TRUE if the rescue button was pressed.
  * @remark
  **********************************************************************/
 bool Interface_isRescuePressed();
@@ -120,11 +117,18 @@ bool Interface_isRescuePressed();
 /**********************************************************************
  * Function: Interface_isSetStationPessed
  * @param None.
- * @return True if the button has been presed, false if the button is
- *  untouched
+ * @return TRUE if the set station button was pressed.
  * @remark
  **********************************************************************/
 bool Interface_isSetStationPressed();
+
+/**********************************************************************
+ * Function: Interface_isResetPressed
+ * @param None.
+ * @return TRUE if reset button was pressed.
+ * @remark
+ **********************************************************************/
+bool Interface_isResetPressed();
 
 /**********************************************************************
  * Function: Interface_readyLightOn
