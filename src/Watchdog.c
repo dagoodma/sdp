@@ -1,5 +1,5 @@
 /* 
- * File:   newmain.c
+ * File:   Watchdog.c
  * Author: dagoodma
  *
  * Created on May 11, 2013, 5:13 PM
@@ -25,6 +25,8 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 #define USE_XBEE
+
+#define XBEE_UART_ID        UART1_ID
 
 #define SHOW_HEARTBEAT
 
@@ -292,7 +294,7 @@ static void Watchdog_init(void) {
     //I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
 
     #ifdef USE_XBEE
-    Xbee_init();
+    Xbee_init(XBEE_UART_ID);
     #endif
 
     #ifdef USE_LOGGER

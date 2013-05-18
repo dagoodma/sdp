@@ -20,8 +20,6 @@
 /***********************************************************************
  * PUBLIC DEFINITIONS                                                  *
  ***********************************************************************/
-//#define XBEE_TEST //used for testing Xbee
-#define XBEE_UART_ID    MAVLINK_UART_ID
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
@@ -37,7 +35,7 @@
  * @author John Ash
  * @date February 1st 2013
  **********************************************************************/
-uint8_t Xbee_init();
+uint8_t Xbee_init(uint8_t uartId);
 
 
 /**********************************************************************
@@ -51,6 +49,14 @@ uint8_t Xbee_init();
  **********************************************************************/
 void Xbee_runSM();
 
+/**********************************************************************
+ * Function: void Xbee_getUartId();
+ * @return XBee UART ID
+ * @remark Can be either UART1_ID or UART2_ID
+ * @author David Goodman
+ * @date 05.18.2013
+ **********************************************************************/
+uint8_t Xbee_getUartId();
 
 //#define XBEE_TEST
 #ifdef XBEE_TEST

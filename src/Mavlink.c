@@ -39,8 +39,8 @@ static void sendBarometer(float temperatureCelsius, float altitude);
  ********************************************************************/
 
 void Mavlink_recieve(){
-    while(UART_isReceiveEmpty(MAVLINK_UART_ID) == FALSE) {
-        uint8_t c = UART_getChar(MAVLINK_UART_ID);
+    while(UART_isReceiveEmpty(Xbee_getUartId()) == FALSE) {
+        uint8_t c = UART_getChar(Xbee_getUartId());
         //if a message can be deciphered
         if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
             switch(msg.msgid) {
@@ -93,9 +93,9 @@ void Mavlink_recieve(){
                 case MAVLINK_MSG_ID_GPS_NED:
                     //mavlink_gps_ned_t newMessage.gpsLocalData;
                     mavlink_msg_gps_ned_decode(&msg,&(Mavlink_newMessage.gpsLocalData));
-                    if (Mavlink_newMessage.gpsLocalData.ack == TRUE) {
-                        Mavlink_sendAck(XBEE_UART_ID, MAVLINK_MSG_ID_GPS_NED);
-                    }
+                    /*if (Mavlink_newMessage.gpsLocalData.ack == TRUE) {
+                        Mavlink_sendAck(Xbee_getUartId(), MAVLINK_MSG_ID_GPS_NED);
+                    }*/
                     hasNewMsg = TRUE;
                     newMsgID = msg.msgid;
                     break;
@@ -137,7 +137,7 @@ void Mavlink_sendAck(uint8_t msgID, uint16_t msgStatus){
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_mavlink_ack_pack(MAV_NUMBER, COMP_ID, &msg, msgID, msgStatus);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
-    UART_putString(MAVLINK_UART_ID, buf, length);
+    UART_putString(Xbee_getUartId(), buf, length);
 }
 void Mavlink_sendHeartbeat(){
     uint8_t data = 0x1;
@@ -145,7 +145,7 @@ void Mavlink_sendHeartbeat(){
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_xbee_heartbeat_pack(MAV_NUMBER, COMP_ID, &msg, TRUE, data);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
-    UART_putString(MAVLINK_UART_ID, buf, length);
+    UART_putString(Xbee_getUartId(), buf, length);
 }
 
 
@@ -227,7 +227,7 @@ void Mavlink_sendBarometerData(float temperatureCelsius, float altitude){
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_barometer_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, temperatureCelsius, altitude);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
-    UART_putString(MAVLINK_UART_ID, buf, length);
+    UART_putString(Xbee_getUartId(), buf, length);
 }
 
 /************************************************************************
@@ -240,7 +240,7 @@ static void sendGpsNed(bool ack, uint8_t status, LocalCoordinate *nedPos){
     mavlink_msg_gps_ned_pack(MAV_NUMBER, COMP_ID, &msg, ack,status,
             nedPos->north, nedPos->east, nedPos->down);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
-    UART_putString(MAVLINK_UART_ID, buf, length);
+    UART_putString(Xbee_getUartId(), buf, length);
 }
 
 static void sendStatusAndError(uint16_t status, uint16_t error){
@@ -248,7 +248,7 @@ static void sendStatusAndError(uint16_t status, uint16_t error){
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_status_and_error_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, status, error);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
-    UART_putString(MAVLINK_UART_ID, buf, length);
+    UART_putString(Xbee_getUartId(), buf, length);
 }
 
 static void sendCmdOther(bool ack, uint8_t command){
@@ -256,7 +256,7 @@ static void sendCmdOther(bool ack, uint8_t command){
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_cmd_other_pack(MAV_NUMBER, COMP_ID, &msg, ack, command);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
-    UART_putString(MAVLINK_UART_ID, buf, length);
+    UART_putString(Xbee_getUartId(), buf, length);
 }
 
 static void sendGpsEcef(bool ack, uint8_t status, GeocentricCoordinate *ecef){
@@ -264,6 +264,6 @@ static void sendGpsEcef(bool ack, uint8_t status, GeocentricCoordinate *ecef){
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_gps_ecef_pack(MAV_NUMBER, COMP_ID, &msg, ack, status,ecef->x,ecef->y,ecef->z);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
-    UART_putString(MAVLINK_UART_ID, buf, length);
+    UART_putString(Xbee_getUartId(), buf, length);
 }
 

@@ -47,7 +47,7 @@
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC32</languageToolchain>
         <languageToolchainVersion>1.20</languageToolchainVersion>
-        <platform>3</platform>
+        <platform>4</platform>
       </toolsSet>
       <compileType>
         <linkerTool>
@@ -75,8 +75,7 @@
         <property key="enable-symbols" value="true"/>
         <property key="enable-unroll-loops" value="false"/>
         <property key="exclude-floating-point" value="false"/>
-        <property key="extra-include-directories"
-                  value=".;C:\Users\dagoodma\Documents\SDP\include;C:\Users\Shehadeh\Documents\GitHub\sdp\include;/Users/ddeo/Documents/sdp/include;C:\Users\John\Documents\SDP\include;C:\Users\jash\Documents\SDP\include;C:\Users\jash\Documents\SDP\include\mavlink\autoLifeguard;C:\Users\jash\Documents\SDP\include\mavlink\autoLifeguard"/>
+        <property key="extra-include-directories" value="../../include"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
         <property key="make-warnings-into-errors" value="false"/>

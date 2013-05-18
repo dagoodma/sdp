@@ -34,6 +34,7 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
+//#define XBEE_TEST //used for testing Xbee
 #define API_DELAY           1000
 // note, need to reprogram Xbee for different Baud Rates.
 //  factory settings are 9600 baud rate
@@ -53,13 +54,15 @@ static uint8_t programMode();
 /**********************************************************************
  * PRIVATE VARIABLES                                                  *
  **********************************************************************/
+static uint8_t xbeeUartId;
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
 
-uint8_t Xbee_init(){
-    UART_init(XBEE_UART_ID,XBEE_BAUD_RATE);
+uint8_t Xbee_init(uint8_t uartId){
+    xbeeUartId = uartId;
+    UART_init(uartId,XBEE_BAUD_RATE);
 #ifdef XBEE_REPROGRAM_SETTINGS
     if( programMode() == FAILURE){
         while(1);
@@ -70,8 +73,8 @@ uint8_t Xbee_init(){
     int i = 0;
     char confirm[3];
     DELAY(2000);
-    UART_putString(XBEE_UART_ID, "+++", 3);
-    DELAY(1000);
+    UART_putString(uartId, "+++", 3);
+    DELAY(API_DELAY);
     //wait for "OK\r"
     do {
         confirm[i] = UART_getChar(XBEE_UART_ID);
@@ -90,9 +93,13 @@ uint8_t Xbee_init(){
 
 void Xbee_runSM(){
     //Recieve bytes if they are available
-    if(UART_isReceiveEmpty(XBEE_UART_ID) == FALSE){
-        Mavlink_recieve(XBEE_UART_ID);
+    if(UART_isReceiveEmpty(xbeeUartId) == FALSE){
+        Mavlink_recieve(xbeeUartId);
     }
+}
+
+uint8_t Xbee_getUartId() {
+    return xbeeUartId;
 }
 
 
@@ -111,12 +118,15 @@ void Xbee_runSM(){
 static uint8_t programMode(){
     int i = 0;
     char confirm[3];
-    DELAY(2000);
-    UART_putString(XBEE_UART_ID, "+++", 3);
-    DELAY(1000);
+
+    DELAY(API_DELAY);
+    DELAY(API_DELAY);
+
+    UART_putString(xbeeUartId, "+++", 3);
+    DELAY(API_DELAY);
     //wait for "OK\r"
     do {
-        confirm[i] = UART_getChar(XBEE_UART_ID);
+        confirm[i] = UART_getChar(xbeeUartId);
         if (confirm[i] != 0)
             i++;
     } while(i < 3);
@@ -124,28 +134,28 @@ static uint8_t programMode(){
     if (!(confirm[0] == 0x4F && confirm[1] == 0x4B && confirm[2] == 0x0D)){
         return FAILURE;
     }
-    DELAY(1000);
-    UART_putString(XBEE_UART_ID, "ATRE\r", 5);// Resets to Factory settings
-    DELAY(1000);
-    UART_putString(XBEE_UART_ID, "ATCH15\r", 7);
-    DELAY(1000);
-    UART_putString(XBEE_UART_ID, "ATDH0\r", 6);
-    DELAY(1000);
+    DELAY(API_DELAY);
+    UART_putString(xbeeUartId, "ATRE\r", 5);// Resets to Factory settings
+    DELAY(API_DELAY);
+    UART_putString(xbeeUartId, "ATCH15\r", 7);
+    DELAY(API_DELAY);
+    UART_putString(xbeeUartId, "ATDH0\r", 6);
+    DELAY(API_DELAY);
     #ifdef UNICAST_MSG
     #ifdef IS_COMPAS
-    UART_putString(XBEE_UART_ID, "ATDLAAC3\r", 9);
-    DELAY(1000);
-    UART_putString(XBEE_UART_ID, "ATMYBC64\r", 9);
+    UART_putString(xbeeUartId, "ATDLAAC3\r", 9);
+    DELAY(API_DELAY);
+    UART_putString(xbeeUartId, "ATMYBC64\r", 9);
     #else
-    UART_putString(XBEE_UART_ID, "ATDLBC64\r", 9);
-    DELAY(1000);
-    UART_putString(XBEE_UART_ID, "ATMYAAC3\r", 9);
+    UART_putString(xbeeUartId, "ATDLBC64\r", 9);
+    DELAY(API_DELAY);
+    UART_putString(xbeeUartId, "ATMYAAC3\r", 9);
     #endif
-    DELAY(1000);
+    DELAY(API_DELAY);
     #endif
-    UART_putString(XBEE_UART_ID, "ATWR\r", 5);//Writes the command to memory
-    DELAY(1000);
-    UART_putString(XBEE_UART_ID, "ATCN\r", 5);//Leave the menu.
+    UART_putString(xbeeUartId, "ATWR\r", 5);//Writes the command to memory
+    DELAY(API_DELAY);
+    UART_putString(xbeeUartId, "ATCN\r", 5);//Leave the menu.
     return SUCCESS;
 }
 #endif
@@ -169,6 +179,8 @@ static uint8_t programMode(){
 #define TIMER_STATUS 3
 #define DELAY_STATUS 4000
 
+#define XBEE_UART_ID    UART2_ID
+
 uint32_t count_recieved = 0, count_lost = 0;
 
 int main(){
@@ -179,7 +191,7 @@ int main(){
     Timer_init();
 
     printf("Timers Init\n");
-    if(Xbee_init() == FAILURE){
+    if(Xbee_init(XBEE_UART_ID) == FAILURE){
         printf("Xbee Failed to initilize\n");
         return FAILURE;
     }
@@ -215,7 +227,7 @@ int main(){
 
 
 void Xbee_message_data_test(mavlink_test_data_t* packet){
-    Mavlink_send_Test_data(XBEE_UART_ID, (packet->data+1)%255);
+    Mavlink_send_Test_data(Xbee_getUartId(), (packet->data+1)%255);
     count_recieved++;
     Timer_new(TIMER_TIMEOUT, DELAY_TIMEOUT);
 }
@@ -225,6 +237,7 @@ void Xbee_message_data_test(mavlink_test_data_t* packet){
 
 //#define XBEE_TEST_2
 #ifdef XBEE_TEST_2
+#define XBEE_UART_ID    UART2_ID
 
 #define TIMER_TIMEOUT 4
 #define DELAY_TIMEOUT 4000
@@ -233,7 +246,7 @@ int main(){
     Board_init();
     Serial_init();
     Timer_init();
-    Xbee_init();
+    Xbee_init(XBEE_UART_ID);
     printf("Xbee Test 2\n");
     while(1){
         Xbee_runSM();
@@ -266,6 +279,8 @@ int main(){
 //#define XBEE_TEST_3
 #ifdef XBEE_TEST_3
 
+#define XBEE_UART_ID UART2_ID
+
 #define STARTUP_DELAY   1500
 #define PRINT_DELAY     1000
 
@@ -275,7 +290,7 @@ int main(){
     //Board_configure(USE_LCD | USE_TIMER);
     DELAY(10);
     dbprint("Starting XBee...\n");
-    if (Xbee_init() != SUCCESS) {
+    if (Xbee_init(XBEE_UART_ID) != SUCCESS) {
         dbprint("Failed XBee init.\n");
         return FAILURE;
     }
@@ -311,6 +326,8 @@ int main(){
 //#define XBEE_ATLAS_TEST
 #ifdef XBEE_ATLAS_TEST
 
+#define XBEE_UART_ID UART1_ID
+
 #define STARTUP_DELAY   1500
 #define PRINT_DELAY     1000
 
@@ -319,7 +336,7 @@ int main(){
     Board_configure(USE_TIMER);
     DELAY(10);
     //dbprint("Starting XBee...\n");
-    if (Xbee_init() != SUCCESS) {
+    if (Xbee_init(XBEE_UART_ID) != SUCCESS) {
         //dbprint("Failed XBee init.\n");
         return FAILURE;
     }

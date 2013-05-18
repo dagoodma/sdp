@@ -101,7 +101,7 @@ static union button_pressed{
         unsigned int rescue :1;
         unsigned int setStation :1;
         unsigned int reset :1;
-    } flags;
+    } flag;
     unsigned char bytes[BUTTON_BYTE_COUNT];
 } buttonPressed;
 
@@ -167,7 +167,6 @@ void Interface_init(){
 
 
     // Reset button counts
-    buttonCount.bytes
     buttonCount.okay = 0;
     buttonCount.cancel = 0;
     buttonCount.stop = 0;
@@ -255,11 +254,11 @@ void Interface_runSM(){
         }
         #else
         buttonPressed.flag.okay = (OKAY_BUTTON == PRESSED);
-        buttonPressed.flags.cancel = (CANCEL_BUTTON == PRESSED);
-        buttonPressed.flags.stop = (STOP_BUTTON == PRESSED);
-        buttonPressed.flags.rescue = (RESCUE_BUTTON == PRESSED);
-        buttonPressed.flags.setStation = (SETSTATION_BUTTON == PRESSED);
-        buttonPressed.flags.reset = (RESET_BUTTON == PRESSED);
+        buttonPressed.flag.cancel = (CANCEL_BUTTON == PRESSED);
+        buttonPressed.flag.stop = (STOP_BUTTON == PRESSED);
+        buttonPressed.flag.rescue = (RESCUE_BUTTON == PRESSED);
+        buttonPressed.flag.setStation = (SETSTATION_BUTTON == PRESSED);
+        buttonPressed.flag.reset = (RESET_BUTTON == PRESSED);
         #endif
 
         Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
@@ -305,7 +304,7 @@ void Interface_runSM(){
  * @remark
  **********************************************************************/
 bool Interface_isCancelPressed(){
-    return buttonPressed.flags.cancel;
+    return buttonPressed.flag.cancel;
 }
 /**********************************************************************
  * Function: Interface_isOkPressed
@@ -314,7 +313,7 @@ bool Interface_isCancelPressed(){
  * @remark
  **********************************************************************/
 bool Interface_isOkPressed(){
-    return buttonPressed.flags.okay;
+    return buttonPressed.flag.okay;
 }
 /**********************************************************************
  * Function: Interface_isStopPressed
@@ -323,7 +322,7 @@ bool Interface_isOkPressed(){
  * @remark
  **********************************************************************/
 bool Interface_isStopPressed(){
-    return buttonPressed.flags.stop;
+    return buttonPressed.flag.stop;
 }
 
 /**********************************************************************
@@ -333,7 +332,7 @@ bool Interface_isStopPressed(){
  * @remark
  **********************************************************************/
 bool Interface_isRescuePressed(){
-    return buttonPressed.flags.rescue;
+    return buttonPressed.flag.rescue;
 }
 
 /**********************************************************************
@@ -343,7 +342,7 @@ bool Interface_isRescuePressed(){
  * @remark
  **********************************************************************/
 bool Interface_isSetStationPressed(){
-    return buttonPressed.flags.setStation;
+    return buttonPressed.flag.setStation;
 
 }
 
@@ -354,7 +353,7 @@ bool Interface_isSetStationPressed(){
  * @remark
  **********************************************************************/
 bool Interface_isResetPressed(){
-    return buttonPressed.flags.reset;
+    return buttonPressed.flag.reset;
 
 }
 
@@ -816,7 +815,7 @@ int main(void) {
     Timer_new(TIMER_TEST, 100);
     while (1) {
         if (Timer_isExpired(TIMER_TEST)) {
-            printf("%X -- C:%X F:%X\n",Interface_isOkPressed(), buttonCount.okay, buttonPressed.flags.okay);
+            printf("%X -- C:%X F:%X\n",Interface_isOkPressed(), buttonCount.okay, buttonPressed.flag.okay);
             Timer_new(TIMER_TEST, 100);
         }
         Interface_runSM();

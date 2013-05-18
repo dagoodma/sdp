@@ -31,10 +31,13 @@
 #include "Interface.h"
 #include "Error.h"
 #include "TiltCompass.h"
+#include "Uart.h"
 
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
+#define XBEE_UART_ID    UART1_ID
+
 // Module selection (comment a line out to disable the module)
 #define USE_OVERRIDE
 #define USE_NAVIGATION
@@ -877,7 +880,7 @@ static void initializeAtlas() {
     haveXbee = FALSE;
     #ifdef USE_XBEE
     DBPRINT("Initializing xbee\n");
-    if (Xbee_init() != SUCCESS) {
+    if (Xbee_init(XBEE_UART_ID) != SUCCESS) {
         fatal(ERROR_XBEE);
     }
     haveXbee = TRUE;

@@ -19,6 +19,7 @@
 4/29/2013   3:08PM      dagoodma    Started new Compas module.
 ***********************************************************************/
 #define IS_COMPAS
+
 #define DEBUG
 #define DEBUG_STATE
 //#define DEBUG_BLINK
@@ -69,6 +70,8 @@
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
+
+#define XBEE_UART_ID    UART1_ID // sets the XBee to use UART 1
  
 // Timer allocation
 #define TIMER_CALIBRATE     TIMER_MAIN
@@ -1203,7 +1206,7 @@ static void checkBoatConnection() {
     Interface_showMessage(RESET_SYSTEM_MESSAGE);
     Interface_readyLightOff();
     Interface_waitLightOn();
-    delay(RESET_HOLD_DELAY);
+    DELAY(RESET_HOLD_DELAY);
     SoftReset();
 }
 
@@ -1324,7 +1327,7 @@ static void initializeCompas() {
 
     #ifdef USE_XBEE
     DBPRINT("Initializing XBee.\n");
-    if (Xbee_init() != SUCCESS)
+    if (Xbee_init(XBEE_UART_ID) != SUCCESS)
         fatal(ERROR_XBEE);
     #endif
 

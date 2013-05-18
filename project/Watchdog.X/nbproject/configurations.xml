@@ -35,10 +35,10 @@
       <itemPath>../../src/Timer.c</itemPath>
       <itemPath>../../src/Uart.c</itemPath>
       <itemPath>../../src/Xbee.c</itemPath>
-      <itemPath>Watchdog.c</itemPath>
       <itemPath>../../src/Accelerometer.c</itemPath>
       <itemPath>../../src/Magnetometer.c</itemPath>
       <itemPath>../../src/I2C.c</itemPath>
+      <itemPath>../../src/Watchdog.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
