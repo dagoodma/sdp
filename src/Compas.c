@@ -1198,7 +1198,7 @@ static void checkBoatConnection() {
  * @return None
  * @remark Resets the command center.
  **********************************************************************/
- void resetCompas() {
+ static void resetCompas() {
     Interface_clearDisplay();
     Interface_showMessage(RESET_SYSTEM_MESSAGE);
     Interface_readyLightOff();
@@ -1213,7 +1213,7 @@ static void checkBoatConnection() {
  * @return None
  * @remark Sends a message to reset the boat, then resets the command center.
  **********************************************************************/
- void resetAll() {
+ static void resetAll() {
     Mavlink_sendResetBoat();
     Interface_clearDisplay();
     Interface_showMessage(RESET_BOAT_MESSAGE);
@@ -1228,7 +1228,7 @@ static void checkBoatConnection() {
  * @return None
  * @remark Decide if reset is desired, and which type.
  **********************************************************************/
- void checkReset() {
+ static void checkReset() {
      if (!resetPressedShort) {
          // Haven't triggered any type of reset yet
          if (event.flags.resetButtonPressed && Timer_isExpired(TIMER_RESET)) {
