@@ -99,7 +99,7 @@
 #define LED_HOLD_DELAY              1000 // (ms) time for led to stay lit
 #define CANCEL_TIMEOUT_DELAY       6500 // (ms) for cancel msg to linger
 #define CANCEL_DEBOUNCE_DELAY       500 // (ms) to read cancel button in cancel state
-#define RESCUE_DEBOUNCE_DELAY       500 // (ms) to read rescue button in rescue state
+#define RESCUE_DEBOUNCE_DELAY       1200 // (ms) to read rescue button in rescue state
 
 #define RESET_HOLD_DELAY            1000 // (ms) to hold before CC reset
 #define RESET_LONG_HOLD_DELAY        5000 // (ms) to hold before CC and boat reset
@@ -291,10 +291,6 @@ static void checkEvents() {
         event.bytes[i] = 0x0;
 
     // Check for hearbeat
-    if (Timer_isExpired(TIMER_HEARTBEAT_CHECK) && isConnectedWithBoat) {
-        if (!Mavlink_hasHeartbeat())
-            event.flags.lostBoatHeartbeat = TRUE;
-    }
     if (Mavlink_hasHeartbeat())
         event.flags.haveBoatHeartbeat = TRUE;
 
@@ -349,22 +345,22 @@ static void checkEvents() {
                     if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_RETURN_STATION)
                         event.flags.haveReturnStationAck = TRUE;
                     // Boat is in override state
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_OVERRIDE)
+                    else if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_OVERRIDE)
                         event.flags.haveStopAck = TRUE;
                     // Boat saved station
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_SAVE_STATION)
+                    else if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_SAVE_STATION)
                         event.flags.haveSetStationAck = TRUE;
                 }
                 // GPS_NED
-                if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_GPS_NED) {
+                else if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_GPS_NED) {
                     // Responding to a rescue
                     if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_LOCAL_START_RESCUE)
                         event.flags.haveStartRescueAck = TRUE;
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_LOCAL_SET_STATION)
+                    else if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_LOCAL_SET_STATION)
                         event.flags.haveSetStationAck = TRUE;
                 }
                 // GPS_ECEF
-                if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_GPS_ECEF) {
+                else if (Mavlink_newMessage.ackData.msgID == MAVLINK_MSG_ID_GPS_ECEF) {
                     if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_GEOCENTRIC_ORIGIN)
                         event.flags.haveSetOriginAck = TRUE;
                 }
@@ -765,7 +761,23 @@ static void doSetStationSM() {
         case STATE_SETSTATION_SEND:
             if (event.flags.haveSetStationAck) {
                 Interface_showMessageOnTimer(SAVED_STATION_MESSAGE, LCD_HOLD_DELAY);
+                Interface_waitLightOff();
+                Interface_readyLightOn();
                 event.flags.setStationDone = TRUE;
+                resendMessageCount = 0;
+            }
+            else if (Timer_isExpired(TIMER_SETSTATION)) {
+                // Resend start rescue message on timer
+                if (resendMessageCount >= RESEND_MESSAGE_LIMIT) {
+                    // Sent too many times
+                    setError(ERROR_NO_ACKNOWLEDGEMENT);
+                    return;
+                }
+                else {
+                    Mavlink_sendSaveStation(WANT_ACK);
+                    Timer_new(TIMER_SETSTATION, RESEND_MESSAGE_DELAY);
+                    resendMessageCount++;
+                }
             }
             else if (event.flags.cancelButtonPressed
                     && Timer_isExpired(TIMER_DEBOUNCE)) {
@@ -927,7 +939,7 @@ static void doMasterSM() {
 
     // Transition out of any state as long as not calibrating..
     if (state != STATE_CALIBRATE) {
-        if (event.flags.haveError) {
+        if (event.flags.haveError || event.flags.haveBoatError) {
             startErrorSM();
         }
         else if (state != STATE_SETORIGIN) {
@@ -1141,6 +1153,9 @@ static void doBarometerUpdate() {
         haveCompasHeight = TRUE;
         Timer_new(TIMER_BAROMETER_LOST, BAROMETER_LOST_DELAY);
     }
+    else if (!isConnectedWithBoat &&  Timer_isExpired(TIMER_BAROMETER_LOST)) {
+        haveCompasHeight = FALSE;
+    }
     else if (haveCompasHeight && Timer_isExpired(TIMER_BAROMETER_LOST)) {
         setError(ERROR_NO_ALTITUDE);
         haveCompasHeight = FALSE;
@@ -1193,22 +1208,26 @@ static void getTargetLocation(LocalCoordinate *targetNed) {
  *  nection was lost.
  **********************************************************************/
 static void checkBoatConnection() {
-    if (event.flags.lostBoatHeartbeat) {
-        // Lost connection to boat
-        setError(ERROR_NO_HEARTBEAT);
-        isConnectedWithBoat = FALSE;
-    }
-    else if (event.flags.haveBoatOnlineMessage && !isConnectedWithBoat
-            || event.flags.haveBoatHeartbeat) {
+        
+    if ((event.flags.haveBoatOnlineMessage || event.flags.haveBoatHeartbeat)
+            && !isConnectedWithBoat) {
         // Boat just came online
         isConnectedWithBoat = TRUE;
         Timer_new(TIMER_HEARTBEAT_CHECK, HEARTBEAT_LOST_DELAY);
         Interface_clearDisplay();
         Interface_showMessageOnTimer(BOAT_ONLINE_MESSAGE,LCD_HOLD_DELAY);
+        // Go back to ready if we were in error from a lost connection
+        if (lastErrorCode == ERROR_NO_HEARTBEAT && state == STATE_ERROR)
+            startReadySM();
     }
-    else if (isConnectedWithBoat && Timer_isExpired(TIMER_HEARTBEAT_CHECK)) {
+    else if (isConnectedWithBoat && event.flags.haveBoatHeartbeat) {
         // Got boat heartbeat, restart timer
         Timer_new(TIMER_HEARTBEAT_CHECK, HEARTBEAT_LOST_DELAY);
+    }
+    else if (isConnectedWithBoat && Timer_isExpired(TIMER_HEARTBEAT_CHECK)) {
+        // Lost connection to boat
+        setError(ERROR_NO_HEARTBEAT);
+        isConnectedWithBoat = FALSE;
     }
 }
 
@@ -1253,7 +1272,7 @@ static void checkBoatConnection() {
          if (event.flags.resetButtonPressed && Timer_isExpired(TIMER_RESET)) {
             // Held reset button for short timer at least
             resetPressedShort = TRUE;
-            Timer_new(TIMER_RESET, RESET_LONG_HOLD_DELAY);
+            Timer_new(TIMER_RESET, (RESET_LONG_HOLD_DELAY - RESET_HOLD_DELAY));
          }
          else if (event.flags.resetButtonPressed && !Timer_isActive(TIMER_RESET)) {
             // Just pressed reset, start timer and wait

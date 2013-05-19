@@ -44,7 +44,7 @@
 #define USE_GPS
 #define USE_DRIVE
 #define USE_TILTCOMPASS
-//#define USE_XBEE
+#define USE_XBEE
 //#define USE_SIREN
 #define USE_BAROMETER
 #define DO_HEARTBEAT
@@ -77,6 +77,7 @@
 #define RESEND_MESSAGE_DELAY        4000 // (ms) resend a message
 #define GPS_CORRECTION_LOST_DELAY   5000 // (ms) throw out gps error corrections now
 #define HEARTBEAT_SEND_DELAY        3000 // (ms) between heart being sent to CC
+#define DEBUG_PRINT_DELAY           1200
 
 #define RESEND_MESSAGE_LIMIT        5 // times to resend before failing
 
@@ -99,7 +100,7 @@ I2C_MODULE I2C_BUS_ID   = I2C1;
 
 // ---- States for Master SM ----
 static enum {
-    STATE_SETORIGIN,    // Obtain location of command center.
+    STATE_SETORIGIN = 0x1,    // Obtain location of command center.
     STATE_SETSTATION,    // Obtain location of station keep point
     STATE_STATIONKEEP,  // Maintaining station coordinates
     STATE_OVERRIDE,     // Remote override activated
@@ -158,6 +159,7 @@ static union EVENTS {
         unsigned int setOriginDone :1;
         /* - Override events - */
         unsigned int receiverDetected :1;
+        unsigned int wantOverride :1;
         unsigned int haveError :1;
     } flags;
     unsigned char bytes[EVENT_BYTE_SIZE]; // allows for 80 bitfields
@@ -168,8 +170,9 @@ static bool overrideShutdown = FALSE; //  whether to force override
 static bool haveStation = FALSE;
 static bool haveOrigin = FALSE;
 static bool wantSaveStation = FALSE;
-static bool wantOverride = FALSE;
+//static bool wantOverride = FALSE;
 static bool haveXbee = FALSE;
+static bool haveError = FALSE;
 
 static LocalCoordinate nedStation; // NED coordinate with station location
 static LocalCoordinate nedRescue; // NED coordinate of drowning person
@@ -250,29 +253,25 @@ static void checkEvents() {
             
             // ------------------------------ Messages ----------------------------
             case MAVLINK_MSG_ID_CMD_OTHER:
-                lastMavlinkMessageWantsAck = Mavlink_newMessage.commandOtherData.ack;
+                lastMavlinkMessageWantsAck = Mavlink_newMessage.commandOtherData.ack == WANT_ACK;
+                lastMavlinkCommandID = Mavlink_newMessage.commandOtherData.command;
                 if (Mavlink_newMessage.commandOtherData.command == MAVLINK_RESET_BOAT ) {
                     event.flags.haveResetMessage = TRUE;
-                    lastMavlinkCommandID = MAVLINK_RESET_BOAT ;
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_RETURN_STATION) {
                     event.flags.haveReturnStationMessage = TRUE;
                     overrideShutdown = FALSE;
-                    lastMavlinkCommandID = MAVLINK_RETURN_STATION;
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_SAVE_STATION) {
                     event.flags.haveSetStationMessage = TRUE;
                     wantSaveStation = TRUE;
-                    lastMavlinkCommandID = MAVLINK_SAVE_STATION;
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_GEOCENTRIC_ORIGIN) {
                     event.flags.haveSetOriginMessage = TRUE;
-                    lastMavlinkCommandID = MAVLINK_GEOCENTRIC_ORIGIN;
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_OVERRIDE) {
                     event.flags.haveOverrideMessage = TRUE;
                     overrideShutdown = TRUE;
-                    lastMavlinkCommandID = MAVLINK_OVERRIDE;
                 }
                 break;
             case MAVLINK_MSG_ID_GPS_ECEF:
@@ -303,6 +302,8 @@ static void checkEvents() {
                 break;
         }
     }
+    if (event.flags.haveOverrideMessage || overrideShutdown)
+        event.flags.wantOverride = TRUE;
 } //  checkEvents()
 
 
@@ -498,7 +499,15 @@ static void doMasterSM() {
     doHeartbeatMessage();
     #endif
 
-    checkOverride();
+    //checkOverride();
+
+    #ifdef DEBUG_VERBOSE
+    if (Timer_isExpired(TIMER_TEST2)) {
+        DBPRINT("State=%X,%X, Receiver=%X, WantOver=%X, ForceOver=%X\n",
+            state, subState, event.flags.receiverDetected, wantOverride, overrideShutdown);
+        Timer_new(TIMER_TEST2, DEBUG_PRINT_DELAY);
+    }
+    #endif
 
     switch (state) {
         case STATE_SETSTATION:
@@ -532,34 +541,23 @@ static void doMasterSM() {
             break;
 
         case STATE_OVERRIDE:
-            if (!wantOverride) {
-                    //setError(ERROR_NO_ORIGIN);
+            if (!event.flags.wantOverride) {
                 if (!haveOrigin)
-                    startSetOriginSM(); // do we ant infinite startup loop?
-                else if (event.flags.haveStartRescueMessage)
-                    startRescueSM();
-                else if (event.flags.haveSetStationMessage )
-                    startSetStationSM();
-                else if (haveOrigin && haveStation)
-                    startStationKeepSM();
-                
-                // Use autonomous controls
-                if (haveOrigin && (haveStation
-                    || event.flags.haveStartRescueMessage)) {
-                    Override_giveMicroControl();
-                    DBPRINT("Micro has control.\n");
-                    #ifdef USE_SIREN
-                    Siren_blueLightOff();
-                    #endif
+                    startSetOriginSM();
+                else if ( !haveError) {
+                    if (!haveStation && event.flags.haveSetStationMessage)
+                        startSetStationSM();
+                    else if (haveOrigin && event.flags.haveStartRescueMessage)
+                        startRescueSM();
+                    else if (haveStation)
+                        startStationKeepSM();
                 }
             }
-
             break;
 
         case STATE_RESCUE:
             doRescueSM();
 
-            
             if (event.flags.haveStartRescueMessage) {
                 startRescueSM();
             }
@@ -585,10 +583,12 @@ static void doMasterSM() {
     }
     if (state != STATE_OVERRIDE) {
         if (event.flags.haveError) {
+            DBPRINT("Error: %s", getErrorMessage(lastErrorCode));
+            //Mavlink_sendError(lastErrorCode); //sent in setError
             startOverrideSM();
             overrideShutdown = TRUE;
         }
-        if (wantOverride)
+        if (event.flags.wantOverride)
             startOverrideSM();
     }
     if (event.flags.haveResetMessage)
@@ -627,6 +627,10 @@ static void startSetOriginSM() {
 static void startSetStationSM() {
     state = STATE_SETSTATION;
     subState = STATE_NONE;
+
+    //if (event.flags.haveSetStationMessage)
+    //    Mavlink_sendAck(MAVLINK_MSG_ID_CMD_OTHER, MAVLINK_SAVE_STATION);
+
     Navigation_cancel();
 }
 
@@ -646,6 +650,9 @@ static void startStationKeepSM() {
 
     Navigation_gotoLocalCoordinate(&nedStation, STATION_TOLERANCE_MIN);
 
+    Override_giveMicroControl();
+    DBPRINT("Micro has control.\n");
+
     DBPRINT("Headed to station.\n");
 }
 
@@ -660,9 +667,15 @@ static void startOverrideSM() {
     state = STATE_OVERRIDE;
     subState = STATE_NONE;
 
+    Mavlink_sendStatus(MAVLINK_STATUS_OVERRIDE);
+
+    handleAcknowledgement();
+
+    //if (event.flags.haveOverrideMessage)
+    //    Mavlink_sendAck(MAVLINK_MSG_ID_CMD_OTHER, MAVLINK_OVERRIDE);
+
     Override_giveReceiverControl();
     DBPRINT("Reciever has control.\n");
-    Mavlink_sendStatus(MAVLINK_STATUS_OVERRIDE);
     Navigation_cancel();
 
     #ifdef USE_SIREN
@@ -681,7 +694,6 @@ static void startRescueSM() {
     state = STATE_RESCUE;
     subState = STATE_RESCUE_GOTO;
 
-
     // Get location data from message
     nedRescue.north = Mavlink_newMessage.gpsLocalData.north;
     nedRescue.east = Mavlink_newMessage.gpsLocalData.east;
@@ -694,6 +706,9 @@ static void startRescueSM() {
     #ifdef USE_SIREN
     Siren_redLightOn();
     #endif
+
+    Override_giveMicroControl();
+    DBPRINT("Micro has control.\n");
 
     DBPRINT("Rescuing person at: N=%.2f, E=%.2f, D=%.2f.\n",
         nedRescue.north, nedRescue.east, nedRescue.down);
@@ -726,6 +741,7 @@ static void handleAcknowledgement() {
 static void setError(error_t errorCode) {
     lastErrorCode = errorCode;
     event.flags.haveError = TRUE;
+    haveError = TRUE;
     Mavlink_sendError(errorCode);
     DBPRINT("Error: %s\n", getErrorMessage(errorCode));
 }
@@ -784,17 +800,22 @@ static void doHeartbeatMessage() {
  * @date 2013.05.04
  **********************************************************************/
 static void checkOverride() {
-
     /* If the receiver is off, boat is not stopped, and we either
         have a station or are setting one, then turn override off */
+    /*
     if (!event.flags.receiverDetected && !overrideShutdown
-        && (haveStation || (state == STATE_SETSTATION))) {
-
+        && ((haveStation && haveOrigin) || (state == STATE_SETSTATION)
+            || state == STATE_SETORIGIN || (haveOrigin && state == STATE_RESCUE))) {
         wantOverride = FALSE;
-    }
-    else {
+    }*//*
+    if (event.flags.receiverDetected || overrideShutdown
+            || (!haveOrigin && state != STATE_SETORIGIN)
+            || (!haveStation && (state != STATE_SETORIGIN && state != STATE_SETSTATION)) ) {
         wantOverride = TRUE;
     }
+    else {
+        wantOverride = FALSE;
+    }*/
 }
 
 
@@ -915,6 +936,9 @@ static void initializeAtlas() {
     }
     #endif
 
+    #ifdef DEBUG_VERBOSE
+    Timer_new(TIMER_TEST2, DEBUG_PRINT_DELAY);
+    #endif
 
 
     Timer_new(TIMER_HEARTBEAT, HEARTBEAT_SEND_DELAY);
@@ -929,7 +953,7 @@ static void initializeAtlas() {
 
 /**********************************************************************
  * Function: main
- * @return SUCCESS or FAILURE/
+ * @return SUCCESS or FAILURE
  * @remark Entry point for AtLAs (boat).
  * @author David Goodman
  * @date 2013.03.10  

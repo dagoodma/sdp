@@ -74,7 +74,7 @@ float Navigation_getLocalDistance(LocalCoordinate *nedPoint);
  * @return None
  * @remark Saves the current local (NED) position into the given variable.
  **********************************************************************/
-float Navigation_getLocalPosition(LocalCoordinate *nedPosition);
+void Navigation_getLocalPosition(LocalCoordinate *nedPosition);
 
 
 /**********************************************************************

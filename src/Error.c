@@ -25,7 +25,7 @@ const char *ERROR_MESSAGE[] = {
     "Never got origin.", // boat didn't receive origin from CC
     "Never got station.", // boat doesn't have a station
     "Need altitude from\nboat.",
-    "Lost boat connection.",
+    "Lost connection with\nboat.",
     "Magnetometer failed.",
     "Barometer failed.",
     "Encoder failed.",

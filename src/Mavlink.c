@@ -189,11 +189,11 @@ void Mavlink_sendRequestOrigin() {
 /* --- Status and Error --- */
 
 void Mavlink_sendStatus(uint16_t status){
-    sendStatusAndError(status, 0);
+    sendStatusAndError(status, ERROR_NONE);
 }
 
 void Mavlink_sendError(uint16_t error){
-    sendStatusAndError(0, error);
+    sendStatusAndError(MAVLINK_STATUS_NONE, error);
 }
 
 

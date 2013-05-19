@@ -45,6 +45,7 @@
 #define MAVLINK_REQUEST_ORIGIN          0x5 // boat->cc: please send cc location 
 
 // Status And Error (errors defined in Error.h) messages from boat
+#define MAVLINK_STATUS_NONE             0x0
 #define MAVLINK_STATUS_ONLINE           0x1 // The boat has come online
 #define MAVLINK_STATUS_START_RESCUE     0x2 // The boat is on a rescue
 #define MAVLINK_STATUS_RESCUE_SUCCESS   0x3 // The boat has rescued the person

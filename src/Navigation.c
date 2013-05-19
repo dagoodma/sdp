@@ -74,6 +74,7 @@ static void updateHeading();
 static uint8_t distanceToSpeed(float dist);
 static void getLocalPosition(LocalCoordinate *nedVar);
 static void setError(error_t errorCode);
+static error_t findNavigationError();
 
 
 /***********************************************************************
@@ -126,10 +127,7 @@ void Navigation_runSM() {
 
             if (Timer_isExpired(TIMER_NAVIGATION)) {
                 // Couldn't recover GPS
-                if (!GPS_hasFix() || !GPS_hasPosition()) 
-                    setError(ERROR_GPS_NOFIX);
-                if (!GPS_isConnected)
-                    setError(ERROR_GPS_DISCONNECTED);
+                setError(findNavigationError());
             }
             break;
         case STATE_ERROR:
@@ -149,7 +147,7 @@ void Navigation_runSM() {
  **********************************************************************/
 void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance) {
     if (!Navigation_isReady()) {
-        startErrorState();
+        setError(findNavigationError());
         return;
     }
 
@@ -171,7 +169,7 @@ void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance) {
  **********************************************************************/
 float Navigation_getLocalDistance(LocalCoordinate *nedPoint) {
     if (!Navigation_isReady()) {
-        startErrorState();
+        setError(findNavigationError());
         return;
     }
 
@@ -193,7 +191,11 @@ float Navigation_getLocalDistance(LocalCoordinate *nedPoint) {
  * @return None
  * @remark Saves the current local (NED) position into the given variable.
  **********************************************************************/
-float Navigation_getLocalPosition(LocalCoordinate *nedPosition) {
+void Navigation_getLocalPosition(LocalCoordinate *nedPosition) {
+    if (!Navigation_isReady()) {
+        setError(findNavigationError());
+        return;
+    }
     getLocalPosition(nedPosition);
 }
 
@@ -501,6 +503,19 @@ static void setError(error_t errorCode) {
     lastErrorCode = errorCode;
 
     startErrorState();
+}
+
+
+/**********************************************************************
+ * Function: findNavigationError
+ * @return The error code that navigation module experienced.
+ * @remark
+ **********************************************************************/
+static error_t findNavigationError() {
+    if (!GPS_isConnected)
+        return ERROR_GPS_DISCONNECTED;
+    if (!GPS_hasFix() || !GPS_hasPosition())
+        return ERROR_GPS_NOFIX;
 }
 
 /*********************************************************************

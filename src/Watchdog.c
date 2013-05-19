@@ -181,21 +181,25 @@ static void doWatchdog(void) {
             case MAVLINK_MSG_ID_CMD_OTHER:
                 // --- Messages from ComPAS to AtLAs (from Atlas.c) ---
                 lastMavlinkMessageWantsAck = Mavlink_newMessage.commandOtherData.ack;
+                char *wantAck = "";
+                if (Mavlink_newMessage.commandOtherData.ack == WANT_ACK)
+                    wantAck = " [WANT_ACK]";
+                
                 if (Mavlink_newMessage.commandOtherData.command == MAVLINK_RESET_BOAT ) {
                     event.flags.haveResetMessage = TRUE;
-                    dbprint("C: %s\n",getMessage(RESET_BOAT_MESSAGE));
+                    dbprint("C: %s%s\n",getMessage(RESET_BOAT_MESSAGE),wantAck);
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_RETURN_STATION) {
                     event.flags.haveReturnStationMessage = TRUE;
-                    dbprint("C: %s\n",getMessage(START_RETURN_MESSAGE));
+                    dbprint("C: %s%s\n",getMessage(START_RETURN_MESSAGE),wantAck);
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_SAVE_STATION) {
                     event.flags.haveSetStationMessage = TRUE;
-                    dbprint("C: %s\n",getMessage(SET_STATION_MESSAGE));
+                    dbprint("C: %s%s\n",getMessage(SET_STATION_MESSAGE),wantAck);
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_OVERRIDE) {
                     event.flags.haveOverrideMessage = TRUE;
-                    dbprint("C: %s\n",getMessage(STOPPING_BOAT_MESSAGE));
+                    dbprint("C: %s%s\n",getMessage(STOPPING_BOAT_MESSAGE),wantAck);
                 }
                 // ----  Messages from AtLAs to ComPAS (from Compas.c) --------
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_REQUEST_ORIGIN) {
@@ -262,6 +266,9 @@ static void doWatchdog(void) {
                     }
                     else if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_RESCUE_SUCCESS) {
                         dbprint("A: successfully rescued person\n");
+                    }
+                    else if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_RETURN_STATION) {
+                        dbprint("A: returning to station\n");
                     }
                     else if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_OVERRIDE) {
                         dbprint("A: in override mode\n");
