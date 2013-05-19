@@ -26,7 +26,7 @@
  ***********************************************************************/
 #define USE_XBEE
 
-#define XBEE_UART_ID        UART1_ID
+#define XBEE_UART_ID        UART2_ID
 
 #define SHOW_HEARTBEAT
 
