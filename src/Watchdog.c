@@ -127,6 +127,13 @@ static void doWatchdog(void) {
         lastMavlinkCommandID = MAVLINK_NO_COMMAND;
         lastMavlinkMessageWantsAck = FALSE;
         switch (lastMavlinkMessageID) {
+            /*----------------  Heartbeat message -------------------------*/
+            case MAVLINK_MSG_ID_XBEE_HEARTBEAT:
+                #ifdef SHOW_HEARTBEAT
+                dbprint("A: heartbeat!\n");
+                #endif
+                DBPRINT("HERE!\n");
+                break;
             /*--------------------  Acknowledgement messages ------------------ */
             case MAVLINK_MSG_ID_MAVLINK_ACK:
                 // ----  Messages from AtLAs to ComPAS (from Compas.c) --------
@@ -260,13 +267,6 @@ static void doWatchdog(void) {
                         dbprint("A: in override mode\n");
                     }
                 }
-                break;
-            /*----------------  Heartbeat message -------------------------*/
-            case MAVLINK_MSG_ID_XBEE_HEARTBEAT:
-                #ifdef SHOW_HEARTBEAT
-                dbprint("A: heartbeat!\n");
-                #endif
-                DBPRINT("HERE!\n");
                 break;
             /*----------------  Barometer altitude message ----------------*/
             case MAVLINK_MSG_ID_BAROMETER:

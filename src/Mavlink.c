@@ -143,7 +143,7 @@ void Mavlink_sendHeartbeat(){
     uint8_t data = 0x1;
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-    mavlink_msg_xbee_heartbeat_pack(MAV_NUMBER, COMP_ID, &msg, TRUE, data);
+    mavlink_msg_xbee_heartbeat_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, data);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
     UART_putString(Xbee_getUartId(), buf, length);
 }

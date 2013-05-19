@@ -48,7 +48,6 @@
 //#define USE_SIREN
 #define USE_BAROMETER
 #define DO_HEARTBEAT
-#define DEBUG
 
 #ifdef DEBUG
 #ifdef USE_SD_LOGGER
@@ -159,7 +158,6 @@ static union EVENTS {
         unsigned int setOriginDone :1;
         /* - Override events - */
         unsigned int receiverDetected :1;
-        unsigned int wantOverride :1;
         unsigned int haveError :1;
     } flags;
     unsigned char bytes[EVENT_BYTE_SIZE]; // allows for 80 bitfields
@@ -206,6 +204,7 @@ static void setError(error_t errorCode);
 static void gpsCorrectionUpdate();
 static void doBarometerUpdate();
 static void doHeartbeatMessage();
+static void checkOverride();
 void fatal(error_t code);
 
 
@@ -303,16 +302,6 @@ static void checkEvents() {
                 DBPRINT("Mavlink received unhandled message: 0x%X\n");
                 break;
         }
-    }
-    /* If the receiver is off, boat is not stopped, and we either
-        have a station or are setting one, then turn override off */
-    if (!event.flags.receiverDetected && !overrideShutdown 
-        && (haveStation || (state == STATE_SETSTATION))) {
-
-        event.flags.wantOverride = FALSE;
-    }
-    else {
-        event.flags.wantOverride = TRUE;
     }
 } //  checkEvents()
 
@@ -508,6 +497,8 @@ static void doMasterSM() {
     #ifdef DO_HEARTBEAT
     doHeartbeatMessage();
     #endif
+
+    checkOverride();
 
     switch (state) {
         case STATE_SETSTATION:
@@ -782,6 +773,27 @@ static void doHeartbeatMessage() {
         Mavlink_sendHeartbeat();
 
         Timer_new(TIMER_HEARTBEAT, HEARTBEAT_SEND_DELAY);
+    }
+}
+
+/**********************************************************************
+ * Function: checkOverride
+ * @return None.
+ * @remark Check if an override is desired.
+ * @author David Goodman
+ * @date 2013.05.04
+ **********************************************************************/
+static void checkOverride() {
+
+    /* If the receiver is off, boat is not stopped, and we either
+        have a station or are setting one, then turn override off */
+    if (!event.flags.receiverDetected && !overrideShutdown
+        && (haveStation || (state == STATE_SETSTATION))) {
+
+        wantOverride = FALSE;
+    }
+    else {
+        wantOverride = TRUE;
     }
 }
 

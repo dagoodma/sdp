@@ -208,6 +208,7 @@ static union EVENTS {
         unsigned int haveBoatOnlineMessage  :1;
         unsigned int readyToPrintMessage :1; // display hold for Ready state expired
         /* - Boat status and error messages - */
+        unsigned int haveBoatHeartbeat :1;
         unsigned int lostBoatHeartbeat :1;
         unsigned int haveBoatPositionMessage :1;
 
@@ -294,6 +295,8 @@ static void checkEvents() {
         if (!Mavlink_hasHeartbeat())
             event.flags.lostBoatHeartbeat = TRUE;
     }
+    if (Mavlink_hasHeartbeat())
+        event.flags.haveBoatHeartbeat = TRUE;
 
     // Calibration flags
     if (state == STATE_CALIBRATE) {
@@ -1195,7 +1198,8 @@ static void checkBoatConnection() {
         setError(ERROR_NO_HEARTBEAT);
         isConnectedWithBoat = FALSE;
     }
-    else if (event.flags.haveBoatOnlineMessage && !isConnectedWithBoat) {
+    else if (event.flags.haveBoatOnlineMessage && !isConnectedWithBoat
+            || event.flags.haveBoatHeartbeat) {
         // Boat just came online
         isConnectedWithBoat = TRUE;
         Timer_new(TIMER_HEARTBEAT_CHECK, HEARTBEAT_LOST_DELAY);
