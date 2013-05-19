@@ -30,7 +30,7 @@
 #include "Accelerometer.h"
 #include "Magnetometer.h"
 
-
+//#define DEBUG_BUTTON_CHECK // spams button statuses in runSM
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
@@ -114,8 +114,6 @@ const char *INTERFACE_MESSAGE[] = {
     "Calibration success.",
     "Calibrate system.\nLevel scope with\nhorizon.",
     "Calibrate system.\nPoint scope north\nand at horizon.",
-   // "Please calibrate the\npitch by leveling\nwith horizon, until\nboth top lights on.",
-    //"Please calibrate the\nyaw by being\nlevel and north,\nuntil both lights on.",
     "Command center is\nready.",
     "Sending boat to\nrescue person.",
     "Boat started rescue.",
@@ -133,9 +131,9 @@ const char *INTERFACE_MESSAGE[] = {
     "Set new origin.",
     "Boat is now online.",
     "Resetting boat.",
-    "Resetting system."
+    "Resetting system.",
     "Are you sure you\nwant to cancel retu-\nrning to station?",
-    "Are you sure you\nwant to cancel sett-\ning station?",
+    "Are you sure you\nwant to cancel sett-\ning station?"
 };
 
 static message_t currentMsgCode, nextMsgCode;
@@ -206,7 +204,7 @@ void Interface_runSM(){
         }
         Timer_clear(TIMER_LCD_HOLD);
     }
-
+   //printf("HERE! ");
     if(Timer_isExpired(TIMER_INTERFACE)) {
 
         #if NUMBER_OF_TIMES_TO_CHECK > 1
@@ -260,7 +258,13 @@ void Interface_runSM(){
         buttonPressed.flag.setStation = (SETSTATION_BUTTON == PRESSED);
         buttonPressed.flag.reset = (RESET_BUTTON == PRESSED);
         #endif
-
+#ifdef DEBUG_BUTTON_CHECK
+        Interface_waitLightOnTimer(1000);
+        printf("Ok=%d, C=%d, S=%d, R=%d, SS=%d, Reset=%d\n",
+            buttonPressed.flag.okay, buttonPressed.flag.cancel,
+            buttonPressed.flag.stop, buttonPressed.flag.rescue,
+            buttonPressed.flag.setStation, buttonPressed.flag.reset);
+#endif
         Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
     }
 
@@ -293,7 +297,9 @@ void Interface_runSM(){
             CALIBRATE_BACK_LED = OFF;
         }
     }
-    
+
+    if (Timer_isExpired(TIMER_INTERFACE) || !Timer_isActive(TIMER_INTERFACE))
+        Timer_new(TIMER_INTERFACE, WAIT_BETWEEN_CHECKS);
     
 }
 
@@ -690,7 +696,7 @@ int main(void) {
 //#define TEST_BUTTONS2
 #ifdef TEST_BUTTONS2
 
-#define DEBUG_PRINT_DELAY       1500
+#define DEBUG_PRINT_DELAY       200
 #define DEBUG
 
 // Pick the I2C_MODULE to initialize

@@ -69,7 +69,7 @@ char Magnetometer_init() {
     accumulator = 0.0f;
     haveReading = FALSE;
 
-    (void)readDevice(READ_DEGREE_ADDRESS);
+    //(void)readDevice(READ_DEGREE_ADDRESS);
     /*
     uint8_t readAddress = readDeviceEEPROM(READ_SLAVE_ADDRESS);
     if (readAddress  != SLAVE_WRITE_ADDRESS) {
@@ -250,7 +250,7 @@ static uint16_t readDeviceEEPROM(uint8_t eeAddress) {
     return data;
 }
 
-#define MAGNETOMETER_TEST
+//#define MAGNETOMETER_TEST
 #ifdef MAGNETOMETER_TEST
 
 #define PRINT_DELAY         500 // (ms)
@@ -277,8 +277,8 @@ int main(void) {
             LCD_setPosition(0,0);
             char *debug = (Magnetometer_isNorth())?
                 "(N)" : "";
-            dbprint("Mag: %.1f %s\n", Magnetometer_getHeading(),
-                    debug);
+            dbprint("Mag: %.1f %s, Raw=%d\n", Magnetometer_getHeading(),
+                    debug, readDevice(READ_DEGREE_ADDRESS));
             Timer_new(TIMER_TEST, PRINT_DELAY);
         }
     }

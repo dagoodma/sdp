@@ -20,7 +20,7 @@
 ***********************************************************************/
 #define IS_COMPAS
 
-#define DEBUG
+//#define DEBUG
 #define DEBUG_STATE
 //#define DEBUG_BLINK
 //#define DEBUG_VERBOSE
@@ -29,11 +29,13 @@
 //#define USE_MAGNETOMETER
 #define USE_ENCODER
 #define USE_ACCELEROMETER
-#define USE_BAROMETER
+//#define USE_BAROMETER
 #define USE_GPS
-//#define USE_XBEE
+#define USE_XBEE
 #define ENABLE_RESET
 
+
+#define DEFAULT_COMPAS_HEIGHT       280.0f // (m) if barometer is disabled
 //#define REQUIRE_RESCUE_HEIGHT // causes an error if altitude unknown and rescue pressed
 
 #ifdef DEBUG
@@ -99,7 +101,7 @@
 #define CANCEL_DEBOUNCE_DELAY       500 // (ms) to read cancel button in cancel state
 #define RESCUE_DEBOUNCE_DELAY       500 // (ms) to read rescue button in rescue state
 
-#define RESET_HOLD_DELAY            2000 // (ms) to hold before CC reset
+#define RESET_HOLD_DELAY            1000 // (ms) to hold before CC reset
 #define RESET_LONG_HOLD_DELAY        5000 // (ms) to hold before CC and boat reset
 
 #define BLINK_DELAY                 2000
@@ -481,9 +483,11 @@ static void doRescueSM() {
                 Interface_readyLightOn();
                 #ifdef DEBUG_RESCUE
                 LCD_setPosition(2,0);
-                LCD_writeString("R: N=%.2f, E=%.2f\nE: Y=%.2f, P=%.2f",
+                char debug[255];
+                sprintf(debug,"R: N=%.2f, E=%.2f\nE: Y=%.2f, P=%.2f",
                     nedRescueTarget.north, nedRescueTarget.east,
                     Encoder_getYaw(), Encoder_getPitch());
+                LCD_writeString(debug);
                 #endif
             }
             else if (Timer_isExpired(TIMER_RESCUE)) {
@@ -806,7 +810,12 @@ static void doSetOriginSM() {
  * @remark Executes one cycle of the ComPAS's master state machine.
  **********************************************************************/
 static void doMasterSM() {
-    checkEvents();
+
+    #ifdef USE_INTERFACE
+    Interface_runSM();
+    #endif
+
+ checkEvents();
 
     #ifdef USE_MAGNETOMETER
     if (state = STATE_CALIBRATE)
@@ -838,12 +847,8 @@ static void doMasterSM() {
 
     #ifdef USE_BAROMETER
     Barometer_runSM();
+    #endif
     doBarometerUpdate(); // send barometer data
-    #endif
-
-    #ifdef USE_INTERFACE
-    Interface_runSM();
-    #endif
 
     // Blink on timer
     #ifdef DEBUG_BLINK
@@ -856,9 +861,10 @@ static void doMasterSM() {
     #ifdef DEBUG_STATE
     if (Timer_isExpired(TIMER_TEST2)) {
         DBPRINT("State: %d, %d\n", state, subState);
-        DBPRINT("Ok=%X, Cancel=%X, Rescue=%X, Stop=%X\n",
+        DBPRINT("Ok=%X, Cancel=%X, Rescue=%X, Stop=%X, Reset=%X, SetStation=%X\n",
             Interface_isOkPressed(), Interface_isCancelPressed(),
-            Interface_isRescuePressed(), Interface_isStopPressed());
+            Interface_isRescuePressed(), Interface_isStopPressed(),
+            Interface_isResetPressed(), Interface_isSetStationPressed());
         Timer_new(TIMER_TEST2, DEBUG_PRINT_DELAY);
     }
     #endif
@@ -1121,7 +1127,12 @@ static void fatal(error_t code) {
  **********************************************************************/
 static void doBarometerUpdate() {
     if (event.flags.haveBarometerMessage) {
-        compasHeight = Barometer_getAltitude()
+#ifndef USE_BAROMETER
+        float compasHeight = DEFAULT_COMPAS_HEIGHT;
+#else
+        float compasHeight = Barometer_getAltitude();
+#endif
+        compasHeight = compasHeight;
             - Mavlink_newMessage.barometerData.altitude;
 
         haveCompasHeight = TRUE;
@@ -1182,6 +1193,7 @@ static void checkBoatConnection() {
     if (event.flags.lostBoatHeartbeat) {
         // Lost connection to boat
         setError(ERROR_NO_HEARTBEAT);
+        isConnectedWithBoat = FALSE;
     }
     else if (event.flags.haveBoatOnlineMessage && !isConnectedWithBoat) {
         // Boat just came online
@@ -1206,7 +1218,7 @@ static void checkBoatConnection() {
     Interface_showMessage(RESET_SYSTEM_MESSAGE);
     Interface_readyLightOff();
     Interface_waitLightOn();
-    DELAY(RESET_HOLD_DELAY);
+    DELAY(RESET_LONG_HOLD_DELAY);
     SoftReset();
 }
 
@@ -1222,7 +1234,7 @@ static void checkBoatConnection() {
     Interface_showMessage(RESET_BOAT_MESSAGE);
     Interface_readyLightOff();
     Interface_waitLightOn();
-    DELAY(RESET_HOLD_DELAY);
+    DELAY(RESET_LONG_HOLD_DELAY);
     resetCompas();
  }
 
@@ -1239,19 +1251,29 @@ static void checkBoatConnection() {
             resetPressedShort = TRUE;
             Timer_new(TIMER_RESET, RESET_LONG_HOLD_DELAY);
          }
-         else if (event.flags.resetButtonPressed) {
+         else if (event.flags.resetButtonPressed && !Timer_isActive(TIMER_RESET)) {
             // Just pressed reset, start timer and wait
             Timer_new(TIMER_RESET, RESET_HOLD_DELAY);
+            Interface_readyLightOff();
+            Interface_waitLightOn();
+         }
+         else if (Timer_isActive(TIMER_RESET) && !event.flags.resetButtonPressed) {
+            Timer_clear(TIMER_RESET);
+            Interface_readyLightOn();
+            Interface_waitLightOff();
+            resetPressedShort = FALSE;
          }
      }
      else  {
          // A reset is desired, determine which type
          if (!event.flags.resetButtonPressed) {
              // want a soft reset
+             DBPRINT("Performing soft reset.\n");
              resetCompas();
          }
          else if (event.flags.resetButtonPressed && Timer_isExpired(TIMER_RESET)) {
              // want a full reset
+             DBPRINT("Performing full reset.\n");
              resetAll();
          }
      }
@@ -1285,7 +1307,7 @@ static void initializeCompas() {
     // -------------------- I2C Devices -------------------
     // I2C bus
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
-    if (I2C_hasError) {
+    if (I2C_hasError()) {
         fatal(ERROR_I2C);
     }
 

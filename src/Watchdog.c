@@ -138,12 +138,12 @@ static void doWatchdog(void) {
                         dbprint("A: ack %s\n", getMessage(RETURNING_MESSAGE));
                     }
                     // Boat is in override state
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_OVERRIDE) {
+                    else if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_OVERRIDE) {
                         event.flags.haveStopAck = TRUE;
                         dbprint("A: ack %s\n", getMessage(STOPPING_BOAT_MESSAGE));
                     }
                     // Boat saved station
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_SAVE_STATION) {
+                    else if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_SAVE_STATION) {
                         event.flags.haveSetStationAck = TRUE;
                         dbprint("A: ack %s\n", getMessage(SAVING_STATION_MESSAGE));
                     }
@@ -155,7 +155,7 @@ static void doWatchdog(void) {
                         event.flags.haveStartRescueAck = TRUE;
                         dbprint("A: ack %s\n", getMessage(STARTING_RESCUE_MESSAGE));
                     }
-                    if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_LOCAL_SET_STATION) {
+                    else if (Mavlink_newMessage.ackData.msgStatus == MAVLINK_LOCAL_SET_STATION) {
                         event.flags.haveSetStationAck = TRUE;
                         dbprint("A: ack %s\n", getMessage(SET_STATION_MESSAGE));
                     }
@@ -176,7 +176,7 @@ static void doWatchdog(void) {
                 lastMavlinkMessageWantsAck = Mavlink_newMessage.commandOtherData.ack;
                 if (Mavlink_newMessage.commandOtherData.command == MAVLINK_RESET_BOAT ) {
                     event.flags.haveResetMessage = TRUE;
-                    dbprint("C: %s\n",getMessage(START_RETURN_MESSAGE));
+                    dbprint("C: %s\n",getMessage(RESET_BOAT_MESSAGE));
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_RETURN_STATION) {
                     event.flags.haveReturnStationMessage = TRUE;

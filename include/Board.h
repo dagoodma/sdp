@@ -14,6 +14,8 @@
  * @date December 19, 2012, 2:08 PM -- Created
  */
 
+//#define DEBUG
+
 #ifndef Board_H
 #define	Board_H
 
@@ -26,7 +28,6 @@
 #include "Error.h"
 #include "Timer.h"
 #include "LCD.h"
-#include "Lcd.h"
 
 #ifdef USE_SD_LOGGER
 #include "Logger.h"
