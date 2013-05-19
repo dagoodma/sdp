@@ -56,7 +56,7 @@
 #define CALIBRATION_VALUE_SIZE      2 // (bytes) u/int16_t each
 
 // Printing debug messages over serial
-#define DEBUG
+//#define DEBUG
 
 // Reference pressure at sea level (changes with weather)
 #define PRESSURE_P0		102201.209f // (Pa)
@@ -440,7 +440,7 @@ int main(void) {
 #endif
 
 
-//#define BAROMETER_COMPAS_TEST
+#define BAROMETER_COMPAS_TEST
 #ifdef BAROMETER_COMPAS_TEST
 
 #define PRINT_DELAY     500 // (ms)

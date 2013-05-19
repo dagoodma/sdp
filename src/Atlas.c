@@ -44,10 +44,11 @@
 #define USE_GPS
 #define USE_DRIVE
 #define USE_TILTCOMPASS
-#define USE_XBEE
+//#define USE_XBEE
 //#define USE_SIREN
 #define USE_BAROMETER
 #define DO_HEARTBEAT
+#define DEBUG
 
 #ifdef DEBUG
 #ifdef USE_SD_LOGGER
@@ -903,11 +904,13 @@ static void initializeAtlas() {
     #endif
 
 
-    // Start calibrating before use
-    startSetOriginSM();
 
     Timer_new(TIMER_HEARTBEAT, HEARTBEAT_SEND_DELAY);
     Mavlink_sendStatus(MAVLINK_STATUS_ONLINE);
+    
+    DELAY(5);
+    // Start calibrating before use
+    startSetOriginSM();
 }
 
 //---------------------------------MAIN -------------------------------

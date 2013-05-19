@@ -38,7 +38,7 @@
 #define DELAY(ms)   do { int i; for (i = 0; i < (ms << 8); i++) { asm ("nop"); } } while(0);
 
 #define MS_TO_SEC(ms)  ((float)ms/1000)
-#define DEBUG
+
 // Debugging statements over terminal, SD logger, or disabled (respectively)
 #ifdef DEBUG
 #ifdef USE_SD_LOGGER

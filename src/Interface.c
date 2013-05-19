@@ -616,17 +616,20 @@ char *getMessage(message_t code) {
 
 
 
-//#define TEST_BUTTONS
+#define TEST_BUTTONS
 #ifdef TEST_BUTTONS
+
+#define STARTUP_DELAY   1500
 int main(void) {
     //initializations
     Board_init();
     Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
     Interface_init();
 
-    DELAY(5);
+    DELAY(10);
     dbprint("Interface online.\n");
 
+    DELAY(STARTUP_DELAY);
     enum {
         CANCEL  = 1,
         OK,
@@ -676,6 +679,43 @@ int main(void) {
 
 #endif
 
+
+//#define TEST_BUTTONS2
+#ifdef TEST_BUTTONS2
+
+#define DEBUG_PRINT_DELAY       1500
+#define DEBUG
+
+int main(void) {
+    //initializations
+    Board_init();
+    Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
+    Interface_init();
+
+    DELAY(5);
+    dbprint("Interface online.\n");
+    DELAY(DEBUG_PRINT_DELAY);
+
+    LCD_clearDisplay();
+    Timer_new(TIMER_TEST, DEBUG_PRINT_DELAY);
+    //cycle and check if buttons are pressed, if so, turn light on for 3 seconds
+    while(1) {
+        //check to see which button is pressed
+        if(Timer_isExpired(TIMER_TEST)) {
+            LCD_setPosition(0,0);
+            dbprint("Ok=%d, C=%d, R=%d, S=%x,\n Reset=%x, SS=%x\n",
+                Interface_isOkPressed(), Interface_isCancelPressed(),
+                Interface_isRescuePressed(), Interface_isStopPressed(),
+                Interface_isResetPressed(), Interface_isSetStationPressed());
+            Timer_new(TIMER_TEST, DEBUG_PRINT_DELAY);
+        }
+        Interface_runSM();
+    }
+
+    return SUCCESS;
+}
+
+#endif
 
 //#define TEST_LIGHTS
 #ifdef TEST_LIGHTS

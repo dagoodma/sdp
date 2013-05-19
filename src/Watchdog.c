@@ -195,9 +195,6 @@ static void doWatchdog(void) {
                     event.flags.haveRequestOriginMessage = TRUE;
                     dbprint("A: requesting origin.\n");
                 }
-                else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_STATUS_OVERRIDE) {
-                    dbprint("A: in override mode\n");
-                }
                 break;
             /*--------------------  GPS messages ------------------ */
             case MAVLINK_MSG_ID_GPS_ECEF:
@@ -252,6 +249,15 @@ static void doWatchdog(void) {
                     if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_ONLINE) {
                         event.flags.haveBoatOnlineMessage = TRUE;
                         dbprint("A: %s\n", getMessage(BOAT_ONLINE_MESSAGE));
+                    }
+                    else if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_START_RESCUE) {
+                        dbprint("A: started a rescue\n");
+                    }
+                    else if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_RESCUE_SUCCESS) {
+                        dbprint("A: successfully rescued person\n");
+                    }
+                    else if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_OVERRIDE) {
+                        dbprint("A: in override mode\n");
                     }
                 }
                 break;
