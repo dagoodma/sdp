@@ -14,7 +14,7 @@
  --------------         ---         --------
  5-1-13 2:10  PM      jash        Created file.
 ***********************************************************************/
-#define DEBUG
+//#define DEBUG
 
 #include <xc.h>
 #include <stdint.h>
@@ -616,15 +616,22 @@ char *getMessage(message_t code) {
 
 
 
-#define TEST_BUTTONS
+//#define TEST_BUTTONS
 #ifdef TEST_BUTTONS
 
-#define STARTUP_DELAY   1500
+// Pick the I2C_MODULE to initialize
+I2C_MODULE      I2C_ID = I2C1;
+
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  80000 // (Hz)
+
+#define STARTUP_DELAY   3500
 int main(void) {
     //initializations
     Board_init();
     Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
     Interface_init();
+    //I2C_init(I2C_ID, I2C_CLOCK_FREQ);
 
     DELAY(10);
     dbprint("Interface online.\n");
@@ -686,20 +693,29 @@ int main(void) {
 #define DEBUG_PRINT_DELAY       1500
 #define DEBUG
 
+// Pick the I2C_MODULE to initialize
+I2C_MODULE      I2C_ID = I2C1;
+
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  80000 // (Hz)
+
+#define DO_STUFF
+
+#define STARTUP_DELAY   3500
 int main(void) {
     //initializations
     Board_init();
     Board_configure(USE_SERIAL | USE_LCD | USE_TIMER);
     Interface_init();
+    //I2C_init(I2C_ID, I2C_CLOCK_FREQ);
 
-    DELAY(5);
     dbprint("Interface online.\n");
-    DELAY(DEBUG_PRINT_DELAY);
+    DELAY(STARTUP_DELAY);
 
-    LCD_clearDisplay();
     Timer_new(TIMER_TEST, DEBUG_PRINT_DELAY);
     //cycle and check if buttons are pressed, if so, turn light on for 3 seconds
     while(1) {
+#ifdef DO_STUFF
         //check to see which button is pressed
         if(Timer_isExpired(TIMER_TEST)) {
             LCD_setPosition(0,0);
@@ -710,6 +726,7 @@ int main(void) {
             Timer_new(TIMER_TEST, DEBUG_PRINT_DELAY);
         }
         Interface_runSM();
+#endif
     }
 
     return SUCCESS;

@@ -15,6 +15,7 @@
 #include "Timer.h"
 #include "Board.h"
 #include "Barometer.h"
+#include "LCD.h"
 
 
 /***********************************************************************
@@ -440,11 +441,11 @@ int main(void) {
 #endif
 
 
-#define BAROMETER_COMPAS_TEST
+//#define BAROMETER_COMPAS_TEST
 #ifdef BAROMETER_COMPAS_TEST
 
 #define PRINT_DELAY     500 // (ms)
-#define STARTUP_DELAY   1500 // (ms)
+#define STARTUP_DELAY   3500 // (ms)
 
 int main(void) {
 // Initialize the UART,Timers, and I2C1

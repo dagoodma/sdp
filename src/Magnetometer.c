@@ -35,6 +35,8 @@
 
 #define MINIMUM_NORTH_ERROR         1.2f // (degrees) minimum error from North
 
+//#define FLIP_NORTH_SOUTH
+
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
  ***********************************************************************/
@@ -82,7 +84,14 @@ char Magnetometer_init() {
 }
 
 float Magnetometer_getHeading() {
+#ifdef FLIP_NORTH_SOUTH
+    if (heading > 180.0f)
+        return (heading - 180.0f);
+    else
+        return (heading + 180.0f);
+#else
     return heading;
+#endif
 }
 
 void Magnetometer_runSM(){
@@ -102,8 +111,8 @@ void Magnetometer_runSM(){
 
 
 bool Magnetometer_isNorth() {
-    return haveReading && (heading <= MINIMUM_NORTH_ERROR
-            || heading >= (360.0 - MINIMUM_NORTH_ERROR));
+    return haveReading && (Magnetometer_getHeading() <= MINIMUM_NORTH_ERROR
+            || Magnetometer_getHeading() >= (360.0 - MINIMUM_NORTH_ERROR));
 }
 
 void Magnetometer_enableSleepMode() {
@@ -241,7 +250,7 @@ static uint16_t readDeviceEEPROM(uint8_t eeAddress) {
     return data;
 }
 
-//#define MAGNETOMETER_TEST
+#define MAGNETOMETER_TEST
 #ifdef MAGNETOMETER_TEST
 
 #define PRINT_DELAY         500 // (ms)
@@ -266,7 +275,10 @@ int main(void) {
         Magnetometer_runSM();
         if (Timer_isExpired(TIMER_TEST)) {
             LCD_setPosition(0,0);
-            dbprint("Mag: %.1f\n", Magnetometer_getHeading());
+            char *debug = (Magnetometer_isNorth())?
+                "(N)" : "";
+            dbprint("Mag: %.1f %s\n", Magnetometer_getHeading(),
+                    debug);
             Timer_new(TIMER_TEST, PRINT_DELAY);
         }
     }

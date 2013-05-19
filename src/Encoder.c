@@ -288,7 +288,7 @@ static uint16_t readDevice(uint8_t deviceReadAddress, uint8_t deviceWriteAddress
     return data;
 }
 
-//#define ENCODER_TEST
+#define ENCODER_TEST
 #ifdef ENCODER_TEST
 
 #define PRINT_DELAY     50

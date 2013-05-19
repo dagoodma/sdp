@@ -25,6 +25,8 @@
 #include "Serial.h"
 #include "Error.h"
 #include "Timer.h"
+#include "LCD.h"
+#include "Lcd.h"
 
 #ifdef USE_SD_LOGGER
 #include "Logger.h"

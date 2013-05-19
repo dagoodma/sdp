@@ -36,6 +36,8 @@
 #define PB_CLOCK        SYSTEM_CLOCK/2
 
 
+#define STARTUP_DELAY   2000 // (ms) to spend configuring (for LCD to power up)
+
 struct {
     unsigned int useSerial :1;
     unsigned int useLCD :1;
@@ -48,6 +50,7 @@ void Board_init()
 }
 
 void Board_configure(uint8_t opts) {
+    DELAY(STARTUP_DELAY );
     if (opts & USE_TIMER) {
         Timer_init();
     }
@@ -59,6 +62,7 @@ void Board_configure(uint8_t opts) {
         option.useLCD = TRUE;
         LCD_init();
     }
+    DELAY(STARTUP_DELAY );
 }
 
 unsigned int Board_GetPBClock()
