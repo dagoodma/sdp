@@ -88,7 +88,7 @@ static error_t findNavigationError();
  **********************************************************************/
 bool Navigation_init() {
     startIdleState();
-    lastErrorCode = 0x0;
+    lastErrorCode = ERROR_NONE;
     Timer_new(TIMER_NAVIGATION, UPDATE_DELAY);
     return SUCCESS;
 }
@@ -301,10 +301,15 @@ bool Navigation_hasError() {
 error_t Navigation_getError() {
     error_t result = ERROR_NONE;
     if (Navigation_hasError()) {
+        result = lastErrorCode;
+        lastErrorCode = ERROR_NONE;
+    }
+    /*
+    if (Navigation_hasError()) {
         startIdleState();
         result = lastErrorCode;
     }
-
+    */
     return result;
 }
 
@@ -405,6 +410,8 @@ static void startErrorState() {
 #ifdef USE_DRIVE
     Drive_stop();
 #endif
+    if (lastErrorCode == ERROR_NONE)
+        lastErrorCode = ERROR_UNKNOWN;
 }
 
 
@@ -516,6 +523,10 @@ static error_t findNavigationError() {
         return ERROR_GPS_DISCONNECTED;
     if (!GPS_hasFix() || !GPS_hasPosition())
         return ERROR_GPS_NOFIX;
+    if (!hasOrigin)
+        return ERROR_NO_ORIGIN;
+
+    return ERROR_NONE;
 }
 
 /*********************************************************************

@@ -603,9 +603,10 @@ void Interface_clearDisplay() {
  **********************************************************************/
 
 static void showMessage(message_t msgCode){
-        LCD_setPosition(0,0);
-        LCD_writeString(INTERFACE_MESSAGE[msgCode]);
-        currentMsgCode = msgCode;
+    LCD_clearDisplay();
+    LCD_setPosition(0,0);
+    LCD_writeString(INTERFACE_MESSAGE[msgCode]);
+    currentMsgCode = msgCode;
 }
 
 /**********************************************************************

@@ -36,7 +36,8 @@ typedef enum {
     ERROR_XBEE,
     ERROR_TILTCOMPASS,
     ERROR_I2C,
-    ERROR_NAVIGATION
+    ERROR_NAVIGATION,
+    ERROR_OVERRIDE
 } error_t;
 
 

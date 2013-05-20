@@ -204,6 +204,7 @@ static void initializeAtlas();
 static void resetAtlas();
 static void handleAcknowledgement();
 static void setError(error_t errorCode);
+static void clearError();
 static void gpsCorrectionUpdate();
 static void doBarometerUpdate();
 static void doHeartbeatMessage();
@@ -275,24 +276,23 @@ static void checkEvents() {
                 }
                 break;
             case MAVLINK_MSG_ID_GPS_ECEF:
-                lastMavlinkMessageWantsAck = Mavlink_newMessage.gpsGeocentricData.ack;
+                lastMavlinkMessageWantsAck = (Mavlink_newMessage.gpsGeocentricData.ack == WANT_ACK);
+                lastMavlinkCommandID = Mavlink_newMessage.commandOtherData.command;
                 if (Mavlink_newMessage.gpsGeocentricData.status == MAVLINK_GEOCENTRIC_ORIGIN) {
                     event.flags.haveSetOriginMessage = TRUE;
-                    lastMavlinkCommandID = MAVLINK_GEOCENTRIC_ORIGIN;
                 }
                 else if (Mavlink_newMessage.gpsGeocentricData.status == MAVLINK_GEOCENTRIC_ERROR)
                     event.flags.haveGeocentricErrorMessage = TRUE;
                 break;
             case MAVLINK_MSG_ID_GPS_NED:
-                lastMavlinkMessageWantsAck = Mavlink_newMessage.gpsLocalData.ack;
+                lastMavlinkMessageWantsAck = Mavlink_newMessage.gpsLocalData.ack == WANT_ACK;
+                lastMavlinkCommandID = Mavlink_newMessage.gpsLocalData.status;
                 if (Mavlink_newMessage.gpsLocalData.status == MAVLINK_LOCAL_SET_STATION) {
                     event.flags.haveSetStationMessage = TRUE;
-                    lastMavlinkCommandID = MAVLINK_LOCAL_SET_STATION;
                     wantSaveStation = FALSE;
                 }
                 else if (Mavlink_newMessage.gpsLocalData.status == MAVLINK_LOCAL_START_RESCUE) {
                     event.flags.haveStartRescueMessage = TRUE;
-                    lastMavlinkCommandID = MAVLINK_LOCAL_START_RESCUE;
                 }
                 break;
             default:
@@ -321,7 +321,8 @@ static void doSetOriginSM() {
         ecefOrigin.z = Mavlink_newMessage.gpsGeocentricData.z;
         Navigation_setOrigin(&ecefOrigin);
 
-        handleAcknowledgement();
+        //handleAcknowledgement();
+        Mavlink_sendAck(MAVLINK_MSG_ID_GPS_ECEF, MAVLINK_GEOCENTRIC_ORIGIN);
         haveOrigin = TRUE;
         event.flags.setOriginDone = TRUE;
 
@@ -360,9 +361,25 @@ static void doSetOriginSM() {
         // Save current position as station
         Navigation_getLocalPosition(&nedStation);
 
-        handleAcknowledgement();
-        haveStation = TRUE;
+        if (Navigation_hasError()) {
+            // Don't have GPS lock
+            setError(Navigation_getError());
+            return;
+        }
+        // quick bandaid:
+        /*
+        else if (!GPS_hasFix() || !GPS_hasPosition) {
+            setError(ERROR_GPS_NOFIX);
+            return;
+        }
+        else if (!GPS_isConnected) {
+            setError(ERROR_GPS_DISCONNECTED);
+            return;
+        }
+*/
         event.flags.setStationDone = TRUE;
+        haveStation = TRUE;
+        wantSaveStation = FALSE;
 
         DBPRINT("Saved new station: N=%.2f, E=%.2f, D=%.2f\n",
             nedStation.north, nedStation.east, nedStation.down);
@@ -373,7 +390,6 @@ static void doSetOriginSM() {
         nedStation.east = Mavlink_newMessage.gpsLocalData.east;
         nedStation.down = Mavlink_newMessage.gpsLocalData.down;
 
-        handleAcknowledgement();
         haveStation = TRUE;
         event.flags.setStationDone = TRUE;
         
@@ -517,10 +533,7 @@ static void doMasterSM() {
                 startRescueSM();
             }
             else if (event.flags.setStationDone) {
-                if (haveOrigin)
-                    startStationKeepSM();
-                else
-                    startOverrideSM();   
+                startStationKeepSM();
             }
             
             break;
@@ -528,7 +541,7 @@ static void doMasterSM() {
             doSetOriginSM();
             
             if (event.flags.setOriginDone)
-                startOverrideSM();   
+                startOverrideSM();    // wait for set station
             
             break;
         case STATE_STATIONKEEP:
@@ -541,16 +554,54 @@ static void doMasterSM() {
             break;
 
         case STATE_OVERRIDE:
-            if (!event.flags.wantOverride) {
-                if (!haveOrigin)
-                    startSetOriginSM();
-                else if ( !haveError) {
-                    if (!haveStation && event.flags.haveSetStationMessage)
-                        startSetStationSM();
-                    else if (haveOrigin && event.flags.haveStartRescueMessage)
+            if (event.flags.haveOverrideMessage) {
+                // Already stopped
+                handleAcknowledgement();
+                Mavlink_sendStatus(STOPPED_BOAT_MESSAGE);
+            }
+            else if (event.flags.haveSetStationMessage) {
+                if (haveOrigin)
+                    startSetStationSM();
+                else {
+                    handleAcknowledgement();
+                    Mavlink_sendError(ERROR_NO_ORIGIN);
+                }
+            }
+            else if (!event.flags.wantOverride) {
+                if (event.flags.haveStartRescueMessage) {
+                    if (haveOrigin)
                         startRescueSM();
-                    else if (haveStation)
+                    else {
+                        handleAcknowledgement();
+                        Mavlink_sendError(ERROR_NO_ORIGIN);
+                    }
+                }
+                else if (event.flags.haveReturnStationMessage || !haveError) {
+                    // Fall Through state
+                    if (haveOrigin && haveStation)
                         startStationKeepSM();
+                    else if (event.flags.haveReturnStationMessage) {
+                        handleAcknowledgement();
+                        if (!haveOrigin)
+                            Mavlink_sendError(ERROR_NO_ORIGIN);
+                        else if (!haveStation)
+                            Mavlink_sendError(ERROR_NO_STATION);
+                    }
+                    else {
+                        // Do nothing, waiting for setStation msg
+                    }
+                }
+                else if (!haveOrigin)
+                    startSetOriginSM(); // other fall through
+            }
+            else {
+                if (event.flags.haveStartRescueMessage) {
+                    handleAcknowledgement();
+                    Mavlink_sendError(ERROR_OVERRIDE);
+                }
+                else if (event.flags.haveReturnStationMessage) {
+                    handleAcknowledgement();
+                    Mavlink_sendError(ERROR_OVERRIDE);
                 }
             }
             break;
@@ -577,19 +628,27 @@ static void doMasterSM() {
             break;
     }
     //  ------- Caught by most states -----------
-    if (state != STATE_RESCUE) {
-        if (event.flags.haveSetStationMessage)
+    if (state != STATE_RESCUE && state != STATE_SETSTATION) {
+        if (event.flags.haveSetStationMessage && !event.flags.wantOverride && !haveError)
             startSetStationSM();
     }
-    if (state != STATE_OVERRIDE) {
+    else if (state != STATE_OVERRIDE) {
+        /*
         if (event.flags.haveError) {
             DBPRINT("Error: %s", getErrorMessage(lastErrorCode));
             //Mavlink_sendError(lastErrorCode); //sent in setError
             startOverrideSM();
-            overrideShutdown = TRUE;
-        }
+        }*/
         if (event.flags.wantOverride)
             startOverrideSM();
+        else if (!haveOrigin && state != STATE_SETORIGIN) {
+            Mavlink_sendError(ERROR_NO_ORIGIN);
+            startOverrideSM();
+        }
+        else if (!haveStation && state != STATE_SETSTATION && state != STATE_SETORIGIN) {
+            Mavlink_sendError(ERROR_NO_ORIGIN);
+            startOverrideSM();
+        }
     }
     if (event.flags.haveResetMessage)
         resetAtlas();
@@ -608,6 +667,7 @@ static void doMasterSM() {
 static void startSetOriginSM() {
     state = STATE_SETORIGIN;
     subState = STATE_NONE;
+    clearError();
 
     // Send status message to command center to request origin coordinate
     Mavlink_sendStatus(MAVLINK_REQUEST_ORIGIN);
@@ -627,9 +687,11 @@ static void startSetOriginSM() {
 static void startSetStationSM() {
     state = STATE_SETSTATION;
     subState = STATE_NONE;
+    clearError();
 
     //if (event.flags.haveSetStationMessage)
-    //    Mavlink_sendAck(MAVLINK_MSG_ID_CMD_OTHER, MAVLINK_SAVE_STATION);
+    //    handleAcknowledgement();
+    Mavlink_sendAck(MAVLINK_MSG_ID_CMD_OTHER, MAVLINK_SAVE_STATION);
 
     Navigation_cancel();
 }
@@ -644,6 +706,10 @@ static void startSetStationSM() {
 static void startStationKeepSM() {
     state = STATE_STATIONKEEP;
     subState = STATE_STATIONKEEP_RETURN;
+    clearError();
+    
+    if (event.flags.haveReturnStationMessage)
+        handleAcknowledgement();
 
     // Send status message for debugging
     Mavlink_sendStatus(MAVLINK_STATUS_RETURN_STATION);
@@ -669,7 +735,8 @@ static void startOverrideSM() {
 
     Mavlink_sendStatus(MAVLINK_STATUS_OVERRIDE);
 
-    handleAcknowledgement();
+    if (event.flags.haveOverrideMessage)
+        handleAcknowledgement();
 
     //if (event.flags.haveOverrideMessage)
     //    Mavlink_sendAck(MAVLINK_MSG_ID_CMD_OTHER, MAVLINK_OVERRIDE);
@@ -693,6 +760,10 @@ static void startOverrideSM() {
 static void startRescueSM() {
     state = STATE_RESCUE;
     subState = STATE_RESCUE_GOTO;
+    clearError();
+
+    if (event.flags.haveStartRescueMessage)
+        handleAcknowledgement();
 
     // Get location data from message
     nedRescue.north = Mavlink_newMessage.gpsLocalData.north;
@@ -700,8 +771,14 @@ static void startRescueSM() {
     nedRescue.down = Mavlink_newMessage.gpsLocalData.down;
 
     // Send status message for debugging
-    Mavlink_sendStatus(MAVLINK_STATUS_START_RESCUE);
     Navigation_gotoLocalCoordinate(&nedStation, RESCUE_TOLERANCE);
+
+    if (!Navigation_hasError())
+        Mavlink_sendStatus(MAVLINK_STATUS_START_RESCUE);
+    else {
+        setError(Navigation_getError());
+        return;
+    }
 
     #ifdef USE_SIREN
     Siren_redLightOn();
@@ -728,6 +805,8 @@ static void handleAcknowledgement() {
     // Send ACK if desired.
     if (lastMavlinkMessageWantsAck)
         Mavlink_sendAck(lastMavlinkMessageID, lastMavlinkCommandID);
+
+    lastMavlinkMessageWantsAck = FALSE;
 }
 
 /**********************************************************************
@@ -744,7 +823,22 @@ static void setError(error_t errorCode) {
     haveError = TRUE;
     Mavlink_sendError(errorCode);
     DBPRINT("Error: %s\n", getErrorMessage(errorCode));
+    DELAY(20);
+    startOverrideSM();
 }
+/**********************************************************************
+ * Function: clearError
+ * @return None.
+ * @remark Clears any set error codes.
+ * @author David Goodman
+ * @date 2013.05.19
+ **********************************************************************/
+static void clearError() {
+    lastErrorCode = ERROR_NONE;
+    event.flags.haveError = FALSE;
+    haveError = FALSE;
+}
+
 
 void fatal(error_t code) {
 
@@ -784,7 +878,7 @@ static void doBarometerUpdate() {
  * @date 2013.05.04
  **********************************************************************/
 static void doHeartbeatMessage() {
-    if (Timer_isExpired(TIMER_HEARTBEAT)) {
+    if (Timer_isExpired(TIMER_HEARTBEAT) || !Timer_isActive(TIMER_HEARTBEAT)) {
 
         Mavlink_sendHeartbeat();
 
@@ -944,8 +1038,6 @@ static void initializeAtlas() {
     Timer_new(TIMER_HEARTBEAT, HEARTBEAT_SEND_DELAY);
     Mavlink_sendStatus(MAVLINK_STATUS_ONLINE);
     
-    DELAY(5);
-    // Start calibrating before use
     startSetOriginSM();
 }
 

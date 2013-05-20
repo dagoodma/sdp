@@ -50,7 +50,7 @@
 #define MAVLINK_STATUS_START_RESCUE     0x2 // The boat is on a rescue
 #define MAVLINK_STATUS_RESCUE_SUCCESS   0x3 // The boat has rescued the person
 #define MAVLINK_STATUS_RETURN_STATION   0x4 // The boat is headed to the station.
-#define MAVLINK_STATUS_OVERRIDE         0x5 // The boat is in override mode
+#define MAVLINK_STATUS_OVERRIDE         0x6 // The boat is in override mode
 
 // ECEF coordinate related
 #define MAVLINK_GEOCENTRIC_ORIGIN       0x1 // cc->boat: sends cc position (origin) *

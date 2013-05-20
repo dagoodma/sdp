@@ -126,14 +126,10 @@ static void doWatchdog(void) {
         lastMavlinkMessageID = Mavlink_getNewMessageID();
         lastMavlinkCommandID = MAVLINK_NO_COMMAND;
         lastMavlinkMessageWantsAck = FALSE;
+        if (Mavlink_hasHeartbeat()) {
+            dbprint("A: heartbeat!\n");
+        }
         switch (lastMavlinkMessageID) {
-            /*----------------  Heartbeat message -------------------------*/
-            case MAVLINK_MSG_ID_XBEE_HEARTBEAT:
-                #ifdef SHOW_HEARTBEAT
-                dbprint("A: heartbeat!\n");
-                #endif
-                DBPRINT("HERE!\n");
-                break;
             /*--------------------  Acknowledgement messages ------------------ */
             case MAVLINK_MSG_ID_MAVLINK_ACK:
                 // ----  Messages from AtLAs to ComPAS (from Compas.c) --------
@@ -272,6 +268,10 @@ static void doWatchdog(void) {
                     }
                     else if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_OVERRIDE) {
                         dbprint("A: in override mode\n");
+                    }
+                    else {
+                        dbprint("Unknown status: 0x%X\n",
+                                Mavlink_newMessage.statusAndErrorData.status);
                     }
                 }
                 break;

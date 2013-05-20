@@ -34,7 +34,8 @@ const char *ERROR_MESSAGE[] = {
     "Xbee failed.",
     "Tilt compass failed.",
     "I2C failed init.",
-    "Navigation failed."
+    "Navigation failed.",
+    "In override mode."
 };
 
 /***********************************************************************
