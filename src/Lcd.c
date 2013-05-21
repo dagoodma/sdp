@@ -105,6 +105,8 @@ static uint8_t currentLine = 0, currentLineWrite = 0, currentCharWrite = 0;
 
 static void (*timerCallback)(void);
 
+bool mutexLock;
+
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
  **********************************************************************/
@@ -117,10 +119,12 @@ void LCD_init(void)
     // Next configure Timer2 for proper interrupts and initialize it to a SHORT_DELAY period.
     timer2Init(runSM, SHORT_DELAY);
     lcdState = initStartState;
+    mutexLock = FALSE;
 
 }
 
 void LCD_clearDisplay() {
+    mutexLock = TRUE;
     currentLineWrite = 0;
     currentCharWrite = 0;
     uint8_t i;
@@ -128,10 +132,12 @@ void LCD_clearDisplay() {
         strncpy(lineBuffer[i], defaultLine, LCD_LINE_LENGTH);
     }
     lcdState = clearDisplayState;
-    DELAY(10);
+    //DELAY(10);
+    mutexLock = FALSE;
 }
 
 void LCD_writeString(const char *str) {
+    mutexLock = TRUE;
     uint8_t i = 0;
     uint8_t len = (strlen(str) < LCD_CHARACTER_TOTAL)? strlen(str)
         : LCD_CHARACTER_TOTAL;
@@ -161,14 +167,17 @@ void LCD_writeString(const char *str) {
     //printf("Line1: %s\n Line2: %s\n Line3: %s\n Line4: %s\n",
     //    lineBuffer[0], lineBuffer[1], lineBuffer[2], lineBuffer[3]);
     pendingUpdate = true;
+    mutexLock = FALSE;
 }
 
 void LCD_setPosition(uint8_t line, uint8_t col) {
+    mutexLock = TRUE;
     if (line < LCD_LINE_TOTAL && col < LCD_LINE_LENGTH) {
         currentLineWrite = line;
         currentCharWrite = col;
     }
 
+    mutexLock = FALSE;
 }
 
 
@@ -374,68 +383,71 @@ void __ISR(_TIMER_2_VECTOR, ipl3) Timer2IntHandler(void) {
  */
 static void runSM(void)
 {
-	switch (lcdState) {
+    if (mutexLock)
+        return;
 
-            // LCD initialization states
-            case initStartState:
-                    SET_TIMER2_DELAY(LONG_DELAY);
-                    sendCommand(SetDisplayMode);
-                    lcdState = enableDisplayState;
-                    break;
+    switch (lcdState) {
 
-            case enableDisplayState:
-                    SET_TIMER2_DELAY(SHORT_DELAY);
-                    sendCommand(EnableDisplay);
-                    lcdState = setEntryModeState;
-                    break;
-            case setEntryModeState:
-                    SET_TIMER2_DELAY(SHORT_DELAY);
-                    sendCommand(SetEntryMode);
-                    lcdState = clearDisplayState;
-                    break;
-            case clearDisplayState:
-                    SET_TIMER2_DELAY(LONG_DELAY);
-                    sendCommand(ClearDisplay);
-                    lcdState = waitForUpdateState;
-                    break;
-            // LCD update states
-            case waitForUpdateState:
-                if (pendingUpdate) {
-                    SET_TIMER2_DELAY(SHORT_DELAY);
-                    lcdState = moveCursorLineState;
-                    currentLine = 0;
-                    pendingUpdate = false;
-                }
+        // LCD initialization states
+        case initStartState:
+                SET_TIMER2_DELAY(LONG_DELAY);
+                sendCommand(SetDisplayMode);
+                lcdState = enableDisplayState;
                 break;
-            case moveCursorLineState:
+
+        case enableDisplayState:
                 SET_TIMER2_DELAY(SHORT_DELAY);
-                setLine(currentLine);
-                lcdState = updateLineState;
+                sendCommand(EnableDisplay);
+                lcdState = setEntryModeState;
                 break;
-            case updateLineState:
-                {
-                    char tmp = getNextCharacter();
-                    if (tmp != '\0') {
-                        SET_TIMER2_DELAY(SHORT_DELAY);
-                        sendData(tmp);
+        case setEntryModeState:
+                SET_TIMER2_DELAY(SHORT_DELAY);
+                sendCommand(SetEntryMode);
+                lcdState = clearDisplayState;
+                break;
+        case clearDisplayState:
+                SET_TIMER2_DELAY(LONG_DELAY);
+                sendCommand(ClearDisplay);
+                lcdState = waitForUpdateState;
+                break;
+        // LCD update states
+        case waitForUpdateState:
+            if (pendingUpdate) {
+                SET_TIMER2_DELAY(SHORT_DELAY);
+                lcdState = moveCursorLineState;
+                currentLine = 0;
+                pendingUpdate = false;
+            }
+            break;
+        case moveCursorLineState:
+            SET_TIMER2_DELAY(SHORT_DELAY);
+            setLine(currentLine);
+            lcdState = updateLineState;
+            break;
+        case updateLineState:
+            {
+                char tmp = getNextCharacter();
+                if (tmp != '\0') {
+                    SET_TIMER2_DELAY(SHORT_DELAY);
+                    sendData(tmp);
+                }
+                else {
+                    SET_TIMER2_DELAY(LONG_DELAY);
+                    currentLine++;
+                    if (currentLine >= LCD_LINE_TOTAL) {
+                        currentLine = 0;
+                        lcdState = waitForUpdateState;
                     }
                     else {
-                        SET_TIMER2_DELAY(LONG_DELAY);
-                        currentLine++;
-                        if (currentLine >= LCD_LINE_TOTAL) {
-                            currentLine = 0;
-                            lcdState = waitForUpdateState;
-                        }
-                        else {
-                            lcdState = moveCursorLineState;
-                        }
+                        lcdState = moveCursorLineState;
                     }
                 }
+            }
+            break;
+        default:
+                lcdState = initStartState;
                 break;
-            default:
-                    lcdState = initStartState;
-                    break;
-	}
+    }
 }
 
 

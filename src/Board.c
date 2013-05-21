@@ -83,6 +83,7 @@ void dbprint(char *fmt, ...) {
     char msg[255];
     vsprintf(msg, fmt, args);
 
+#ifdef DEBUG
     if (option.useSerial)
         printf(msg);
     if (option.useLCD)
@@ -90,6 +91,7 @@ void dbprint(char *fmt, ...) {
     #ifdef USE_LOGGER
     Logger_writeString(msg);
     #endif
+#endif
 };
 
 

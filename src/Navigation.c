@@ -303,6 +303,7 @@ error_t Navigation_getError() {
     if (Navigation_hasError()) {
         result = lastErrorCode;
         lastErrorCode = ERROR_NONE;
+        startIdleState();
     }
     /*
     if (Navigation_hasError()) {
@@ -519,7 +520,7 @@ static void setError(error_t errorCode) {
  * @remark
  **********************************************************************/
 static error_t findNavigationError() {
-    if (!GPS_isConnected)
+    if (!GPS_isConnected || !GPS_isInitialized())
         return ERROR_GPS_DISCONNECTED;
     if (!GPS_hasFix() || !GPS_hasPosition())
         return ERROR_GPS_NOFIX;

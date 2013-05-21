@@ -21,7 +21,7 @@ const char *ERROR_MESSAGE[] = {
     "Unkown error.",
     "Never got reply from\nboat.",
     "GPS disconnected.",
-    "GPS has no fix.", // GPs
+    "GPS has no fix.", // GPS
     "Never got origin.", // boat didn't receive origin from CC
     "Never got station.", // boat doesn't have a station
     "Need altitude from\nboat.",

@@ -33,15 +33,18 @@
 #include "TiltCompass.h"
 #include "Uart.h"
 
+
+#define DEBUG
+
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
-#define XBEE_UART_ID    UART1_ID
+#define XBEE_UART_ID    UART2_ID
 
 // Module selection (comment a line out to disable the module)
 #define USE_OVERRIDE
 #define USE_NAVIGATION
-#define USE_GPS
+//#define USE_GPS
 #define USE_DRIVE
 #define USE_TILTCOMPASS
 #define USE_XBEE
@@ -265,7 +268,7 @@ static void checkEvents() {
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_SAVE_STATION) {
                     event.flags.haveSetStationMessage = TRUE;
-                    wantSaveStation = TRUE;
+                    wantSaveStation = TRUE;overrideShutdown = FALSE;
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_GEOCENTRIC_ORIGIN) {
                     event.flags.haveSetOriginMessage = TRUE;
@@ -290,9 +293,11 @@ static void checkEvents() {
                 if (Mavlink_newMessage.gpsLocalData.status == MAVLINK_LOCAL_SET_STATION) {
                     event.flags.haveSetStationMessage = TRUE;
                     wantSaveStation = FALSE;
+                    overrideShutdown = FALSE;
                 }
                 else if (Mavlink_newMessage.gpsLocalData.status == MAVLINK_LOCAL_START_RESCUE) {
                     event.flags.haveStartRescueMessage = TRUE;
+                    overrideShutdown = FALSE;
                 }
                 break;
             default:
@@ -302,7 +307,7 @@ static void checkEvents() {
                 break;
         }
     }
-    if (event.flags.haveOverrideMessage || overrideShutdown)
+    if (event.flags.haveOverrideMessage || overrideShutdown || event.flags.receiverDetected)
         event.flags.wantOverride = TRUE;
 } //  checkEvents()
 
@@ -326,8 +331,7 @@ static void doSetOriginSM() {
         haveOrigin = TRUE;
         event.flags.setOriginDone = TRUE;
 
-        DBPRINT("Set new origin: X=%.1f, Y=%.1f, Z=%.1f\n",
-            ecefOrigin.x, ecefOrigin.y, ecefOrigin.z);
+        DBPRINT("Set new origin: X=%.1f, Y=%.1f, Z=%.1f\n",ecefOrigin.x, ecefOrigin.y, ecefOrigin.z);
     }
     else {
         // Resend request if timer expires
@@ -381,8 +385,7 @@ static void doSetOriginSM() {
         haveStation = TRUE;
         wantSaveStation = FALSE;
 
-        DBPRINT("Saved new station: N=%.2f, E=%.2f, D=%.2f\n",
-            nedStation.north, nedStation.east, nedStation.down);
+        DBPRINT("Saved new station: N=%.2f, E=%.2f, D=%.2f\n", nedStation.north, nedStation.east, nedStation.down);
      }
      else {
          // Set the given coordinate as station
@@ -393,8 +396,7 @@ static void doSetOriginSM() {
         haveStation = TRUE;
         event.flags.setStationDone = TRUE;
         
-        DBPRINT("Set new station: N=%.2f, E=%.2f, D=%.2f.\n",
-            nedStation.north, nedStation.east, nedStation.down);
+        DBPRINT("Set new station: N=%.2f, E=%.2f, D=%.2f.\n",nedStation.north, nedStation.east, nedStation.down);
     }
 }
 
@@ -670,7 +672,7 @@ static void startSetOriginSM() {
     clearError();
 
     // Send status message to command center to request origin coordinate
-    Mavlink_sendStatus(MAVLINK_REQUEST_ORIGIN);
+    Mavlink_sendRequestOrigin();
 
     resendMessageCount = 0;
     Timer_new(TIMER_SETORIGIN, RESEND_MESSAGE_DELAY);
@@ -743,7 +745,7 @@ static void startOverrideSM() {
 
     Override_giveReceiverControl();
     DBPRINT("Reciever has control.\n");
-    Navigation_cancel();
+    Navigation_cancel() ;
 
     #ifdef USE_SIREN
     Siren_blueLightOn();
@@ -787,8 +789,7 @@ static void startRescueSM() {
     Override_giveMicroControl();
     DBPRINT("Micro has control.\n");
 
-    DBPRINT("Rescuing person at: N=%.2f, E=%.2f, D=%.2f.\n",
-        nedRescue.north, nedRescue.east, nedRescue.down);
+    DBPRINT("Rescuing person at: N=%.2f, E=%.2f, D=%.2f.\n",nedRescue.north, nedRescue.east, nedRescue.down);
 }
 
 
@@ -818,12 +819,16 @@ static void handleAcknowledgement() {
  * @date 2013.05.04
  **********************************************************************/
 static void setError(error_t errorCode) {
+    /* TODO uncomment this
+     if (errorCode ==  ERROR_NONE)
+     *      return;
+     */
     lastErrorCode = errorCode;
     event.flags.haveError = TRUE;
     haveError = TRUE;
     Mavlink_sendError(errorCode);
     DBPRINT("Error: %s\n", getErrorMessage(errorCode));
-    DELAY(20);
+    //DELAY(20);
     startOverrideSM();
 }
 /**********************************************************************
@@ -964,7 +969,7 @@ static void resetAtlas() {
  **********************************************************************/
 static void initializeAtlas() {
     Board_init();
-#if defined(DEBUG) && !defined(USE_XBEE)
+#if defined(DEBUG) && defined(USE_SERIAL)
     Serial_init();
     DBPRINT("Initializing serial.\n");
 #endif
@@ -1021,6 +1026,8 @@ static void initializeAtlas() {
     if (GPS_init() != SUCCESS) {
         fatal(ERROR_GPS);
     }
+    #else
+    DBPRINT("Skipping gps.\n");
     #endif
 
     #ifdef USE_NAVIGATION
@@ -1039,6 +1046,11 @@ static void initializeAtlas() {
     Mavlink_sendStatus(MAVLINK_STATUS_ONLINE);
     
     startSetOriginSM();
+
+/*
+    while (1) {
+        asm("nop");
+    }*/
 }
 
 //---------------------------------MAIN -------------------------------

@@ -33,7 +33,6 @@
 #include "Logger.h"
 #endif
 
-
 /*******************************************************************************
  * PUBLIC #DEFINES                                                             *
  ******************************************************************************/
@@ -43,15 +42,17 @@
 #define MS_TO_SEC(ms)  ((float)ms/1000)
 
 // Debugging statements over terminal, SD logger, or disabled (respectively)
+/*
 #ifdef DEBUG
 #ifdef USE_SD_LOGGER
-#define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
+//#define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
 #else
-#define DBPRINT(...)   printf(__VA_ARGS__)
+//#define DBPRINT(...)   printf(__VA_ARGS__)
 #endif
-#else   
+#else
+*/
 #define DBPRINT(...)   ((int)0)
-#endif
+//#endif
 
 /*****************************************************************************/
 // Boolean defines for TRUE, FALSE, SUCCESS and ERROR

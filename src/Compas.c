@@ -104,6 +104,7 @@
 
 #define RESET_HOLD_DELAY            1000 // (ms) to hold before CC reset
 #define RESET_LONG_HOLD_DELAY        5000 // (ms) to hold before CC and boat reset
+#define RESET_READY_BLINK_DELAY     700 // (ms) system ready for reset show ready light
 
 #define BLINK_DELAY                 2000
 #define BLINK_ON_DELAY              1500
@@ -631,7 +632,7 @@ static void doStopSM() {
                 subState = STATE_STOP_IDLE;
                 Timer_new(TIMER_DEBOUNCE, STATE_REENTRY_DEBOUNCE_DELAY);
                 //Interface_clearDisplay();
-                Interface_showMessageOnTimer(STOPPED_BOAT_MESSAGE, LCD_HOLD_DELAY);
+                Interface_showMessage(STOPPED_BOAT_MESSAGE);
                 Interface_waitLightOff();
                 Interface_readyLightOn();
                 resendMessageCount = 0;
@@ -1287,6 +1288,8 @@ static void checkBoatConnection() {
          if (event.flags.resetButtonPressed && Timer_isExpired(TIMER_RESET)) {
             // Held reset button for short timer at least
             resetPressedShort = TRUE;
+            Interface_showMessage(CONFIRM_RESET_BOAT_MESSAGE);
+            Interface_readyLightOnTimer(RESET_READY_BLINK_DELAY);
             Timer_new(TIMER_RESET, (RESET_LONG_HOLD_DELAY - RESET_HOLD_DELAY));
          }
          else if (event.flags.resetButtonPressed && !Timer_isActive(TIMER_RESET)) {
@@ -1295,7 +1298,8 @@ static void checkBoatConnection() {
             Interface_readyLightOff();
             Interface_waitLightOn();
          }
-         else if (Timer_isActive(TIMER_RESET) && !event.flags.resetButtonPressed) {
+         else if (!event.flags.resetButtonPressed && Timer_isActive(TIMER_RESET)) {
+            Timer_stop(TIMER_RESET);
             Timer_clear(TIMER_RESET);
             Interface_readyLightOn();
             Interface_waitLightOff();
@@ -1313,6 +1317,9 @@ static void checkBoatConnection() {
              // want a full reset
              DBPRINT("Performing full reset.\n");
              resetAll();
+         }
+         else {
+             //waiting
          }
      }
  }

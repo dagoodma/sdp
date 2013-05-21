@@ -123,7 +123,7 @@ const char *INTERFACE_MESSAGE[] = {
     "Boat is headed\nto station.",
     "Stopping the boat.",
     "Boat has stopped.",
-    "Are you sure you\nwant to cancel the\nstop?",
+    "Are you sure you\nwant the boat to\nreturn to station?",
     "Saving boat's posit-\nion as new station.",
     "Saved new station.",
     "Set new station.",
@@ -133,7 +133,8 @@ const char *INTERFACE_MESSAGE[] = {
     "Resetting boat.",
     "Resetting system.",
     "Are you sure you\nwant to cancel retu-\nrning to station?",
-    "Are you sure you\nwant to cancel sett-\ning station?"
+    "Are you sure you\nwant to cancel sett-\ning station?",
+    "System will reset.\nHold longer to reset\nthe boat."
 };
 
 static message_t currentMsgCode, nextMsgCode;

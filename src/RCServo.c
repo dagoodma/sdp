@@ -18,11 +18,14 @@
  ******************************************************************************/
 
 //#define DEBUG_VERBOSE
+/*
 #ifdef DEBUG_VERBOSE
     #define dbprintf(...) printf(__VA_ARGS__)
 #else
     #define dbprintf(...)
 #endif
+*/
+#define dbprintf(...)
 
 #define RCPINCOUNT 10
 #define SERVOCENTER 1500
