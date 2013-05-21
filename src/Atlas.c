@@ -11,7 +11,7 @@
 ***********************************************************************/
 #define IS_ATLAS
 //#define DEBUG
-//#define DEBUG_VERBOSE
+#define DEBUG_VERBOSE
 
 #include <xc.h>
 #include <stdio.h>
@@ -170,6 +170,7 @@ static union EVENTS {
 
 
 static bool overrideShutdown = FALSE; //  whether to force override
+static bool receiverShutdown = FALSE; // whether receiver made us enter override or not
 static bool haveStation = FALSE;
 static bool haveOrigin = FALSE;
 static bool wantSaveStation = FALSE;
@@ -521,8 +522,8 @@ static void doMasterSM() {
 
     #ifdef DEBUG_VERBOSE
     if (Timer_isExpired(TIMER_TEST2)) {
-        DBPRINT("State=%X,%X, Receiver=%X, WantOver=%X, ForceOver=%X\n",
-            state, subState, event.flags.receiverDetected, wantOverride, overrideShutdown);
+        DBPRINT("State=%X,%X, Receiver=%X, WantOver=%X, ForceOver=%X, ReceiverShut=%X, HaveError=%X\n",
+            state, subState, event.flags.receiverDetected, event.flags.wantOverride, overrideShutdown, receiverShutdown, haveError);
         Timer_new(TIMER_TEST2, DEBUG_PRINT_DELAY);
     }
     #endif
@@ -556,11 +557,14 @@ static void doMasterSM() {
             break;
 
         case STATE_OVERRIDE:
-            if (event.flags.haveOverrideMessage) {
+            if (!receiverShutdown && event.flags.receiverDetected)
+                startOverrideSM(); // receiver came online
+            else if (event.flags.haveOverrideMessage) {
                 // Already stopped
                 handleAcknowledgement();
                 Mavlink_sendStatus(STOPPED_BOAT_MESSAGE);
             }
+            /*
             else if (event.flags.haveSetStationMessage) {
                 if (haveOrigin)
                     startSetStationSM();
@@ -569,6 +573,7 @@ static void doMasterSM() {
                     Mavlink_sendError(ERROR_NO_ORIGIN);
                 }
             }
+             * */
             else if (!event.flags.wantOverride) {
                 if (event.flags.haveStartRescueMessage) {
                     if (haveOrigin)
@@ -577,6 +582,9 @@ static void doMasterSM() {
                         handleAcknowledgement();
                         Mavlink_sendError(ERROR_NO_ORIGIN);
                     }
+                }
+                else if (event.flags.haveSetStationMessage) {
+                    startSetStationSM();
                 }
                 else if (event.flags.haveReturnStationMessage || !haveError) {
                     // Fall Through state
@@ -605,7 +613,14 @@ static void doMasterSM() {
                     handleAcknowledgement();
                     Mavlink_sendError(ERROR_OVERRIDE);
                 }
+                else if (event.flags.haveSetStationMessage) {
+                    handleAcknowledgement();
+                    Mavlink_sendError(ERROR_OVERRIDE);
+                }
             }
+
+            if (receiverShutdown && !event.flags.receiverDetected)
+                receiverShutdown = FALSE;
             break;
 
         case STATE_RESCUE:
@@ -735,10 +750,16 @@ static void startOverrideSM() {
     state = STATE_OVERRIDE;
     subState = STATE_NONE;
 
-    Mavlink_sendStatus(MAVLINK_STATUS_OVERRIDE);
+    if (event.flags.receiverDetected) {
+        Mavlink_sendStatus(MAVLINK_STATUS_OVERRIDE);
+        receiverShutdown = TRUE;
+    }
+    else
+        receiverShutdown = FALSE;
 
     if (event.flags.haveOverrideMessage)
         handleAcknowledgement();
+    
 
     //if (event.flags.haveOverrideMessage)
     //    Mavlink_sendAck(MAVLINK_MSG_ID_CMD_OTHER, MAVLINK_OVERRIDE);

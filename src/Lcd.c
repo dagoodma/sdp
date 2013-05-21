@@ -124,7 +124,6 @@ void LCD_init(void)
 }
 
 void LCD_clearDisplay() {
-    mutexLock = TRUE;
     currentLineWrite = 0;
     currentCharWrite = 0;
     uint8_t i;
@@ -132,12 +131,10 @@ void LCD_clearDisplay() {
         strncpy(lineBuffer[i], defaultLine, LCD_LINE_LENGTH);
     }
     lcdState = clearDisplayState;
-    //DELAY(10);
-    mutexLock = FALSE;
+    DELAY(10);
 }
 
 void LCD_writeString(const char *str) {
-    mutexLock = TRUE;
     uint8_t i = 0;
     uint8_t len = (strlen(str) < LCD_CHARACTER_TOTAL)? strlen(str)
         : LCD_CHARACTER_TOTAL;
@@ -166,62 +163,23 @@ void LCD_writeString(const char *str) {
     }
     //printf("Line1: %s\n Line2: %s\n Line3: %s\n Line4: %s\n",
     //    lineBuffer[0], lineBuffer[1], lineBuffer[2], lineBuffer[3]);
+
+    DELAY(10);
     pendingUpdate = true;
-    mutexLock = FALSE;
 }
 
 void LCD_setPosition(uint8_t line, uint8_t col) {
-    mutexLock = TRUE;
     if (line < LCD_LINE_TOTAL && col < LCD_LINE_LENGTH) {
         currentLineWrite = line;
         currentCharWrite = col;
     }
 
-    mutexLock = FALSE;
 }
 
 
 /*******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
-/*
-static void lcdNewline(uint8_t pos) {
-    if ( pos < LCD_START_LINE2 )
-        addressCounter = LCD_START_LINE2;
-    else if ( (pos >= LCD_START_LINE2) && (pos < LCD_START_LINE3) )
-        addressCounter = LCD_START_LINE3;
-    else if ( (pos >= LCD_START_LINE3) && (pos < LCD_START_LINE4) )
-        addressCounter = LCD_START_LINE4;
-    else
-        addressCounter = LCD_START_LINE1;
-
-    sendCommand((1<<LCD_DDRAM)+addressCounter);
-}*/
-
-/*************************************************************************
-Display character at current cursor position
-Input:    character to be displayed
-Returns:  none
-*************************************************************************/
-/*
-void lcdPutc(char c)
-{
-    uint8_t pos;
-
-
-    pos = lcd_waitbsy();   // read busy-flag and address counter
-    if (c=='\n')
-    {
-        lcdNewline(pos);
-    }
-    else
-    {
-        lcd_waitbusy();
-        lcd_write(c, 1);
-    }
-
-}*//* lcd_putc */
-
 
 /**
  * GetNextTopLineChar() muxes the default line and the user input into a single
@@ -383,9 +341,6 @@ void __ISR(_TIMER_2_VECTOR, ipl3) Timer2IntHandler(void) {
  */
 static void runSM(void)
 {
-    if (mutexLock)
-        return;
-
     switch (lcdState) {
 
         // LCD initialization states

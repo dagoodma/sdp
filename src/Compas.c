@@ -206,7 +206,7 @@ static union EVENTS {
         unsigned int haveRescueSuccessMessage :1; // boat rescued drownee
         unsigned int haveReturnStationMessage :1; // boat is heading to station
         unsigned int haveRequestOriginMessage :1;
-        unsigned int haveOverrideMessage :1; // boat is in override state
+        unsigned int haveBoatReceiverMessage :1; // boat is in override state
         unsigned int haveBoatOnlineMessage  :1;
         unsigned int readyToPrintMessage :1; // display hold for Ready state expired
         /* - Boat status and error messages - */
@@ -392,6 +392,8 @@ static void checkEvents() {
                     // ---------- Boat status messages -----------------
                     if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_ONLINE)
                         event.flags.haveBoatOnlineMessage = TRUE;
+                    else if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_OVERRIDE)
+                        event.flags.haveBoatReceiverMessage = TRUE;
                 }
                 break;
             /*----------------  Heartbeat message -------------------------*/
@@ -967,6 +969,8 @@ static void doMasterSM() {
                 startSetStationSM();
         }
     }
+    if (event.flags.haveBoatReceiverMessage)
+        Interface_showMessageOnTimer(RECEIVER_ENABLED_MESSAGE, LCD_HOLD_DELAY);
     //DBPRINT("!\n");
 } // doMasterSM()
 

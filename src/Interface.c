@@ -134,7 +134,8 @@ const char *INTERFACE_MESSAGE[] = {
     "Resetting system.",
     "Are you sure you\nwant to cancel retu-\nrning to station?",
     "Are you sure you\nwant to cancel sett-\ning station?",
-    "System will reset.\nHold longer to reset\nthe boat."
+    "System will reset.\nHold longer to reset\nthe boat.",
+    "Remote receiver\noverride enabled."
 };
 
 static message_t currentMsgCode, nextMsgCode;
