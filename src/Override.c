@@ -30,8 +30,8 @@
 // Ports
 #define ENABLE_OUT_TRIS PORTX12_TRIS // J5-06
 #define ENABLE_OUT_LAT  PORTX12_LAT // J5-06
-#define MICRO_HAS_CONTROL       0
-#define RECIEVER_HAS_CONTROL    1
+#define MICRO_HAS_CONTROL       1
+#define RECIEVER_HAS_CONTROL    0
 
 
 /***********************************************************************
@@ -150,7 +150,6 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
     mCNClearIntFlag();
     //INTEnable(INT_CN,0);
 }
-
 
 //#define OVERRIDE_TEST
 #ifdef OVERRIDE_TEST

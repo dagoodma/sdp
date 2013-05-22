@@ -39,8 +39,8 @@
 #define DEBUG
 #define DEBUG_VERBOSE
 
-#define XBEE_UART_ID    UART2_ID
-#define GPS_UART_ID     UART1_ID
+#define XBEE_UART_ID    UART1_ID
+#define GPS_UART_ID     UART2_ID
 
 // Module selection (comment a line out to disable the module)
 #define USE_OVERRIDE
@@ -1036,7 +1036,7 @@ static void resetAtlas() {
  **********************************************************************/
 static void initializeAtlas() {
     Board_init();
-#if defined(DEBUG) && defined(USE_SERIAL) && !defined(USE_GPS)
+#if defined(DEBUG) && defined(USE_SERIAL) //&& !defined(USE_GPS)
     Serial_init();
     DBPRINT("Initializing serial.\n");
 #endif

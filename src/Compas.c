@@ -59,7 +59,7 @@
 #define ENABLE_RESET
 
 
-#define DEFAULT_COMPAS_HEIGHT       340.0f // (m) if barometer is disabled
+#define DEFAULT_COMPAS_HEIGHT       315.0f // (m) if barometer is disabled
 //#define REQUIRE_RESCUE_HEIGHT // causes an error if altitude unknown and rescue pressed
 
 #ifdef DEBUG

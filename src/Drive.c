@@ -6,7 +6,6 @@
  *
  * Created on March 27, 2013, 12:34 PM
  */
-//#define DEBUG
 
 #include <xc.h>
 #include <stdio.h>
@@ -26,6 +25,19 @@
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
+
+//#define DEBUG
+
+#ifdef DEBUG
+#ifdef USE_SD_LOGGER
+#define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
+#else
+#define DBPRINT(...)   printf(__VA_ARGS__)
+#endif
+#else
+#define DBPRINT(...)   ((int)0)
+#endif
+
 
 // --------------------- Acutator ports -----------------------------
 #define MOTOR_LEFT              RC_PORTY07  //RD10, J5-01            //RC_PORTW08 // RB2 -- J7-01
@@ -277,6 +289,7 @@ static void setLeftMotor(uint8_t speed) {
     if (rc_time < RC_MOTOR_MIN)
         rc_time = RC_MOTOR_MIN;
 
+    DBPRINT("Setting left motor to RC_TIME=%d\n",rc_time);
     RC_setPulseTime(MOTOR_LEFT, rc_time);
 }
 
@@ -294,6 +307,7 @@ static void setRightMotor(uint8_t speed) {
     if (rc_time < RC_MOTOR_MIN)
         rc_time = RC_MOTOR_MIN;
 
+    DBPRINT("Setting right motor to RC_TIME=%d\n",rc_time);
     RC_setPulseTime(MOTOR_RIGHT, rc_time);
 }
 
@@ -316,6 +330,7 @@ static void setRudder(char direction, uint8_t percentAngle) {
     if (rc_time < RC_RUDDER_MIN)
         rc_time = RC_RUDDER_MIN;
 
+    DBPRINT("Setting rudder to RC_TIME=%d\n",rc_time);
     RC_setPulseTime(RUDDER, rc_time);
 }
 
@@ -776,7 +791,7 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
 #endif
 
 
-#define ACTUATOR_TEST
+//#define ACTUATOR_TEST
 #ifdef ACTUATOR_TEST
 
 #include "I2C.h"
@@ -881,6 +896,51 @@ int main(){
 //    printf("\nDone with drive test.\n");
     return SUCCESS;
 }
+#endif
+
+//#define SIMPLE_TEST
+#ifdef SIMPLE_TEST
+
+#include "I2C.h"
+#include "TiltCompass.h"
+#include "Ports.h"
+#include "Drive.h"
+
+// Pick the I2C_MODULE to initialize
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  100000 // (Hz)
+
+//Define and enable the Enable pin for override
+#define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
+
+#define ACTUATOR_DELAY 2500 //ms
+
+#define MAX_PULSE 1750
+#define MIN_PULSE 1250
+#define STOP_PULSE 1500
+#define MICRO 1
+#define RECIEVER 0
+
+
+//#define RECIEVE_CONTROL
+
+int main(){
+    //Initializations
+    Board_init();
+    Serial_init();
+    Timer_init();
+    Drive_init();
+    ENABLE_OUT_TRIS = OUTPUT;
+    ENABLE_OUT_LAT = MICRO;
+setLeftMotor(100);
+    setRightMotor(100);
+    while (1)
+        asm("nop");
+    
+    return SUCCESS;
+}
+
 #endif
 
 
