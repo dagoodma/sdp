@@ -28,7 +28,6 @@
 #define START_BAUDRATE      38400 // (baud)
 #define DESIRED_BAUDRATE    START_BAUDRATE
 
-#define GPS_UART_ID         UART2_ID
 #define GPS_UART_BAUDRATE   START_BAUDRATE
 
 
@@ -133,6 +132,7 @@ static void startParseState();
 static int8_t readMessageByte();
 static int8_t parseMessage();
 static void parsePayloadField();
+static uint8_t gpsUartID;
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
@@ -143,12 +143,12 @@ static void parsePayloadField();
  * @return none
  * @remark Initializes the GPS.
  **********************************************************************/
-bool GPS_init() {
+bool GPS_init(uint8_t uartId) {
 #ifdef DEBUG
-    printf("Intializing the GPS on uart %d.\n", GPS_UART_ID);
+    printf("Intializing the GPS on uart %d.\n", uartId);
 #endif
-
-    UART_init(GPS_UART_ID,GPS_UART_BAUDRATE);
+    gpsUartID = uartId;
+    UART_init(gpsUartID,GPS_UART_BAUDRATE);
 
     startIdleState();
     gpsInitialized = TRUE;
@@ -318,7 +318,7 @@ float GPS_getHeading() {
  * @remark 
  **********************************************************************/
 static bool hasNewByte() {
-    return !UART_isReceiveEmpty(GPS_UART_ID);
+    return !UART_isReceiveEmpty(gpsUartID);
 }
 
 /**********************************************************************
@@ -393,7 +393,7 @@ static void setConnected() {
 static int8_t readMessageByte() {
     // Read a new byte from the UART or return FAILURE
     if (hasNewByte())
-        rawMessage[byteIndex] = UART_getChar(GPS_UART_ID);
+        rawMessage[byteIndex] = UART_getChar(gpsUartID);
     else
         return FAILURE;
 

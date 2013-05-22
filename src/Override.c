@@ -64,9 +64,7 @@ void Override_init() {
 
     // Let override timer expire to disable override
     Timer_new(TIMER_OVERRIDE, 1);
-    while (Override_isTriggered()) {
-        asm("nop");
-    }
+    DELAY(1);
 
     //Enable the interrupt for the override feature
     mPORTBSetPinsDigitalIn(BIT_0); // CN2

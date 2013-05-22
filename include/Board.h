@@ -98,7 +98,8 @@
 #define TIMER_LIGHT_HOLD        15
 #define TIMER_LCD_HOLD          16
 #define TIMER_I2C_TIMEOUT       17
-#define TIMER_RESET             18 
+#define TIMER_RESET             18
+#define TIMER_INIT              19
 
 // Master state machine timers
 #define TIMER_MAIN              23

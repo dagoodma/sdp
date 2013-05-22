@@ -105,7 +105,6 @@ static uint8_t currentLine = 0, currentLineWrite = 0, currentCharWrite = 0;
 
 static void (*timerCallback)(void);
 
-bool mutexLock;
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
@@ -114,12 +113,12 @@ bool mutexLock;
 
 void LCD_init(void)
 {
+    DELAY(100);
     // First initialize the low-level LCD driver
     driverInit();
     // Next configure Timer2 for proper interrupts and initialize it to a SHORT_DELAY period.
     timer2Init(runSM, SHORT_DELAY);
     lcdState = initStartState;
-    mutexLock = FALSE;
 
 }
 

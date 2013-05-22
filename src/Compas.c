@@ -18,37 +18,6 @@
  --------------         ---         --------
 4/29/2013   3:08PM      dagoodma    Started new Compas module.
 ***********************************************************************/
-#define IS_COMPAS
-
-//#define DEBUG
-#define DEBUG_STATE
-//#define DEBUG_BLINK
-//#define DEBUG_VERBOSE
-#define DEBUG_RESCUE
-#define USE_INTERFACE
-//#define USE_MAGNETOMETER
-#define USE_ENCODER
-#define USE_ACCELEROMETER
-//#define USE_BAROMETER
-#define USE_GPS
-#define USE_XBEE
-#define ENABLE_RESET
-
-
-#define DEFAULT_COMPAS_HEIGHT       280.0f // (m) if barometer is disabled
-//#define REQUIRE_RESCUE_HEIGHT // causes an error if altitude unknown and rescue pressed
-
-#ifdef DEBUG
-#ifdef USE_SD_LOGGER
-#define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
-#else
-#define DBPRINT(...)   printf(__VA_ARGS__)
-#endif
-#else
-#define DBPRINT(...)   ((int)0)
-#endif
-
-
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
@@ -72,8 +41,40 @@
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
+#define IS_COMPAS
+
+//#define DEBUG
+#define DEBUG_STATE
+//#define DEBUG_BLINK
+//#define DEBUG_VERBOSE
+#define DEBUG_RESCUE
+#define USE_INTERFACE
+//#define USE_MAGNETOMETER
+#define USE_ENCODER
+#define USE_ACCELEROMETER
+//#define USE_BAROMETER
+#define USE_GPS
+#define USE_GPS_ORIGIN // whether to use hardcoded values or GPS
+#define USE_XBEE
+#define ENABLE_RESET
+
+
+#define DEFAULT_COMPAS_HEIGHT       340.0f // (m) if barometer is disabled
+//#define REQUIRE_RESCUE_HEIGHT // causes an error if altitude unknown and rescue pressed
+
+#ifdef DEBUG
+#ifdef USE_SD_LOGGER
+#define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
+#else
+#define DBPRINT(...)   printf(__VA_ARGS__)
+#endif
+#else
+#define DBPRINT(...)   ((int)0)
+#endif
+
 
 #define XBEE_UART_ID    UART1_ID // sets the XBee to use UART 1
+#define GPS_UART_ID     UART2_ID
  
 // Timer allocation
 #define TIMER_CALIBRATE     TIMER_MAIN
@@ -204,6 +205,7 @@ static union EVENTS {
         unsigned int haveUnknownMessage :1;
         unsigned int haveHeartbeatMessage :1; // talking to boat
         unsigned int haveRescueSuccessMessage :1; // boat rescued drownee
+        unsigned int haveArrivedStationMessage :1;
         unsigned int haveReturnStationMessage :1; // boat is heading to station
         unsigned int haveRequestOriginMessage :1;
         unsigned int haveBoatReceiverMessage :1; // boat is in override state
@@ -394,6 +396,10 @@ static void checkEvents() {
                         event.flags.haveBoatOnlineMessage = TRUE;
                     else if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_OVERRIDE)
                         event.flags.haveBoatReceiverMessage = TRUE;
+                    else if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_RESCUE_SUCCESS)
+                        event.flags.haveRescueSuccessMessage = TRUE;
+                    else if (Mavlink_newMessage.statusAndErrorData.status == MAVLINK_STATUS_ARRIVED_STATION)
+                        event.flags.haveArrivedStationMessage = TRUE;
                 }
                 break;
             /*----------------  Heartbeat message -------------------------*/
@@ -822,7 +828,8 @@ static void doSetStationSM() {
 static void doSetOriginSM() {
     if (event.flags.haveSetOriginAck) {
         //Interface_clearDisplay();
-        Interface_showMessageOnTimer(SET_ORIGIN_MESSAGE, LCD_HOLD_DELAY);
+        //Interface_showMessageOnTimer(SET_ORIGIN_MESSAGE, LCD_HOLD_DELAY);
+        Interface_showMessageOnTimer(BOAT_ONLINE_MESSAGE, LCD_HOLD_DELAY);
         event.flags.setOriginDone = TRUE;
     } else if (Timer_isExpired(TIMER_SETORIGIN)) {
         setError(ERROR_NO_ACKNOWLEDGEMENT);
@@ -968,9 +975,14 @@ static void doMasterSM() {
                     && (state != STATE_SETSTATION || Timer_isExpired(TIMER_DEBOUNCE)))
                 startSetStationSM();
         }
+        // Check for error again
+        if (event.flags.haveError)
+            startErrorSM();
     }
     if (event.flags.haveBoatReceiverMessage)
         Interface_showMessageOnTimer(RECEIVER_ENABLED_MESSAGE, LCD_HOLD_DELAY);
+    if (event.flags.haveArrivedStationMessage)
+        Interface_showMessageOnTimer(BOAT_ARRIVED_STATION_MESSAGE, LCD_HOLD_DELAY);
     //DBPRINT("!\n");
 } // doMasterSM()
 
@@ -1052,6 +1064,9 @@ static void startSetOriginSM() {
     subState = STATE_NONE;
 
     updatePosition();
+    if (event.flags.haveError)
+        return;
+
     Mavlink_sendOrigin(WANT_ACK, &ecefPosition);
     Timer_new(TIMER_SETORIGIN, RESEND_MESSAGE_DELAY);
     resendMessageCount = 0;
@@ -1113,8 +1128,17 @@ static void startStopSM() {
 }
 
 static void updatePosition() {
-    #ifdef USE_GPS_ORIGIN
-    GPS_getPosition(&ecefPosition);
+    #if defined(USE_GPS_ORIGIN) && defined(USE_GPS)
+    if (GPS_isInitialized() && GPS_isConnected() && GPS_hasFix()
+        && GPS_hasPosition()) {
+        GPS_getPosition(&ecefPosition);
+    }
+    else {
+        if (!GPS_isInitialized() || !GPS_isConnected())
+            setError(ERROR_GPS_DISCONNECTED);
+        if (!GPS_hasFix() || !GPS_hasPosition())
+            setError(ERROR_GPS_NOFIX);
+    }
     #else
     ecefPosition.x = ECEF_X_ORIGIN;
     ecefPosition.y = ECEF_Y_ORIGIN;
@@ -1389,18 +1413,20 @@ static void initializeCompas() {
     #endif
 
     // ------------------- UART Devices ------------------
-    #ifdef USE_GPS
-    DBPRINT("Initializing GPS.\n");
-    if (GPS_init() != SUCCESS) {
-        fatal(ERROR_GPS);
-    }
-    #endif
 
     #ifdef USE_XBEE
     DBPRINT("Initializing XBee.\n");
     if (Xbee_init(XBEE_UART_ID) != SUCCESS)
         fatal(ERROR_XBEE);
     #endif
+
+    #ifdef USE_GPS
+    DBPRINT("Initializing GPS.\n");
+    if (GPS_init(GPS_UART_ID) != SUCCESS) {
+        fatal(ERROR_GPS);
+    }
+    #endif
+
 
     #ifdef DEBUG_BLINK
     Interface_waitLightOnTimer(BLINK_ON_DELAY);

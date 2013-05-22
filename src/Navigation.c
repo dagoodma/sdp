@@ -143,7 +143,7 @@ void Navigation_runSM() {
  * @param
  * @return None
  * @remark Starts navigating to the desired location until within the given
- *  tolerance range.
+ *  tolerance range. Requires GPS connection and fix.
  **********************************************************************/
 void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance) {
     if (!Navigation_isReady()) {
@@ -165,7 +165,7 @@ void Navigation_gotoLocalCoordinate(LocalCoordinate *ned_des, float tolerance) {
  * @param A pointer to a local coordinate point.
  * @return Distance to the point in meters.
  * @remark Calculates the distance to the given point from the current
- *  position (in the local frame).
+ *  position (in the local frame). Requires GPS connection and fix.
  **********************************************************************/
 float Navigation_getLocalDistance(LocalCoordinate *nedPoint) {
     if (!Navigation_isReady()) {
@@ -190,6 +190,7 @@ float Navigation_getLocalDistance(LocalCoordinate *nedPoint) {
  * @param A pointer to a local coordinate point.
  * @return None
  * @remark Saves the current local (NED) position into the given variable.
+ *   Requires GPS connection and fix.
  **********************************************************************/
 void Navigation_getLocalPosition(LocalCoordinate *nedPosition) {
     if (!Navigation_isReady()) {
@@ -305,12 +306,6 @@ error_t Navigation_getError() {
         lastErrorCode = ERROR_NONE;
         startIdleState();
     }
-    /*
-    if (Navigation_hasError()) {
-        startIdleState();
-        result = lastErrorCode;
-    }
-    */
     return result;
 }
 

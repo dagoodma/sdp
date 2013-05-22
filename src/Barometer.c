@@ -121,7 +121,7 @@ static void updateReadings(int BAROMETER_I2C_ID);
 char Barometer_init() {
     hasError = FALSE;
     int i;
-
+    DELAY(10);
     for (i = 0; i < CALIBRATION_VALUE_TOTAL; i++) {
         calibration.bytes[i] = readTwoDataBytes(
             calibrationAddresses[i], BAROMETER_I2C_ID);

@@ -35,6 +35,8 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
+//#define USE_MAGNETOMETER
+
 #define WAIT_BETWEEN_CHECKS 20 // [miliseconds]
 #define NUMBER_OF_TIMES_TO_CHECK 1
 #define MINIMUM_POSITIVES 1
@@ -135,7 +137,8 @@ const char *INTERFACE_MESSAGE[] = {
     "Are you sure you\nwant to cancel retu-\nrning to station?",
     "Are you sure you\nwant to cancel sett-\ning station?",
     "System will reset.\nHold longer to reset\nthe boat.",
-    "Remote receiver\noverride enabled."
+    "Remote receiver\noverride enabled.",
+    "Boat at station.\n"
 };
 
 static message_t currentMsgCode, nextMsgCode;
@@ -289,7 +292,11 @@ void Interface_runSM(){
     }
     else if (usingYawLights) {
         READY_LED = OFF;
-        if (Magnetometer_isNorth()) {
+        #ifdef USE_MAGNETOMETER
+        if (Magnetometer_isNorth() && Accelerometer_isLevel()) {
+        #else
+        if (Accelerometer_isLevel())
+        #endif
             CALIBRATE_FRONT_LED = ON;
             CALIBRATE_BACK_LED = ON;
             READY_LED = ON;

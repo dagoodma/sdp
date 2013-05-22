@@ -70,7 +70,7 @@ typedef struct oCourseVector {
  * @return none
  * @remark Initializes the GPS.
  **********************************************************************/
-bool GPS_init();
+bool GPS_init(uint8_t uartId);
 
 /**********************************************************************
  * Function: GPS_isInitialized

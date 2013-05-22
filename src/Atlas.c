@@ -9,9 +9,7 @@
  --------------         ---         --------
 3/27/2013   11:10PM     dagoodma    Created project.
 ***********************************************************************/
-#define IS_ATLAS
-//#define DEBUG
-#define DEBUG_VERBOSE
+
 
 #include <xc.h>
 #include <stdio.h>
@@ -34,16 +32,19 @@
 #include "Uart.h"
 
 
-#define DEBUG
-
 /***********************************************************************
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
+#define IS_ATLAS
+#define DEBUG
+#define DEBUG_VERBOSE
+
 #define XBEE_UART_ID    UART2_ID
+#define GPS_UART_ID     UART1_ID
 
 // Module selection (comment a line out to disable the module)
 #define USE_OVERRIDE
-#define USE_NAVIGATION
+//#define USE_NAVIGATION
 //#define USE_GPS
 #define USE_DRIVE
 #define USE_TILTCOMPASS
@@ -75,7 +76,7 @@
 
 // --------------------- Timer delays -----------------------
 #define STARTUP_DELAY               2500 // (ms) time to wait before starting up
-#define STATION_KEEP_DELAY          3000 // (ms) to check if drifted away
+#define STATION_KEEP_DELAY          10000 // (ms) to check if drifted away
 #define BAROMETER_SEND_DELAY        10000 // (ms) time between sending barometer data
 #define RESEND_MESSAGE_DELAY        4000 // (ms) resend a message
 #define GPS_CORRECTION_LOST_DELAY   5000 // (ms) throw out gps error corrections now
@@ -88,7 +89,7 @@
 #define INITIALIZE_ERROR_MAX            5
 
 #define STATION_TOLERANCE_MIN           5.0f // (meters) to approach station
-#define STATION_TOLERANCE_MAX           12.0f // (meters) distance to float away
+#define STATION_TOLERANCE_MAX           8.0f // (meters) distance to float away
 #define RESCUE_TOLERANCE                2.0f // (meters) to approach person
 
 // Pick the I2C_MODULE to initialize
@@ -154,6 +155,7 @@ static union EVENTS {
         unsigned int navigationError :1;
         /* - Rescue events - */
         unsigned int rescueFail :1;
+        unsigned int rescueSuccess :1;
         /* - Station Keep events - */
         unsigned int stationKeepFail :1;
         /* Set/save station and origin */
@@ -177,6 +179,7 @@ static bool wantSaveStation = FALSE;
 //static bool wantOverride = FALSE;
 static bool haveXbee = FALSE;
 static bool haveError = FALSE;
+static bool rescueShutdown = FALSE;
 
 static LocalCoordinate nedStation; // NED coordinate with station location
 static LocalCoordinate nedRescue; // NED coordinate of drowning person
@@ -266,10 +269,13 @@ static void checkEvents() {
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_RETURN_STATION) {
                     event.flags.haveReturnStationMessage = TRUE;
                     overrideShutdown = FALSE;
+                    rescueShutdown = FALSE;
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_SAVE_STATION) {
                     event.flags.haveSetStationMessage = TRUE;
-                    wantSaveStation = TRUE;overrideShutdown = FALSE;
+                    wantSaveStation = TRUE;
+                    overrideShutdown = FALSE;
+                    rescueShutdown = FALSE;
                 }
                 else if (Mavlink_newMessage.commandOtherData.command == MAVLINK_GEOCENTRIC_ORIGIN) {
                     event.flags.haveSetOriginMessage = TRUE;
@@ -295,10 +301,12 @@ static void checkEvents() {
                     event.flags.haveSetStationMessage = TRUE;
                     wantSaveStation = FALSE;
                     overrideShutdown = FALSE;
+                    rescueShutdown = FALSE;
                 }
                 else if (Mavlink_newMessage.gpsLocalData.status == MAVLINK_LOCAL_START_RESCUE) {
                     event.flags.haveStartRescueMessage = TRUE;
                     overrideShutdown = FALSE;
+                    rescueShutdown = FALSE;
                 }
                 break;
             default:
@@ -308,7 +316,8 @@ static void checkEvents() {
                 break;
         }
     }
-    if (event.flags.haveOverrideMessage || overrideShutdown || event.flags.receiverDetected)
+    if (event.flags.haveOverrideMessage || overrideShutdown || event.flags.receiverDetected
+            || rescueShutdown)
         event.flags.wantOverride = TRUE;
 } //  checkEvents()
 
@@ -344,7 +353,7 @@ static void doSetOriginSM() {
                 return;
             }
             else {
-                DBPRINTF("Resending origin request.\n");
+                DBPRINT("Resending origin request.\n");
                 Mavlink_sendRequestOrigin(NO_ACK); // just want message
                 Timer_new(TIMER_SETORIGIN, RESEND_MESSAGE_DELAY);
                 resendMessageCount++;
@@ -364,6 +373,7 @@ static void doSetOriginSM() {
         a given position. */
     if (wantSaveStation) {
         // Save current position as station
+        #ifdef USE_NAVIGATION
         Navigation_getLocalPosition(&nedStation);
 
         if (Navigation_hasError()) {
@@ -371,17 +381,8 @@ static void doSetOriginSM() {
             setError(Navigation_getError());
             return;
         }
-        // quick bandaid:
-        /*
-        else if (!GPS_hasFix() || !GPS_hasPosition) {
-            setError(ERROR_GPS_NOFIX);
-            return;
-        }
-        else if (!GPS_isConnected) {
-            setError(ERROR_GPS_DISCONNECTED);
-            return;
-        }
-*/
+        #endif
+
         event.flags.setStationDone = TRUE;
         haveStation = TRUE;
         wantSaveStation = FALSE;
@@ -411,29 +412,46 @@ static void doStationKeepSM() {
     switch (subState) {
         case STATE_STATIONKEEP_RETURN:
             // Driving to the station
+            #ifdef USE_NAVIGATION
             if (event.flags.navigationDone) {
                 subState = STATE_STATIONKEEP_IDLE;
-                Timer_new(TIMER_STATIONKEEP,STATION_KEEP_DELAY);
+                Timer_new(TIMER_STATIONKEEP,STATION_KEEP_DELAY); // check position on timer
+                Mavlink_sendStatus(MAVLINK_STATUS_ARRIVED_STATION);
                 DBPRINT("Arrived at station.\n");
             }
+            #else
+                subState = STATE_STATIONKEEP_IDLE;
+                Timer_new(TIMER_STATIONKEEP,STATION_KEEP_DELAY); // check position on timer
+                Mavlink_sendStatus(MAVLINK_STATUS_ARRIVED_STATION);
+                DBPRINT("Arrived at station.\n");
+            #endif
             // TODO obstacle detection
             break;
         case STATE_STATIONKEEP_IDLE:
             // Wait to float away from the station
             if (Timer_isExpired(TIMER_STATIONKEEP)) {
                 // Check if we floated too far away from the station
+                #ifdef USE_NAVIGATION
                 if (Navigation_getLocalDistance(&nedStation) > STATION_TOLERANCE_MAX) {
                     startStationKeepSM(); // return to station
                     return;
                 }
-
-                Timer_new(TIMER_STATIONKEEP, STATION_KEEP_DELAY);
+                else {
+                    Timer_new(TIMER_STATIONKEEP, STATION_KEEP_DELAY);
+                }
+                #else
+                    startStationKeepSM(); // return to station
+                    return;
+                #endif
             }
             break;
     }
+
+    #ifdef USE_NAVIGATION
     if (event.flags.navigationError) {
         setError((error_t)Navigation_getError());
     }
+    #endif
 }
 
 
@@ -455,10 +473,15 @@ static void doOverrideSM() {
 static void doRescueSM() {
     switch (subState) {
         case STATE_RESCUE_GOTO:
+            #ifdef USE_NAVIGATION
             if (event.flags.navigationDone) {
                 subState = STATE_RESCUE_SEARCH;
                 Navigation_cancel();
             }
+            #else
+                subState = STATE_RESCUE_SEARCH;
+                DBPRINT("Arrived near person, searching.\n");
+            #endif
             break;
         case STATE_RESCUE_SEARCH:
             // Human sensor event handling
@@ -470,6 +493,8 @@ static void doRescueSM() {
             Mavlink_sendStatus(MAVLINK_STATUS_RESCUE_SUCCESS);
             break;
         case STATE_RESCUE_SUPPORT:
+            event.flags.rescueSuccess = TRUE;
+
             // Do nothing
             break;
     }
@@ -641,6 +666,11 @@ static void doMasterSM() {
                 Siren_redLightOff();
                 #endif
             }
+            if (event.flags.rescueSuccess) {
+                // Just stop in place
+                rescueShutdown = TRUE;
+                startOverrideSM();
+            }
 
             break;
     }
@@ -649,7 +679,7 @@ static void doMasterSM() {
         if (event.flags.haveSetStationMessage && !event.flags.wantOverride && !haveError)
             startSetStationSM();
     }
-    else if (state != STATE_OVERRIDE) {
+    if (state != STATE_OVERRIDE) {
         /*
         if (event.flags.haveError) {
             DBPRINT("Error: %s", getErrorMessage(lastErrorCode));
@@ -662,8 +692,9 @@ static void doMasterSM() {
             Mavlink_sendError(ERROR_NO_ORIGIN);
             startOverrideSM();
         }
-        else if (!haveStation && state != STATE_SETSTATION && state != STATE_SETORIGIN) {
-            Mavlink_sendError(ERROR_NO_ORIGIN);
+        else if (!haveStation && state != STATE_SETSTATION && state != STATE_SETORIGIN
+                && state != STATE_RESCUE) {
+            Mavlink_sendError(ERROR_NO_STATION);
             startOverrideSM();
         }
     }
@@ -706,6 +737,7 @@ static void startSetStationSM() {
     subState = STATE_NONE;
     clearError();
 
+    // Handle acknowledgement works (I think) but saw issues with handleAck...
     //if (event.flags.haveSetStationMessage)
     //    handleAcknowledgement();
     Mavlink_sendAck(MAVLINK_MSG_ID_CMD_OTHER, MAVLINK_SAVE_STATION);
@@ -731,7 +763,9 @@ static void startStationKeepSM() {
     // Send status message for debugging
     Mavlink_sendStatus(MAVLINK_STATUS_RETURN_STATION);
 
-    Navigation_gotoLocalCoordinate(&nedStation, STATION_TOLERANCE_MIN);
+    #ifdef USE_NAVIGATION
+    Navigation_gotoLocalCoordinate(&nedStation, STATION_TOLERANCE_MIN); // to station
+    #endif
 
     Override_giveMicroControl();
     DBPRINT("Micro has control.\n");
@@ -794,7 +828,9 @@ static void startRescueSM() {
     nedRescue.down = Mavlink_newMessage.gpsLocalData.down;
 
     // Send status message for debugging
-    Navigation_gotoLocalCoordinate(&nedStation, RESCUE_TOLERANCE);
+    #ifdef USE_NAVIGATION
+    Navigation_gotoLocalCoordinate(&nedStation, RESCUE_TOLERANCE); // to rescue
+    #endif
 
     if (!Navigation_hasError())
         Mavlink_sendStatus(MAVLINK_STATUS_START_RESCUE);
@@ -920,6 +956,7 @@ static void doHeartbeatMessage() {
  * @date 2013.05.04
  **********************************************************************/
 static void checkOverride() {
+    // TODO remove, this was moved into override state logic and into
     /* If the receiver is off, boat is not stopped, and we either
         have a station or are setting one, then turn override off */
     /*
@@ -990,7 +1027,7 @@ static void resetAtlas() {
  **********************************************************************/
 static void initializeAtlas() {
     Board_init();
-#if defined(DEBUG) && defined(USE_SERIAL)
+#if defined(DEBUG) && defined(USE_SERIAL) && !defined(USE_GPS)
     Serial_init();
     DBPRINT("Initializing serial.\n");
 #endif
@@ -1031,6 +1068,8 @@ static void initializeAtlas() {
     #endif
 
 
+    // ------------------- UART Devices ------------------
+
     haveXbee = FALSE;
     #ifdef USE_XBEE
     DBPRINT("Initializing xbee\n");
@@ -1041,10 +1080,9 @@ static void initializeAtlas() {
     #endif
 
 
-    // ------------------- UART Devices ------------------
     #ifdef USE_GPS
     DBPRINT("Initializing gps.\n");
-    if (GPS_init() != SUCCESS) {
+    if (GPS_init(GPS_UART_ID) != SUCCESS) {
         fatal(ERROR_GPS);
     }
     #else

@@ -326,7 +326,7 @@ int main(){
 //#define XBEE_ATLAS_TEST
 #ifdef XBEE_ATLAS_TEST
 
-#define XBEE_UART_ID UART1_ID
+#define XBEE_UART_ID UART2_ID
 
 #define STARTUP_DELAY   1500
 #define PRINT_DELAY     1000
@@ -335,12 +335,12 @@ int main(){
     Board_init();
     Board_configure(USE_TIMER);
     DELAY(10);
-    //dbprint("Starting XBee...\n");
+    DBPRINT("Starting XBee...\n");
     if (Xbee_init(XBEE_UART_ID) != SUCCESS) {
-        //dbprint("Failed XBee init.\n");
+        DBPRINT("Failed XBee init.\n");
         return FAILURE;
     }
-    //dbprint("XBee initialized.\n");
+    DBPRINT("XBee initialized.\n");
     DELAY(STARTUP_DELAY);
 
     Timer_new(TIMER_TEST, PRINT_DELAY);
