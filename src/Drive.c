@@ -776,7 +776,7 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void){
 #endif
 
 
-//#define ACTUATOR_TEST
+#define ACTUATOR_TEST
 #ifdef ACTUATOR_TEST
 
 #include "I2C.h"
@@ -823,53 +823,53 @@ int main(){
 
     //Test Rudder
     printf("Centering rudder.\n");
-    setRudder(STOP_PULSE);
+    setRudder(RUDDER_TURN_LEFT, 0);
     delayMillisecond(ACTUATOR_DELAY);
 
     printf("Turning rudder left.\n");
-    setRudder(MAXPULSE); //push to one direction
+    setRudder(RUDDER_TURN_LEFT, 100); //push to one direction
     delayMillisecond(ACTUATOR_DELAY);
     printf("Centering rudder.\n");
-    setRudder(STOP_PULSE);
+    setRudder(RUDDER_TURN_LEFT, 0);
     delayMillisecond(ACTUATOR_DELAY);
 
     printf("Turning rudder right.\n");
-    setRudder(MINPULSE);
+    setRudder(RUDDER_TURN_RIGHT, 100);
     delayMillisecond(ACTUATOR_DELAY);
     
     printf("Centering rudder.\n");
-    setRudder(STOP_PULSE);
+    setRudder(RUDDER_TURN_LEFT, 0);
     
 
     //Test Motor Left
     printf("Testing left motor.\n");
-    setLeftMotor(STOP_PULSE);
+    setLeftMotor(0);
     delayMillisecond(ACTUATOR_DELAY);
     printf("Driving left motor forward.\n");
-    setLeftMotor(MAX_PULSE);
+    setLeftMotor(100);
     delayMillisecond(ACTUATOR_DELAY);
-    setLeftMotor(STOP_PULSE);
+    setLeftMotor(0);
     delayMillisecond(ACTUATOR_DELAY);
-    printf("Driving left motor reverse.\n");
-    setLeftMotor(MIN_PULSE);
-    delayMillisecond(ACTUATOR_DELAY);
-    setLeftMotor(STOP_PULSE);
+    //printf("Driving left motor reverse.\n");
+    //setLeftMotor(MIN_PULSE);
+    //delayMillisecond(ACTUATOR_DELAY);
+    //setLeftMotor(0);
    
 
     //Test Motor Right
     printf("Testing right motor.\n");
-    setRightMotor(STOP_PULSE);
+    setRightMotor(0);
     delayMillisecond(ACTUATOR_DELAY);
     printf("Driving right motor forward.\n");
-    setRightMotor(MAX_PULSE);
+    setRightMotor(100);
     delayMillisecond(ACTUATOR_DELAY);
-    setRightMotor(STOP_PULSE);
+    setRightMotor(0);
     delayMillisecond(ACTUATOR_DELAY);
-    printf("Driving right motor reverse.\n");
-    setRightMotor(MIN_PULSE);
-    delayMillisecond(ACTUATOR_DELAY);
-    setRightMotor(STOP_PULSE);
-    delayMillisecond(ACTUATOR_DELAY);
+    //printf("Driving right motor reverse.\n");
+    //setRightMotor(MIN_PULSE);
+    //delayMillisecond(ACTUATOR_DELAY);
+    //setRightMotor(STOP_PULSE);
+    //delayMillisecond(ACTUATOR_DELAY);
 
 //    // Remove this code
 //    setRightMotor(MAX_PULSE);
@@ -879,7 +879,7 @@ int main(){
 //
 //
 //    printf("\nDone with drive test.\n");
-
+    return SUCCESS;
 }
 #endif
 

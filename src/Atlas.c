@@ -44,8 +44,8 @@
 
 // Module selection (comment a line out to disable the module)
 #define USE_OVERRIDE
-//#define USE_NAVIGATION
-//#define USE_GPS
+#define USE_NAVIGATION
+#define USE_GPS
 #define USE_DRIVE
 #define USE_TILTCOMPASS
 #define USE_XBEE
@@ -69,6 +69,7 @@
 // Timer allocation
 #define TIMER_STATIONKEEP   TIMER_MAIN
 #define TIMER_SETORIGIN     TIMER_MAIN
+#define TIMER_SETORIGIN_RETRY   TIMER_MAIN2
 
 #define TIMER_BAROMETER_SEND        TIMER_BACKGROUND
 #define TIMER_GPS_CORRECTION_LOST   TIMER_BACKGROUND2
@@ -82,6 +83,7 @@
 #define GPS_CORRECTION_LOST_DELAY   5000 // (ms) throw out gps error corrections now
 #define HEARTBEAT_SEND_DELAY        3000 // (ms) between heart being sent to CC
 #define DEBUG_PRINT_DELAY           1200
+#define RETRY_ORIGIN_DELAY          3000
 
 #define RESEND_MESSAGE_LIMIT        5 // times to resend before failing
 
@@ -606,6 +608,7 @@ static void doMasterSM() {
                     else {
                         handleAcknowledgement();
                         Mavlink_sendError(ERROR_NO_ORIGIN);
+                        Timer_new(TIMER_SETORIGIN_RETRY, RETRY_ORIGIN_DELAY);
                     }
                 }
                 else if (event.flags.haveSetStationMessage) {
@@ -617,8 +620,10 @@ static void doMasterSM() {
                         startStationKeepSM();
                     else if (event.flags.haveReturnStationMessage) {
                         handleAcknowledgement();
-                        if (!haveOrigin)
+                        if (!haveOrigin) {
                             Mavlink_sendError(ERROR_NO_ORIGIN);
+                            Timer_new(TIMER_SETORIGIN_RETRY, RETRY_ORIGIN_DELAY);
+                        }
                         else if (!haveStation)
                             Mavlink_sendError(ERROR_NO_STATION);
                     }
@@ -628,6 +633,10 @@ static void doMasterSM() {
                 }
                 else if (!haveOrigin)
                     startSetOriginSM(); // other fall through
+                
+                if (Timer_isExpired(TIMER_SETORIGIN_RETRY)) {
+                    startSetOriginSM(); // retry origin
+                }
             }
             else {
                 if (event.flags.haveStartRescueMessage) {

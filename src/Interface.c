@@ -295,7 +295,7 @@ void Interface_runSM(){
         #ifdef USE_MAGNETOMETER
         if (Magnetometer_isNorth() && Accelerometer_isLevel()) {
         #else
-        if (Accelerometer_isLevel())
+        if (Accelerometer_isLevel()) {
         #endif
             CALIBRATE_FRONT_LED = ON;
             CALIBRATE_BACK_LED = ON;

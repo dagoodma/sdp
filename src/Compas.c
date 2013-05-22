@@ -102,6 +102,7 @@
 #define CANCEL_DEBOUNCE_DELAY       500 // (ms) to read cancel button in cancel state
 #define RESCUE_DEBOUNCE_DELAY       600 // (ms) to read rescue button in rescue state
 #define STATE_REENTRY_DEBOUNCE_DELAY    1500 // (ms) before repeating last state
+#define STARTUP_DELAY               1000
 
 #define RESET_HOLD_DELAY            1000 // (ms) to hold before CC reset
 #define RESET_LONG_HOLD_DELAY        5000 // (ms) to hold before CC and boat reset
@@ -1366,6 +1367,8 @@ static void initializeCompas() {
     #endif
 
     Timer_init();
+
+    DELAY(STARTUP_DELAY);
 
     #ifdef USE_INTERFACE
     DBPRINT("Initializing interface.\n");
