@@ -36,8 +36,8 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 #define IS_ATLAS
-#define DEBUG
-#define DEBUG_VERBOSE
+//#define DEBUG
+//#define DEBUG_VERBOSE
 
 #define XBEE_UART_ID    UART1_ID
 #define GPS_UART_ID     UART2_ID
@@ -49,7 +49,7 @@
 #define USE_DRIVE
 #define USE_TILTCOMPASS
 #define USE_XBEE
-//#define USE_SIREN
+//#define USE_SIREN // NOT IMPLEMENTED
 #define USE_BAROMETER
 #define DO_HEARTBEAT
 
@@ -96,7 +96,7 @@
 
 // Pick the I2C_MODULE to initialize
 // Set Desired Operation Frequency
-#define I2C_CLOCK_FREQ  100000 // (Hz)
+#define I2C_CLOCK_FREQ  75000 // (Hz)
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -934,8 +934,10 @@ void fatal(error_t code) {
 static void doBarometerUpdate() {
     if (Timer_isExpired(TIMER_BAROMETER_SEND)) {
 
+        #ifdef USE_XBEE
         Mavlink_sendBarometerData(Barometer_getTemperature(),
             Barometer_getAltitude());
+        #endif
 
         Timer_new(TIMER_BAROMETER_SEND, BAROMETER_SEND_DELAY);
     }
@@ -951,7 +953,9 @@ static void doBarometerUpdate() {
 static void doHeartbeatMessage() {
     if (Timer_isExpired(TIMER_HEARTBEAT) || !Timer_isActive(TIMER_HEARTBEAT)) {
 
+        #ifdef USE_XBEE
         Mavlink_sendHeartbeat();
+        #endif
 
         Timer_new(TIMER_HEARTBEAT, HEARTBEAT_SEND_DELAY);
     }
@@ -1141,3 +1145,116 @@ int main(void) {
 }
 #endif
 
+
+
+//#define ATLAS_SYSTEM_TEST
+#ifdef ATLAS_SYSTEM_TEST
+
+#define PRINT_DELAY     1500
+
+// Be sure to disable Xbee and enable Debug
+
+static void printGps();
+static void printBarometer();
+static void printTiltCompass();
+
+
+int main() {
+    initializeAtlas();
+
+    DBPRINT("AtLAs system test initialized.\n");
+    // Print GPS and sensor data while sending XBee messages
+    Timer_new(TIMER_TEST,PRINT_DELAY);
+    while (1) {
+        checkEvents();
+
+        #ifdef USE_TILTCOMPASS
+        TiltCompass_runSM();
+        #endif
+
+        #ifdef USE_GPS
+        GPS_runSM();
+        #endif
+
+        #ifdef USE_NAVIGATION
+        Navigation_runSM();
+        #ifdef USE_ERROR_CORRECTION
+        gpsCorrectionUpdate();
+        #endif
+        #endif
+
+        #ifdef USE_DRIVE
+        Drive_runSM();
+        #endif
+
+        #ifdef USE_XBEE
+        Xbee_runSM();
+        #endif
+
+        #ifdef USE_BAROMETER
+        Barometer_runSM();
+        doBarometerUpdate(); // send barometer data
+        #endif
+
+        #ifdef DO_HEARTBEAT
+        doHeartbeatMessage();
+        #endif
+
+        //checkOverride();
+
+        #ifdef DEBUG_VERBOSE
+        if (Timer_isExpired(TIMER_TEST2)) {
+            DBPRINT("State=%X,%X, Receiver=%X, WantOver=%X, ForceOver=%X, ReceiverShut=%X, HaveError=%X\n",
+                state, subState, event.flags.receiverDetected, event.flags.wantOverride, overrideShutdown, receiverShutdown, haveError);
+            Timer_new(TIMER_TEST2, DEBUG_PRINT_DELAY);
+        }
+        #endif
+
+        if (Timer_isExpired(TIMER_TEST)) {
+            printGps();
+            printBarometer();
+            printTiltCompass();
+
+            if (event.flags.haveError)
+                printf("Found an error: %s\n", getErrorMessage(lastErrorCode));
+
+            Timer_new(TIMER_TEST,PRINT_DELAY);
+        }
+    }
+
+
+}
+
+static void printBarometer() {
+    printf("Barometer: T=%.2f, Alt=%.2f\n", Barometer_getTemperature(), Barometer_getAltitude());
+}
+
+
+static void printTiltCompass() {
+    printf("Compass: %.2f\n", TiltCompass_getHeading());
+}
+
+static void printGps() {
+    if (!GPS_isConnected()) {
+        printf("GPS not connected.");
+    }
+    else if (GPS_hasFix() && GPS_hasPosition()) {
+        GeocentricCoordinate ecefPos;
+        GPS_getPosition(&ecefPos);
+        printf("Position: x=%.2f, y=%.2f, z=%.2f (m)\n", ecefPos.x,
+            ecefPos.y, ecefPos.z);
+
+        printf("Velocity: %.2f (m/s), Heading: %.2f (deg)",
+            GPS_getVelocity(), GPS_getHeading());
+    }
+    else {
+        printf("No fix!");
+    }
+
+    if (Navigation_isReady())
+        printf(" Nav ready.\n");
+    else
+        printf( "Nav not ready!\n");
+}
+
+#endif

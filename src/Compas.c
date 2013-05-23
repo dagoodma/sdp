@@ -59,7 +59,7 @@
 #define ENABLE_RESET
 
 
-#define DEFAULT_COMPAS_HEIGHT       315.0f // (m) if barometer is disabled
+#define DEFAULT_COMPAS_HEIGHT       1.5f // (m) if barometer is disabled
 //#define REQUIRE_RESCUE_HEIGHT // causes an error if altitude unknown and rescue pressed
 
 #ifdef DEBUG
@@ -130,7 +130,7 @@
 #define ECEF_Y_ORIGIN -4322167.0f
 #define ECEF_Z_ORIGIN  3817539.0f
 
-#define I2C_CLOCK_FREQ  50000 // (Hz)
+#define I2C_CLOCK_FREQ  80000 // (Hz)
 
 
 /***********************************************************************
@@ -1182,12 +1182,11 @@ static void doBarometerUpdate() {
     if (event.flags.haveBarometerMessage) {
         // Just got barometer message
 #ifndef USE_BAROMETER
-        float compasHeight = DEFAULT_COMPAS_HEIGHT;
+        compasHeight = DEFAULT_COMPAS_HEIGHT;
 #else
-        float compasHeight = Barometer_getAltitude();
-#endif
-        compasHeight = compasHeight;
+        compasHeight = Barometer_getAltitude();
             - Mavlink_newMessage.barometerData.altitude;
+#endif
 
         haveCompasHeight = TRUE;
         Timer_new(TIMER_BAROMETER_LOST, BAROMETER_LOST_DELAY);
@@ -1467,3 +1466,6 @@ int main() {
 }
 
 #endif
+
+
+

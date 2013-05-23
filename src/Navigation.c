@@ -276,8 +276,8 @@ void Navigation_disableErrorCorrection() {
  * @remark
  **********************************************************************/
 bool Navigation_isReady() {
-    return GPS_isInitialized() && GPS_isConnected() && GPS_hasFix()
-        && GPS_hasPosition() && hasOrigin;
+    return (GPS_isInitialized() && GPS_isConnected() && GPS_hasFix()
+        && GPS_hasPosition() && hasOrigin);
 }
 
 /**********************************************************************
@@ -503,6 +503,9 @@ static void updateHeading() {
  *  error code to the given code.
  **********************************************************************/
 static void setError(error_t errorCode) {
+    if (errorCode == ERROR_NONE)
+        return;
+    
     lastErrorCode = errorCode;
 
     startErrorState();
@@ -515,7 +518,11 @@ static void setError(error_t errorCode) {
  * @remark
  **********************************************************************/
 static error_t findNavigationError() {
-    if (!GPS_isConnected || !GPS_isInitialized())
+    /*!isReady()
+     !GPS_isInitialized() || !GPS_isConnected() || !GPS_hasFix()
+        || !GPS_hasPosition() || !hasOrigin;
+     */
+    if (!GPS_isConnected() || !GPS_isInitialized())
         return ERROR_GPS_DISCONNECTED;
     if (!GPS_hasFix() || !GPS_hasPosition())
         return ERROR_GPS_NOFIX;

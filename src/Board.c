@@ -60,7 +60,7 @@ void Board_configure(uint8_t opts) {
     }
     if (opts & USE_LCD) {
         option.useLCD = TRUE;
-        LCD_init();
+        //LCD_init();
     }
     DELAY(STARTUP_DELAY );
 }

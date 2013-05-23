@@ -27,6 +27,8 @@
  ***********************************************************************/
 
 //#define DEBUG
+//#define DEBUG_VERBOSE
+//#define DISABLE_MOTORS
 
 #ifdef DEBUG
 #ifdef USE_SD_LOGGER
@@ -260,7 +262,7 @@ static void startDriveState() {
  **********************************************************************/
 static void startTrackState() {
     state = STATE_TRACK;
-    stopMotors();
+    //stopMotors();
 
     lastRudderDirection = RUDDER_TURN_NONE;
 }
@@ -290,7 +292,9 @@ static void setLeftMotor(uint8_t speed) {
         rc_time = RC_MOTOR_MIN;
 
     DBPRINT("Setting left motor to RC_TIME=%d\n",rc_time);
+    #ifndef DISABLE_MOTORS
     RC_setPulseTime(MOTOR_LEFT, rc_time);
+    #endif
 }
 
 /**********************************************************************
@@ -308,7 +312,9 @@ static void setRightMotor(uint8_t speed) {
         rc_time = RC_MOTOR_MIN;
 
     DBPRINT("Setting right motor to RC_TIME=%d\n",rc_time);
+    #ifndef DISABLE_MOTORS
     RC_setPulseTime(MOTOR_RIGHT, rc_time);
+    #endif
 }
 
 /**********************************************************************
@@ -394,9 +400,12 @@ static void updateRudder() {
     setRudder(rudderDirection, (uint8_t)uPercent);
     lastThetaError = thetaError;
     lastRudderDirection = rudderDirection;
+    char *dir;
+    dir = (rudderDirection == RUDDER_TURN_RIGHT)? "R" : "L";
         
     #ifdef DEBUG_VERBOSE
-    DBPRINT("Rudder control: uDegrees=%.2f, uPercent=%d\n\n", uDegrees, (uint8_t)uPercent);
+    DBPRINT("Rudder control: rDegrees=%d, yDegrees=%d, eDegrees=%d, uDegrees=%.2f, uPercent=%d[%s]\n\n",
+        desiredHeading, currentHeading, thetaError, uDegrees, (uint8_t)uPercent, dir);
     #endif
 }
 
@@ -1006,6 +1015,90 @@ int main(){
 
     printf("Finished state machine test.\n\n");
 
+
+    return SUCCESS;
+}
+
+
+#endif
+
+
+//#define CONTROLLER_TEST
+#ifdef CONTROLLER_TEST
+
+
+#include "I2C.h"
+#include "TiltCompass.h"
+#include "Ports.h"
+#include "Drive.h"
+
+// Pick the I2C_MODULE to initialize
+static I2C_MODULE      TILT_COMPASS_I2C_ID = I2C1;
+// Set Desired Operation Frequency
+#define I2C_CLOCK_FREQ  50000 // (Hz)
+
+//Define and enable the Enable pin for override
+#define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
+
+#define COMMAND_DELAY 17500 //ms
+
+#define MAX_PULSE 1750
+#define MIN_PULSE 1250
+#define STOP_PULSE 1500
+#define MICRO 1
+#define RECIEVER 0
+
+
+//#define RECIEVE_CONTROL
+
+int main(){
+    //Initializations
+    Board_init();
+    Serial_init();
+    Timer_init();
+    if (Drive_init() != SUCCESS) {
+        printf("Failed to initialize drive module.\n");
+    }
+    I2C_init(TILT_COMPASS_I2C_ID, I2C_CLOCK_FREQ);
+    if (TiltCompass_init() != SUCCESS) {
+        printf("Failed to initialize tilt compass module.\n");
+    }
+    ENABLE_OUT_TRIS = OUTPUT;
+
+    while (1) {
+        printf("Driving north at full speed.\n");
+        Timer_new(TIMER_TEST, COMMAND_DELAY);
+        Drive_forwardHeading(100, 0);
+
+        while(!Timer_isExpired(TIMER_TEST)) {
+            //wait for finish
+            DELAY(1);
+            Drive_runSM();
+            TiltCompass_runSM();
+        }
+        Drive_stop();
+        Drive_runSM();
+        TiltCompass_runSM();
+
+        printf("Driving south at full speed.\n");
+        Timer_new(TIMER_TEST, COMMAND_DELAY);
+        Drive_forwardHeading(100, 180);
+
+        while(!Timer_isExpired(TIMER_TEST)) {
+            //wait for finish
+            DELAY(1);
+            Drive_runSM();
+            TiltCompass_runSM();
+        }
+        
+        Drive_stop();
+        Drive_runSM();
+        TiltCompass_runSM();
+        delayMillisecond(COMMAND_DELAY);
+        printf("Waiting for retry...\n");
+
+    }
 
     return SUCCESS;
 }

@@ -57,7 +57,7 @@
 #define NOFIX_STATUS            0x00
 
 // GPS connection timeout for packet not seen
-#define DELAY_TIMEOUT           5000
+#define DELAY_TIMEOUT           15000
 
 // unpacking functions
 #define UNPACK_LITTLE_ENDIAN_32(data, start) \
@@ -841,7 +841,7 @@ void getCourseVector(CourseVector *course, LocalCoordinate *ned_cur,
 int main() {
     Board_init(); // initalize interrupts
     Serial_init(); // init serial port for printing messages
-    GPS_init();
+    GPS_init(UART2_ID);
     Timer_init();
     printf("GPS initialized.\n");
 
@@ -1094,6 +1094,59 @@ int main() {
     Serial_init(); // init serial port for printing messages
     GPS_init();
     Timer_init();
+    printf("GPS initialized.\n");
+
+    Timer_new(TIMER_TEST,1000);
+    while(1) {
+        if (Timer_isExpired(TIMER_TEST)) {
+            if (!GPS_isConnected()) {
+                printf("GPS not connected.\n");
+            }
+            else if (GPS_hasFix() && GPS_hasPosition()) {
+                GeocentricCoordinate ecefPos;
+                GPS_getPosition(&ecefPos);
+                printf("Position: x=%.2f, y=%.2f, z=%.2f (m)\n", ecefPos.x,
+                    ecefPos.y, ecefPos.z);
+
+                printf("Velocity: %.2f (m/s), Heading: %.2f (deg)\n",
+                    GPS_getVelocity(), GPS_getHeading());
+            }
+            else {
+                printf("No fix!\n");
+            }
+
+            Timer_new(TIMER_TEST,1000);
+        }
+        GPS_runSM();
+
+    }
+}
+
+#endif
+
+
+
+//#define GPS_ATLAS_OVERRIDE_TEST
+#ifdef GPS_ATLAS_OVERRIDE_TEST
+
+
+#include "Ports.h"
+
+
+//Define and enable the Enable pin for override
+#define ENABLE_OUT_TRIS  PORTX12_TRIS // J5-06
+#define ENABLE_OUT_LAT  PORTX12_LAT // J5-06, //0--> Microcontroller control, 1--> Reciever Control
+
+#define MICRO 1
+#define RECIEVER 0
+
+int main() {
+    Board_init(); // initalize interrupts
+    Serial_init(); // init serial port for printing messages
+    GPS_init(UART2_ID);
+    Timer_init();
+
+    ENABLE_OUT_TRIS = OUTPUT;
     printf("GPS initialized.\n");
 
     Timer_new(TIMER_TEST,1000);
