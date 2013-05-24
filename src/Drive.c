@@ -79,7 +79,7 @@
 
 // ------------------------- Controller 
 //PD Controller Param Settings for Rudder
-#define KP_RUDDER 7.0f
+#define KP_RUDDER 7.5f
 #define KD_RUDDER 0.0f
 #define RUDDER_BANGBANG_SPEED_THRESHOLD 17 // (speed %) motor speed threshold
 #define RUDDER_BANGBANG_THETA_DEADBAND_THRESHOLD 10 // (degrees) heading error threshold

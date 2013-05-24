@@ -7,8 +7,6 @@
  *
  * Created on March 3, 2013, 10:27 AM
  */
-//#define DEBUG
-#define USE_SD_LOGGER
 #include <xc.h>
 #include <stdio.h>
 #include <plib.h>
@@ -29,13 +27,31 @@
  * PRIVATE DEFINITIONS                                                 *
  ***********************************************************************/
 
+//#define DEBUG
+
 #define USE_DRIVE
+
+
+#ifdef DEBUG
+#ifdef USE_SD_LOGGER
+//#define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
+#else
+#define DBPRINT(...)   printf(__VA_ARGS__)
+#endif
+#else
+#define DBPRINT(...)   ((int)0)
+#endif
+
 
 #define UPDATE_DELAY        1500 // (ms)
 #define TIMEOUT_DELAY       7000 // (ms)
 
 // don't change heading unless calculated is this much away from last
 #define HEADING_TOLERANCE   10 // (deg)
+
+
+#define DISTANCE_SPEED_OFFSET   30
+#define DISTANCE_SPEED_KP       2.7f
 
 /***********************************************************************
  * PRIVATE VARIABLES                                                   *
@@ -353,7 +369,7 @@ bool Navigation_isUsingErrorCorrection() {
  **********************************************************************/
 static uint8_t distanceToSpeed(float dist) {
     //int speed = (int)dist + 5;
-    uint32_t speed = ((uint32_t)dist + 3);
+    uint32_t speed = ((uint32_t)(dist*DISTANCE_SPEED_KP) + DISTANCE_SPEED_OFFSET);
     speed = (speed > 100)? 100 : speed;
     return (uint8_t)speed;
 }

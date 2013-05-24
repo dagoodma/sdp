@@ -838,7 +838,7 @@ static void startRescueSM() {
 
     // Send status message for debugging
     #ifdef USE_NAVIGATION
-    Navigation_gotoLocalCoordinate(&nedStation, RESCUE_TOLERANCE); // to rescue
+    Navigation_gotoLocalCoordinate(&nedRescue, RESCUE_TOLERANCE); // to rescue
     #endif
 
     if (!Navigation_hasError())
@@ -998,6 +998,7 @@ static void checkOverride() {
  * @date 2013.05.05
  **********************************************************************/
 static void gpsCorrectionUpdate() {
+    #ifdef USE_ERROR_CORRECTION
     if (event.flags.haveGeocentricErrorMessage) {
         GeocentricCoordinate ecefError;
         ecefError.x = Mavlink_newMessage.gpsGeocentricData.x;
@@ -1016,6 +1017,7 @@ static void gpsCorrectionUpdate() {
         Navigation_disableErrorCorrection();
         DBPRINT("Error corrections disabled due to telemetry timeout.\n");
     }
+    #endif
 }
 
 
@@ -1159,8 +1161,25 @@ static void printBarometer();
 static void printTiltCompass();
 
 
+
+#define ECEF_X_ORIGIN -2707534.0f
+#define ECEF_Y_ORIGIN -4322167.0f
+#define ECEF_Z_ORIGIN  3817539.0f
+
 int main() {
     initializeAtlas();
+    GeocentricCoordinate origin;
+    origin.x = ECEF_X_ORIGIN;
+    origin.y = ECEF_Y_ORIGIN;
+    origin.z = ECEF_Z_ORIGIN;
+    Navigation_setOrigin(&origin);
+
+    LocalCoordinate desired;
+    desired.north = 0.0f;
+    desired.east = 50.0f;
+
+
+    bool startedNav = FALSE;
 
     DBPRINT("AtLAs system test initialized.\n");
     // Print GPS and sensor data while sending XBee messages
@@ -1217,6 +1236,11 @@ int main() {
 
             if (event.flags.haveError)
                 printf("Found an error: %s\n", getErrorMessage(lastErrorCode));
+
+            if (Navigation_isReady()) {
+                Navigation_gotoLocalCoordinate(&desired, 3.0f);
+                startedNav = TRUE;
+            }
 
             Timer_new(TIMER_TEST,PRINT_DELAY);
         }
