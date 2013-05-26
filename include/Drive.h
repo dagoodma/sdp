@@ -84,5 +84,16 @@ void Drive_forwardHeading(uint8_t speed, uint16_t angle);
  **********************************************************************/
 void Drive_stop();
 
+
+/**********************************************************************
+ * Function: Drive_getDebugString
+ * @return None
+ * @remark 
+ * @author David Goodman
+ * @date 2013.05.25 
+ **********************************************************************/
+char *Drive_getDebugString();
+
+
 #endif // Drive_H
 

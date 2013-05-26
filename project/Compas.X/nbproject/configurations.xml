@@ -22,6 +22,7 @@
       <itemPath>../../include/Error.h</itemPath>
       <itemPath>../../include/Interface.h</itemPath>
       <itemPath>../../include/LCD.h</itemPath>
+      <itemPath>../../include/AD.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -46,6 +47,7 @@
       <itemPath>../../src/Error.c</itemPath>
       <itemPath>../../src/Interface.c</itemPath>
       <itemPath>../../src/Lcd.c</itemPath>
+      <itemPath>../../src/AD.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

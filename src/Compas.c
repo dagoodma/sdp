@@ -406,7 +406,7 @@ static void checkEvents() {
             /*----------------  Heartbeat message -------------------------*/
                 // This is handled in checkHeartbeat() below
             /*----------------  Barometer altitude message ----------------*/
-            case MAVLINK_MSG_ID_BAROMETER:
+            case MAVLINK_MSG_ID_DATA:
                 event.flags.haveBarometerMessage = TRUE;
                 break;
             default:
@@ -852,18 +852,22 @@ static void doMasterSM() {
     checkEvents();
 
     #ifdef USE_MAGNETOMETER
-    if (state = STATE_CALIBRATE)
+    if (state = STATE_CALIBRATE) {
         Magnetometer_runSM();
+        if (I2C_hasError()) setError(ERROR_MAGNETOMETER);
+    }
     #endif
 
 
     #ifdef USE_ENCODER
     Encoder_runSM();
+    if (I2C_hasError()) setError(ERROR_ENCODER);
     #endif
 
     #ifdef USE_ACCELEROMETER
     if (state == STATE_CALIBRATE) {
         Accelerometer_runSM();
+        if (I2C_hasError()) setError(ERROR_ACCELEROMETER);
     }
     #endif
 
@@ -881,8 +885,9 @@ static void doMasterSM() {
 
     #ifdef USE_BAROMETER
     Barometer_runSM();
+    if (I2C_hasError()) setError(ERROR_BAROMETER);
     #endif
-    doBarometerUpdate(); // send barometer data
+    doBarometerUpdate(); // receive boat data and update height
 
     // Blink on timer
     #ifdef DEBUG_BLINK
@@ -1185,7 +1190,7 @@ static void doBarometerUpdate() {
         compasHeight = DEFAULT_COMPAS_HEIGHT;
 #else
         compasHeight = Barometer_getAltitude();
-            - Mavlink_newMessage.barometerData.altitude;
+            - Mavlink_newMessage.telemetryData.altitude;
 #endif
 
         haveCompasHeight = TRUE;

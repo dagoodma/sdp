@@ -48,11 +48,19 @@
                 <field type="float" name="east">East component in meters.</field>
 				<field type="float" name="down">Down component in meters.</field>
           </message>
-          <message id="243" name="BAROMETER">
-				<description>Barometer data from boat containing temperature and altitude information.</description>
+          <message id="243" name="DATA">
+				<description>AtLAs data such as altitude, temperature, and battery levels.</description>
 				<field type="uint8_t" name="ack">TRUE or FALSE if acknowledgement required.</field>
-				<field type="float" name="temperature">Contains the temperature in degrees Celsius.</field>
-                <field type="float" name="altitude">Contains the altitude calculated from the barometer</field>
+				<field type="float" name="temperature">The temperature in degrees Celsius.</field>
+                <field type="float" name="altitude">The altitude calculated from the barometer.</field>
+                <field type="uint16_t" name="batVolt1">Battery reading for electronics (NiMH) in millivolts.</field>
+                <field type="uint16_t" name="batVolt2">Battery reading for motors (LiPo) in millivolts.</field>
+          </message>
+          <message id="245" name="DEBUG">
+                <description>Debug message with information and telemetry.</description>
+                <field type="uint8_t" name="ack">Always FALSE.</field>
+                <field type="char" name="sender">Sent by AtLAs (0x1) or ComPAS (0x2).</field>
+                <field type="char[100]" name="message">String containing a debug message."</field>
           </message>
      </messages>
 </mavlink>

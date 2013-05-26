@@ -5,7 +5,7 @@
 typedef struct __mavlink_cmd_other_t
 {
  uint8_t ack; ///< TRUE or FALSE if acknowledgement required.
- uint8_t command; ///< Return to station (0x1), reinitialize boat (0x2), start override (0x3)
+ uint8_t command; ///< Return to station (0x1), reinitialize boat (0x2), start override (0x3), save station (0x4)
 } mavlink_cmd_other_t;
 
 #define MAVLINK_MSG_ID_CMD_OTHER_LEN 2
@@ -29,7 +29,7 @@ typedef struct __mavlink_cmd_other_t
  * @param msg The MAVLink message to compress the data into
  *
  * @param ack TRUE or FALSE if acknowledgement required.
- * @param command Return to station (0x1), reinitialize boat (0x2), start override (0x3)
+ * @param command Return to station (0x1), reinitialize boat (0x2), start override (0x3), save station (0x4)
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_cmd_other_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
@@ -60,7 +60,7 @@ static inline uint16_t mavlink_msg_cmd_other_pack(uint8_t system_id, uint8_t com
  * @param chan The MAVLink channel this message was sent over
  * @param msg The MAVLink message to compress the data into
  * @param ack TRUE or FALSE if acknowledgement required.
- * @param command Return to station (0x1), reinitialize boat (0x2), start override (0x3)
+ * @param command Return to station (0x1), reinitialize boat (0x2), start override (0x3), save station (0x4)
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_cmd_other_pack_chan(uint8_t system_id, uint8_t component_id, uint8_t chan,
@@ -103,7 +103,7 @@ static inline uint16_t mavlink_msg_cmd_other_encode(uint8_t system_id, uint8_t c
  * @param chan MAVLink channel to send the message
  *
  * @param ack TRUE or FALSE if acknowledgement required.
- * @param command Return to station (0x1), reinitialize boat (0x2), start override (0x3)
+ * @param command Return to station (0x1), reinitialize boat (0x2), start override (0x3), save station (0x4)
  */
 #ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
@@ -142,7 +142,7 @@ static inline uint8_t mavlink_msg_cmd_other_get_ack(const mavlink_message_t* msg
 /**
  * @brief Get field command from cmd_other message
  *
- * @return Return to station (0x1), reinitialize boat (0x2), start override (0x3)
+ * @return Return to station (0x1), reinitialize boat (0x2), start override (0x3), save station (0x4)
  */
 static inline uint8_t mavlink_msg_cmd_other_get_command(const mavlink_message_t* msg)
 {

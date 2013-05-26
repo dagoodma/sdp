@@ -29,6 +29,7 @@
 //#define DEBUG
 //#define DEBUG_VERBOSE
 //#define DISABLE_MOTORS
+#define USE_PUBLIC_DEBUG
 
 #ifdef DEBUG
 #ifdef USE_SD_LOGGER
@@ -107,6 +108,10 @@ enum {
 static uint8_t desiredSpeed = 0; // (percent) from 0 to 100%
 
 static uint16_t desiredHeading = 0; // (degrees) from North
+
+#ifdef USE_PUBLIC_DEBUG
+char *debugString = "";
+#endif
 
 
 /***********************************************************************
@@ -225,6 +230,22 @@ void Drive_forwardHeading(uint8_t speed, uint16_t angle) {
  **********************************************************************/
 void Drive_stop() {
     startIdleState();
+}
+
+
+/**********************************************************************
+ * Function: Drive_getDebugString
+ * @return None
+ * @remark 
+ * @author David Goodman
+ * @date 2013.05.25 
+ **********************************************************************/
+char *Drive_getDebugString() {
+    #ifdef USE_PUBLIC_DEBUG
+    return debugString;
+    #else
+    return "";
+    #endif
 }
 
 
@@ -405,6 +426,11 @@ static void updateRudder() {
         
     #ifdef DEBUG_VERBOSE
     DBPRINT("Rudder control: rDegrees=%d, yDegrees=%d, eDegrees=%d, uDegrees=%.2f, uPercent=%d[%s]\n\n",
+        desiredHeading, currentHeading, thetaError, uDegrees, (uint8_t)uPercent, dir);
+    #endif
+
+    #ifdef USE_DEBUG_STRING
+    sprintf(debugString, "R=%d, Y=%d, e=%d, U=%.2f, U\%=%d[%s]\n",
         desiredHeading, currentHeading, thetaError, uDegrees, (uint8_t)uPercent, dir);
     #endif
 }

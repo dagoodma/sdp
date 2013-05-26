@@ -62,6 +62,10 @@
 #define MAVLINK_LOCAL_START_RESCUE      0x2 // cc->boat: rescue person at this point
 #define MAVLINK_LOCAL_BOAT_POSITION     0x3 // boat->cc: current boat position
 
+// Debug message senders
+#define MAVLINK_SENDER_ATLAS            0x1
+#define MAVLINK_SENDER_COMPAS           0x2
+
 // * at end denotes WANT_ACK
 
 /**********************************************************************
@@ -75,10 +79,11 @@ union MAVLINK_MESSAGE {
     mavlink_gps_geo_t           gpsGeodeticData;
     mavlink_gps_ecef_t          gpsGeocentricData;
     mavlink_gps_ned_t           gpsLocalData;
-    mavlink_barometer_t         barometerData;
+    mavlink_data_t              telemetryData;
+    mavlink_debug_t             debugData;
 } Mavlink_newMessage;
 
-mavlink_xbee_heartbeat_t Mavlink_heartbeatData;
+mavlink_heartbeat_t Mavlink_heartbeatData;
 
 /**********************************************************************
  * PUBLIC FUNCTIONS                                                   *
@@ -135,7 +140,9 @@ void Mavlink_sendGeocentricError(GeocentricCoordinate *ecefError);
 
 void Mavlink_sendBoatPosition(LocalCoordinate *nedPos);
 
-void Mavlink_sendBarometerData(float temperatureCelsius, float altitude);
+void Mavlink_sendBoatData(float temperature, float altitude, uint16_t batVolt1, uint16_t batVolt2);
+
+void Mavlink_sendDebug(char sender, char *message);
 
 
 #ifdef XBEE_TEST

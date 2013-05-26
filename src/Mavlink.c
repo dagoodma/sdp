@@ -24,6 +24,8 @@ static BOOL hasHeartbeat = FALSE;
 #define MAV_NUMBER 15 // defines the MAV number, arbitrary
 #define COMP_ID 15
 
+#define DEBUG_MSG_SIZE      100
+
 
 /********************************************************************
  * PRIVATE PROTOTYPES                                               *
@@ -44,9 +46,9 @@ void Mavlink_recieve(){
         //if a message can be deciphered
         if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
             switch(msg.msgid) {
-                case MAVLINK_MSG_ID_XBEE_HEARTBEAT:
+                case MAVLINK_MSG_ID_HEARTBEAT:
                 {
-                    mavlink_msg_xbee_heartbeat_decode(&msg, &Mavlink_heartbeatData);
+                    mavlink_msg_heartbeat_decode(&msg, &Mavlink_heartbeatData);
                     hasHeartbeat = TRUE;
 
                     break;
@@ -67,47 +69,43 @@ void Mavlink_recieve(){
                     newMsgID = msg.msgid;
                     break;  
                 case MAVLINK_MSG_ID_CMD_OTHER:
-                    //mavlink_reset_t newMessage.resetData;
                     mavlink_msg_cmd_other_decode(&msg, &(Mavlink_newMessage.commandOtherData));
                     hasNewMsg = TRUE;
                     newMsgID = msg.msgid;
                     break;
                 case MAVLINK_MSG_ID_STATUS_AND_ERROR:
-                    //mavlink_reset_t newMessage.resetData;
                     mavlink_msg_status_and_error_decode(&msg, &(Mavlink_newMessage.statusAndErrorData));
                     hasNewMsg = TRUE;
                     newMsgID = msg.msgid;
                     break;
                 case MAVLINK_MSG_ID_GPS_GEO:
-                    //mavlink_gps_geo_t newMessage.gpsGeodeticData;
                     mavlink_msg_gps_geo_decode(&msg, &(Mavlink_newMessage.gpsGeodeticData));
                     hasNewMsg = TRUE;
                     newMsgID = msg.msgid;
                     break;
                 case MAVLINK_MSG_ID_GPS_ECEF:
-                    //mavlink_gps_ecef_t newMessage.gpsGeocentricData;
                     mavlink_msg_gps_ecef_decode(&msg, &(Mavlink_newMessage.gpsGeocentricData));
                     hasNewMsg = TRUE;
                     newMsgID = msg.msgid;
                     break;
                 case MAVLINK_MSG_ID_GPS_NED:
-                    //mavlink_gps_ned_t newMessage.gpsLocalData;
                     mavlink_msg_gps_ned_decode(&msg,&(Mavlink_newMessage.gpsLocalData));
-                    /*if (Mavlink_newMessage.gpsLocalData.ack == TRUE) {
-                        Mavlink_sendAck(Xbee_getUartId(), MAVLINK_MSG_ID_GPS_NED);
-                    }*/
                     hasNewMsg = TRUE;
                     newMsgID = msg.msgid;
                     break;
-                case MAVLINK_MSG_ID_BAROMETER:
-                    //mavlink_barometer_t newMessage.barometerData;
-                    mavlink_msg_barometer_decode(&msg, &(Mavlink_newMessage.barometerData));
+                case MAVLINK_MSG_ID_DATA:
+                    mavlink_msg_data_decode(&msg, &(Mavlink_newMessage.telemetryData));
                     hasNewMsg = TRUE;
                     newMsgID = msg.msgid;
                     break;
-            }
+                case MAVLINK_MSG_ID_DEBUG:
+                    mavlink_msg_debug_decode(&msg, &(Mavlink_newMessage.debugData));
+                    hasNewMsg = TRUE;
+                    newMsgID = msg.msgid;
+                    break;
+            } // switch
         }
-    }
+    } // while
     packet_drops += status.packet_rx_drop_count;
 }
 
@@ -143,7 +141,7 @@ void Mavlink_sendHeartbeat(){
     uint8_t data = 0x1;
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-    mavlink_msg_xbee_heartbeat_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, data);
+    mavlink_msg_heartbeat_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, data);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
     UART_putString(Xbee_getUartId(), buf, length);
 }
@@ -222,10 +220,24 @@ void Mavlink_sendBoatPosition(LocalCoordinate *nedPos){
     sendGpsNed(NO_ACK, MAVLINK_LOCAL_BOAT_POSITION, nedPos);
 }
 
-void Mavlink_sendBarometerData(float temperatureCelsius, float altitude){
+
+void Mavlink_sendBoatData(float temperature, float altitude, uint16_t batVolt1, uint16_t batVolt2) {
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-    mavlink_msg_barometer_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, temperatureCelsius, altitude);
+    mavlink_msg_data_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, temperature, altitude, batVolt1, batVolt2);
+    uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
+    UART_putString(Xbee_getUartId(), buf, length);
+}
+
+void Mavlink_sendDebug(char sender, char *message) {
+    mavlink_message_t msg;
+    uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+
+    char str[DEBUG_MSG_SIZE];
+    strncpy(str,message,DEBUG_MSG_SIZE - 1);
+    str[DEBUG_MSG_SIZE - 1] = '\0';
+
+    mavlink_msg_debug_pack(MAV_NUMBER, COMP_ID, &msg, NO_ACK, sender, message);
     uint16_t length = mavlink_msg_to_send_buffer(buf, &msg);
     UART_putString(Xbee_getUartId(), buf, length);
 }

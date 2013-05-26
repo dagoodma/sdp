@@ -186,6 +186,7 @@ static void doWatchdog(void) {
                 break;
             /*------------------ CMD_OTHER messages --------------- */
             case MAVLINK_MSG_ID_CMD_OTHER:
+            {
                 // --- Messages from ComPAS to AtLAs (from Atlas.c) ---
                 lastMavlinkMessageWantsAck = Mavlink_newMessage.commandOtherData.ack;
                 char *wantAck = "";
@@ -214,6 +215,7 @@ static void doWatchdog(void) {
                     DBPRINT("A: requesting origin.\n");
                 }
                 break;
+            }
             /*--------------------  GPS messages ------------------ */
             case MAVLINK_MSG_ID_GPS_ECEF:
                 // --- Messages from ComPAS to AtLAs (from Atlas.c) ---
@@ -290,11 +292,27 @@ static void doWatchdog(void) {
                 }
                 break;
             /*----------------  Barometer altitude message ----------------*/
-            case MAVLINK_MSG_ID_BAROMETER:
+            case MAVLINK_MSG_ID_DATA:
                 event.flags.haveBarometerMessage = TRUE;
-                DBPRINT("A: barom A=%.2f T=%.2f\n", Mavlink_newMessage.barometerData.altitude,
-                    Mavlink_newMessage.barometerData.temperature);
+                DBPRINT("A: data A=%.2f, T=%.2f,\n lipo=%.2f, nimh=%.2f\n",
+                    Mavlink_newMessage.telemetryData.altitude,
+                    Mavlink_newMessage.telemetryData.temperature,
+                    (float)Mavlink_newMessage.telemetryData.batVolt1/1000,
+                    (float)Mavlink_newMessage.telemetryData.batVolt2/1000);
                 break;
+            case MAVLINK_MSG_ID_DEBUG:
+            {
+                char *sender = "";
+                if (Mavlink_newMessage.debugData.sender == MAVLINK_SENDER_ATLAS)
+                    sender = "A";
+                else if (Mavlink_newMessage.debugData.sender == MAVLINK_SENDER_COMPAS)
+                    sender = "C";
+                else
+                    sender = "?";
+
+                DBPRINT("%s: debug=%s\n", sender, Mavlink_newMessage.debugData.message);
+                break;
+            }
             default:
                 // Unknown message ID
                 event.flags.haveUnknownMessage = TRUE;

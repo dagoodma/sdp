@@ -67,16 +67,16 @@ static void mavlink_test_test_data(uint8_t system_id, uint8_t component_id, mavl
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 }
 
-static void mavlink_test_xbee_heartbeat(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
+static void mavlink_test_heartbeat(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
 {
 	mavlink_message_t msg;
         uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
         uint16_t i;
-	mavlink_xbee_heartbeat_t packet_in = {
+	mavlink_heartbeat_t packet_in = {
 		5,
 	72,
 	};
-	mavlink_xbee_heartbeat_t packet1, packet2;
+	mavlink_heartbeat_t packet1, packet2;
         memset(&packet1, 0, sizeof(packet1));
         	packet1.ack = packet_in.ack;
         	packet1.data = packet_in.data;
@@ -84,18 +84,18 @@ static void mavlink_test_xbee_heartbeat(uint8_t system_id, uint8_t component_id,
         
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_xbee_heartbeat_encode(system_id, component_id, &msg, &packet1);
-	mavlink_msg_xbee_heartbeat_decode(&msg, &packet2);
+	mavlink_msg_heartbeat_encode(system_id, component_id, &msg, &packet1);
+	mavlink_msg_heartbeat_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_xbee_heartbeat_pack(system_id, component_id, &msg , packet1.ack , packet1.data );
-	mavlink_msg_xbee_heartbeat_decode(&msg, &packet2);
+	mavlink_msg_heartbeat_pack(system_id, component_id, &msg , packet1.ack , packet1.data );
+	mavlink_msg_heartbeat_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_xbee_heartbeat_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.ack , packet1.data );
-	mavlink_msg_xbee_heartbeat_decode(&msg, &packet2);
+	mavlink_msg_heartbeat_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.ack , packet1.data );
+	mavlink_msg_heartbeat_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
@@ -103,12 +103,12 @@ static void mavlink_test_xbee_heartbeat(uint8_t system_id, uint8_t component_id,
         for (i=0; i<mavlink_msg_get_send_buffer_length(&msg); i++) {
         	comm_send_ch(MAVLINK_COMM_0, buffer[i]);
         }
-	mavlink_msg_xbee_heartbeat_decode(last_msg, &packet2);
+	mavlink_msg_heartbeat_decode(last_msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
         
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_xbee_heartbeat_send(MAVLINK_COMM_1 , packet1.ack , packet1.data );
-	mavlink_msg_xbee_heartbeat_decode(last_msg, &packet2);
+	mavlink_msg_heartbeat_send(MAVLINK_COMM_1 , packet1.ack , packet1.data );
+	mavlink_msg_heartbeat_decode(last_msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 }
 
@@ -398,37 +398,41 @@ static void mavlink_test_gps_ned(uint8_t system_id, uint8_t component_id, mavlin
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 }
 
-static void mavlink_test_barometer(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
+static void mavlink_test_data(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
 {
 	mavlink_message_t msg;
         uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
         uint16_t i;
-	mavlink_barometer_t packet_in = {
+	mavlink_data_t packet_in = {
 		17.0,
 	45.0,
-	29,
+	17651,
+	17755,
+	41,
 	};
-	mavlink_barometer_t packet1, packet2;
+	mavlink_data_t packet1, packet2;
         memset(&packet1, 0, sizeof(packet1));
         	packet1.temperature = packet_in.temperature;
         	packet1.altitude = packet_in.altitude;
+        	packet1.batVolt1 = packet_in.batVolt1;
+        	packet1.batVolt2 = packet_in.batVolt2;
         	packet1.ack = packet_in.ack;
         
         
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_barometer_encode(system_id, component_id, &msg, &packet1);
-	mavlink_msg_barometer_decode(&msg, &packet2);
+	mavlink_msg_data_encode(system_id, component_id, &msg, &packet1);
+	mavlink_msg_data_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_barometer_pack(system_id, component_id, &msg , packet1.ack , packet1.temperature , packet1.altitude );
-	mavlink_msg_barometer_decode(&msg, &packet2);
+	mavlink_msg_data_pack(system_id, component_id, &msg , packet1.ack , packet1.temperature , packet1.altitude , packet1.batVolt1 , packet1.batVolt2 );
+	mavlink_msg_data_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_barometer_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.ack , packet1.temperature , packet1.altitude );
-	mavlink_msg_barometer_decode(&msg, &packet2);
+	mavlink_msg_data_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.ack , packet1.temperature , packet1.altitude , packet1.batVolt1 , packet1.batVolt2 );
+	mavlink_msg_data_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
@@ -436,26 +440,74 @@ static void mavlink_test_barometer(uint8_t system_id, uint8_t component_id, mavl
         for (i=0; i<mavlink_msg_get_send_buffer_length(&msg); i++) {
         	comm_send_ch(MAVLINK_COMM_0, buffer[i]);
         }
-	mavlink_msg_barometer_decode(last_msg, &packet2);
+	mavlink_msg_data_decode(last_msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
         
         memset(&packet2, 0, sizeof(packet2));
-	mavlink_msg_barometer_send(MAVLINK_COMM_1 , packet1.ack , packet1.temperature , packet1.altitude );
-	mavlink_msg_barometer_decode(last_msg, &packet2);
+	mavlink_msg_data_send(MAVLINK_COMM_1 , packet1.ack , packet1.temperature , packet1.altitude , packet1.batVolt1 , packet1.batVolt2 );
+	mavlink_msg_data_decode(last_msg, &packet2);
+        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
+}
+
+static void mavlink_test_debug(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
+{
+	mavlink_message_t msg;
+        uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+        uint16_t i;
+	mavlink_debug_t packet_in = {
+		5,
+	'B',
+	"CDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVW",
+	};
+	mavlink_debug_t packet1, packet2;
+        memset(&packet1, 0, sizeof(packet1));
+        	packet1.ack = packet_in.ack;
+        	packet1.sender = packet_in.sender;
+        
+        	mav_array_memcpy(packet1.message, packet_in.message, sizeof(char)*100);
+        
+
+        memset(&packet2, 0, sizeof(packet2));
+	mavlink_msg_debug_encode(system_id, component_id, &msg, &packet1);
+	mavlink_msg_debug_decode(&msg, &packet2);
+        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
+
+        memset(&packet2, 0, sizeof(packet2));
+	mavlink_msg_debug_pack(system_id, component_id, &msg , packet1.ack , packet1.sender , packet1.message );
+	mavlink_msg_debug_decode(&msg, &packet2);
+        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
+
+        memset(&packet2, 0, sizeof(packet2));
+	mavlink_msg_debug_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.ack , packet1.sender , packet1.message );
+	mavlink_msg_debug_decode(&msg, &packet2);
+        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
+
+        memset(&packet2, 0, sizeof(packet2));
+        mavlink_msg_to_send_buffer(buffer, &msg);
+        for (i=0; i<mavlink_msg_get_send_buffer_length(&msg); i++) {
+        	comm_send_ch(MAVLINK_COMM_0, buffer[i]);
+        }
+	mavlink_msg_debug_decode(last_msg, &packet2);
+        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
+        
+        memset(&packet2, 0, sizeof(packet2));
+	mavlink_msg_debug_send(MAVLINK_COMM_1 , packet1.ack , packet1.sender , packet1.message );
+	mavlink_msg_debug_decode(last_msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 }
 
 static void mavlink_test_autoLifeguard(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
 {
 	mavlink_test_test_data(system_id, component_id, last_msg);
-	mavlink_test_xbee_heartbeat(system_id, component_id, last_msg);
+	mavlink_test_heartbeat(system_id, component_id, last_msg);
 	mavlink_test_mavlink_ack(system_id, component_id, last_msg);
 	mavlink_test_cmd_other(system_id, component_id, last_msg);
 	mavlink_test_status_and_error(system_id, component_id, last_msg);
 	mavlink_test_gps_geo(system_id, component_id, last_msg);
 	mavlink_test_gps_ecef(system_id, component_id, last_msg);
 	mavlink_test_gps_ned(system_id, component_id, last_msg);
-	mavlink_test_barometer(system_id, component_id, last_msg);
+	mavlink_test_data(system_id, component_id, last_msg);
+	mavlink_test_debug(system_id, component_id, last_msg);
 }
 
 #ifdef __cplusplus

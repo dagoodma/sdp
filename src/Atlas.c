@@ -16,6 +16,7 @@
 #include <plib.h>
 #include <stdlib.h>
 
+#include "AD.h"
 #include "Board.h"
 #include "Serial.h"
 #include "Ports.h"
@@ -38,9 +39,7 @@
 #define IS_ATLAS
 //#define DEBUG
 //#define DEBUG_VERBOSE
-
-#define XBEE_UART_ID    UART1_ID
-#define GPS_UART_ID     UART2_ID
+#define DEBUG_XBEE
 
 // Module selection (comment a line out to disable the module)
 #define USE_OVERRIDE
@@ -48,11 +47,24 @@
 #define USE_GPS
 #define USE_DRIVE
 #define USE_TILTCOMPASS
-#define USE_XBEE
+#define USE_XBEE      // wireless XBee communication
 //#define USE_SIREN // NOT IMPLEMENTED
-#define USE_BAROMETER
-#define DO_HEARTBEAT
+#define USE_BAROMETER // measures and sends altitude and temperature
+#define USE_HEARTBEAT // sends an occasional heartbeat messag
+//#define USE_BATTERY   // measures and sends battery voltages
 
+// Ports
+#define XBEE_UART_ID    UART1_ID
+#define GPS_UART_ID     UART2_ID
+
+
+#define LIPO_BATTERY    AD_PORTW4
+#define NIMH_BATTERY    AD_PORTV7
+
+// Convert battery voltage from digital (11:1) to millivolts
+#define BATTERY_TO_MILLIVOLT(d)     ((uint16_t)((float)d*3.2f * 11.0f))
+
+// Debug message macro
 #ifdef DEBUG
 #ifdef USE_SD_LOGGER
 #define DBPRINT(...)   do { char debug[255]; sprintf(debug,__VA_ARGS__); } while(0)
@@ -63,6 +75,7 @@
 #define DBPRINT(...)   ((int)0)
 #endif
 
+// Other
 
 #define EVENT_BYTE_SIZE     10 // provides 80 event bits
 
@@ -71,25 +84,26 @@
 #define TIMER_SETORIGIN     TIMER_MAIN
 #define TIMER_SETORIGIN_RETRY   TIMER_MAIN2
 
-#define TIMER_BAROMETER_SEND        TIMER_BACKGROUND
+#define TIMER_DATA_SEND             TIMER_BACKGROUND
 #define TIMER_GPS_CORRECTION_LOST   TIMER_BACKGROUND2
 #define TIMER_HEARTBEAT             TIMER_BACKGROUND3
 
-// --------------------- Timer delays -----------------------
+// Timer delays
 #define STARTUP_DELAY               2500 // (ms) time to wait before starting up
 #define STATION_KEEP_DELAY          10000 // (ms) to check if drifted away
-#define BAROMETER_SEND_DELAY        10000 // (ms) time between sending barometer data
+#define DATA_SEND_DELAY             10000 // (ms) time between sending barometer data
 #define RESEND_MESSAGE_DELAY        4000 // (ms) resend a message
 #define GPS_CORRECTION_LOST_DELAY   5000 // (ms) throw out gps error corrections now
 #define HEARTBEAT_SEND_DELAY        3000 // (ms) between heart being sent to CC
 #define DEBUG_PRINT_DELAY           1200
 #define RETRY_ORIGIN_DELAY          3000
 
-#define RESEND_MESSAGE_LIMIT        5 // times to resend before failing
 
+#define RESEND_MESSAGE_LIMIT        5 // times to resend before failing
 // Maximum substate errors before failing (fall into override)
 #define INITIALIZE_ERROR_MAX            5
 
+// Navigation system tolerances
 #define STATION_TOLERANCE_MIN           5.0f // (meters) to approach station
 #define STATION_TOLERANCE_MAX           8.0f // (meters) distance to float away
 #define RESCUE_TOLERANCE                2.0f // (meters) to approach person
@@ -215,7 +229,8 @@ static void handleAcknowledgement();
 static void setError(error_t errorCode);
 static void clearError();
 static void gpsCorrectionUpdate();
-static void doBarometerUpdate();
+static void doDataMessage();
+static uint16_t getBatteryVoltage(unsigned int pin);
 static void doHeartbeatMessage();
 static void checkOverride();
 void fatal(error_t code);
@@ -515,6 +530,7 @@ static void doMasterSM() {
 
     #ifdef USE_TILTCOMPASS
     TiltCompass_runSM();
+    if (I2C_hasError()) setError(ERROR_TILTCOMPASS);
     #endif
 
     #ifdef USE_GPS
@@ -538,20 +554,29 @@ static void doMasterSM() {
 
     #ifdef USE_BAROMETER
     Barometer_runSM();
-    doBarometerUpdate(); // send barometer data
+    if (I2C_hasError()) setError(ERROR_BAROMETER);
     #endif
 
-    #ifdef DO_HEARTBEAT
+    #ifdef USE_HEARTBEAT
     doHeartbeatMessage();
     #endif
 
-    //checkOverride();
+    // Send telemetry data message
+    doDataMessage(); 
 
     #ifdef DEBUG_VERBOSE
     if (Timer_isExpired(TIMER_TEST2)) {
         DBPRINT("State=%X,%X, Receiver=%X, WantOver=%X, ForceOver=%X, ReceiverShut=%X, HaveError=%X\n",
             state, subState, event.flags.receiverDetected, event.flags.wantOverride, overrideShutdown, receiverShutdown, haveError);
         Timer_new(TIMER_TEST2, DEBUG_PRINT_DELAY);
+    }
+    #endif
+
+    #ifdef DEBUG_XBEE
+    // Sending XBee debug message
+    if (Timer_isExpired(TIMER_TEST3)) {
+        Mavlink_sendDebug(MAVLINK_SENDER_ATLAS, Drive_getDebugString());
+        Timer_new(TIMER_TEST3, DEBUG_PRINT_DELAY);
     }
     #endif
 
@@ -894,7 +919,6 @@ static void setError(error_t errorCode) {
     haveError = TRUE;
     Mavlink_sendError(errorCode);
     DBPRINT("Error: %s\n", getErrorMessage(errorCode));
-    //DELAY(20);
     startOverrideSM();
 }
 /**********************************************************************
@@ -924,22 +948,32 @@ void fatal(error_t code) {
 }
 
 /**********************************************************************
- * Function: doBarometerUpdate
+ * Function: doDataMessage
  * @return None.
- * @remark Sends barometer data such as temperature and altitude if 
- *  the timer expired.
+ * @remark Sends telemetry data such as temperature, altitude, and battery
+ *  voltage if the proper time has elapsed.
  * @author David Goodman
  * @date 2013.05.04
  **********************************************************************/
-static void doBarometerUpdate() {
-    if (Timer_isExpired(TIMER_BAROMETER_SEND)) {
+static void doDataMessage() {
+    if (Timer_isExpired(TIMER_DATA_SEND)) {
 
         #ifdef USE_XBEE
-        Mavlink_sendBarometerData(Barometer_getTemperature(),
-            Barometer_getAltitude());
+        #ifdef USE_BAROMETER
+        float tempC = Barometer_getTemperature();
+        float altM = Barometer_getAltitude();
+        #else
+        float tempC = 0.0f;
+        float altM = 0.0f;
         #endif
 
-        Timer_new(TIMER_BAROMETER_SEND, BAROMETER_SEND_DELAY);
+        uint16_t lipoV = getBatteryVoltage(LIPO_BATTERY);
+        uint16_t nimhV = getBatteryVoltage(NIMH_BATTERY);
+
+        Mavlink_sendBoatData(tempC, altM, nimhV, lipoV);
+        #endif
+
+        Timer_new(TIMER_DATA_SEND, DATA_SEND_DELAY);
     }
 }
 
@@ -1032,6 +1066,23 @@ static void resetAtlas() {
     SoftReset();
 }
 
+/**********************************************************************
+ * Function: getBatteryVoltage
+ * @param AD input port for battery voltage.
+ * @return Battery voltage in millivolts.
+ * @remark Reads and converts battery voltage from 10-bit ADC through 11 to 1 voltage
+ *  divider (0=0V to 1023=36V) to a voltage in millivolts.
+ * @author David Goodman
+ * @date 2013.05.25
+ **********************************************************************/
+static uint16_t getBatteryVoltage(unsigned int pin) {
+    #ifdef USE_BATTERY
+    unsigned int batteryLevel = AD_readPin(pin);
+    return BATTERY_TO_MILLIVOLT(batteryLevel);
+    #else
+    return 0;
+    #endif
+}
 
 /**********************************************************************
  * Function: initializeAtlas
@@ -1059,6 +1110,15 @@ static void initializeAtlas() {
     Override_init();
     #endif
 
+
+    #ifdef USE_BATTERY
+    DBPRINT("Initializing AD.\n");
+    AD_init(LIPO_BATTERY | NIMH_BATTERY);
+    
+    DBPRINT("Battery: LiPo=%.2fV, NiMH=%.2fV\n", (float)getBatteryVoltage(LIPO_BATTERY) / 1000,
+        (float)get_batteryVoltage(NIMH_BATTERY)/1000);
+    #endif
+
     // -------------------- I2C Devices -------------------
     DBPRINT("Initializing I2C.\n");
     I2C_init(I2C_BUS_ID, I2C_CLOCK_FREQ);
@@ -1079,7 +1139,7 @@ static void initializeAtlas() {
     if (Barometer_init() != SUCCESS) {
         fatal(ERROR_BAROMETER);
     }
-    Timer_new(TIMER_BAROMETER_SEND, BAROMETER_SEND_DELAY);
+    Timer_new(TIMER_DATA_SEND, DATA_SEND_DELAY);
     #endif
 
 
@@ -1116,15 +1176,14 @@ static void initializeAtlas() {
     #endif
 
 
+    #ifdef DEBUG_XBEE
+    Timer_new(TIMER_TEST3, DEBUG_PRINT_DELAY);
+    #endif
+
     Timer_new(TIMER_HEARTBEAT, HEARTBEAT_SEND_DELAY);
     Mavlink_sendStatus(MAVLINK_STATUS_ONLINE);
     
     startSetOriginSM();
-
-/*
-    while (1) {
-        asm("nop");
-    }*/
 }
 
 //---------------------------------MAIN -------------------------------
@@ -1149,6 +1208,8 @@ int main(void) {
 
 
 
+//----------------------------- TEST HARNESSES --------------------------
+
 //#define ATLAS_SYSTEM_TEST
 #ifdef ATLAS_SYSTEM_TEST
 
@@ -1159,7 +1220,7 @@ int main(void) {
 static void printGps();
 static void printBarometer();
 static void printTiltCompass();
-
+static void printBattery();
 
 
 #define ECEF_X_ORIGIN -2707534.0f
@@ -1212,14 +1273,15 @@ int main() {
 
         #ifdef USE_BAROMETER
         Barometer_runSM();
-        doBarometerUpdate(); // send barometer data
         #endif
 
-        #ifdef DO_HEARTBEAT
+        #ifdef USE_HEARTBEAT
         doHeartbeatMessage();
         #endif
 
-        //checkOverride();
+
+        // Send telemetry data
+        doDataMessage();
 
         #ifdef DEBUG_VERBOSE
         if (Timer_isExpired(TIMER_TEST2)) {
@@ -1233,6 +1295,7 @@ int main() {
             printGps();
             printBarometer();
             printTiltCompass();
+            printBattery();
 
             if (event.flags.haveError)
                 printf("Found an error: %s\n", getErrorMessage(lastErrorCode));
@@ -1279,6 +1342,14 @@ static void printGps() {
         printf(" Nav ready.\n");
     else
         printf( "Nav not ready!\n");
+}
+
+static void printBattery() {
+#ifdef USE_BATTERY
+    printf("Battery: LiPo=%.2fV, NiMH=%.2fV\n", (float)getBatteryVoltage(LIPO_BATTERY) / 1000,
+        (float)get_batteryVoltage(NIMH_BATTERY)/1000);
+    
+#endif
 }
 
 #endif
