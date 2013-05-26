@@ -1,0 +1,165 @@
+Watchdog initialized.
+A: Boat is now online.
+A: requesting origin.
+C: Sending boat origin.
+   X=-2706933, Y=-4324216, Z=3815325
+A: ack=Set new origin.
+A: debug=
+A: debug=
+A: heartbeat!
+A: debug=
+A: debug=
+A: heartbeat!
+A: debug=
+A: debug=
+A: heartbeat!
+A: debug=
+A: data A=126.74, T=25.90,
+ lipo=0.00, nimh=0.00
+A: debug=
+A: heartbeat!
+A: debug=
+A: debug=
+A: heartbeat!
+A: debug=
+A: in override mode
+A: debug=
+A: heartbeat!
+A: debug=
+A: debug=
+A: data A=127.57, T=25.90,
+ lipo=0.00, nimh=0.00
+A: heartbeat!
+A: debug=
+A: debug=
+A: heartbeat!
+A: debug=
+A: debug=
+A: heartbeat!
+A: debug=
+A: debug=
+C: Sending boat to
+rescue person.
+ N=10.6, E=11.8
+A: ack Sending boat to
+rescue person.
+A: started a rescue
+A: debug=R=45, Y=359, e=46, U=32.20, Up=71[R], S=81
+
+A: heartbeat!
+A: data A=127.49, T=25.90,
+ lipo=0.00, nimh=0.00
+A: debug=R=45, Y=350, e=55, U=38.50, Up=85[R], S=82
+
+C: Stopping the boat. [WANT_ACK]
+A: ack Stopping the boat.
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: heartbeat!
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: in override mode
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: heartbeat!
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: heartbeat!
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: data A=127.49, T=26.00,
+ lipo=0.00, nimh=0.00
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: heartbeat!
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: heartbeat!
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: heartbeat!
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: data A=127.41, T=26.00,
+ lipo=0.00, nimh=0.00
+A: heartbeat!
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: heartbeat!
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+A: heartbeat!
+C: Sending boat to
+rescue person.
+ N=10.6, E=11.8
+A: ack Sending boat to
+rescue person.
+A: err=In override mode.
+A: debug=R=45, Y=354, e=51, U=35.70, Up=79[R], S=82
+
+C: Sending boat to
+rescue person.
+ N=10.6, E=11.8
+A: ack Sending boat to
+rescue person.
+A: started a rescue
+A: debug=R=349, Y=33, e=44, U=30.80, Up=68[L], S=100
+
+A: heartbeat!
+A: debug=R=349, Y=10, e=21, U=14.70, Up=32[L], S=100
+
+A: debug=R=349, Y=340, e=9, U=6.30, Up=14[R], S=100
+
+A: heartbeat!
+A: debug=R=338, Y=317, e=21, U=14.70, Up=32[R], S=97
+
+A: data A=126.07, T=26.10,
+ lipo=0.00, nimh=0.00
+A: debug=R=338, Y=359, e=21, U=14.70, Up=32[L], S=82
+
+A: heartbeat!
+A: debug=R=323, Y=354, e=31, U=21.70, Up=48[L], S=70
+
+A: debug=R=300, Y=296, e=4, U=2.80, Up=6[R], S=62
+
+A: heartbeat!
+A: debug=R=287, Y=312, e=25, U=17.50, Up=38[L], S=56
+
+A: debug=R=274, Y=272, e=2, U=1.40, Up=3[R], S=52
+
+A: heartbeat!
+A: debug=R=259, Y=261, e=2, U=1.40, Up=3[L], S=48
+
+A: debug=R=245, Y=261, e=16, U=11.20, Up=100[L] BB, S=44
+
+A: data A=125.74, T=26.20,
+ lipo=0.00, nimh=0.00
+A: debug=R=227, Y=220, e=7, U=4.90, Up=10[R], S=40
+
+A: heartbeat!
+A: debug=R=196, Y=227, e=31, U=21.70, Up=100[L] BB, S=37
+
+A: successfully rescued person
+A: debug=R=196, Y=190, e=6, U=4.20, Up=9[R], S=37
+
+A: heartbeat!
+A: debug=R=196, Y=190, e=6, U=4.20, Up=9[R], S=37
+
+A: debug=R=196, Y=190, e=6, U=4.20, Up=9[R], S=37
+
+A: heartbeat!
+A: debug=R=196, Y=190, e=6, U=4.20, Up=9[R], S=37
+
+

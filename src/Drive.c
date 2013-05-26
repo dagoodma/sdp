@@ -80,10 +80,10 @@
 
 // ------------------------- Controller 
 //PD Controller Param Settings for Rudder
-#define KP_RUDDER 7.5f
+#define KP_RUDDER 0.7f
 #define KD_RUDDER 0.0f
-#define RUDDER_BANGBANG_SPEED_THRESHOLD 17 // (speed %) motor speed threshold
-#define RUDDER_BANGBANG_THETA_DEADBAND_THRESHOLD 10 // (degrees) heading error threshold
+#define RUDDER_BANGBANG_SPEED_THRESHOLD 45 // (speed %) motor speed threshold
+#define RUDDER_BANGBANG_THETA_DEADBAND_THRESHOLD 9 // (degrees) heading error threshold
 
 
 
@@ -110,7 +110,7 @@ static uint8_t desiredSpeed = 0; // (percent) from 0 to 100%
 static uint16_t desiredHeading = 0; // (degrees) from North
 
 #ifdef USE_PUBLIC_DEBUG
-char *debugString = "";
+char debugString[100];
 #endif
 
 
@@ -213,6 +213,7 @@ void Drive_forwardHeading(uint8_t speed, uint16_t angle) {
     desiredHeading = angle;
     
     // Start driving the given speed
+    desiredSpeed = speed;
     setLeftMotor(speed);
     setRightMotor(speed);
 
@@ -412,10 +413,13 @@ static void updateRudder() {
     uPercent = (uPercent > 100.0)? 100.0f : uPercent;
     uPercent = (uPercent < 0.0)? 0.0f : uPercent;
 
+    char *bangbang = "";
     // Bang-bang control to force rudder all the way if speed is low
     if (desiredSpeed < RUDDER_BANGBANG_SPEED_THRESHOLD
-            && thetaError > RUDDER_BANGBANG_THETA_DEADBAND_THRESHOLD)
+            && thetaError > RUDDER_BANGBANG_THETA_DEADBAND_THRESHOLD) {
         uPercent = 100.0f;
+        bangbang = " BB";
+    }
     
     // Command the rudder and save 
     setRudder(rudderDirection, (uint8_t)uPercent);
@@ -429,9 +433,9 @@ static void updateRudder() {
         desiredHeading, currentHeading, thetaError, uDegrees, (uint8_t)uPercent, dir);
     #endif
 
-    #ifdef USE_DEBUG_STRING
-    sprintf(debugString, "R=%d, Y=%d, e=%d, U=%.2f, U\%=%d[%s]\n",
-        desiredHeading, currentHeading, thetaError, uDegrees, (uint8_t)uPercent, dir);
+    #ifdef USE_PUBLIC_DEBUG
+    sprintf(debugString, "R=%d, Y=%d, e=%d, U=%.2f, Up=%d[%s]%s, S=%d\n",
+        desiredHeading, currentHeading, thetaError, uDegrees, (uint8_t)uPercent, dir, bangbang, desiredSpeed);
     #endif
 }
 
